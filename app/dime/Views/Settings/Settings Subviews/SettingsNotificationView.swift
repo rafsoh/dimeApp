@@ -16,7 +16,7 @@ struct SettingsNotificationsView: View {
   @AppStorage("notificationsEnabled", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
   var notificationsEnabled: Bool = true
   @State var option = 1
-  @State var customTime = Date.now
+  @State private var customTimerList: [Date] = []
 
   var center = UNUserNotificationCenter.current()
 
@@ -157,35 +157,33 @@ struct SettingsNotificationsView: View {
           .overlay(alignment: .bottom) {
             Divider()
           }
+            
+          NavigationLink(destination: SettingsNotificationCustomTimeView(customTimerList: $customTimerList, onDismiss: onDismiss)) {
+                
+              HStack {
+                Text("Custom Time")
+                  .font(.system(.body, design: .rounded))
+                  .foregroundColor(Color.PrimaryText)
 
-          HStack {
-            Text("Custom Time")
-              .font(.system(.body, design: .rounded))
-              .foregroundColor(Color.PrimaryText)
+                Spacer()
 
-            Spacer()
+                  if option == 3 {
+                      Image(systemName: "checkmark")
+                          .font(.system(.subheadline, design: .rounded))
+                          .foregroundColor(.DarkIcon.opacity(0.6))
+                          .matchedGeometryEffect(id: "tick", in: animation)
+                  }
+                  
+                  Image(systemName: "chevron.forward")
+                    .font(.system(.subheadline, design: .rounded))
+                    .foregroundColor(.DarkIcon.opacity(0.6))
 
-            if option == 3 {
-              DatePicker(
-                "Custom notification time", selection: $customTime,
-                displayedComponents: .hourAndMinute
-              )
-              .labelsHidden()
-
-              Image(systemName: "checkmark")
-                .font(.system(.subheadline, design: .rounded))
-                .foregroundColor(.DarkIcon.opacity(0.6))
-                .matchedGeometryEffect(id: "tick", in: animation)
+              }
+              .frame(maxWidth: .infinity)
+              .contentShape(Rectangle())
+              .padding(.vertical, 9)
             }
-          }
-          .frame(maxWidth: .infinity)
-          .contentShape(Rectangle())
-          .onTapGesture {
-            withAnimation(.easeIn(duration: 0.15)) {
-              option = 3
-            }
-          }
-          .padding(.vertical, 9)
+
         }
         .padding(.horizontal, 15)
         .background(Color.SettingsBackground, in: RoundedRectangle(cornerRadius: 9))
@@ -193,25 +191,10 @@ struct SettingsNotificationsView: View {
           UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.set(
             option, forKey: "notificationOption")
 
-          if newValue == 3 {
-            let components = Calendar.current.dateComponents([.hour, .minute], from: customTime)
-
-            UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.set(
-              components.hour!, forKey: "customHour")
-            UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.set(
-              components.minute!, forKey: "customMinute")
-          }
-
-          newNotification()
+            newNotification()
         }
-        .onChange(of: customTime) { _ in
-          let components = Calendar.current.dateComponents([.hour, .minute], from: customTime)
-
-          UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.set(
-            components.hour!, forKey: "customHour")
-          UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.set(
-            components.minute!, forKey: "customMinute")
-
+        .onChange(of: customTimerList) { _ in
+          UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.saveCustomTimerList(customTimerList)
           newNotification()
         }
         .onAppear {
@@ -221,22 +204,16 @@ struct SettingsNotificationsView: View {
               forKey: "notificationOption")
           }
 
-          if UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.object(forKey: "customHour")
-            != nil
-            && UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.object(forKey: "customMinute")
-              != nil {
-            var components = DateComponents()
-            components.hour = UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.integer(
-              forKey: "customHour")
-            components.minute = UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.integer(
-              forKey: "customMinute")
-            customTime = Calendar.current.date(from: components)!
-          }
+          self.customTimerList = UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.loadCustomTimerList()
         }
       }
     }
     .modifier(SettingsSubviewModifier())
   }
+    
+    private func onDismiss(){
+        self.option = 3
+    }
 }
 
 func newNotification() {
@@ -248,7 +225,7 @@ func newNotification() {
   content.sound = UNNotificationSound.default
 
   // show this notification five seconds from now
-  var components = DateComponents()
+  var dateComponentsList : [DateComponents] = []
   var option = 1
 
   if UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.object(forKey: "notificationOption")
@@ -258,30 +235,38 @@ func newNotification() {
   }
 
   if option == 1 {
-    components.hour = 8
-    components.minute = 0
+      var dateComponents = DateComponents()
+      dateComponents.hour = 8
+      dateComponents.minute = 0
+      dateComponentsList.append(dateComponents)
   } else if option == 2 {
-    components.hour = 20
-    components.minute = 0
+      var dateComponents = DateComponents()
+      dateComponents.hour = 20
+      dateComponents.minute = 0
+      dateComponentsList.append(dateComponents)
   } else {
-    if UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.object(forKey: "customHour") != nil,
-      UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.object(forKey: "customMinute") != nil {
-      components.hour = UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.integer(
-        forKey: "customHour")
-      components.minute = UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.integer(
-        forKey: "customMinute")
-    } else {
-      components.hour = 8
-      components.minute = 0
-    }
+      let customTimes = UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.loadCustomTimerList()
+      if !customTimes.isEmpty {
+          for item in customTimes {
+              let dateComponents = Calendar.current.dateComponents([.hour, .minute], from: item)
+              dateComponentsList.append(dateComponents)
+          }
+      } else {
+          var dateComponent = DateComponents()
+           dateComponent.hour = 8
+           dateComponent.minute = 0
+           dateComponentsList.append(dateComponent)
+      }
   }
 
-  let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
+    for components in dateComponentsList {
+        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
+        // choose a random identifier
+        let request = UNNotificationRequest(
+          identifier: UUID().uuidString, content: content, trigger: trigger)
+        // add our notification request
+        UNUserNotificationCenter.current().add(request)
+    }
 
-  // choose a random identifier
-  let request = UNNotificationRequest(
-    identifier: UUID().uuidString, content: content, trigger: trigger)
 
-  // add our notification request
-  UNUserNotificationCenter.current().add(request)
 }
