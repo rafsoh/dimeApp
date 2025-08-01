@@ -16,7 +16,7 @@ struct SettingsNotificationCustomTimeView: View {
     
     var body: some View {
         VStack {
-            Text("Notifications")
+            Text("Custom Times")
               .font(.system(.title3, design: .rounded).weight(.semibold))
               .foregroundColor(Color.PrimaryText)
               .frame(maxWidth: .infinity)
