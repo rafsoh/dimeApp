@@ -223,6 +223,9 @@ struct TransactionView: View {
     @State var isEditingDecimal = false
     @State var decimalValuesAssigned: AssignedDecimal = .none
     @State private var priceString: String = "0"
+    
+    // Discard Changes Confirmation Dialog
+    @State private var showDiscardChangesDialog: Bool = false
 
     var body: some View {
         GeometryReader { proxy in
@@ -301,7 +304,11 @@ struct TransactionView: View {
                 .overlay {
                     HStack {
                         Button {
-                            dismiss()
+                            if price != 0 || note.isEmpty == false {
+                                showDiscardChangesDialog = true
+                            } else {
+                                dismiss()
+                            }
                         } label: {
                             Image(systemName: "xmark")
                             //                                .font(.system(size: 16, weight: .semibold))
@@ -924,6 +931,15 @@ struct TransactionView: View {
             if income {
                 swipingOffset = capsuleWidth
             }
+        }
+        .confirmationDialog("Are you sure you want to discard your changes?", isPresented: $showDiscardChangesDialog) {
+            Button(role: .destructive) {
+                dismiss()
+            } label: {
+                Text("Discard Changes")
+            }
+        } message: {
+            Text("This action will discard any unsaved changes.")
         }
     }
 
