@@ -28,8 +28,8 @@ struct InstructionHeadings {
 struct BrandNewBudgetView: View {
     @FetchRequest private var categories: FetchedResults<Category>
 
-    @AppStorage("firstWeekday", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var firstWeekday: Int = 1
-    @AppStorage("firstDayOfMonth", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var firstDayOfMonth: Int = 1
+    @AppStorage("firstWeekday", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var firstWeekday: Int = 1
+    @AppStorage("firstDayOfMonth", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var firstDayOfMonth: Int = 1
 
     @Environment(\.managedObjectContext) var moc
     @EnvironmentObject var dataController: DataController
@@ -84,7 +84,7 @@ struct BrandNewBudgetView: View {
 //        return (amount as NSString).doubleValue
 //    }
 
-    @AppStorage("numberEntryType", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var numberEntryType: Int = 1
+    @AppStorage("numberEntryType", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var numberEntryType: Int = 1
 
     @State private var price: Double = 0
     @State private var category: Category?
@@ -92,7 +92,7 @@ struct BrandNewBudgetView: View {
     @State var decimalValuesAssigned: AssignedDecimal = .none
     @State private var priceString: String = "0"
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var currency: String = Locale.current.currencyCode!
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }

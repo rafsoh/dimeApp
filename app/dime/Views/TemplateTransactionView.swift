@@ -16,11 +16,11 @@ struct TemplateTransactionView: View {
     @EnvironmentObject var dataController: DataController
     @Environment(\.dismiss) var dismiss
 
-    @AppStorage("numberEntryType", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var numberEntryType: Int = 1
+    @AppStorage("numberEntryType", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var numberEntryType: Int = 1
 
     @Environment(\.colorScheme) var colorScheme
 
-    @AppStorage("topEdge", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var topEdge: Double = 30
+    @AppStorage("topEdge", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var topEdge: Double = 30
 
     @State private var note = ""
     @State var category: Category?
@@ -71,7 +71,7 @@ struct TemplateTransactionView: View {
     @State var showCategoryPicker = false
     @State var showCategorySheet = false
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var currency: String = Locale.current.currencyCode!
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
@@ -85,7 +85,7 @@ struct TemplateTransactionView: View {
 
     @ObservedObject var keyboardHeightHelper = KeyboardHeightHelper()
 
-    @AppStorage("firstTransactionViewLaunch", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var firstLaunch: Bool = true
+    @AppStorage("firstTransactionViewLaunch", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var firstLaunch: Bool = true
 
     // edit mode
     let toEdit: TemplateTransaction?
@@ -95,7 +95,7 @@ struct TemplateTransactionView: View {
     @State var toDelete: TemplateTransaction?
     @State var deleteMode = false
 
-    @AppStorage("bottomEdge", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var bottomEdge: Double = 15
+    @AppStorage("bottomEdge", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var bottomEdge: Double = 15
 
     @State private var offset: CGFloat = 0
 
@@ -142,7 +142,7 @@ struct TemplateTransactionView: View {
         }
     }
 
-    @AppStorage("colourScheme", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var colourScheme: Int = 0
+    @AppStorage("colourScheme", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var colourScheme: Int = 0
 
     @Environment(\.colorScheme) var systemColorScheme
 
@@ -948,9 +948,9 @@ struct SettingsQuickAddWidgetView: View {
 }
 
 struct SettingsQuickAddWidgetDraggingView: View {
-    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
+    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var showCents: Bool = true
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var currency: String = Locale.current.currencyCode!
 
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!

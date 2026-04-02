@@ -14,7 +14,7 @@ struct UpdateAlert: View {
 
     @State private var offset: CGFloat = 0
 
-    @AppStorage("bottomEdge", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var bottomEdge: Double = 15
+    @AppStorage("bottomEdge", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var bottomEdge: Double = 15
 
     @State var opacity = 0.0
 

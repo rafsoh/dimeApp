@@ -93,7 +93,7 @@ class UnlockManager: NSObject, ObservableObject, SKPaymentTransactionObserver, S
         self.dataController = dataController
 
         // Prepare to look for our unlock product.
-        let productIDs = Set(["com.rafaelsoh.dime.smalltip", "com.rafaelsoh.dime.mediumtip", "com.rafaelsoh.dime.largetip"])
+        let productIDs = Set(["com.vanxun.dime.smalltip", "com.vanxun.dime.mediumtip", "com.vanxun.dime.largetip"])
         request = SKProductsRequest(productIdentifiers: productIDs)
 
         // This is required because we inherit from NSObject.

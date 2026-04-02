@@ -139,9 +139,9 @@ struct ShortcutInsightsView: View {
     let type: ShortcutsInsightsType
     let timeframe: ShortcutsInsightsTimeFrame
 
-    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
+    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var showCents: Bool = true
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var currency: String = Locale.current.currencyCode!
 
     var leftText: String {
         switch type {

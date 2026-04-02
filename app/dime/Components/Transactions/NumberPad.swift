@@ -20,8 +20,8 @@ struct NumberPad: View {
     var showingNotePicker: Bool = false
     var submit: () -> Void
 
-    @AppStorage("numberEntryType", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var numberEntryType: Int = 1
-    @AppStorage("haptics", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+    @AppStorage("numberEntryType", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var numberEntryType: Int = 1
+    @AppStorage("haptics", store: UserDefaults(suiteName: "group.com.vanxun.dime"))
         var hapticType: Int = 1
 
     var numPadNumbers = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
@@ -241,7 +241,7 @@ struct NumberPadTextView: View {
     @Binding var isEditingDecimal: Bool
     @Binding var decimalValuesAssigned: AssignedDecimal
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var currency: String = Locale.current.currencyCode!
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
@@ -250,7 +250,7 @@ struct NumberPadTextView: View {
 //        return splitDouble(price)
 //    }
 
-    @AppStorage("numberEntryType", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var numberEntryType: Int = 1
+    @AppStorage("numberEntryType", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var numberEntryType: Int = 1
 
     public var amount: String {
         if numberEntryType == 1 {

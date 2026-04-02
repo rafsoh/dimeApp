@@ -26,5 +26,10 @@ struct DimeShortcuts: AppShortcutsProvider {
             phrases: ["Extract leftover amount for your budgets in \(.applicationName)"],
             systemImageName: "circle.grid.2x2.fill"
         )
+        AppShortcut(
+            intent: QuickLogIntent(),
+            phrases: ["Quick log in \(.applicationName)"],
+            systemImageName: "bolt.fill"
+        )
     }
 }

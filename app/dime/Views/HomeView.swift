@@ -43,6 +43,7 @@ struct HomeView: View {
     @State var fromURL2: Bool = false
     @State var fromURL3: Bool = false
     @State var fromURL4: Bool = false
+    @State var pendingCategorizeID: String? = nil
 
     @State var launchAdd: Bool = false
     @State var launchSearch: Bool = false
@@ -114,6 +115,11 @@ struct HomeView: View {
                             fromURL3 = true
                         } else if url.host == "budget" {
                             fromURL4 = true
+                        } else if url.host == "categorize" {
+                            if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+                               let idString = components.queryItems?.first(where: { $0.name == "id" })?.value {
+                                pendingCategorizeID = idString
+                            }
                         }
                     }
             }
@@ -169,6 +175,19 @@ struct HomeView: View {
             if appLockVM.isAppLockEnabled && fromURL4 {
                 currentTab = "Budget"
             }
+
+            if appLockVM.isAppLockEnabled, let catID = pendingCategorizeID {
+                if #available(iOS 16, *) {
+                    if let uuid = UUID(uuidString: catID),
+                       let transaction = try? dataController.findTransaction(withId: uuid) {
+                        currentTab = "Log"
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            transactionManager.toEdit = transaction
+                        }
+                    }
+                }
+                pendingCategorizeID = nil
+            }
         }
         .onOpenURL { url in
             if url.host == "search" {
@@ -177,6 +196,18 @@ struct HomeView: View {
                 currentTab = "Insights"
             } else if url.host == "budget" {
                 currentTab = "Budget"
+            } else if url.host == "categorize" {
+                if #available(iOS 16, *) {
+                    if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+                       let idString = components.queryItems?.first(where: { $0.name == "id" })?.value,
+                       let uuid = UUID(uuidString: idString),
+                       let transaction = try? dataController.findTransaction(withId: uuid) {
+                        currentTab = "Log"
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            transactionManager.toEdit = transaction
+                        }
+                    }
+                }
             }
         }
     }

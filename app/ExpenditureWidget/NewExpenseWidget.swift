@@ -60,7 +60,7 @@ struct NewExpenseWidgetEntry: TimelineEntry {
 struct NewExpenseWidgetEntryView: View {
     let entry: NewExpenseProvider.Entry
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var currency: String = Locale.current.currencyCode!
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }

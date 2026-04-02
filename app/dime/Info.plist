@@ -8,7 +8,7 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-			<string>com.rafaelsoh.dime</string>
+			<string>com.vanxun.dime</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>dimeapp</string>
@@ -41,9 +41,13 @@
 			<string>dimeapp://newExpense</string>
 		</dict>
 	</array>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>remote-notification</string>
-	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Dime uses the camera to scan receipts and bills for automatic expense entry.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Dime accesses your photos to scan receipts and bills for automatic expense entry.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Dime uses speech recognition to log transactions by voice.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Dime needs microphone access for voice transaction logging.</string>
 </dict>
 </plist>

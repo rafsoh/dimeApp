@@ -71,7 +71,7 @@ struct ActualBudgetView: View {
         GridItem(.flexible(), spacing: 15)
     ]
 
-    @AppStorage("budgetViewStyle", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var budgetRows: Bool = false
+    @AppStorage("budgetViewStyle", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var budgetRows: Bool = false
 
     @Namespace var animation
 
@@ -285,7 +285,7 @@ struct MainBudgetView: View {
         }
     }
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var currency: String = Locale.current.currencyCode!
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
@@ -599,7 +599,7 @@ struct SingleBudgetView: View {
         }
     }
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var currency: String = Locale.current.currencyCode!
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
@@ -930,7 +930,7 @@ struct AnimatedBudgetBarGraph: View {
     var color: Color
     var percent: Double
 
-    @AppStorage("animated", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var animated: Bool = true
+    @AppStorage("animated", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var animated: Bool = true
     @State var showBar: Bool = false
 
     var body: some View {
@@ -967,14 +967,14 @@ struct AnimatedBudgetBarGraph: View {
 }
 
 struct BudgetDollarView: View {
-    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
+    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var showCents: Bool = true
 
     var amount: Double
     var red: Bool
     var scale: Int
     var size: CGFloat
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var currency: String = Locale.current.currencyCode!
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
@@ -1008,9 +1008,9 @@ struct BudgetDollarView: View {
 
 struct DetailedBudgetDollarView: View {
     var amount: Double
-    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
+    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var showCents: Bool = true
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var currency: String = Locale.current.currencyCode!
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
@@ -1036,9 +1036,9 @@ struct DetailedBudgetDifferenceDollarView: View {
     var amount: Double
     var red: Bool
 
-    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
+    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var showCents: Bool = true
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var currency: String = Locale.current.currencyCode!
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
@@ -1068,7 +1068,7 @@ struct DeleteBudgetAlert: View {
     let toDelete: Budget
     @Environment(\.colorScheme) var systemColorScheme
 
-    @AppStorage("bottomEdge", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var bottomEdge: Double = 15
+    @AppStorage("bottomEdge", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var bottomEdge: Double = 15
 
     @State private var offset: CGFloat = 0
 
@@ -1152,7 +1152,7 @@ struct DeleteMainBudgetAlert: View {
     let toDelete: MainBudget
     @Environment(\.colorScheme) var systemColorScheme
 
-    @AppStorage("bottomEdge", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var bottomEdge: Double = 15
+    @AppStorage("bottomEdge", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var bottomEdge: Double = 15
 
     @State private var offset: CGFloat = 0
 
@@ -1427,7 +1427,7 @@ struct TimeBudgetView: View {
         }
     }
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var currency: String = Locale.current.currencyCode!
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
@@ -1677,7 +1677,7 @@ struct TimeBudgetView: View {
 struct FilteredCategoryDayBudgetView: View {
     @FetchRequest private var transactions: FetchedResults<Transaction>
     @Binding var totalSpent: Double
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var currency: String = Locale.current.currencyCode!
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
@@ -1686,9 +1686,9 @@ struct FilteredCategoryDayBudgetView: View {
 
     @Environment(\.managedObjectContext) var moc
     @EnvironmentObject var dataController: DataController
-    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
-    @AppStorage("swapTimeLabel", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var swapTimeLabel: Bool = false
-    @AppStorage("showExpenseOrIncomeSign", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var showCents: Bool = true
+    @AppStorage("swapTimeLabel", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var swapTimeLabel: Bool = false
+    @AppStorage("showExpenseOrIncomeSign", store: UserDefaults(suiteName: "group.com.vanxun.dime"))
     var showExpenseOrIncomeSign: Bool = true
 
     var body: some View {
@@ -1814,7 +1814,7 @@ struct FilteredBudgetView: View {
 
         var calendar = Calendar(identifier: .gregorian)
 
-        calendar.firstWeekday = UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.integer(forKey: "firstWeekday")
+        calendar.firstWeekday = UserDefaults(suiteName: "group.com.vanxun.dime")!.integer(forKey: "firstWeekday")
         calendar.minimumDaysInFirstWeek = 4
 
         if type == 1 {
@@ -1921,7 +1921,7 @@ struct TimeMainBudgetView: View {
         }
     }
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var currency: String = Locale.current.currencyCode!
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
@@ -2162,7 +2162,7 @@ struct AnimatedHorizontalBarGraphBudget: View {
     let category: Category
 
     @State var showBar: Bool = false
-    @AppStorage("animated", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var animated: Bool = true
+    @AppStorage("animated", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var animated: Bool = true
 
     var body: some View {
         HStack(spacing: 0) {
@@ -2188,7 +2188,7 @@ struct AnimatedHorizontalBarGraphBudget: View {
 
 struct AnimatedHorizontalBarGraphMainBudget: View {
     @State var showBar: Bool = false
-    @AppStorage("animated", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var animated: Bool = true
+    @AppStorage("animated", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var animated: Bool = true
 
     var body: some View {
         HStack(spacing: 0) {
@@ -2220,7 +2220,7 @@ struct AnimatedCurvedBarGraphBudget: View {
     let color: String
     @State var percent: Double = 0
 
-    @AppStorage("animated", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var animated: Bool = true
+    @AppStorage("animated", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var animated: Bool = true
 
     var body: some View {
         DonutSemicircle(percent: percent, cornerRadius: cornerRadius, width: width)
@@ -2252,7 +2252,7 @@ struct AnimatedCurvedBarGraphMainBudget: View {
 
     @State var percent: Double = 0
 
-    @AppStorage("animated", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var animated: Bool = true
+    @AppStorage("animated", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var animated: Bool = true
 
     var body: some View {
         DonutSemicircle(percent: percent, cornerRadius: cornerRadius, width: width)

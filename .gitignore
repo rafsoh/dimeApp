@@ -7,3 +7,7 @@ xcuserdata/
 
 ## MacOS
 .DS_Store
+
+## Secrets
+Secrets.xcconfig
+Secrets.swift

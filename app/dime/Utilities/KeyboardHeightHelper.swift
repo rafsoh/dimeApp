@@ -77,7 +77,7 @@ extension UIApplication {
 }
 
 struct KeyboardAwareModifier: ViewModifier {
-    @AppStorage("keyboard", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var savedKeyboardHeight: Double = .init(UIScreen.main.bounds.height / 2.5)
+    @AppStorage("keyboard", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var savedKeyboardHeight: Double = .init(UIScreen.main.bounds.height / 2.5)
     var showToolbar: Bool
 //    @State private var keyboardHeight: CGFloat = 250
 

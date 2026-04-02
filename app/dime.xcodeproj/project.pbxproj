@@ -69,7 +69,6 @@
 		5358E9192AC885E3003E8CA9 /* AlertToast.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5358E9182AC885E3003E8CA9 /* AlertToast.swift */; };
 		53620B8B28CAE3520058F216 /* LockBudgetWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53620B8A28CAE3520058F216 /* LockBudgetWidget.swift */; };
 		5362CF322A92750800244744 /* ImportDataView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5362CF312A92750800244744 /* ImportDataView.swift */; };
-		536715ED28E1E9A3008461F2 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 536715EC28E1E9A3008461F2 /* StoreKit.framework */; };
 		536A2A152A59C47400D81E02 /* Wiggle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 536A2A142A59C47400D81E02 /* Wiggle.swift */; };
 		536A2A172A5A7C5D00D81E02 /* OffsetHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 536A2A162A5A7C5D00D81E02 /* OffsetHelper.swift */; };
 		536CC386293106180081E401 /* LineGraph.swift in Sources */ = {isa = PBXBuildFile; fileRef = 536CC385293106180081E401 /* LineGraph.swift */; };
@@ -148,16 +147,24 @@
 		53E832E72B0B067B000CBBA0 /* TransactionCategoryPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53E832E62B0B067B000CBBA0 /* TransactionCategoryPicker.swift */; };
 		53EB930E28A65A570026BE28 /* Color.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5327D2B5287C6AFB00F76ADF /* Color.swift */; };
 		53EB930F28A65B250026BE28 /* FontExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53B1D1A4289383B100E28062 /* FontExtension.swift */; };
+		A1B2C3D4E5F6A7B8C9D0E1F6 /* SpeechRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F7 /* SpeechRecognizer.swift */; };
 		AE5B3D792AEE99E000AB364E /* NumberPad.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE5B3D782AEE99E000AB364E /* NumberPad.swift */; };
 		AEADEF6F2AE94DA3006EB614 /* Toast.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEADEF6E2AE94DA3006EB614 /* Toast.swift */; };
 		AEADEF712AE94DA8006EB614 /* BackButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEADEF702AE94DA8006EB614 /* BackButton.swift */; };
 		AEADEF742AE94DC3006EB614 /* ToolbarButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEADEF722AE94DC3006EB614 /* ToolbarButton.swift */; };
 		AEADEF752AE94DC3006EB614 /* Toolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEADEF732AE94DC3006EB614 /* Toolbar.swift */; };
 		AECE7F9E2AED1A6800B57267 /* SuggestedTransactions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AECE7F9D2AED1A6800B57267 /* SuggestedTransactions.swift */; };
+		C1A2B3D4E5F6A7B8C9D0E1F5 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A2B3D4E5F6A7B8C9D0E1F2 /* Constants.swift */; };
+		D1A2B3D4E5F6A7B8C9D0E1A1 /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A2B3D4E5F6A7B8C9D0E1A0 /* Secrets.swift */; };
+		C1A2B3D4E5F6A7B8C9D0E1F6 /* GeminiService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A2B3D4E5F6A7B8C9D0E1F3 /* GeminiService.swift */; };
+		C1A2B3D4E5F6A7B8C9D0E1F7 /* ImagePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A2B3D4E5F6A7B8C9D0E1F4 /* ImagePickerView.swift */; };
+		D1E2F3A4B5C6D7E8F9A0B1C2 /* DonutSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1E2F3A4B5C6D7E8F9A0B1C3 /* DonutSegment.swift */; };
 		D63B204A2D8728C300CAFB20 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = D63B20462D8728C300CAFB20 /* Localizable.strings */; };
 		D63B204B2D8728C300CAFB20 /* Localizable.stringsdict in Resources */ = {isa = PBXBuildFile; fileRef = D63B20482D8728C300CAFB20 /* Localizable.stringsdict */; };
 		D6A4DE202D61744400F7F751 /* SwiftUIIntrospect in Frameworks */ = {isa = PBXBuildFile; productRef = D6A4DE1F2D61744400F7F751 /* SwiftUIIntrospect */; };
 		D6A4DE242D61744400F7F751 /* SwiftUIIntrospect-Static in Frameworks */ = {isa = PBXBuildFile; productRef = D6A4DE232D61744400F7F751 /* SwiftUIIntrospect-Static */; };
+		E1F2A3B4C5D6E7F8A9B0C1D2 /* QuickLogIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F2A3B4C5D6E7F8A9B0C1D3 /* QuickLogIntent.swift */; };
+		E1F2A3B4C5D6E7F8A9B0C1D4 /* SettingsShortcutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F2A3B4C5D6E7F8A9B0C1D5 /* SettingsShortcutView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -265,7 +272,6 @@
 		5358E9182AC885E3003E8CA9 /* AlertToast.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AlertToast.swift; sourceTree = "<group>"; };
 		53620B8A28CAE3520058F216 /* LockBudgetWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockBudgetWidget.swift; sourceTree = "<group>"; };
 		5362CF312A92750800244744 /* ImportDataView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportDataView.swift; sourceTree = "<group>"; };
-		536715EC28E1E9A3008461F2 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		536A2A142A59C47400D81E02 /* Wiggle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Wiggle.swift; sourceTree = "<group>"; };
 		536A2A162A5A7C5D00D81E02 /* OffsetHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OffsetHelper.swift; sourceTree = "<group>"; };
 		536CC385293106180081E401 /* LineGraph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineGraph.swift; sourceTree = "<group>"; };
@@ -325,14 +331,22 @@
 		53E832E42B0A2CAF000CBBA0 /* InsightsSummaryBlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsSummaryBlock.swift; sourceTree = "<group>"; };
 		53E832E62B0B067B000CBBA0 /* TransactionCategoryPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionCategoryPicker.swift; sourceTree = "<group>"; };
 		53EB931028A65F670026BE28 /* ExpenditureWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ExpenditureWidgetExtension.entitlements; sourceTree = "<group>"; };
+		A1B2C3D4E5F6A7B8C9D0E1F7 /* SpeechRecognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechRecognizer.swift; sourceTree = "<group>"; };
 		AE5B3D782AEE99E000AB364E /* NumberPad.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumberPad.swift; sourceTree = "<group>"; };
 		AEADEF6E2AE94DA3006EB614 /* Toast.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Toast.swift; sourceTree = "<group>"; };
 		AEADEF702AE94DA8006EB614 /* BackButton.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BackButton.swift; sourceTree = "<group>"; };
 		AEADEF722AE94DC3006EB614 /* ToolbarButton.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ToolbarButton.swift; sourceTree = "<group>"; };
 		AEADEF732AE94DC3006EB614 /* Toolbar.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Toolbar.swift; sourceTree = "<group>"; };
 		AECE7F9D2AED1A6800B57267 /* SuggestedTransactions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestedTransactions.swift; sourceTree = "<group>"; };
+		C1A2B3D4E5F6A7B8C9D0E1F2 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
+		D1A2B3D4E5F6A7B8C9D0E1A0 /* Secrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Secrets.swift; sourceTree = "<group>"; };
+		C1A2B3D4E5F6A7B8C9D0E1F3 /* GeminiService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiService.swift; sourceTree = "<group>"; };
+		C1A2B3D4E5F6A7B8C9D0E1F4 /* ImagePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePickerView.swift; sourceTree = "<group>"; };
+		D1E2F3A4B5C6D7E8F9A0B1C3 /* DonutSegment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DonutSegment.swift; sourceTree = "<group>"; };
 		D63B20472D8728C300CAFB20 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = Localizations/en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		D63B20492D8728C300CAFB20 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = en; path = Localizations/en.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
+		E1F2A3B4C5D6E7F8A9B0C1D3 /* QuickLogIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickLogIntent.swift; sourceTree = "<group>"; };
+		E1F2A3B4C5D6E7F8A9B0C1D5 /* SettingsShortcutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsShortcutView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -364,7 +378,6 @@
 				5327D2E6287C6CC300F76ADF /* Popovers in Frameworks */,
 				538D10752A5AB7E7008F1AFB /* IsScrolling in Frameworks */,
 				533A38F42AA49E5900F66957 /* Alamofire in Frameworks */,
-				536715ED28E1E9A3008461F2 /* StoreKit.framework in Frameworks */,
 				53B1D1A8289A60D500E28062 /* CrookedText in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -490,6 +503,11 @@
 				536A2A142A59C47400D81E02 /* Wiggle.swift */,
 				536A2A162A5A7C5D00D81E02 /* OffsetHelper.swift */,
 				533D1C3B2AE7BB6900894764 /* DynamicType.swift */,
+				C1A2B3D4E5F6A7B8C9D0E1F2 /* Constants.swift */,
+				D1A2B3D4E5F6A7B8C9D0E1A0 /* Secrets.swift */,
+				C1A2B3D4E5F6A7B8C9D0E1F3 /* GeminiService.swift */,
+				C1A2B3D4E5F6A7B8C9D0E1F4 /* ImagePickerView.swift */,
+				A1B2C3D4E5F6A7B8C9D0E1F7 /* SpeechRecognizer.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -550,6 +568,7 @@
 				53B822A92A6D50CC000FC7C9 /* NewTransactionIntent.swift */,
 				536FA6C02A7E05C600C52490 /* GetInsightsIntent.swift */,
 				536FA6C22A7F941B00C52490 /* BudgetInsightsIntent.swift */,
+				E1F2A3B4C5D6E7F8A9B0C1D3 /* QuickLogIntent.swift */,
 			);
 			path = Actions;
 			sourceTree = "<group>";
@@ -557,7 +576,6 @@
 		5383D85C287D9A0100D1B9BA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				536715EC28E1E9A3008461F2 /* StoreKit.framework */,
 				5383D85D287D9A0100D1B9BA /* CloudKit.framework */,
 				53B1D18B288ED7E400E28062 /* WidgetKit.framework */,
 				53B1D18D288ED7E500E28062 /* SwiftUI.framework */,
@@ -589,6 +607,7 @@
 			isa = PBXGroup;
 			children = (
 				533D1C3D2AE8023B00894764 /* PencilShape.swift */,
+				D1E2F3A4B5C6D7E8F9A0B1C3 /* DonutSegment.swift */,
 				53B907982AE817EA0001F496 /* DonutSemicircle.swift */,
 				53B9079A2AE818710001F496 /* RoundedTriangle.swift */,
 				53B9079E2AE818B90001F496 /* Ring.swift */,
@@ -633,6 +652,7 @@
 				53D6BDD32AF73CA100F5728E /* SettingsFeatureLabView.swift */,
 				53D6BDD52AF73CE400F5728E /* SettingsUpcomingView.swift */,
 				53D6BDE02AF73FAB00F5728E /* SettingsSubviewModifier.swift */,
+				E1F2A3B4C5D6E7F8A9B0C1D5 /* SettingsShortcutView.swift */,
 			);
 			path = "Settings Subviews";
 			sourceTree = "<group>";
@@ -912,6 +932,7 @@
 				5327D2D9287C6B5F00F76ADF /* HomeView.swift in Sources */,
 				53BC2A422A8B21930019E4A8 /* MainModel.xcdatamodeld in Sources */,
 				53D6BDCC2AF73BC800F5728E /* SettingsCurrencyView.swift in Sources */,
+				D1E2F3A4B5C6D7E8F9A0B1C2 /* DonutSegment.swift in Sources */,
 				53B907992AE817EA0001F496 /* DonutSemicircle.swift in Sources */,
 				53B9079F2AE818B90001F496 /* Ring.swift in Sources */,
 				5358E9192AC885E3003E8CA9 /* AlertToast.swift in Sources */,
@@ -991,6 +1012,13 @@
 				53A4147928B6625D008C30E7 /* AppDelegate.swift in Sources */,
 				5327D2DD287C6B5F00F76ADF /* InsightsView.swift in Sources */,
 				53A839BD28D35738006F227C /* SKProduct-LocalizedPrice.swift in Sources */,
+				C1A2B3D4E5F6A7B8C9D0E1F5 /* Constants.swift in Sources */,
+				D1A2B3D4E5F6A7B8C9D0E1A1 /* Secrets.swift in Sources */,
+				C1A2B3D4E5F6A7B8C9D0E1F6 /* GeminiService.swift in Sources */,
+				C1A2B3D4E5F6A7B8C9D0E1F7 /* ImagePickerView.swift in Sources */,
+				E1F2A3B4C5D6E7F8A9B0C1D2 /* QuickLogIntent.swift in Sources */,
+				E1F2A3B4C5D6E7F8A9B0C1D4 /* SettingsShortcutView.swift in Sources */,
+				A1B2C3D4E5F6A7B8C9D0E1F6 /* SpeechRecognizer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1087,7 +1115,7 @@
 				CODE_SIGN_ENTITLEMENTS = BudgetIntent/BudgetIntent.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5UNNTHMF44;
+				DEVELOPMENT_TEAM = WJ989CRRQJ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BudgetIntent/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = BudgetIntent;
@@ -1099,7 +1127,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 2.1.4;
-				PRODUCT_BUNDLE_IDENTIFIER = com.rafaelsoh.dime.BudgetIntent;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vanxun.dime.BudgetIntent;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -1119,7 +1147,7 @@
 				CODE_SIGN_ENTITLEMENTS = BudgetIntent/BudgetIntent.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5UNNTHMF44;
+				DEVELOPMENT_TEAM = WJ989CRRQJ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BudgetIntent/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = BudgetIntent;
@@ -1131,7 +1159,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 2.1.4;
-				PRODUCT_BUNDLE_IDENTIFIER = com.rafaelsoh.dime.BudgetIntent;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vanxun.dime.BudgetIntent;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -1150,7 +1178,7 @@
 				CODE_SIGN_ENTITLEMENTS = BudgetIntentUI/BudgetIntentUI.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5UNNTHMF44;
+				DEVELOPMENT_TEAM = WJ989CRRQJ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BudgetIntentUI/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = BudgetIntentUI;
@@ -1162,7 +1190,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 2.1.4;
-				PRODUCT_BUNDLE_IDENTIFIER = com.rafaelsoh.dime.BudgetIntentUI;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vanxun.dime.BudgetIntentUI;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1177,7 +1205,7 @@
 				CODE_SIGN_ENTITLEMENTS = BudgetIntentUI/BudgetIntentUI.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5UNNTHMF44;
+				DEVELOPMENT_TEAM = WJ989CRRQJ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BudgetIntentUI/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = BudgetIntentUI;
@@ -1189,7 +1217,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 2.1.4;
-				PRODUCT_BUNDLE_IDENTIFIER = com.rafaelsoh.dime.BudgetIntentUI;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vanxun.dime.BudgetIntentUI;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1326,7 +1354,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"dime/Preview Content\"";
-				DEVELOPMENT_TEAM = 5UNNTHMF44;
+				DEVELOPMENT_TEAM = WJ989CRRQJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = dime/Info.plist;
@@ -1343,7 +1371,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 2.1.4;
-				PRODUCT_BUNDLE_IDENTIFIER = com.rafaelsoh.dime;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vanxun.dime;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -1367,7 +1395,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"dime/Preview Content\"";
-				DEVELOPMENT_TEAM = 5UNNTHMF44;
+				DEVELOPMENT_TEAM = WJ989CRRQJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = dime/Info.plist;
@@ -1384,7 +1412,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 2.1.4;
-				PRODUCT_BUNDLE_IDENTIFIER = com.rafaelsoh.dime;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vanxun.dime;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -1406,7 +1434,7 @@
 				CODE_SIGN_ENTITLEMENTS = ExpenditureWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5UNNTHMF44;
+				DEVELOPMENT_TEAM = WJ989CRRQJ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ExpenditureWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = ExpenditureWidgetExtension;
@@ -1418,7 +1446,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 2.1.4;
-				PRODUCT_BUNDLE_IDENTIFIER = com.rafaelsoh.dime.ExpenditureWidget;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vanxun.dime.ExpenditureWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1437,7 +1465,7 @@
 				CODE_SIGN_ENTITLEMENTS = ExpenditureWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5UNNTHMF44;
+				DEVELOPMENT_TEAM = WJ989CRRQJ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ExpenditureWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = ExpenditureWidgetExtension;
@@ -1449,7 +1477,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 2.1.4;
-				PRODUCT_BUNDLE_IDENTIFIER = com.rafaelsoh.dime.ExpenditureWidget;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vanxun.dime.ExpenditureWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;

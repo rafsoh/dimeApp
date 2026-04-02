@@ -25,7 +25,7 @@ struct TransactionView: View {
         UIAccessibility.isBoldTextEnabled
     }
 
-    @AppStorage("topEdge", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var topEdge:
+    @AppStorage("topEdge", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var topEdge:
     Double = 20
 
     @State private var note = ""
@@ -47,7 +47,7 @@ struct TransactionView: View {
     @State var showCategoryPicker = false
     @State var showCategorySheet = false
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var currency: String = Locale.current.currencyCode!
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
@@ -60,6 +60,15 @@ struct TransactionView: View {
     @State var toastTitle = ""
     @State var toastImage = ""
 
+    // receipt scanning
+    @State private var showImageSourcePicker = false
+    @State private var showCamera = false
+    @State private var showPhotoLibrary = false
+    @State private var selectedImage: UIImage?
+    @State private var isScanning = false
+    @State private var batchResults: [ReceiptScanResult] = []
+    @State private var showBatchImport = false
+
     // shaking category error
     @State var categoryButtonTextColor = Color.SubtitleText
     @State var categoryButtonBackgroundColor = Color.clear
@@ -69,18 +78,19 @@ struct TransactionView: View {
     @ObservedObject var keyboardHeightHelper = KeyboardHeightHelper()
 
     @AppStorage(
-        "firstTransactionViewLaunch", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+        "firstTransactionViewLaunch", store: UserDefaults(suiteName: "group.com.vanxun.dime"))
     var firstLaunch: Bool = true
 
     // edit mode
     let toEdit: Transaction?
+    let voiceResults: [ReceiptScanResult]?
 
     // delete mode
 
     @State var toDelete: Transaction?
     @State var deleteMode = false
 
-    @AppStorage("bottomEdge", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+    @AppStorage("bottomEdge", store: UserDefaults(suiteName: "group.com.vanxun.dime"))
     var bottomEdge: Double = 15
 
     @State private var offset: CGFloat = 0
@@ -138,7 +148,7 @@ struct TransactionView: View {
         }
     }
 
-    @AppStorage("colourScheme", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+    @AppStorage("colourScheme", store: UserDefaults(suiteName: "group.com.vanxun.dime"))
     var colourScheme: Int = 0
 
     @Environment(\.colorScheme) var systemColorScheme
@@ -168,7 +178,7 @@ struct TransactionView: View {
     @State var textFieldFocused: Bool = false
 
     @AppStorage(
-        "showTransactionRecommendations", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+        "showTransactionRecommendations", store: UserDefaults(suiteName: "group.com.vanxun.dime"))
     var showRecommendations: Bool = false
 
     var suggestedTransactions: [Transaction] {
@@ -218,7 +228,7 @@ struct TransactionView: View {
     }
 
     @State private var price: Double = 0
-    @AppStorage("numberEntryType", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+    @AppStorage("numberEntryType", store: UserDefaults(suiteName: "group.com.vanxun.dime"))
     var numberEntryType: Int = 1
     @State var isEditingDecimal = false
     @State var decimalValuesAssigned: AssignedDecimal = .none
@@ -229,7 +239,24 @@ struct TransactionView: View {
             VStack(spacing: 8) {
                 // income/expense picker
                 VStack {
-                    if showToast {
+                    if isScanning {
+                        HStack(spacing: 6.5) {
+                            ProgressView()
+                                .tint(Color.SubtitleText)
+
+                            Text("Scanning Receipt...")
+                                .font(.system(.body, design: .rounded).weight(.semibold))
+                                .lineLimit(1)
+                                .foregroundColor(Color.SubtitleText)
+                        }
+                        .padding(8)
+                        .background(
+                            Color.SecondaryBackground,
+                            in: RoundedRectangle(cornerRadius: 9, style: .continuous)
+                        )
+                        .transition(AnyTransition.opacity.combined(with: .move(edge: .top)))
+                        .frame(maxWidth: dynamicTypeSize > .xLarge ? 250 : 200)
+                    } else if showToast {
                         HStack(spacing: 6.5) {
                             Image(systemName: toastImage)
                                 .font(.system(.subheadline, design: .rounded).weight(.semibold))
@@ -331,6 +358,25 @@ struct TransactionView: View {
                                     .contentShape(Circle())
                             }
                             .accessibilityLabel("delete transaction")
+                        }
+
+                        if toEdit == nil {
+                            Button {
+                                showImageSourcePicker = true
+                            } label: {
+                                Image(systemName: "doc.text.viewfinder")
+                                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                                    .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+                                    .foregroundColor(isScanning ? Color.IncomeGreen : Color.SubtitleText)
+                                    .padding(7)
+                                    .background(
+                                        isScanning ? Color.IncomeGreen.opacity(0.23) : Color.SecondaryBackground,
+                                        in: Circle()
+                                    )
+                                    .contentShape(Circle())
+                            }
+                            .disabled(isScanning)
+                            .accessibilityLabel("scan receipt")
                         }
 
                         Button {
@@ -904,6 +950,10 @@ struct TransactionView: View {
                         animateIcon = true
                     }
                 }
+
+                if let results = voiceResults, !results.isEmpty {
+                    applyVoiceResults(results)
+                }
             }
         }
         .sheet(isPresented: $showCategorySheet) {
@@ -924,6 +974,198 @@ struct TransactionView: View {
             if income {
                 swipingOffset = capsuleWidth
             }
+        }
+        .confirmationDialog("Scan Receipt", isPresented: $showImageSourcePicker) {
+            if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                Button("Take Photo") {
+                    showCamera = true
+                }
+            }
+            Button("Choose from Library") {
+                showPhotoLibrary = true
+            }
+            Button("Cancel", role: .cancel) {}
+        }
+        .sheet(isPresented: $showCamera) {
+            ImagePickerView(image: $selectedImage, isPresented: $showCamera, sourceType: .camera)
+                .ignoresSafeArea()
+        }
+        .sheet(isPresented: $showPhotoLibrary) {
+            ImagePickerView(image: $selectedImage, isPresented: $showPhotoLibrary, sourceType: .photoLibrary)
+                .ignoresSafeArea()
+        }
+        .onChange(of: selectedImage) { newImage in
+            guard let image = newImage else { return }
+            withAnimation {
+                isScanning = true
+            }
+
+            Task {
+                do {
+                    let results = try await GeminiService.scanBatchTransactions(image: image)
+
+                    await MainActor.run {
+                        withAnimation {
+                            isScanning = false
+                        }
+                        selectedImage = nil
+
+                        if results.count == 1 {
+                            // Single transaction: auto-fill form fields (existing behavior)
+                            let result = results[0]
+
+                            if let amount = result.amount, amount > 0 {
+                                price = amount
+                                if numberEntryType == 2 {
+                                    if amount.truncatingRemainder(dividingBy: 1) > 0 {
+                                        isEditingDecimal = true
+                                        decimalValuesAssigned = .second
+                                    }
+                                }
+                            }
+
+                            if let merchant = result.merchant, !merchant.isEmpty {
+                                note = String(merchant.prefix(50))
+                            }
+
+                            if let dateString = result.date {
+                                let formatter = DateFormatter()
+                                formatter.dateFormat = "yyyy-MM-dd"
+                                if let parsedDate = formatter.date(from: dateString) {
+                                    date = parsedDate
+                                }
+                            }
+
+                            if let isIncome = result.isIncome {
+                                if isIncome != income {
+                                    withAnimation(.easeIn(duration: 0.15)) {
+                                        income = isIncome
+                                        swipingOffset = isIncome ? capsuleWidth : 0
+                                    }
+                                }
+                            }
+
+                            if let categoryName = result.category {
+                                let cats = income ? incomeCategories : expenseCategories
+                                if let match = cats.first(where: {
+                                    $0.wrappedName.lowercased() == categoryName.lowercased()
+                                }) {
+                                    category = match
+                                } else if let match = cats.first(where: {
+                                    $0.wrappedName.lowercased().contains(categoryName.lowercased())
+                                        || categoryName.lowercased().contains($0.wrappedName.lowercased())
+                                }) {
+                                    category = match
+                                }
+                            }
+
+                            let generator = UINotificationFeedbackGenerator()
+                            generator.notificationOccurred(.success)
+                        } else if results.count > 1 {
+                            // Multiple transactions: show batch import sheet
+                            batchResults = results
+                            showBatchImport = true
+
+                            let generator = UINotificationFeedbackGenerator()
+                            generator.notificationOccurred(.success)
+                        }
+                    }
+                } catch {
+                    await MainActor.run {
+                        withAnimation {
+                            isScanning = false
+                        }
+                        selectedImage = nil
+
+                        if let geminiError = error as? GeminiError,
+                           case .missingAPIKey = geminiError
+                        {
+                            toastImage = "key.fill"
+                            toastTitle = "Set API Key"
+                        } else {
+                            toastImage = "exclamationmark.triangle"
+                            toastTitle = "Scan Failed"
+                        }
+                        showToast = true
+
+                        let generator = UINotificationFeedbackGenerator()
+                        generator.notificationOccurred(.error)
+                    }
+                }
+            }
+        }
+        .sheet(isPresented: $showBatchImport) {
+            BatchImportSheet(
+                results: batchResults,
+                expenseCategories: Array(expenseCategories),
+                incomeCategories: Array(incomeCategories),
+                onDismiss: {
+                    showBatchImport = false
+                    dismiss()
+                }
+            )
+        }
+    }
+
+    // MARK: - Voice Input
+
+    func applyVoiceResults(_ results: [ReceiptScanResult]) {
+        if results.count == 1 {
+            let result = results[0]
+
+            if let amount = result.amount, amount > 0 {
+                price = amount
+                if numberEntryType == 2 {
+                    if amount.truncatingRemainder(dividingBy: 1) > 0 {
+                        isEditingDecimal = true
+                        decimalValuesAssigned = .second
+                    }
+                }
+            }
+
+            if let merchant = result.merchant, !merchant.isEmpty {
+                note = String(merchant.prefix(50))
+            }
+
+            if let dateString = result.date {
+                let formatter = DateFormatter()
+                formatter.dateFormat = "yyyy-MM-dd"
+                if let parsedDate = formatter.date(from: dateString) {
+                    date = parsedDate
+                }
+            }
+
+            if let isIncome = result.isIncome {
+                if isIncome != income {
+                    withAnimation(.easeIn(duration: 0.15)) {
+                        income = isIncome
+                        swipingOffset = isIncome ? capsuleWidth : 0
+                    }
+                }
+            }
+
+            if let categoryName = result.category {
+                let cats = income ? incomeCategories : expenseCategories
+                if let match = cats.first(where: {
+                    $0.wrappedName.lowercased() == categoryName.lowercased()
+                }) {
+                    category = match
+                } else if let match = cats.first(where: {
+                    $0.wrappedName.lowercased().contains(categoryName.lowercased())
+                        || categoryName.lowercased().contains($0.wrappedName.lowercased())
+                }) {
+                    category = match
+                }
+            }
+
+            let generator = UINotificationFeedbackGenerator()
+            generator.notificationOccurred(.success)
+        } else if results.count > 1 {
+            batchResults = results
+            showBatchImport = true
+
+            let generator = UINotificationFeedbackGenerator()
+            generator.notificationOccurred(.success)
         }
     }
 
@@ -1102,7 +1344,7 @@ struct TransactionView: View {
         dismiss()
     }
 
-    init(toEdit: Transaction? = nil) {
+    init(toEdit: Transaction? = nil, voiceResults: [ReceiptScanResult]? = nil) {
         if let transaction = toEdit {
             _note = State(initialValue: transaction.wrappedNote)
 
@@ -1119,6 +1361,7 @@ struct TransactionView: View {
             _date = State(initialValue: transaction.date ?? Date.now)
         }
         self.toEdit = toEdit
+        self.voiceResults = voiceResults
     }
 
     init(category: Category? = nil) {
@@ -1128,6 +1371,7 @@ struct TransactionView: View {
         }
 
         toEdit = nil
+        voiceResults = nil
     }
 }
 
@@ -1470,7 +1714,7 @@ struct RecurringPickerView: View {
     let stringArray = ["none", "daily", "weekly", "monthly"]
     let stringArray2 = ["", "days", "weeks", "months"]
 
-    @AppStorage("bottomEdge", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+    @AppStorage("bottomEdge", store: UserDefaults(suiteName: "group.com.vanxun.dime"))
     var bottomEdge: Double = 15
 
     @State private var offset: CGFloat = 0
@@ -1478,7 +1722,7 @@ struct RecurringPickerView: View {
     @State var holdingType = 0
     @State var holdingCoefficient = 0
 
-    @AppStorage("colourScheme", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+    @AppStorage("colourScheme", store: UserDefaults(suiteName: "group.com.vanxun.dime"))
     var colourScheme: Int = 0
 
     @Environment(\.colorScheme) var systemColorScheme
@@ -1790,5 +2034,259 @@ struct ButtonView: View {
             .background(Color.SecondaryBackground)
             .foregroundColor(Color.PrimaryText)
             .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+}
+
+// MARK: - Batch Import Sheet
+
+struct BatchImportSheet: View {
+    let results: [ReceiptScanResult]
+    let expenseCategories: [Category]
+    let incomeCategories: [Category]
+    let onDismiss: () -> Void
+
+    @Environment(\.managedObjectContext) var moc
+    @EnvironmentObject var dataController: DataController
+    @Environment(\.dismiss) var dismiss
+
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.vanxun.dime"))
+    var currency: String = Locale.current.currencyCode!
+    var currencySymbol: String {
+        Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
+    }
+
+    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.vanxun.dime"))
+    var showCents: Bool = true
+
+    @State private var selected: [Bool] = []
+
+    var selectedResults: [ReceiptScanResult] {
+        results.enumerated().compactMap { index, result in
+            (index < selected.count && selected[index]) ? result : nil
+        }
+    }
+
+    var selectedCount: Int {
+        selectedResults.count
+    }
+
+    var selectedTotal: Double {
+        selectedResults.compactMap { $0.amount }.reduce(0, +)
+    }
+
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 0) {
+                ScrollView {
+                    VStack(spacing: 0) {
+                        ForEach(Array(results.enumerated()), id: \.offset) { index, result in
+                            if index < selected.count {
+                                HStack(spacing: 12) {
+                                    Image(systemName: selected[index] ? "checkmark.circle.fill" : "circle")
+                                        .font(.system(.title3, design: .rounded))
+                                        .foregroundColor(selected[index] ? Color.IncomeGreen : Color.SubtitleText)
+                                        .onTapGesture {
+                                            selected[index].toggle()
+                                        }
+
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(result.merchant ?? "Unknown")
+                                            .font(.system(.body, design: .rounded).weight(.medium))
+                                            .foregroundColor(Color.PrimaryText)
+                                            .lineLimit(1)
+
+                                        HStack(spacing: 6) {
+                                            if let dateStr = result.date {
+                                                Text(formatDisplayDate(dateStr))
+                                                    .font(.system(.caption, design: .rounded))
+                                                    .foregroundColor(Color.SubtitleText)
+                                            }
+
+                                            if let cat = result.category {
+                                                Text(cat)
+                                                    .font(.system(.caption, design: .rounded).weight(.medium))
+                                                    .foregroundColor(Color.SubtitleText)
+                                                    .padding(.horizontal, 6)
+                                                    .padding(.vertical, 2)
+                                                    .background(Color.SecondaryBackground, in: RoundedRectangle(cornerRadius: 4, style: .continuous))
+                                            }
+                                        }
+                                    }
+
+                                    Spacer()
+
+                                    Text("\(currencySymbol)\(result.amount ?? 0, specifier: showCents ? "%.2f" : "%.0f")")
+                                        .font(.system(.body, design: .rounded).weight(.semibold))
+                                        .foregroundColor(Color.PrimaryText)
+                                }
+                                .padding(.vertical, 10)
+                                .padding(.horizontal, 16)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    selected[index].toggle()
+                                }
+
+                                if index < results.count - 1 {
+                                    Divider()
+                                        .padding(.leading, 50)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Bottom bar
+                VStack(spacing: 10) {
+                    Divider()
+
+                    HStack {
+                        Text("Total:")
+                            .font(.system(.body, design: .rounded).weight(.semibold))
+                            .foregroundColor(Color.PrimaryText)
+                        Spacer()
+                        Text("\(currencySymbol)\(selectedTotal, specifier: showCents ? "%.2f" : "%.0f")")
+                            .font(.system(.body, design: .rounded).weight(.semibold))
+                            .foregroundColor(Color.PrimaryText)
+                    }
+                    .padding(.horizontal, 16)
+
+                    HStack(spacing: 12) {
+                        Button {
+                            importIndividually()
+                        } label: {
+                            Text("Import \(selectedCount) Items")
+                                .font(.system(.body, design: .rounded).weight(.semibold))
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(selectedCount > 0 ? Color.DarkBackground : Color.SubtitleText, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        }
+                        .disabled(selectedCount == 0)
+
+                        Button {
+                            importAsMerged()
+                        } label: {
+                            Text("Merge as 1")
+                                .font(.system(.body, design: .rounded).weight(.semibold))
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(selectedCount > 0 ? Color.DarkBackground : Color.SubtitleText, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        }
+                        .disabled(selectedCount == 0)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 8)
+                }
+            }
+            .navigationTitle("Scanned \(results.count) Transactions")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(allSelected ? "Deselect All" : "Select All") {
+                        let newValue = !allSelected
+                        for i in selected.indices {
+                            selected[i] = newValue
+                        }
+                    }
+                    .font(.system(.subheadline, design: .rounded))
+                }
+            }
+        }
+        .onAppear {
+            selected = Array(repeating: true, count: results.count)
+        }
+    }
+
+    var allSelected: Bool {
+        selected.allSatisfy { $0 }
+    }
+
+    private func matchCategory(name: String?, isIncome: Bool) -> Category? {
+        guard let categoryName = name else { return nil }
+        let cats = isIncome ? incomeCategories : expenseCategories
+        if let match = cats.first(where: {
+            $0.wrappedName.lowercased() == categoryName.lowercased()
+        }) {
+            return match
+        }
+        if let match = cats.first(where: {
+            $0.wrappedName.lowercased().contains(categoryName.lowercased())
+                || categoryName.lowercased().contains($0.wrappedName.lowercased())
+        }) {
+            return match
+        }
+        return nil
+    }
+
+    private func parseDate(_ dateString: String?) -> Date {
+        guard let ds = dateString else { return Date.now }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.date(from: ds) ?? Date.now
+    }
+
+    private func formatDisplayDate(_ dateString: String) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        guard let d = formatter.date(from: dateString) else { return dateString }
+        let display = DateFormatter()
+        display.dateFormat = "MM/dd"
+        return display.string(from: d)
+    }
+
+    private func importIndividually() {
+        for result in selectedResults {
+            let isIncome = result.isIncome ?? false
+            let cat = matchCategory(name: result.category, isIncome: isIncome)
+            let txDate = parseDate(result.date)
+
+            _ = dataController.newTransaction(
+                note: result.merchant ?? "",
+                category: cat,
+                income: isIncome,
+                amount: result.amount ?? 0,
+                date: txDate,
+                repeatType: 0,
+                repeatCoefficient: 1,
+                delay: false
+            )
+        }
+
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(.success)
+        onDismiss()
+    }
+
+    private func importAsMerged() {
+        let firstResult = selectedResults.first
+        let isIncome = firstResult?.isIncome ?? false
+        let cat = matchCategory(name: firstResult?.category, isIncome: isIncome)
+
+        let merchants = selectedResults.compactMap { $0.merchant }
+        let mergedNote = merchants.isEmpty
+            ? "Merged Transaction"
+            : String(merchants.joined(separator: ", ").prefix(50))
+
+        _ = dataController.newTransaction(
+            note: mergedNote,
+            category: cat,
+            income: isIncome,
+            amount: selectedTotal,
+            date: Date.now,
+            repeatType: 0,
+            repeatCoefficient: 1,
+            delay: false
+        )
+
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(.success)
+        onDismiss()
     }
 }

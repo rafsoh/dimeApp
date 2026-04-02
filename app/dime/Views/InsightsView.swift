@@ -14,7 +14,7 @@ struct InsightsView: View {
     @FetchRequest(sortDescriptors: []) private var transactions: FetchedResults<Transaction>
 
     @State private var showTimeMenu = false
-    @AppStorage("chartTimeFrame", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var chartType = 1
+    @AppStorage("chartTimeFrame", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var chartType = 1
 
     private var didSave = NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
     @State private var refreshID = UUID()
@@ -126,12 +126,12 @@ struct HorizontalPieChartView: View {
     @FetchRequest private var allCategories: FetchedResults<Category>
     @FetchRequest private var transactions: FetchedResults<Transaction>
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var currency: String = Locale.current.currencyCode!
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
 
-    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
+    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var showCents: Bool = true
 
     var income: Bool
     var date: Date
@@ -139,7 +139,9 @@ struct HorizontalPieChartView: View {
         var holdingTotal = 0.0
 
         transactions.forEach { transaction in
-            holdingTotal += transaction.amount
+            if transaction.category != nil {
+                holdingTotal += transaction.amount
+            }
         }
 
         return holdingTotal
@@ -153,6 +155,19 @@ struct HorizontalPieChartView: View {
     @Binding var selectedDate: Date?
 
     @Environment(\.dynamicTypeSize) var dynamicTypeSize
+
+    @State private var animationProgress: Double = 0
+
+    var segmentAngles: [(start: Double, end: Double)] {
+        var angles = [(start: Double, end: Double)]()
+        var currentAngle: Double = 0
+        for cat in categories {
+            let sweepAngle = cat.percent * 360.0
+            angles.append((start: currentAngle, end: currentAngle + sweepAngle))
+            currentAngle += sweepAngle
+        }
+        return angles
+    }
 
     var fontSize: CGFloat {
         switch dynamicTypeSize {
@@ -215,99 +230,77 @@ struct HorizontalPieChartView: View {
                         .font(.system(.callout, design: .rounded).weight(.semibold))
                         .foregroundColor(Color.SubtitleText)
 
-                    GeometryReader { proxy in
-                        HStack(spacing: proxy.size.width * 0.015) {
-                            ForEach(categories) { category in
-                                if category.percent < 0.005 {
-                                    EmptyView()
-                                } else {
-                                    AnimatedHorizontalBarGraph(category: category, index: categories.firstIndex(of: category) ?? 0)
-                                        .frame(width: (proxy.size.width * (1.0 - (0.015 * Double(categories.count - 1)))) * category.percent)
-                                        .onTapGesture {
-                                            withAnimation(.easeInOut) {
-                                                if categoryFilter == category.category {
-                                                    selectedDate = nil
-                                                    categoryFilterMode = false
-                                                    categoryFilter = nil
-                                                } else {
-                                                    selectedDate = nil
-                                                    categoryFilterMode = true
-                                                    categoryFilter = category.category
-                                                    chosenAmount = category.percent * total
-                                                    chosenName = category.category.wrappedName
-                                                }
-                                            }
-                                        }
-                                        .opacity(categoryFilterMode ? (categoryFilter == category.category ? 1 : 0.5) : 1)
-                                        .overlay {
-                                            if categoryFilterMode && categoryFilter == category.category {
-                                                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                                    .stroke(Color.DarkBackground, lineWidth: 1.5)
-                                            }
-                                        }
-                                }
-                            }
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .frame(height: 17)
-                    .padding(.bottom, 10)
-                }
+                    HStack(alignment: .top, spacing: 16) {
+                        // Donut chart
+                        ZStack {
+                            ForEach(Array(categories.enumerated()), id: \.element.id) { index, category in
+                                if index < segmentAngles.count {
+                                    let angles = segmentAngles[index]
+                                    let gap: Double = categories.count > 1 ? 1.0 : 0.0
+                                    let color = category.category.income
+                                        ? Color(hex: Color.colorArray[index])
+                                        : Color(hex: category.category.wrappedColour)
 
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 10) {
-                        ForEach(categories, id: \.self) { category in
-                            if !categoryFilterMode || categoryFilter == category.category {
-                                let boxColor = category.category.income ? Color(hex: Color.colorArray[categories.firstIndex(of: category) ?? 0]) : Color(hex: category.category.wrappedColour)
-
-                                HStack(spacing: 10) {
-
-                                    Text(category.category.fullName)
-                                        .font(.system(.title3, design: .rounded).weight(.semibold))
-                                        .foregroundColor(Color.PrimaryText)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-
-                                    Text("\(currencySymbol)\(category.amount, specifier: (showCents && category.amount < 100) ? "%.2f" : "%.0f")")
-                                        .font(.system(categoryFilterMode && categoryFilter == category.category ? .title3 : .body, design: .rounded).weight(.medium))
-                                        .foregroundColor(Color.SubtitleText)
-                                        .lineLimit(1)
-                                        .layoutPriority(1)
-
-                                    if categoryFilterMode && categoryFilter == category.category {
-                                        Button {
-                                            withAnimation(.easeInOut) {
+                                    let sweep = (angles.end - angles.start) * animationProgress
+                                    DonutSegment(
+                                        startAngle: angles.start + gap / 2,
+                                        endAngle: angles.start + sweep - gap / 2,
+                                        thickness: 22
+                                    )
+                                    .fill(color)
+                                    .opacity(categoryFilterMode ? (categoryFilter == category.category ? 1.0 : 0.4) : 1.0)
+                                    .onTapGesture {
+                                        withAnimation(.easeInOut) {
+                                            if categoryFilter == category.category {
                                                 selectedDate = nil
                                                 categoryFilterMode = false
                                                 categoryFilter = nil
+                                            } else {
+                                                selectedDate = nil
+                                                categoryFilterMode = true
+                                                categoryFilter = category.category
+                                                chosenAmount = category.percent * total
+                                                chosenName = category.category.wrappedName
                                             }
-                                        } label: {
-                                            Image(systemName: "xmark")
-                                                .font(.system(.footnote, design: .rounded).weight(.bold))
-                                                .foregroundColor(Color.SubtitleText)
-                                                .padding(5)
-                                                .background(Color.SecondaryBackground, in: Circle())
                                         }
-
-                                    } else {
-
-                                        Text("\(category.percent * 100, specifier: "%.0f")%")
-                                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                                            .foregroundColor(boxColor)
-                                            .padding(.vertical, 3)
-                                            .frame(width: percentWidth)
-                                            .background(boxColor.opacity(0.23), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                                     }
                                 }
-                                .padding(.vertical, categoryFilterMode && categoryFilter == category.category ? 10 : 5)
-                                .padding(.horizontal, categoryFilterMode && categoryFilter == category.category ? 10 : 0)
-                                .background(RoundedRectangle(cornerRadius: 12).fill(categoryFilterMode && categoryFilter == category.category ? Color.TertiaryBackground : Color.PrimaryBackground))
-                                .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(categoryFilterMode && categoryFilter == category.category ? Color.Outline : Color.clear, lineWidth: 1.3))
-                                .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+                        .frame(width: 120, height: 120)
+
+                        // Legend
+                        VStack(alignment: .leading, spacing: 6) {
+                            ForEach(Array(categories.enumerated()), id: \.element.id) { index, category in
+                                let color = category.category.income
+                                    ? Color(hex: Color.colorArray[index])
+                                    : Color(hex: category.category.wrappedColour)
+
+                                HStack(spacing: 8) {
+                                    RoundedRectangle(cornerRadius: 3, style: .continuous)
+                                        .fill(color)
+                                        .frame(width: 10, height: 10)
+
+                                    Text("\(category.category.wrappedName) (\(category.percent * 100, specifier: "%.1f")%)")
+                                        .font(.system(.caption, design: .rounded).weight(.medium))
+                                        .foregroundColor(Color.PrimaryText)
+                                        .lineLimit(1)
+
+                                    Spacer()
+
+                                    Text("\(currencySymbol)\(category.amount, specifier: (showCents && category.amount < 100) ? "%.2f" : "%.0f")")
+                                        .font(.system(.caption, design: .rounded).weight(.medium))
+                                        .foregroundColor(Color.SubtitleText)
+                                        .lineLimit(1)
+                                }
                                 .contentShape(Rectangle())
-                                .drawingGroup()
                                 .onTapGesture {
                                     withAnimation(.easeInOut) {
-                                        if !categoryFilterMode {
+                                        if categoryFilter == category.category {
+                                            selectedDate = nil
+                                            categoryFilterMode = false
+                                            categoryFilter = nil
+                                        } else {
                                             selectedDate = nil
                                             categoryFilterMode = true
                                             categoryFilter = category.category
@@ -316,14 +309,71 @@ struct HorizontalPieChartView: View {
                                         }
                                     }
                                 }
-
                             }
 
+                            Divider()
+
+                            HStack(spacing: 8) {
+                                Text("Total:")
+                                    .font(.system(.caption, design: .rounded).weight(.semibold))
+                                    .foregroundColor(Color.PrimaryText)
+
+                                Spacer()
+
+                                Text("\(currencySymbol)\(total, specifier: (showCents && total < 100) ? "%.2f" : "%.0f")")
+                                    .font(.system(.caption, design: .rounded).weight(.semibold))
+                                    .foregroundColor(Color.PrimaryText)
+                            }
+                        }
+                    }
+                    .padding(.bottom, 10)
+                } else {
+                    // Filtered category detail row
+                    VStack(spacing: 10) {
+                        ForEach(categories, id: \.self) { category in
+                            if categoryFilter == category.category {
+                                HStack(spacing: 10) {
+                                    Text(category.category.fullName)
+                                        .font(.system(.title3, design: .rounded).weight(.semibold))
+                                        .foregroundColor(Color.PrimaryText)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                                    Text("\(currencySymbol)\(category.amount, specifier: (showCents && category.amount < 100) ? "%.2f" : "%.0f")")
+                                        .font(.system(.title3, design: .rounded).weight(.medium))
+                                        .foregroundColor(Color.SubtitleText)
+                                        .lineLimit(1)
+                                        .layoutPriority(1)
+
+                                    Button {
+                                        withAnimation(.easeInOut) {
+                                            selectedDate = nil
+                                            categoryFilterMode = false
+                                            categoryFilter = nil
+                                        }
+                                    } label: {
+                                        Image(systemName: "xmark")
+                                            .font(.system(.footnote, design: .rounded).weight(.bold))
+                                            .foregroundColor(Color.SubtitleText)
+                                            .padding(5)
+                                            .background(Color.SecondaryBackground, in: Circle())
+                                    }
+                                }
+                                .padding(.vertical, 10)
+                                .padding(.horizontal, 10)
+                                .background(RoundedRectangle(cornerRadius: 12).fill(Color.TertiaryBackground))
+                                .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.Outline, lineWidth: 1.3))
+                                .fixedSize(horizontal: false, vertical: true)
+                            }
                         }
                     }
                 }
             }
             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+            .onAppear {
+                withAnimation(.easeInOut(duration: 0.8)) {
+                    animationProgress = 1.0
+                }
+            }
         }
     }
 
@@ -349,7 +399,7 @@ struct HorizontalPieChartView: View {
 
         var calendar = Calendar(identifier: .gregorian)
 
-        calendar.firstWeekday = UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.integer(forKey: "firstWeekday")
+        calendar.firstWeekday = UserDefaults(suiteName: "group.com.vanxun.dime")!.integer(forKey: "firstWeekday")
         calendar.minimumDaysInFirstWeek = 4
 
         switch type {
@@ -407,7 +457,7 @@ struct FilteredCategoryInsightsView: View {
 
             var calendar = Calendar(identifier: .gregorian)
 
-            calendar.firstWeekday = UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.integer(forKey: "firstWeekday")
+            calendar.firstWeekday = UserDefaults(suiteName: "group.com.vanxun.dime")!.integer(forKey: "firstWeekday")
             calendar.minimumDaysInFirstWeek = 4
 
             switch type {
@@ -453,15 +503,15 @@ struct FilteredCategoryInsightsView: View {
 struct FilteredDateInsightsView: View {
     @FetchRequest private var transactions: FetchedResults<Transaction>
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var currency: String = Locale.current.currencyCode!
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
 
-    @AppStorage("swapTimeLabel", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var swapTimeLabel: Bool = false
-    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
+    @AppStorage("swapTimeLabel", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var swapTimeLabel: Bool = false
+    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var showCents: Bool = true
     
-    @AppStorage("showExpenseOrIncomeSign", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+    @AppStorage("showExpenseOrIncomeSign", store: UserDefaults(suiteName: "group.com.vanxun.dime"))
     var showExpenseOrIncomeSign: Bool = true
 
 
@@ -522,7 +572,7 @@ struct FilteredInsightsView: View {
 
         var calendar = Calendar(identifier: .gregorian)
 
-        calendar.firstWeekday = UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.integer(forKey: "firstWeekday")
+        calendar.firstWeekday = UserDefaults(suiteName: "group.com.vanxun.dime")!.integer(forKey: "firstWeekday")
         calendar.minimumDaysInFirstWeek = 4
 
         if type == 1 {
@@ -573,7 +623,7 @@ struct SingleGraphView: View {
     @Binding var categoryFilterMode: Bool
     @Binding var selectedDate: Date?
 
-    @AppStorage("incomeTracking", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var incomeTracking: Bool = true
+    @AppStorage("incomeTracking", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var incomeTracking: Bool = true
     let language = Locale.current.languageCode
 
     var selectedDateString: String {
@@ -599,10 +649,10 @@ struct SingleGraphView: View {
     @State var selectedDateAmount: Double = 0
 
     var currencySymbol: String
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var currency: String = Locale.current.currencyCode!
     var showCents: Bool
 
-    @AppStorage("firstDayOfMonth", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var firstDayOfMonth: Int = 1
+    @AppStorage("firstDayOfMonth", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var firstDayOfMonth: Int = 1
 
     var dateString: String {
         let dateFormatter = DateFormatter()
@@ -922,12 +972,12 @@ struct WeekGraphView: View {
         SortDescriptor(\.day)
     ]) private var transactions: FetchedResults<Transaction>
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var currency: String = Locale.current.currencyCode!
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
 
-    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
+    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var showCents: Bool = true
 
     @State var categoryFilterMode = false
     @State var categoryFilter: Category?
@@ -936,7 +986,7 @@ struct WeekGraphView: View {
 
     var startOfCurrentWeek: Date {
         var calendar = Calendar(identifier: .gregorian)
-        calendar.firstWeekday = UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.integer(forKey: "firstWeekday") ?? 0
+        calendar.firstWeekday = UserDefaults(suiteName: "group.com.vanxun.dime")?.integer(forKey: "firstWeekday") ?? 0
         calendar.minimumDaysInFirstWeek = 4
 
         let dateComponents = calendar.dateComponents([.weekOfYear, .yearForWeekOfYear], from: Date.now)
@@ -950,7 +1000,7 @@ struct WeekGraphView: View {
             return Date.now
         } else {
             var calendar = Calendar(identifier: .gregorian)
-            calendar.firstWeekday = UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.integer(forKey: "firstWeekday") ?? 0
+            calendar.firstWeekday = UserDefaults(suiteName: "group.com.vanxun.dime")?.integer(forKey: "firstWeekday") ?? 0
             calendar.minimumDaysInFirstWeek = 4
 
             if let date = transactions[0].day {
@@ -997,8 +1047,8 @@ struct WeekGraphView: View {
     @State var chosenCategoryName = ""
     @State var chosenCategoryAmount = 0.0
 
-    @AppStorage("insightsViewIncomeFiltering", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var income: Bool = true
-    @AppStorage("incomeTracking", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var incomeTracking: Bool = true
+    @AppStorage("insightsViewIncomeFiltering", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var income: Bool = true
+    @AppStorage("incomeTracking", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var incomeTracking: Bool = true
 
 //    @Environment(\.dynamicTypeMultiplier) var multiplier
 
@@ -1166,7 +1216,7 @@ struct AverageLineView: View {
     var getMax: Int
     var average: Double
 
-//    @AppStorage("animated", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var animated: Bool = true
+//    @AppStorage("animated", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var animated: Bool = true
 //    @State var showLine: Bool = false
 //    @State var offset: CGFloat
 
@@ -1346,14 +1396,14 @@ struct MonthGraphView: View {
         SortDescriptor(\.day)
     ]) private var transactions: FetchedResults<Transaction>
 
-    @AppStorage("firstDayOfMonth", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var firstDayOfMonth: Int = 1
+    @AppStorage("firstDayOfMonth", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var firstDayOfMonth: Int = 1
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var currency: String = Locale.current.currencyCode!
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
 
-    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
+    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var showCents: Bool = true
 
     @State var categoryFilterMode = false
     @State var categoryFilter: Category?
@@ -1418,8 +1468,8 @@ struct MonthGraphView: View {
     @State var chosenCategoryName = ""
     @State var chosenCategoryAmount = 0.0
 
-    @AppStorage("insightsViewIncomeFiltering", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var income: Bool = true
-    @AppStorage("incomeTracking", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var incomeTracking: Bool = true
+    @AppStorage("insightsViewIncomeFiltering", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var income: Bool = true
+    @AppStorage("incomeTracking", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var incomeTracking: Bool = true
 
 //    @Environment(\.dynamicTypeMultiplier) var multiplier
 
@@ -1604,7 +1654,7 @@ struct MonthGraphView: View {
 }
 
 struct SingleMonthBarGraphView: View {
-    @AppStorage("firstDayOfMonth", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var firstDayOfMonth: Int = 1
+    @AppStorage("firstDayOfMonth", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var firstDayOfMonth: Int = 1
 
     @Binding var selectedDate: Date?
     @Binding var categoryFilterMode: Bool
@@ -1729,12 +1779,12 @@ struct YearGraphView: View {
         SortDescriptor(\.day)
     ]) private var transactions: FetchedResults<Transaction>
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var currency: String = Locale.current.currencyCode!
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
 
-    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
+    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var showCents: Bool = true
 
     @State var categoryFilterMode = false
     @State var categoryFilter: Category?
@@ -1797,8 +1847,8 @@ struct YearGraphView: View {
     @State var chosenCategoryName = ""
     @State var chosenCategoryAmount = 0.0
 
-    @AppStorage("insightsViewIncomeFiltering", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var income: Bool = true
-    @AppStorage("incomeTracking", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var incomeTracking: Bool = true
+    @AppStorage("insightsViewIncomeFiltering", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var income: Bool = true
+    @AppStorage("incomeTracking", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var incomeTracking: Bool = true
 //
 //    @Environment(\.dynamicTypeMultiplier) var multiplier
 
@@ -2113,9 +2163,9 @@ struct ChartTimePickerView: View {
     @State var timeframe = ChartTimeFrame.week
     @Binding var showMenu: Bool
 
-    @AppStorage("colourScheme", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var colourScheme: Int = 0
+    @AppStorage("colourScheme", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var colourScheme: Int = 0
 
-    @AppStorage("chartTimeFrame", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var chartType = 1
+    @AppStorage("chartTimeFrame", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var chartType = 1
 
     @Environment(\.colorScheme) var systemColorScheme
 
@@ -2190,7 +2240,7 @@ struct ChartTimePickerView: View {
 struct AnimatedBarGraph: View {
     var index: Int
 
-    @AppStorage("animated", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var animated: Bool = true
+    @AppStorage("animated", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var animated: Bool = true
     @State var showBar: Bool = false
 
     var body: some View {
@@ -2216,7 +2266,7 @@ struct AnimatedBarGraph: View {
 }
 
 struct AnimatedHorizontalBarGraph: View {
-    @AppStorage("animated", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var animated: Bool = true
+    @AppStorage("animated", store: UserDefaults(suiteName: "group.com.vanxun.dime")) var animated: Bool = true
     var category: PowerCategory
     var index: Int
 
