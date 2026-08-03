@@ -334,6 +334,24 @@ struct SettingsView: View {
                   systemImage: "rectangle.grid.2x2.fill", title: "Categories", colour: 110)
               }
 
+              NavigationLink(
+                destination: SettingsAccountView()
+                  .onAppear {
+                    withAnimation(.easeOut.speed(1.5)) {
+                      tabBarManager.navigationHideTab()
+                    }
+                  }
+                  .onDisappear {
+                    withAnimation(.easeOut.speed(1.5)) {
+                      tabBarManager.navigationShowTab()
+                    }
+                  }
+
+              ) {
+                SettingsRowView(
+                  systemImage: "creditcard.fill", title: "Accounts", colour: 115)
+              }
+
               NavigationLink(destination: SettingsCloudView()) {
                 SettingsRowView(
                   systemImage: "icloud.fill", title: "iCloud Sync", colour: 111,
@@ -564,7 +582,7 @@ struct SettingsView: View {
 
     let fileName = "export.csv"
     let path = NSURL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(fileName)
-    var csvText = "Date,Note,Amount,Category,Type\n"
+      var csvText = "Date,Note,Amount,Category,Account,Type\n"
 
     for transaction in transactions {
       var string = transaction.wrappedNote
@@ -579,7 +597,7 @@ struct SettingsView: View {
       string.removeAll(where: { $0 == "," })
 
       csvText +=
-        "\(transaction.wrappedDate),\(string),\(String(format: "%.2f", transaction.wrappedAmount)),\(transaction.category?.wrappedName ?? ""),\(type)\n"
+        "\(transaction.wrappedDate),\(string),\(String(format: "%.2f", transaction.wrappedAmount)),\(transaction.category?.wrappedName ?? ""),\(transaction.account?.wrappedName ?? ""),\(type)\n"
     }
 
     do {
@@ -892,6 +910,18 @@ struct SettingsCategoryView: View {
 
   var body: some View {
     CategoryView(mode: .settings, income: false)
+      .navigationBarBackButtonHidden(true)
+      .navigationBarTitle("")
+      .navigationBarHidden(true)
+      .background(Color.PrimaryBackground)
+  }
+}
+
+struct SettingsAccountView: View {
+  @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
+
+  var body: some View {
+    AccountView(mode: .settings)
       .navigationBarBackButtonHidden(true)
       .navigationBarTitle("")
       .navigationBarHidden(true)

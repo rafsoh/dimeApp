@@ -22,6 +22,19 @@
 "Categories" = "Categories";
 "no_income_categories" = "No income categories found, click the 'New' button to add some";
 "no_expense_categories" = "No expense categories found, click the 'New' button to add some";
+
+// accounts
+
+"Accounts" = "Accounts";
+"Account" = "Account";
+"ACCOUNTS" = "ACCOUNTS";
+"no_accounts" = "No accounts found, click the 'New' button to add some";
+"New Account" = "New Account";
+"Edit Account" = "Edit Account";
+"Account Name" = "Account Name";
+"Optional" = "Optional";
+"This action cannot be undone. Existing transactions will keep their history without this account." = "This action cannot be undone. Existing transactions will keep their history without this account.";
+"Limit Exceeded" = "Limit Exceeded";
 "Suggestions Hidden" = "Suggestions Hidden";
 "Successfully Edited" = "Successfully Edited";
 "INCOME CATEGORIES" = "INCOME CATEGORIES";

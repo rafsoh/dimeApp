@@ -126,6 +126,10 @@ class DataController: ObservableObject {
         let fetchRequest4: NSFetchRequest<NSFetchRequestResult> = MainBudget.fetchRequest()
         let batchDeleteRequest4 = NSBatchDeleteRequest(fetchRequest: fetchRequest4)
         _ = try? container.viewContext.executeAndMergeChanges(using: batchDeleteRequest4)
+
+        let fetchRequest5: NSFetchRequest<NSFetchRequestResult> = Account.fetchRequest()
+        let batchDeleteRequest5 = NSBatchDeleteRequest(fetchRequest: fetchRequest5)
+        _ = try? container.viewContext.executeAndMergeChanges(using: batchDeleteRequest5)
     }
 
     func save() {
@@ -143,6 +147,7 @@ class DataController: ObservableObject {
                 let newTransaction = Transaction(context: container.viewContext)
                 newTransaction.note = transaction.wrappedNote
                 newTransaction.category = transaction.category
+                newTransaction.account = transaction.account
                 newTransaction.amount = transaction.wrappedAmount
                 newTransaction.date = holdingDate
                 newTransaction.id = UUID()
@@ -185,6 +190,7 @@ class DataController: ObservableObject {
             let newTransaction = Transaction(context: container.viewContext)
             newTransaction.note = transaction.wrappedNote
             newTransaction.category = transaction.category
+            newTransaction.account = transaction.account
             newTransaction.amount = transaction.wrappedAmount
             newTransaction.date = transaction.nextTransactionDate
             newTransaction.id = UUID()
@@ -234,7 +240,7 @@ class DataController: ObservableObject {
         save()
     }
 
-    func newTransaction(note: String, category: Category?, income: Bool, amount: Double, date: Date, repeatType: Int, repeatCoefficient: Int, delay _: Bool) -> Transaction {
+    func newTransaction(note: String, category: Category?, account: Account? = nil, income: Bool, amount: Double, date: Date, repeatType: Int, repeatCoefficient: Int, delay _: Bool) -> Transaction {
         let transaction = Transaction(context: container.viewContext)
 
         if note.trimmingCharacters(in: .whitespacesAndNewlines) == "" {
@@ -247,6 +253,10 @@ class DataController: ObservableObject {
 
         if let unwrappedCategory = category {
             transaction.category = unwrappedCategory
+        }
+
+        if let unwrappedAccount = account {
+            transaction.account = unwrappedAccount
         }
 
         transaction.amount = amount
@@ -276,7 +286,7 @@ class DataController: ObservableObject {
     func newTemplateTransaction(order: Int) {
         if let match = getTemplateTransaction(order: order) {
             if let unwrappedCategory = match.category {
-                _ = newTransaction(note: match.note ?? "", category: unwrappedCategory, income: match.income, amount: match.amount, date: Date.now, repeatType: Int(match.recurringType), repeatCoefficient: Int(match.recurringCoefficient), delay: false)
+                _ = newTransaction(note: match.note ?? "", category: unwrappedCategory, account: match.account, income: match.income, amount: match.amount, date: Date.now, repeatType: Int(match.recurringType), repeatCoefficient: Int(match.recurringCoefficient), delay: false)
 
                 addedTransaction = true
             }
@@ -424,12 +434,87 @@ class DataController: ObservableObject {
         return itemRequest
     }
 
+    func fetchRequestForAccounts() -> NSFetchRequest<Account> {
+        let itemRequest: NSFetchRequest<Account> = Account.fetchRequest()
+        itemRequest.sortDescriptors = [NSSortDescriptor(key: "order", ascending: true)]
+        return itemRequest
+    }
+
     func getAllCategories(income: Bool) -> [Category] {
         let request: NSFetchRequest<Category> = Category.fetchRequest()
         request.sortDescriptors = [NSSortDescriptor(key: "order", ascending: true)]
         request.predicate = NSPredicate(format: "income = %d", income)
 
         return results(for: request)
+    }
+
+    func getAllAccounts() -> [Account] {
+        results(for: fetchRequestForAccounts())
+    }
+
+    func accountCheck(name: String, emoji: String) -> (error: CategoryError, order: Int64) {
+        if name.trimmingCharacters(in: .whitespacesAndNewlines) == "" && emoji == "" {
+            return (CategoryError.incomplete, 0)
+        } else if name.trimmingCharacters(in: .whitespacesAndNewlines) == "" {
+            return (CategoryError.missingName, 0)
+        } else if emoji == "" {
+            return (CategoryError.missingEmoji, 0)
+        }
+
+        let accounts = getAllAccounts()
+
+        var emojiArray = [String]()
+        var nameArray = [String]()
+
+        accounts.forEach { account in
+            emojiArray.append(account.wrappedEmoji)
+            nameArray.append(account.wrappedName)
+        }
+
+        if emojiArray.contains(emoji) && nameArray.contains(name) {
+            return (CategoryError.duplicate, 0)
+        } else if emojiArray.contains(emoji) {
+            return (CategoryError.duplicateEmoji, 0)
+        } else if nameArray.contains(name) {
+            return (CategoryError.duplicateName, 0)
+        } else {
+            let newItemOrder = (accounts.last?.order ?? 0) + 1
+            return (CategoryError.none, newItemOrder)
+        }
+    }
+
+    func accountCheckEdit(name: String, emoji: String, toEdit: Account) -> (error: CategoryError, order: Int64) {
+        if name.trimmingCharacters(in: .whitespacesAndNewlines) == "" && emoji == "" {
+            return (CategoryError.incomplete, 0)
+        } else if name.trimmingCharacters(in: .whitespacesAndNewlines) == "" {
+            return (CategoryError.missingName, 0)
+        } else if emoji == "" {
+            return (CategoryError.missingEmoji, 0)
+        }
+
+        var accounts = getAllAccounts()
+
+        if let position = accounts.firstIndex(of: toEdit) {
+            accounts.remove(at: position)
+        }
+
+        var emojiArray = [String]()
+        var nameArray = [String]()
+
+        accounts.forEach { account in
+            emojiArray.append(account.wrappedEmoji)
+            nameArray.append(account.wrappedName)
+        }
+
+        if emojiArray.contains(emoji) && nameArray.contains(name) {
+            return (CategoryError.duplicate, 0)
+        } else if emojiArray.contains(emoji) {
+            return (CategoryError.duplicateEmoji, 0)
+        } else if nameArray.contains(name) {
+            return (CategoryError.duplicateName, 0)
+        } else {
+            return (CategoryError.none, toEdit.order)
+        }
     }
 
     func getSuggestedNotes(searchQuery: String, category: Category?, income: Bool) -> [Transaction] {

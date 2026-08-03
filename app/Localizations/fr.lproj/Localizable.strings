@@ -22,6 +22,19 @@
 "Categories" = "Catégories";
 "no_income_categories" = "Aucune catégorie de revenus n'a été trouvée, cliquez sur le bouton 'Nouveau' pour en ajouter";
 "no_expense_categories" = "Aucune catégorie de dépenses n'a été trouvée, cliquez sur le bouton 'Nouveau' pour en ajouter";
+
+// accounts
+
+"Accounts" = "Comptes";
+"Account" = "Compte";
+"ACCOUNTS" = "COMPTES";
+"no_accounts" = "Aucun compte trouvé, cliquez sur le bouton 'Nouveau' pour en ajouter";
+"New Account" = "Nouveau compte";
+"Edit Account" = "Modifier le compte";
+"Account Name" = "Nom du compte";
+"Optional" = "Facultatif";
+"This action cannot be undone. Existing transactions will keep their history without this account." = "Cette action ne peut être annulée. Les transactions existantes conserveront leur historique sans ce compte.";
+"Limit Exceeded" = "Limite dépassée";
 "Suggestions Hidden" = "Suggestions cachées";
 "Successfully Edited" = "Édité avec succès";
 "INCOME CATEGORIES" = "Catégories de revenus";
