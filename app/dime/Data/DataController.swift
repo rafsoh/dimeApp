@@ -446,6 +446,78 @@ class DataController: ObservableObject {
         results(for: fetchRequestForAccounts())
     }
 
+    func findCategory(named name: String, income: Bool) -> Category? {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        return getAllCategories(income: income).first {
+            $0.wrappedName.caseInsensitiveCompare(trimmed) == .orderedSame
+        }
+    }
+
+    func findOrCreateCategory(named name: String, income: Bool) -> Category? {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+
+        if let existing = findCategory(named: trimmed, income: income) {
+            return existing
+        }
+
+        let categories = getAllCategories(income: income)
+        let usedEmojis = Set(categories.map(\.wrappedEmoji))
+        let usedColours = Set(categories.map(\.wrappedColour))
+        let defaultEmojis = ["📁", "🛒", "🍔", "🚗", "🏠", "💊", "🎮", "✈️", "👕", "💡", "📦", "🎁", "☕", "📱", "🎬", "💪"]
+        let palette = ["#279AF4", "#EC7A58", "#A6678A", "#C56AF7", "#6E7BF1", "#F3BF56", "#ED80A2", "#F6D24A", "#E34D63", "#61C7FA", "#7014F5", "#EB7068"]
+        let emoji = defaultEmojis.first { !usedEmojis.contains($0) } ?? "📁"
+        let colour: String = {
+            if income { return "IncomeGreen" }
+            return palette.first { !usedColours.contains($0) } ?? "#279AF4"
+        }()
+
+        let category = Category(context: container.viewContext)
+        category.name = trimmed
+        category.emoji = emoji
+        category.colour = colour
+        category.income = income
+        category.order = (categories.last?.order ?? 0) + 1
+        category.id = UUID()
+        category.dateCreated = Date.now
+        return category
+    }
+
+    func findAccount(named name: String) -> Account? {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        return getAllAccounts().first {
+            $0.wrappedName.caseInsensitiveCompare(trimmed) == .orderedSame
+        }
+    }
+
+    func findOrCreateAccount(named name: String) -> Account? {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+
+        if let existing = findAccount(named: trimmed) {
+            return existing
+        }
+
+        let accounts = getAllAccounts()
+        let usedEmojis = Set(accounts.map(\.wrappedEmoji))
+        let usedColours = Set(accounts.map(\.wrappedColour))
+        let defaultEmojis = ["💳", "🏦", "💵", "💰", "🏧", "📱", "🪙", "💎"]
+        let palette = ["#279AF4", "#EC7A58", "#A6678A", "#C56AF7", "#6E7BF1", "#F3BF56", "#ED80A2", "#F6D24A", "#E34D63", "#61C7FA", "#7014F5", "#EB7068"]
+        let emoji = defaultEmojis.first { !usedEmojis.contains($0) } ?? "💳"
+        let colour = palette.first { !usedColours.contains($0) } ?? "#6E7BF1"
+
+        let account = Account(context: container.viewContext)
+        account.name = trimmed
+        account.emoji = emoji
+        account.colour = colour
+        account.order = (accounts.last?.order ?? 0) + 1
+        account.id = UUID()
+        account.dateCreated = Date.now
+        return account
+    }
+
     func accountCheck(name: String, emoji: String) -> (error: CategoryError, order: Int64) {
         if name.trimmingCharacters(in: .whitespacesAndNewlines) == "" && emoji == "" {
             return (CategoryError.incomplete, 0)

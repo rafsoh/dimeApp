@@ -79,6 +79,10 @@ struct ImportDataView: View {
     @State var dateFormatString = ""
     @State var validDateFormatString = false
     @State var uniqueCategories: [MatchedCategory] = .init()
+    @State var accountColumnIndex: Int?
+    @State var incomeColumnIndex: Int?
+    @State var typeColumnIndex: Int?
+    @State var usedAutoColumnMap = false
 
     @State var processingState = ProcessingState.loading
     @State var errorMessage = "Invalid dates in date column."
@@ -108,13 +112,13 @@ struct ImportDataView: View {
     }
 
     let instructions: [InstructionHeadings] = [
-        InstructionHeadings(title: "Import transactions", subtitle: "Begin by adding a CSV file with 4 columns: amount, note, date, and category."),
+        InstructionHeadings(title: "Import transactions", subtitle: "Add a CSV with date, amount, note/title, and category. Account and income columns are detected automatically when present."),
         InstructionHeadings(title: "Assign category column", subtitle: "Select a column from your import that corresponds to the categories of your transactions."),
         InstructionHeadings(title: "Assign note column", subtitle: "Select a column from your import that corresponds to the notes/subtitles of your transactions."),
         InstructionHeadings(title: "Assign date column", subtitle: "Select a column from your import that corresponds to the dates of your transactions."),
         InstructionHeadings(title: "Assign amount column", subtitle: "Select a column from your import that corresponds to the values of your transactions."),
         InstructionHeadings(title: "Indicate date format", subtitle: "Referencing this article, state the format of the dates in the assigned column."),
-        InstructionHeadings(title: "Link categories", subtitle: "Match values found in the 'Category' column to the corresponding categories in Dime."),
+        InstructionHeadings(title: "Ready to import", subtitle: "Categories and accounts will be created automatically from your CSV values. No manual mapping needed."),
         InstructionHeadings(title: "Processing import", subtitle: "Please wait while we process your new transactions.")
     ]
 
@@ -125,7 +129,7 @@ struct ImportDataView: View {
         ColumnLabel(image: "dollarsign.circle.fill", label: "Amount")
     ]
 
-    let pointers = ["Ensure that the values in the 'Amount' column do not contain any currency symbols.", "All dates should be of a consistent, recognizable format. If no timestamps are provided, the time of transaction will default to 12:00 am.", "Remove all commas in the 'Note' and 'Category' columns as they would disrupt the parsing of your file."]
+    let pointers = ["Headers like Date, Amount, Title, Category, Account, and Income are detected automatically.", "Ensure that the values in the 'Amount' column do not contain any currency symbols.", "Remove all commas in text columns as they would disrupt the parsing of your file."]
 
     var incomeCategories: [Category] {
         dataController.getAllCategories(income: true)
@@ -520,6 +524,7 @@ struct ImportDataView: View {
                         }
                         .onChange(of: dateFormatString) { newValue in
                             let dateFormatter = DateFormatter()
+                            dateFormatter.locale = Locale(identifier: "en_US_POSIX")
                             dateFormatter.dateFormat = newValue
 
                             if dateFormatter.date(from: sampleDateString) != nil {
@@ -666,18 +671,23 @@ struct ImportDataView: View {
 
                 } else {
                     Button {
-                        if progress == 7 {
-                            if numberOfLinkedCategories == uniqueCategories.count {
-                                withAnimation(.interactiveSpring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.8)) {
-                                    progress += 1
-                                }
-
-                                importData()
-                            } else {
+                        if progress == 6 {
+                            guard validDateFormatString else {
                                 showToast = true
-                                toastMessage = "Unlinked Categories"
+                                toastMessage = "Invalid Date Format"
+                                return
                             }
 
+                            withAnimation(.interactiveSpring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.8)) {
+                                progress = 8
+                            }
+                            importData()
+                        } else if progress == 7 {
+                            // Legacy linking step skipped — categories/accounts are auto-created.
+                            withAnimation(.interactiveSpring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.8)) {
+                                progress = 8
+                            }
+                            importData()
                         } else if progress > 5 {
                             withAnimation(.interactiveSpring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.8)) {
                                 progress += 1
@@ -846,7 +856,20 @@ struct ImportDataView: View {
 
         var holdingRows = data.components(separatedBy: .newlines).filter { $0 != "" }
 
-        if !holdingRows[0].containsDigits {
+        guard !holdingRows.isEmpty else {
+            showToast = true
+            toastMessage = "Invalid File"
+            return
+        }
+
+        let firstRowCells = holdingRows[0].components(separatedBy: ",").map {
+            $0.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        let headerMap = detectColumnMap(from: firstRowCells)
+
+        if headerMap != nil {
+            holdingRows.removeFirst()
+        } else if !holdingRows[0].containsDigits {
             holdingRows.removeFirst()
         }
 
@@ -857,12 +880,10 @@ struct ImportDataView: View {
         }
 
         let values = holdingRows.map { $0.components(separatedBy: ",") }.filter { !$0.isEmpty }
-
         rows = values
 
-        // Transpose rows to columns
         let maxColumnCount = values.map { $0.count }.max() ?? 0
-//
+
         guard maxColumnCount > 3 else {
             showToast = true
             toastMessage = "Invalid File"
@@ -873,55 +894,154 @@ struct ImportDataView: View {
 
         for row in values {
             for (index, value) in row.enumerated() {
-                holdingColumns[index].append(value)
+                holdingColumns[index].append(value.trimmingCharacters(in: .whitespacesAndNewlines))
             }
         }
 
         columns = holdingColumns
-
         displayedColumns = holdingColumns.map { $0.prefix(8).map { $0 } }
-
         numberOfRows = displayedColumns[0].count
-
         remainingColumns = Array(0 ..< maxColumnCount)
 
-        withAnimation {
-            progress += 1
+        if let map = headerMap,
+           map.category < maxColumnCount,
+           map.note < maxColumnCount,
+           map.date < maxColumnCount,
+           map.amount < maxColumnCount {
+            usedAutoColumnMap = true
+            selectedColumns = [map.category, map.note, map.date, map.amount]
+            accountColumnIndex = map.account
+            incomeColumnIndex = map.income
+            typeColumnIndex = map.type
+            columnSelectionCompleted = true
+            sampleDateString = displayedColumns[map.date].first ?? ""
+
+            if let deducedFormat = deduceDateFormat(from: sampleDateString) {
+                dateFormatString = deducedFormat
+                validDateFormatString = true
+            }
+
+            withAnimation {
+                progress = 6
+            }
+        } else {
+            usedAutoColumnMap = false
+            accountColumnIndex = nil
+            incomeColumnIndex = nil
+            typeColumnIndex = nil
+            withAnimation {
+                progress += 1
+            }
         }
     }
 
+    func detectColumnMap(from headers: [String]) -> (category: Int, note: Int, date: Int, amount: Int, account: Int?, income: Int?, type: Int?)? {
+        func index(matching names: [String]) -> Int? {
+            headers.firstIndex { header in
+                names.contains { header.caseInsensitiveCompare($0) == .orderedSame }
+            }
+        }
+
+        guard let category = index(matching: ["category"]),
+              let note = index(matching: ["note", "title", "notes", "description"]),
+              let date = index(matching: ["date"]),
+              let amount = index(matching: ["amount", "value"]) else {
+            return nil
+        }
+
+        return (
+            category: category,
+            note: note,
+            date: date,
+            amount: amount,
+            account: index(matching: ["account", "accounts", "payment method", "wallet"]),
+            income: index(matching: ["income"]),
+            type: index(matching: ["type"])
+        )
+    }
+
     func importData() {
+        guard selectedColumns.count >= 4 else {
+            processingState = .error
+            errorMessage = "Missing required columns."
+            return
+        }
+
         let categoryColumnIndex = selectedColumns[0]
         let noteColumnIndex = selectedColumns[1]
         let dateColumnIndex = selectedColumns[2]
         let amountColumnIndex = selectedColumns[3]
 
         let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
         dateFormatter.dateFormat = dateFormatString
 
-        let categoryDictionary: [String: Category] = Dictionary(uniqueKeysWithValues: uniqueCategories.map { ($0.excelValue, $0.category!) })
+        var categoryCache: [String: Category] = [:]
+        var accountCache: [String: Account] = [:]
 
-        rows.forEach { row in
-//            let rowCategory = categoryDictionary[row[categoryColumnIndex]]
-            if let transactionDate = dateFormatter.date(from: row[dateColumnIndex]) {
-                if let rowCategory = categoryDictionary[row[categoryColumnIndex]] {
-                    if let transactionAmount = Double(row[amountColumnIndex]) {
-                        _ = dataController.newTransaction(note: row[noteColumnIndex], category: rowCategory, income: rowCategory.income, amount: abs(transactionAmount), date: transactionDate, repeatType: 0, repeatCoefficient: 1, delay: false)
-                    } else {
-                        processingState = .error
-                        errorMessage = "Invalid values in amount column."
-                        return
-                    }
-                } else {
-                    processingState = .error
-                    errorMessage = "Error occurred while matching categories."
-                    return
-                }
-            } else {
+        for row in rows {
+            guard row.count > max(categoryColumnIndex, noteColumnIndex, dateColumnIndex, amountColumnIndex) else {
+                continue
+            }
+
+            guard let transactionDate = dateFormatter.date(from: row[dateColumnIndex].trimmingCharacters(in: .whitespacesAndNewlines)) else {
                 processingState = .error
                 errorMessage = "Invalid dates in date column."
                 return
             }
+
+            let amountString = row[amountColumnIndex]
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .replacingOccurrences(of: ",", with: "")
+            guard let transactionAmount = Double(amountString) else {
+                processingState = .error
+                errorMessage = "Invalid values in amount column."
+                return
+            }
+
+            let isIncome = resolveIncome(for: row, amount: transactionAmount)
+            let categoryName = row[categoryColumnIndex].trimmingCharacters(in: .whitespacesAndNewlines)
+            let cacheKey = "\(isIncome ? "i" : "e"):\(categoryName.lowercased())"
+
+            let rowCategory: Category
+            if let cached = categoryCache[cacheKey] {
+                rowCategory = cached
+            } else if let created = dataController.findOrCreateCategory(named: categoryName, income: isIncome) {
+                categoryCache[cacheKey] = created
+                rowCategory = created
+            } else {
+                processingState = .error
+                errorMessage = "Error occurred while creating categories."
+                return
+            }
+
+            var rowAccount: Account?
+            if let accountIndex = accountColumnIndex, accountIndex < row.count {
+                let accountName = row[accountIndex].trimmingCharacters(in: .whitespacesAndNewlines)
+                if !accountName.isEmpty {
+                    let accountKey = accountName.lowercased()
+                    if let cached = accountCache[accountKey] {
+                        rowAccount = cached
+                    } else if let created = dataController.findOrCreateAccount(named: accountName) {
+                        accountCache[accountKey] = created
+                        rowAccount = created
+                    }
+                }
+            }
+
+            let note = row[noteColumnIndex].trimmingCharacters(in: .whitespacesAndNewlines)
+
+            _ = dataController.newTransaction(
+                note: note,
+                category: rowCategory,
+                account: rowAccount,
+                income: isIncome,
+                amount: abs(transactionAmount),
+                date: transactionDate,
+                repeatType: 0,
+                repeatCoefficient: 1,
+                delay: false
+            )
         }
 
         dataController.save()
@@ -934,17 +1054,38 @@ struct ImportDataView: View {
         }
     }
 
+    func resolveIncome(for row: [String], amount: Double) -> Bool {
+        if let incomeIndex = incomeColumnIndex, incomeIndex < row.count {
+            let value = row[incomeIndex].trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            if ["true", "1", "yes", "y"].contains(value) { return true }
+            if ["false", "0", "no", "n"].contains(value) { return false }
+        }
+
+        if let typeIndex = typeColumnIndex, typeIndex < row.count {
+            let value = row[typeIndex].trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            if value.contains("income") { return true }
+            if value.contains("expense") { return false }
+        }
+
+        // Default to expense when no income/type column is present.
+        _ = amount
+        return false
+    }
+
     func deduceDateFormat(from dateString: String) -> String? {
-        let dateFormats = ["yyyy-MM-dd", "dd-MM-yyyy", "MM-dd-yyyy",
+        let dateFormats = ["yyyy-MM-dd HH:mm:ss",
+                           "yyyy-MM-dd'T'HH:mm:ss",
+                           "yyyy-MM-dd", "dd-MM-yyyy", "MM-dd-yyyy",
                            "yyyy/MM/dd", "dd/MM/yyyy", "MM/dd/yyyy",
                            "yyyyMMdd", "ddMMyyyy", "MMddyyyy", "yyyy-MM-dd HH:mm:ss Z",
                            "dd/MM/yyyy HH:mm:ss"]
 
         let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
 
         for dateFormat in dateFormats {
             dateFormatter.dateFormat = dateFormat
-            if let _ = dateFormatter.date(from: dateString) {
+            if dateFormatter.date(from: dateString) != nil {
                 return dateFormat
             }
         }

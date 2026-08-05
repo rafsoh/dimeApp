@@ -45,6 +45,7 @@ struct LogView: View {
 
     // filters
     @State var categoryFilter: Category?
+    @State var accountFilter: Account?
     @State var dateFilter = Date.now
     @State var weekFilter = Date.now
     @State var monthFilter = Date.now
@@ -123,6 +124,8 @@ struct LogView: View {
                             EmptyView()
                         case .category:
                             filterTagView(text: "filter-tag-category")
+                        case .account:
+                            filterTagView(text: "filter-tag-account")
                         case .day:
                             filterTagView(text: "filter-tag-day")
                         case .week:
@@ -182,6 +185,8 @@ struct LogView: View {
                         EmptyView()
                     case .category:
                         CategoryStepperView(categoryFilter: $categoryFilter)
+                    case .account:
+                        AccountStepperView(accountFilter: $accountFilter)
                     case .day:
                         DateStepperView(date: $dateFilter)
                     case .week:
@@ -205,7 +210,7 @@ struct LogView: View {
                         LogInsightsView(navBarText: $navBarText, showCents: showCents, currencySymbol: currencySymbol)
                     }
 
-                    TransactionsList(filter: filter, category: categoryFilter, date: dateFilter, week: weekFilter, month: monthFilter, income: income)
+                    TransactionsList(filter: filter, category: categoryFilter, account: accountFilter, date: dateFilter, week: weekFilter, month: monthFilter, income: income)
                         .zIndex(0)
                         .padding(.horizontal, 20)
                         .padding(.bottom, 70 + bottomEdge)
@@ -890,6 +895,7 @@ struct FilterPickerView: View {
 struct TransactionsList: View {
     var filter: FilterType
     var category: Category?
+    var account: Account?
     var date: Date
     var week: Date
     var month: Date
@@ -918,6 +924,8 @@ struct TransactionsList: View {
                 ListView(transactions: _transactions)
             case .category:
                 FilteredCategoryView(category: category)
+            case .account:
+                FilteredAccountView(account: account)
             case .day:
                 FilteredDateView(date: date)
             case .week:
@@ -1259,11 +1267,21 @@ struct SingleTransactionView: View {
                         .foregroundColor(future ? Color.SubtitleText : Color.PrimaryText)
                         .lineLimit(1)
 
-                    Text(getSubtitle())
-                        .font(.system(.subheadline, design: .rounded).weight(.medium))
-                        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-                        .foregroundColor(future ? Color.EvenLighterText : Color.SubtitleText)
-                        .lineLimit(1)
+                    HStack(spacing: 6) {
+                        if let account = transaction.account {
+                            Text("\(account.wrappedEmoji) \(account.wrappedName)")
+                                .font(.system(.caption, design: .rounded).weight(.semibold))
+                                .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+                                .foregroundColor(Color(hex: account.wrappedColour))
+                                .lineLimit(1)
+                        }
+
+                        Text(getSubtitle())
+                            .font(.system(.subheadline, design: .rounded).weight(.medium))
+                            .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+                            .foregroundColor(future ? Color.EvenLighterText : Color.SubtitleText)
+                            .lineLimit(1)
+                    }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -1324,7 +1342,7 @@ struct SingleTransactionView: View {
             }
             .offset(x: offset)
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("\(transaction.wrappedNote), \(currencySymbol)\(String(format: "%.2f", transaction.wrappedAmount)), Transaction Category: \(transaction.category?.wrappedName ?? "Unknown"), Transaction made at \(timeConverterAccessibilityLabel(date: transaction.wrappedDate))")
+            .accessibilityLabel("\(transaction.wrappedNote), \(currencySymbol)\(String(format: "%.2f", transaction.wrappedAmount)), Transaction Category: \(transaction.category?.wrappedName ?? "Unknown"), Account: \(transaction.account?.wrappedName ?? "None"), Transaction made at \(timeConverterAccessibilityLabel(date: transaction.wrappedDate))")
         }
         .onChange(of: deletePopup) { _ in
             if deletePopup {
@@ -1683,6 +1701,43 @@ struct FilteredCategoryView: View {
     }
 }
 
+struct FilteredAccountView: View {
+    @SectionedFetchRequest<Date?, Transaction> private var transactions: SectionedFetchResults<Date?, Transaction>
+
+    var account: Account?
+
+    var body: some View {
+        VStack(spacing: 30) {
+            if transactions.count == 0 || account == nil {
+                NoResultsView(fullscreen: true)
+            } else {
+                ListView(transactions: _transactions)
+            }
+        }
+        .frame(maxHeight: .infinity)
+    }
+
+    init(account: Account?) {
+        if let unwrappedAccount = account {
+            let accountPredicate = NSPredicate(format: "%K == %@", #keyPath(Transaction.account), unwrappedAccount)
+            let datePredicate = NSPredicate(format: "%K <= %@", #keyPath(Transaction.date), Date.now as CVarArg)
+            let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [accountPredicate, datePredicate])
+
+            _transactions = SectionedFetchRequest<Date?, Transaction>(sectionIdentifier: \.day, sortDescriptors: [
+                SortDescriptor(\.day, order: .reverse),
+                SortDescriptor(\.date, order: .reverse)
+            ], predicate: andPredicate)
+        } else {
+            _transactions = SectionedFetchRequest<Date?, Transaction>(sectionIdentifier: \.day, sortDescriptors: [
+                SortDescriptor(\.day, order: .reverse),
+                SortDescriptor(\.date, order: .reverse)
+            ])
+        }
+
+        self.account = account
+    }
+}
+
 struct FilteredDateView: View {
     @FetchRequest private var transactions: FetchedResults<Transaction>
 
@@ -1774,6 +1829,64 @@ struct NoResultsView: View {
             .opacity(0.7)
             .padding(.top, 50)
         }
+    }
+}
+
+struct AccountStepperView: View {
+    @Binding var accountFilter: Account?
+    @EnvironmentObject var dataController: DataController
+    @State var accounts = [Account]()
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            ScrollViewReader { value in
+                HStack(spacing: 8) {
+                    ForEach(accounts, id: \.self) { item in
+                        HStack(spacing: 5) {
+                            Text(item.wrappedEmoji)
+                                .font(.system(.footnote, design: .rounded).weight(.medium))
+                                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                            Text(item.wrappedName)
+                                .font(.system(.body, design: .rounded).weight(.medium))
+                                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                        }
+                        .id(item.id)
+                        .padding(.horizontal, 11)
+                        .padding(.vertical, 7)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .foregroundColor(accountFilter == item ? Color(hex: item.wrappedColour) : Color.PrimaryText)
+                        .background(
+                            accountFilter == item
+                                ? Color(hex: item.wrappedColour).opacity(0.3)
+                                : Color.PrimaryBackground,
+                            in: RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        )
+                        .overlay {
+                            if accountFilter != item {
+                                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                    .strokeBorder(Color.Outline, style: StrokeStyle(lineWidth: 1.5))
+                            }
+                        }
+                        .onTapGesture {
+                            accountFilter = item
+                            withAnimation {
+                                value.scrollTo(item.id, anchor: .leading)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: 30)
+        .onAppear {
+            accounts = dataController.getAllAccounts()
+            accountFilter = accounts.first
+        }
+    }
+
+    init(accountFilter: Binding<Account?>?) {
+        _accountFilter = accountFilter ?? Binding.constant(nil)
     }
 }
 

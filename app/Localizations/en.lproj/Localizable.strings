@@ -112,6 +112,7 @@
 "filter-tag-type" = "by type";
 "filter-tag-day" = "by day";
 "filter-tag-category" = "by category";
+"filter-tag-account" = "by account";
 "filter-tag-week" = "by week";
 "filter-tag-month" = "by month";
 "filter-tag-recurring" = "recurring";
