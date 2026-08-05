@@ -30,7 +30,8 @@ enum CustomError: Swift.Error, CustomLocalizedStringResourceConvertible {
 class DataController: ObservableObject {
     static let shared = DataController()
 
-    var container = NSPersistentCloudKitContainer(name: "MainModel")
+    // Local Personal Team builds use a plain container (no CloudKit).
+    var container = NSPersistentContainer(name: "MainModel")
 
     init() {
         let description = NSPersistentStoreDescription()
@@ -40,24 +41,17 @@ class DataController: ObservableObject {
         description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
         description.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
 
-//        let keyValueStore = NSUbiquitousKeyValueStore.default
-//
-//        if keyValueStore.object(forKey: "icloud_sync") == nil {
-//            keyValueStore.set(true, forKey: "icloud_sync")
-//        }
-//
-//        if !keyValueStore.bool(forKey: "icloud_sync") {
-//            description.cloudKitContainerOptions = nil
-//        } else {
-//            description.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: "iCloud.com.rafaelsoh.dime")
-//        }
+        // Local Personal Team builds: keep Core Data on-device only (no CloudKit entitlement).
+        description.cloudKitContainerOptions = nil
 
-        description.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: "iCloud.com.rafaelsoh.dime")
-
-        let groupID = "group.com.rafaelsoh.dime"
+        let groupID = "group.com.vishwajeet.dime"
 
         if let url = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: groupID) {
             description.url = url.appendingPathComponent("Main.sqlite")
+        } else {
+            let supportURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+            try? FileManager.default.createDirectory(at: supportURL, withIntermediateDirectories: true)
+            description.url = supportURL.appendingPathComponent("Main.sqlite")
         }
 
         container.persistentStoreDescriptions = [description]
@@ -100,11 +94,11 @@ class DataController: ObservableObject {
 
     var addedTransaction: Bool {
         get {
-            UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.bool(forKey: "newTransactionAdded")
+            (UserDefaults(suiteName: "group.com.vishwajeet.dime") ?? .standard).bool(forKey: "newTransactionAdded")
         }
 
         set {
-            UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.set(newValue, forKey: "newTransactionAdded")
+            (UserDefaults(suiteName: "group.com.vishwajeet.dime") ?? .standard).set(newValue, forKey: "newTransactionAdded")
         }
     }
 
@@ -126,6 +120,10 @@ class DataController: ObservableObject {
         let fetchRequest4: NSFetchRequest<NSFetchRequestResult> = MainBudget.fetchRequest()
         let batchDeleteRequest4 = NSBatchDeleteRequest(fetchRequest: fetchRequest4)
         _ = try? container.viewContext.executeAndMergeChanges(using: batchDeleteRequest4)
+
+        let fetchRequest5: NSFetchRequest<NSFetchRequestResult> = Account.fetchRequest()
+        let batchDeleteRequest5 = NSBatchDeleteRequest(fetchRequest: fetchRequest5)
+        _ = try? container.viewContext.executeAndMergeChanges(using: batchDeleteRequest5)
     }
 
     func save() {
@@ -143,6 +141,7 @@ class DataController: ObservableObject {
                 let newTransaction = Transaction(context: container.viewContext)
                 newTransaction.note = transaction.wrappedNote
                 newTransaction.category = transaction.category
+                newTransaction.account = transaction.account
                 newTransaction.amount = transaction.wrappedAmount
                 newTransaction.date = holdingDate
                 newTransaction.id = UUID()
@@ -185,6 +184,7 @@ class DataController: ObservableObject {
             let newTransaction = Transaction(context: container.viewContext)
             newTransaction.note = transaction.wrappedNote
             newTransaction.category = transaction.category
+            newTransaction.account = transaction.account
             newTransaction.amount = transaction.wrappedAmount
             newTransaction.date = transaction.nextTransactionDate
             newTransaction.id = UUID()
@@ -234,7 +234,7 @@ class DataController: ObservableObject {
         save()
     }
 
-    func newTransaction(note: String, category: Category?, income: Bool, amount: Double, date: Date, repeatType: Int, repeatCoefficient: Int, delay _: Bool) -> Transaction {
+    func newTransaction(note: String, category: Category?, account: Account? = nil, income: Bool, amount: Double, date: Date, repeatType: Int, repeatCoefficient: Int, delay _: Bool) -> Transaction {
         let transaction = Transaction(context: container.viewContext)
 
         if note.trimmingCharacters(in: .whitespacesAndNewlines) == "" {
@@ -247,6 +247,10 @@ class DataController: ObservableObject {
 
         if let unwrappedCategory = category {
             transaction.category = unwrappedCategory
+        }
+
+        if let unwrappedAccount = account {
+            transaction.account = unwrappedAccount
         }
 
         transaction.amount = amount
@@ -276,7 +280,7 @@ class DataController: ObservableObject {
     func newTemplateTransaction(order: Int) {
         if let match = getTemplateTransaction(order: order) {
             if let unwrappedCategory = match.category {
-                _ = newTransaction(note: match.note ?? "", category: unwrappedCategory, income: match.income, amount: match.amount, date: Date.now, repeatType: Int(match.recurringType), repeatCoefficient: Int(match.recurringCoefficient), delay: false)
+                _ = newTransaction(note: match.note ?? "", category: unwrappedCategory, account: match.account, income: match.income, amount: match.amount, date: Date.now, repeatType: Int(match.recurringType), repeatCoefficient: Int(match.recurringCoefficient), delay: false)
 
                 addedTransaction = true
             }
@@ -324,7 +328,7 @@ class DataController: ObservableObject {
 
         var calendar = Calendar(identifier: .gregorian)
 
-        calendar.firstWeekday = UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.integer(forKey: "firstWeekday")
+        calendar.firstWeekday = UserDefaults(suiteName: "group.com.vishwajeet.dime")!.integer(forKey: "firstWeekday")
         calendar.minimumDaysInFirstWeek = 4
 
         switch type {
@@ -424,12 +428,159 @@ class DataController: ObservableObject {
         return itemRequest
     }
 
+    func fetchRequestForAccounts() -> NSFetchRequest<Account> {
+        let itemRequest: NSFetchRequest<Account> = Account.fetchRequest()
+        itemRequest.sortDescriptors = [NSSortDescriptor(key: "order", ascending: true)]
+        return itemRequest
+    }
+
     func getAllCategories(income: Bool) -> [Category] {
         let request: NSFetchRequest<Category> = Category.fetchRequest()
         request.sortDescriptors = [NSSortDescriptor(key: "order", ascending: true)]
         request.predicate = NSPredicate(format: "income = %d", income)
 
         return results(for: request)
+    }
+
+    func getAllAccounts() -> [Account] {
+        results(for: fetchRequestForAccounts())
+    }
+
+    func findCategory(named name: String, income: Bool) -> Category? {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        return getAllCategories(income: income).first {
+            $0.wrappedName.caseInsensitiveCompare(trimmed) == .orderedSame
+        }
+    }
+
+    func findOrCreateCategory(named name: String, income: Bool) -> Category? {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+
+        if let existing = findCategory(named: trimmed, income: income) {
+            return existing
+        }
+
+        let categories = getAllCategories(income: income)
+        let usedEmojis = Set(categories.map(\.wrappedEmoji))
+        let usedColours = Set(categories.map(\.wrappedColour))
+        let defaultEmojis = ["📁", "🛒", "🍔", "🚗", "🏠", "💊", "🎮", "✈️", "👕", "💡", "📦", "🎁", "☕", "📱", "🎬", "💪"]
+        let palette = ["#279AF4", "#EC7A58", "#A6678A", "#C56AF7", "#6E7BF1", "#F3BF56", "#ED80A2", "#F6D24A", "#E34D63", "#61C7FA", "#7014F5", "#EB7068"]
+        let emoji = defaultEmojis.first { !usedEmojis.contains($0) } ?? "📁"
+        let colour: String = {
+            if income { return "IncomeGreen" }
+            return palette.first { !usedColours.contains($0) } ?? "#279AF4"
+        }()
+
+        let category = Category(context: container.viewContext)
+        category.name = trimmed
+        category.emoji = emoji
+        category.colour = colour
+        category.income = income
+        category.order = (categories.last?.order ?? 0) + 1
+        category.id = UUID()
+        category.dateCreated = Date.now
+        return category
+    }
+
+    func findAccount(named name: String) -> Account? {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        return getAllAccounts().first {
+            $0.wrappedName.caseInsensitiveCompare(trimmed) == .orderedSame
+        }
+    }
+
+    func findOrCreateAccount(named name: String) -> Account? {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+
+        if let existing = findAccount(named: trimmed) {
+            return existing
+        }
+
+        let accounts = getAllAccounts()
+        let usedEmojis = Set(accounts.map(\.wrappedEmoji))
+        let usedColours = Set(accounts.map(\.wrappedColour))
+        let defaultEmojis = ["💳", "🏦", "💵", "💰", "🏧", "📱", "🪙", "💎"]
+        let palette = ["#279AF4", "#EC7A58", "#A6678A", "#C56AF7", "#6E7BF1", "#F3BF56", "#ED80A2", "#F6D24A", "#E34D63", "#61C7FA", "#7014F5", "#EB7068"]
+        let emoji = defaultEmojis.first { !usedEmojis.contains($0) } ?? "💳"
+        let colour = palette.first { !usedColours.contains($0) } ?? "#6E7BF1"
+
+        let account = Account(context: container.viewContext)
+        account.name = trimmed
+        account.emoji = emoji
+        account.colour = colour
+        account.order = (accounts.last?.order ?? 0) + 1
+        account.id = UUID()
+        account.dateCreated = Date.now
+        return account
+    }
+
+    func accountCheck(name: String, emoji: String) -> (error: CategoryError, order: Int64) {
+        if name.trimmingCharacters(in: .whitespacesAndNewlines) == "" && emoji == "" {
+            return (CategoryError.incomplete, 0)
+        } else if name.trimmingCharacters(in: .whitespacesAndNewlines) == "" {
+            return (CategoryError.missingName, 0)
+        } else if emoji == "" {
+            return (CategoryError.missingEmoji, 0)
+        }
+
+        let accounts = getAllAccounts()
+
+        var emojiArray = [String]()
+        var nameArray = [String]()
+
+        accounts.forEach { account in
+            emojiArray.append(account.wrappedEmoji)
+            nameArray.append(account.wrappedName)
+        }
+
+        if emojiArray.contains(emoji) && nameArray.contains(name) {
+            return (CategoryError.duplicate, 0)
+        } else if emojiArray.contains(emoji) {
+            return (CategoryError.duplicateEmoji, 0)
+        } else if nameArray.contains(name) {
+            return (CategoryError.duplicateName, 0)
+        } else {
+            let newItemOrder = (accounts.last?.order ?? 0) + 1
+            return (CategoryError.none, newItemOrder)
+        }
+    }
+
+    func accountCheckEdit(name: String, emoji: String, toEdit: Account) -> (error: CategoryError, order: Int64) {
+        if name.trimmingCharacters(in: .whitespacesAndNewlines) == "" && emoji == "" {
+            return (CategoryError.incomplete, 0)
+        } else if name.trimmingCharacters(in: .whitespacesAndNewlines) == "" {
+            return (CategoryError.missingName, 0)
+        } else if emoji == "" {
+            return (CategoryError.missingEmoji, 0)
+        }
+
+        var accounts = getAllAccounts()
+
+        if let position = accounts.firstIndex(of: toEdit) {
+            accounts.remove(at: position)
+        }
+
+        var emojiArray = [String]()
+        var nameArray = [String]()
+
+        accounts.forEach { account in
+            emojiArray.append(account.wrappedEmoji)
+            nameArray.append(account.wrappedName)
+        }
+
+        if emojiArray.contains(emoji) && nameArray.contains(name) {
+            return (CategoryError.duplicate, 0)
+        } else if emojiArray.contains(emoji) {
+            return (CategoryError.duplicateEmoji, 0)
+        } else if nameArray.contains(name) {
+            return (CategoryError.duplicateName, 0)
+        } else {
+            return (CategoryError.none, toEdit.order)
+        }
     }
 
     func getSuggestedNotes(searchQuery: String, category: Category?, income: Bool) -> [Transaction] {
@@ -647,7 +798,7 @@ class DataController: ObservableObject {
 
         var calendar = Calendar(identifier: .gregorian)
 
-        calendar.firstWeekday = UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.integer(forKey: "firstWeekday")
+        calendar.firstWeekday = UserDefaults(suiteName: "group.com.vishwajeet.dime")!.integer(forKey: "firstWeekday")
         calendar.minimumDaysInFirstWeek = 4
 
         let dateCapPredicate = NSPredicate(format: "%K <= %@", #keyPath(Transaction.date), Date.now as CVarArg)
@@ -695,7 +846,7 @@ class DataController: ObservableObject {
                 let thisWeek = calendar.date(from: dateComponents)!
                 startPredicate = NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), thisWeek as CVarArg)
             } else if type == 3 {
-                let startOfMonth = UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.integer(forKey: "firstDayOfMonth")
+                let startOfMonth = UserDefaults(suiteName: "group.com.vishwajeet.dime")!.integer(forKey: "firstDayOfMonth")
 
                 let thisMonth = getStartOfMonth(startDay: startOfMonth)
                 startPredicate = NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), thisMonth as CVarArg)
@@ -1199,7 +1350,7 @@ class DataController: ObservableObject {
             // calendar initialization
             var calendar = Calendar(identifier: .gregorian)
 
-            calendar.firstWeekday = UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.integer(forKey: "firstWeekday")
+            calendar.firstWeekday = UserDefaults(suiteName: "group.com.vishwajeet.dime")!.integer(forKey: "firstWeekday")
             calendar.minimumDaysInFirstWeek = 4
 
             var dictionary = [Date: Double]()
@@ -1373,7 +1524,7 @@ class DataController: ObservableObject {
 
         var calendar = Calendar(identifier: .gregorian)
 
-        calendar.firstWeekday = UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.integer(forKey: "firstWeekday")
+        calendar.firstWeekday = UserDefaults(suiteName: "group.com.vishwajeet.dime")!.integer(forKey: "firstWeekday")
         calendar.minimumDaysInFirstWeek = 4
 
         let startPredicate = NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), date as CVarArg)
@@ -1504,7 +1655,7 @@ class DataController: ObservableObject {
 
         var calendar = Calendar(identifier: .gregorian)
 
-        calendar.firstWeekday = UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.integer(forKey: "firstWeekday")
+        calendar.firstWeekday = UserDefaults(suiteName: "group.com.vishwajeet.dime")!.integer(forKey: "firstWeekday")
         calendar.minimumDaysInFirstWeek = 4
 
         let endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), Date.now as CVarArg)
@@ -1525,7 +1676,7 @@ class DataController: ObservableObject {
 
             startPredicate = NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), startDate as CVarArg)
         case .month:
-            let startOfMonth = UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.integer(forKey: "firstDayOfMonth")
+            let startOfMonth = UserDefaults(suiteName: "group.com.vishwajeet.dime")!.integer(forKey: "firstDayOfMonth")
 
             startDate = getStartOfMonth(startDay: startOfMonth)
 
@@ -1553,7 +1704,7 @@ class DataController: ObservableObject {
 
         var calendar = Calendar(identifier: .gregorian)
 
-        calendar.firstWeekday = UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.integer(forKey: "firstWeekday")
+        calendar.firstWeekday = UserDefaults(suiteName: "group.com.vishwajeet.dime")!.integer(forKey: "firstWeekday")
         calendar.minimumDaysInFirstWeek = 4
 
         switch type {

@@ -24,6 +24,10 @@ extension Transaction {
         category?.wrappedName ?? ""
     }
 
+    var wrappedAccountName: String {
+        account?.wrappedName ?? ""
+    }
+
     var wrappedColour: String {
         category?.wrappedColour ?? ""
     }
@@ -66,6 +70,39 @@ extension Category {
 
     var wrappedEmoji: String {
         emoji ?? "😄️"
+    }
+
+    var wrappedName: String {
+        name ?? ""
+    }
+
+    var wrappedDate: Date {
+        dateCreated ?? Date.now
+    }
+
+    var fullName: String {
+        wrappedEmoji + "  " + wrappedName
+    }
+
+    var allTransactions: [Transaction] {
+        let set = transactions as? Set<Transaction> ?? []
+        return set.sorted {
+            $0.wrappedDate < $1.wrappedDate
+        }
+    }
+
+    var transactionCount: Int {
+        transactions?.count ?? 0
+    }
+}
+
+extension Account {
+    var wrappedColour: String {
+        colour ?? "#FFFFFF"
+    }
+
+    var wrappedEmoji: String {
+        emoji ?? "💳"
     }
 
     var wrappedName: String {

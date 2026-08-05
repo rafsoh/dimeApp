@@ -15,6 +15,7 @@ struct TransactionView: View {
     var expenseCategories: FetchedResults<Category>
     @FetchRequest(sortDescriptors: [], predicate: NSPredicate(format: "income = %d", true)) private
     var incomeCategories: FetchedResults<Category>
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.order)]) private var accounts: FetchedResults<Account>
 
     @Environment(\.managedObjectContext) var moc
     @EnvironmentObject var dataController: DataController
@@ -25,11 +26,12 @@ struct TransactionView: View {
         UIAccessibility.isBoldTextEnabled
     }
 
-    @AppStorage("topEdge", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var topEdge:
+    @AppStorage("topEdge", store: UserDefaults(suiteName: "group.com.vishwajeet.dime")) var topEdge:
     Double = 20
 
     @State private var note = ""
     @State var category: Category?
+    @State var account: Account?
     @State private var date = Date.now
     @State private var repeatType = 0
     @State private var repeatCoefficient = 1
@@ -46,8 +48,10 @@ struct TransactionView: View {
 
     @State var showCategoryPicker = false
     @State var showCategorySheet = false
+    @State var showAccountPicker = false
+    @State var showAccountSheet = false
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.vishwajeet.dime")) var currency: String = Locale.current.currencyCode!
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
@@ -69,7 +73,7 @@ struct TransactionView: View {
     @ObservedObject var keyboardHeightHelper = KeyboardHeightHelper()
 
     @AppStorage(
-        "firstTransactionViewLaunch", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+        "firstTransactionViewLaunch", store: UserDefaults(suiteName: "group.com.vishwajeet.dime"))
     var firstLaunch: Bool = true
 
     // edit mode
@@ -80,7 +84,7 @@ struct TransactionView: View {
     @State var toDelete: Transaction?
     @State var deleteMode = false
 
-    @AppStorage("bottomEdge", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+    @AppStorage("bottomEdge", store: UserDefaults(suiteName: "group.com.vishwajeet.dime"))
     var bottomEdge: Double = 15
 
     @State private var offset: CGFloat = 0
@@ -138,7 +142,7 @@ struct TransactionView: View {
         }
     }
 
-    @AppStorage("colourScheme", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+    @AppStorage("colourScheme", store: UserDefaults(suiteName: "group.com.vishwajeet.dime"))
     var colourScheme: Int = 0
 
     @Environment(\.colorScheme) var systemColorScheme
@@ -168,7 +172,7 @@ struct TransactionView: View {
     @State var textFieldFocused: Bool = false
 
     @AppStorage(
-        "showTransactionRecommendations", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+        "showTransactionRecommendations", store: UserDefaults(suiteName: "group.com.vishwajeet.dime"))
     var showRecommendations: Bool = false
 
     var suggestedTransactions: [Transaction] {
@@ -218,7 +222,7 @@ struct TransactionView: View {
     }
 
     @State private var price: Double = 0
-    @AppStorage("numberEntryType", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+    @AppStorage("numberEntryType", store: UserDefaults(suiteName: "group.com.vishwajeet.dime"))
     var numberEntryType: Int = 1
     @State var isEditingDecimal = false
     @State var decimalValuesAssigned: AssignedDecimal = .none
@@ -461,6 +465,9 @@ struct TransactionView: View {
                                         if category == nil {
                                             category = transaction.category
                                         }
+                                        if account == nil {
+                                            account = transaction.account
+                                        }
                                     }
                                     self.hideKeyboard()
                                 } label: {
@@ -688,21 +695,134 @@ struct TransactionView: View {
                             .contentShape(Rectangle())
                             .onTapGesture {
                                 withAnimation(.easeInOut) {
+                                    showAccountPicker = false
                                     showCategoryPicker.toggle()
                                 }
 
                             }
                         }
                     }
+
+                    // account picker button
+                    Group {
+                        if accounts.isEmpty {
+                            HStack(spacing: 4) {
+                                Image(systemName: "plus")
+                                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+
+                                Text("Account")
+                                    .font(.system(.body, design: .rounded).weight(.semibold))
+                                    .lineLimit(1)
+                            }
+                            .padding(.vertical, 8.5)
+                            .padding(.horizontal, 10)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .foregroundColor(Color.SubtitleText)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 11.5, style: .continuous)
+                                    .strokeBorder(Color.Outline, lineWidth: 1.5)
+                            )
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                showAccountSheet = true
+                            }
+                        } else if showAccountPicker {
+                            HStack(spacing: 10) {
+                                Text("Close")
+                                    .font(.system(.body, design: .rounded).weight(.semibold))
+                                    .lineLimit(1)
+                            }
+                            .padding(.vertical, 8.5)
+                            .padding(.horizontal, 10)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .foregroundColor(Color.AlertRed)
+                            .background(Color.AlertRed.opacity(0.23),
+                                in: RoundedRectangle(cornerRadius: 11.5, style: .continuous)
+                            )
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                withAnimation(.easeInOut) {
+                                    showAccountPicker = false
+                                }
+                            }
+                        } else if let unwrappedAccount = account {
+                            HStack(spacing: 5) {
+                                Text(unwrappedAccount.wrappedEmoji)
+                                    .font(.system(.footnote, design: .rounded).weight(.semibold))
+
+                                Text(unwrappedAccount.wrappedName)
+                                    .font(.system(.body, design: .rounded).weight(.semibold))
+                                    .lineLimit(1)
+
+                                Spacer()
+
+                                Image(systemName: "creditcard")
+                                    .font(.system(.caption, design: .rounded).weight(.semibold))
+                                    .foregroundColor(Color(hex: unwrappedAccount.wrappedColour).opacity(0.8))
+                            }
+                            .padding(.vertical, 8.5)
+                            .padding(.horizontal, 10)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .foregroundColor(Color(hex: unwrappedAccount.wrappedColour))
+                            .background(
+                                Color(hex: unwrappedAccount.wrappedColour).opacity(0.35),
+                                in: RoundedRectangle(cornerRadius: 11.5, style: .continuous)
+                            )
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                withAnimation(.easeInOut) {
+                                    showCategoryPicker = false
+                                    showAccountPicker.toggle()
+                                }
+                            }
+                        } else {
+                            HStack(spacing: 5.5) {
+                                Image(systemName: "creditcard")
+                                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+
+                                Text("Account")
+                                    .font(.system(.body, design: .rounded).weight(.semibold))
+                                    .lineLimit(1)
+
+                                Spacer()
+
+                                Text("Optional")
+                                    .font(.system(.caption, design: .rounded).weight(.medium))
+                                    .foregroundColor(Color.SubtitleText.opacity(0.8))
+                            }
+                            .padding(.vertical, 8.5)
+                            .padding(.horizontal, 10)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .foregroundColor(Color.SubtitleText)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 11.5, style: .continuous)
+                                    .strokeBorder(Color.Outline, lineWidth: 1.5)
+                            )
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                withAnimation(.easeInOut) {
+                                    showCategoryPicker = false
+                                    showAccountPicker.toggle()
+                                }
+                            }
+                        }
+                    }
                     .padding(.bottom, 5)
                 }
 
-                // date and category picker
+                // category / account / number pad
 
                 if showCategoryPicker {
                     NewCategoryPickerView(
                         category: $category, showPicker: $showCategoryPicker,
                         showSheet: $showCategorySheet, income: income
+                    )
+                    .transition(AnyTransition.move(edge: .trailing).combined(with: .opacity))
+                } else if showAccountPicker {
+                    NewAccountPickerView(
+                        account: $account,
+                        showPicker: $showAccountPicker,
+                        showingAccountView: $showAccountSheet
                     )
                     .transition(AnyTransition.move(edge: .trailing).combined(with: .opacity))
                 } else {
@@ -909,6 +1029,9 @@ struct TransactionView: View {
         .sheet(isPresented: $showCategorySheet) {
             CategoryView(mode: .transaction, income: income)
         }
+        .sheet(isPresented: $showAccountSheet) {
+            AccountView(mode: .transaction)
+        }
         .sheet(isPresented: $showPicker) {
             if #available(iOS 16.0, *) {
                 CustomRecurringView(
@@ -1028,6 +1151,8 @@ struct TransactionView: View {
                 editedTransaction.category = unwrappedCategory
             }
 
+            editedTransaction.account = account
+
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 withAnimation(.easeInOut(duration: 0.5)) {
                     editedTransaction.amount = price
@@ -1078,6 +1203,8 @@ struct TransactionView: View {
             transaction.category = unwrappedCategory
         }
 
+        transaction.account = account
+
         transaction.amount = price
         transaction.date = date
         transaction.id = UUID()
@@ -1108,6 +1235,10 @@ struct TransactionView: View {
 
             if let unwrappedCategory = transaction.category {
                 _category = State(initialValue: unwrappedCategory)
+            }
+
+            if let unwrappedAccount = transaction.account {
+                _account = State(initialValue: unwrappedAccount)
             }
 
             _income = State(initialValue: transaction.income)
@@ -1470,7 +1601,7 @@ struct RecurringPickerView: View {
     let stringArray = ["none", "daily", "weekly", "monthly"]
     let stringArray2 = ["", "days", "weeks", "months"]
 
-    @AppStorage("bottomEdge", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+    @AppStorage("bottomEdge", store: UserDefaults(suiteName: "group.com.vishwajeet.dime"))
     var bottomEdge: Double = 15
 
     @State private var offset: CGFloat = 0
@@ -1478,7 +1609,7 @@ struct RecurringPickerView: View {
     @State var holdingType = 0
     @State var holdingCoefficient = 0
 
-    @AppStorage("colourScheme", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+    @AppStorage("colourScheme", store: UserDefaults(suiteName: "group.com.vishwajeet.dime"))
     var colourScheme: Int = 0
 
     @Environment(\.colorScheme) var systemColorScheme

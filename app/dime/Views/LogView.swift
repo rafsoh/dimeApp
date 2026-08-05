@@ -5,7 +5,6 @@
 //  Created by Rafael Soh on 19/5/22.
 //
 
-import CloudKitSyncMonitor
 import CoreData
 import Foundation
 import SwiftUIIntrospect
@@ -13,8 +12,6 @@ import Popovers
 import SwiftUI
 
 struct LogView: View {
-    @ObservedObject var syncMonitor = SyncMonitor.shared
-
     @State var updatedRecurring = false
 
     @FetchRequest(sortDescriptors: []) private var transactions: FetchedResults<Transaction>
@@ -22,11 +19,11 @@ struct LogView: View {
     @EnvironmentObject var dataController: DataController
     @Environment(\.managedObjectContext) var moc
 
-    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
+    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.vishwajeet.dime")) var showCents: Bool = true
 
     var topEdge: CGFloat
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.vishwajeet.dime")) var currency: String = Locale.current.currencyCode!
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
@@ -39,7 +36,7 @@ struct LogView: View {
     // top bar
     @State var navBarText = ""
     @State var showMenu = false
-    @AppStorage("logTimeFrame", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var logTimeFrame = 2
+    @AppStorage("logTimeFrame", store: UserDefaults(suiteName: "group.com.vishwajeet.dime")) var logTimeFrame = 2
     let subtitleText = ["today", "this week", "this month", "this year"]
 
     // show filter menu
@@ -48,6 +45,7 @@ struct LogView: View {
 
     // filters
     @State var categoryFilter: Category?
+    @State var accountFilter: Account?
     @State var dateFilter = Date.now
     @State var weekFilter = Date.now
     @State var monthFilter = Date.now
@@ -126,6 +124,8 @@ struct LogView: View {
                             EmptyView()
                         case .category:
                             filterTagView(text: "filter-tag-category")
+                        case .account:
+                            filterTagView(text: "filter-tag-account")
                         case .day:
                             filterTagView(text: "filter-tag-day")
                         case .week:
@@ -185,6 +185,8 @@ struct LogView: View {
                         EmptyView()
                     case .category:
                         CategoryStepperView(categoryFilter: $categoryFilter)
+                    case .account:
+                        AccountStepperView(accountFilter: $accountFilter)
                     case .day:
                         DateStepperView(date: $dateFilter)
                     case .week:
@@ -208,7 +210,7 @@ struct LogView: View {
                         LogInsightsView(navBarText: $navBarText, showCents: showCents, currencySymbol: currencySymbol)
                     }
 
-                    TransactionsList(filter: filter, category: categoryFilter, date: dateFilter, week: weekFilter, month: monthFilter, income: income)
+                    TransactionsList(filter: filter, category: categoryFilter, account: accountFilter, date: dateFilter, week: weekFilter, month: monthFilter, income: income)
                         .zIndex(0)
                         .padding(.horizontal, 20)
                         .padding(.bottom, 70 + bottomEdge)
@@ -266,35 +268,22 @@ struct LogView: View {
             .fullScreenCover(isPresented: $searchMode) {
                 SearchView()
             }
-            .onChange(of: syncMonitor.syncStateSummary) { newState in
-                if newState == .succeeded && !updatedRecurring {
-                    dataController.updateRecurringTransactions()
-                    updatedRecurring = true
-
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 60) {
-                        updatedRecurring = false
-                    }
-                }
-            }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
-                if syncMonitor.syncStateSummary == .succeeded && !updatedRecurring {
+                // Local-only builds: refresh recurring transactions without CloudKit sync monitor.
+                if !updatedRecurring {
                     dataController.updateRecurringTransactions()
                     updatedRecurring = true
 
                     DispatchQueue.main.asyncAfter(deadline: .now() + 60) {
                         updatedRecurring = false
                     }
-                } else if !NSUbiquitousKeyValueStore.default.bool(forKey: "icloud_sync") {
-                    dataController.updateRecurringTransactions()
                 }
             }
             .onChange(of: launchSearch) { _ in
                 searchMode = true
             }
             .onAppear {
-                if !NSUbiquitousKeyValueStore.default.bool(forKey: "icloud_sync") {
-                    dataController.updateRecurringTransactions()
-                }
+                dataController.updateRecurringTransactions()
             }
 //            .animation(.spring(duration: 0.5), value: released)
 //            .animation(.spring(response: 0.4, dampingFraction: 0.6), value: pullStatus)
@@ -352,9 +341,9 @@ struct NumberView: AnimatableModifier {
     let netTotal: Bool
     let positive: Bool
 
-    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
+    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.vishwajeet.dime")) var showCents: Bool = true
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.vishwajeet.dime")) var currency: String = Locale.current.currencyCode!
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
@@ -414,10 +403,10 @@ struct LogInsightsView: View {
     @State var showMenu1 = false
     let subtitleText = ["today", "this week", "this month", "this year", "all time"]
 
-    @AppStorage("logInsightsTimeFrame", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var timeframe = 2
-    @AppStorage("logInsightsType", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var insightsType = 1
+    @AppStorage("logInsightsTimeFrame", store: UserDefaults(suiteName: "group.com.vishwajeet.dime")) var timeframe = 2
+    @AppStorage("logInsightsType", store: UserDefaults(suiteName: "group.com.vishwajeet.dime")) var insightsType = 1
 
-    @AppStorage("logViewLineGraph", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var lineGraph: Bool = false
+    @AppStorage("logViewLineGraph", store: UserDefaults(suiteName: "group.com.vishwajeet.dime")) var lineGraph: Bool = false
 
     var netTotal: (value: Double, positive: Bool) {
         dataController.getLogViewTotalNet(type: timeframe)
@@ -426,7 +415,7 @@ struct LogInsightsView: View {
     var range: Int {
         var calendar = Calendar(identifier: .gregorian)
 
-        calendar.firstWeekday = UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.integer(forKey: "firstWeekday") ?? 0
+        calendar.firstWeekday = UserDefaults(suiteName: "group.com.vishwajeet.dime")?.integer(forKey: "firstWeekday") ?? 0
         calendar.minimumDaysInFirstWeek = 4
 
         if timeframe == 3 {
@@ -764,7 +753,7 @@ struct TimePickerView: View {
     @Binding var timeframe: Int
     @State var holdingTimeframe = 0
 
-    @AppStorage("colourScheme", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var colourScheme: Int = 0
+    @AppStorage("colourScheme", store: UserDefaults(suiteName: "group.com.vishwajeet.dime")) var colourScheme: Int = 0
 
     @Environment(\.colorScheme) var systemColorScheme
 
@@ -837,7 +826,7 @@ struct FilterPickerView: View {
     @Binding var filterType: FilterType
     @Binding var showMenu: Bool
 
-    @AppStorage("colourScheme", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var colourScheme: Int = 0
+    @AppStorage("colourScheme", store: UserDefaults(suiteName: "group.com.vishwajeet.dime")) var colourScheme: Int = 0
 
     @Environment(\.colorScheme) var systemColorScheme
     @Environment(\.dynamicTypeSize) var dynamicTypeSize
@@ -906,13 +895,14 @@ struct FilterPickerView: View {
 struct TransactionsList: View {
     var filter: FilterType
     var category: Category?
+    var account: Account?
     var date: Date
     var week: Date
     var month: Date
     var income: Bool
 
-    @AppStorage("showUpcomingTransactions", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showUpcoming: Bool = true
-    @AppStorage("showUpcomingTransactionsWhenUpcoming", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showSoon: Bool = false
+    @AppStorage("showUpcomingTransactions", store: UserDefaults(suiteName: "group.com.vishwajeet.dime")) var showUpcoming: Bool = true
+    @AppStorage("showUpcomingTransactionsWhenUpcoming", store: UserDefaults(suiteName: "group.com.vishwajeet.dime")) var showSoon: Bool = false
 
     @EnvironmentObject var dataController: DataController
 
@@ -934,6 +924,8 @@ struct TransactionsList: View {
                 ListView(transactions: _transactions)
             case .category:
                 FilteredCategoryView(category: category)
+            case .account:
+                FilteredAccountView(account: account)
             case .day:
                 FilteredDateView(date: date)
             case .week:
@@ -954,17 +946,17 @@ struct TransactionsList: View {
 struct ListView: View {
     @SectionedFetchRequest<Date?, Transaction> var transactions: SectionedFetchResults<Date?, Transaction>
 
-    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
+    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.vishwajeet.dime")) var showCents: Bool = true
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.vishwajeet.dime")) var currency: String = Locale.current.currencyCode!
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
     
-    @AppStorage("showExpenseOrIncomeSign", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+    @AppStorage("showExpenseOrIncomeSign", store: UserDefaults(suiteName: "group.com.vishwajeet.dime"))
     var showExpenseOrIncomeSign: Bool = true
 
-    @AppStorage("swapTimeLabel", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var swapTimeLabel: Bool = false
+    @AppStorage("swapTimeLabel", store: UserDefaults(suiteName: "group.com.vishwajeet.dime")) var swapTimeLabel: Bool = false
 
     @EnvironmentObject var toastPresenter: OverallToastPresenter
 
@@ -1093,17 +1085,17 @@ struct FutureListView: View {
         }
     }
 
-    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
+    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.vishwajeet.dime")) var showCents: Bool = true
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.vishwajeet.dime")) var currency: String = Locale.current.currencyCode!
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
     
-    @AppStorage("showExpenseOrIncomeSign", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+    @AppStorage("showExpenseOrIncomeSign", store: UserDefaults(suiteName: "group.com.vishwajeet.dime"))
     var showExpenseOrIncomeSign: Bool = true
 
-    @AppStorage("swapTimeLabel", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var swapTimeLabel: Bool = false
+    @AppStorage("swapTimeLabel", store: UserDefaults(suiteName: "group.com.vishwajeet.dime")) var swapTimeLabel: Bool = false
 
     var totalString: String {
         let numberFormatter = NumberFormatter()
@@ -1275,11 +1267,21 @@ struct SingleTransactionView: View {
                         .foregroundColor(future ? Color.SubtitleText : Color.PrimaryText)
                         .lineLimit(1)
 
-                    Text(getSubtitle())
-                        .font(.system(.subheadline, design: .rounded).weight(.medium))
-                        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-                        .foregroundColor(future ? Color.EvenLighterText : Color.SubtitleText)
-                        .lineLimit(1)
+                    HStack(spacing: 6) {
+                        if let account = transaction.account {
+                            Text("\(account.wrappedEmoji) \(account.wrappedName)")
+                                .font(.system(.caption, design: .rounded).weight(.semibold))
+                                .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+                                .foregroundColor(Color(hex: account.wrappedColour))
+                                .lineLimit(1)
+                        }
+
+                        Text(getSubtitle())
+                            .font(.system(.subheadline, design: .rounded).weight(.medium))
+                            .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+                            .foregroundColor(future ? Color.EvenLighterText : Color.SubtitleText)
+                            .lineLimit(1)
+                    }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -1340,7 +1342,7 @@ struct SingleTransactionView: View {
             }
             .offset(x: offset)
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("\(transaction.wrappedNote), \(currencySymbol)\(String(format: "%.2f", transaction.wrappedAmount)), Transaction Category: \(transaction.category?.wrappedName ?? "Unknown"), Transaction made at \(timeConverterAccessibilityLabel(date: transaction.wrappedDate))")
+            .accessibilityLabel("\(transaction.wrappedNote), \(currencySymbol)\(String(format: "%.2f", transaction.wrappedAmount)), Transaction Category: \(transaction.category?.wrappedName ?? "Unknown"), Account: \(transaction.account?.wrappedName ?? "None"), Transaction made at \(timeConverterAccessibilityLabel(date: transaction.wrappedDate))")
         }
         .onChange(of: deletePopup) { _ in
             if deletePopup {
@@ -1511,7 +1513,7 @@ struct DeleteTransactionAlert: View {
 
     @Environment(\.colorScheme) var systemColorScheme
 
-    @AppStorage("bottomEdge", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var bottomEdge: Double = 15
+    @AppStorage("bottomEdge", store: UserDefaults(suiteName: "group.com.vishwajeet.dime")) var bottomEdge: Double = 15
 
     @State private var offset: CGFloat = 0
 
@@ -1699,21 +1701,58 @@ struct FilteredCategoryView: View {
     }
 }
 
+struct FilteredAccountView: View {
+    @SectionedFetchRequest<Date?, Transaction> private var transactions: SectionedFetchResults<Date?, Transaction>
+
+    var account: Account?
+
+    var body: some View {
+        VStack(spacing: 30) {
+            if transactions.count == 0 || account == nil {
+                NoResultsView(fullscreen: true)
+            } else {
+                ListView(transactions: _transactions)
+            }
+        }
+        .frame(maxHeight: .infinity)
+    }
+
+    init(account: Account?) {
+        if let unwrappedAccount = account {
+            let accountPredicate = NSPredicate(format: "%K == %@", #keyPath(Transaction.account), unwrappedAccount)
+            let datePredicate = NSPredicate(format: "%K <= %@", #keyPath(Transaction.date), Date.now as CVarArg)
+            let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [accountPredicate, datePredicate])
+
+            _transactions = SectionedFetchRequest<Date?, Transaction>(sectionIdentifier: \.day, sortDescriptors: [
+                SortDescriptor(\.day, order: .reverse),
+                SortDescriptor(\.date, order: .reverse)
+            ], predicate: andPredicate)
+        } else {
+            _transactions = SectionedFetchRequest<Date?, Transaction>(sectionIdentifier: \.day, sortDescriptors: [
+                SortDescriptor(\.day, order: .reverse),
+                SortDescriptor(\.date, order: .reverse)
+            ])
+        }
+
+        self.account = account
+    }
+}
+
 struct FilteredDateView: View {
     @FetchRequest private var transactions: FetchedResults<Transaction>
 
     var date: Date
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.vishwajeet.dime")) var currency: String = Locale.current.currencyCode!
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
 
-    @AppStorage("swapTimeLabel", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var swapTimeLabel: Bool = false
+    @AppStorage("swapTimeLabel", store: UserDefaults(suiteName: "group.com.vishwajeet.dime")) var swapTimeLabel: Bool = false
 
-    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
+    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.vishwajeet.dime")) var showCents: Bool = true
     
-    @AppStorage("showExpenseOrIncomeSign", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+    @AppStorage("showExpenseOrIncomeSign", store: UserDefaults(suiteName: "group.com.vishwajeet.dime"))
     var showExpenseOrIncomeSign: Bool = true
 
     var body: some View {
@@ -1790,6 +1829,64 @@ struct NoResultsView: View {
             .opacity(0.7)
             .padding(.top, 50)
         }
+    }
+}
+
+struct AccountStepperView: View {
+    @Binding var accountFilter: Account?
+    @EnvironmentObject var dataController: DataController
+    @State var accounts = [Account]()
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            ScrollViewReader { value in
+                HStack(spacing: 8) {
+                    ForEach(accounts, id: \.self) { item in
+                        HStack(spacing: 5) {
+                            Text(item.wrappedEmoji)
+                                .font(.system(.footnote, design: .rounded).weight(.medium))
+                                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                            Text(item.wrappedName)
+                                .font(.system(.body, design: .rounded).weight(.medium))
+                                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                        }
+                        .id(item.id)
+                        .padding(.horizontal, 11)
+                        .padding(.vertical, 7)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .foregroundColor(accountFilter == item ? Color(hex: item.wrappedColour) : Color.PrimaryText)
+                        .background(
+                            accountFilter == item
+                                ? Color(hex: item.wrappedColour).opacity(0.3)
+                                : Color.PrimaryBackground,
+                            in: RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        )
+                        .overlay {
+                            if accountFilter != item {
+                                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                    .strokeBorder(Color.Outline, style: StrokeStyle(lineWidth: 1.5))
+                            }
+                        }
+                        .onTapGesture {
+                            accountFilter = item
+                            withAnimation {
+                                value.scrollTo(item.id, anchor: .leading)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: 30)
+        .onAppear {
+            accounts = dataController.getAllAccounts()
+            accountFilter = accounts.first
+        }
+    }
+
+    init(accountFilter: Binding<Account?>?) {
+        _accountFilter = accountFilter ?? Binding.constant(nil)
     }
 }
 
@@ -2057,7 +2154,7 @@ struct WeekStepperView: View {
             return Date.now
         } else {
             var calendar = Calendar(identifier: .gregorian)
-            calendar.firstWeekday = UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.integer(forKey: "firstWeekday") ?? 0
+            calendar.firstWeekday = UserDefaults(suiteName: "group.com.vishwajeet.dime")?.integer(forKey: "firstWeekday") ?? 0
             calendar.minimumDaysInFirstWeek = 4
 
             let date = transactions[0].day ?? Date.now
@@ -2120,7 +2217,7 @@ struct WeekStepperView: View {
         .onAppear {
             var calendar = Calendar(identifier: .gregorian)
 
-            calendar.firstWeekday = UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.integer(forKey: "firstWeekday") ?? 0
+            calendar.firstWeekday = UserDefaults(suiteName: "group.com.vishwajeet.dime")?.integer(forKey: "firstWeekday") ?? 0
             calendar.minimumDaysInFirstWeek = 4
 
             let date = transactionsReversed[0].day ?? Date.now
