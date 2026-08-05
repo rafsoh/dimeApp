@@ -16,7 +16,7 @@ import WidgetKit
 struct SettingsView: View {
   @Environment(\.dynamicTypeSize) var dynamicTypeSize
 
-  @AppStorage("colourScheme", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+  @AppStorage("colourScheme", store: UserDefaults(suiteName: "group.com.vishwajeet.dime"))
   var colourScheme: Int = 0
   var colourSchemeString: String {
     if colourScheme == 1 {
@@ -28,7 +28,7 @@ struct SettingsView: View {
     }
   }
 
-  @AppStorage("activeIcon", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+  @AppStorage("activeIcon", store: UserDefaults(suiteName: "group.com.vishwajeet.dime"))
   var activeIcon: String = "AppIcon"
   var appIconString: String {
     if activeIcon == "AppIcon1" {
@@ -42,7 +42,7 @@ struct SettingsView: View {
     }
   }
 
-  @AppStorage("firstWeekday", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+  @AppStorage("firstWeekday", store: UserDefaults(suiteName: "group.com.vishwajeet.dime"))
   var firstWeekday: Int = 1
   var firstWeekdayString: String {
     if firstWeekday == 1 {
@@ -52,9 +52,9 @@ struct SettingsView: View {
     }
   }
 
-  @AppStorage("showNotifications", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+  @AppStorage("showNotifications", store: UserDefaults(suiteName: "group.com.vishwajeet.dime"))
   var showNotifications: Bool = false
-  @AppStorage("notificationOption", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+  @AppStorage("notificationOption", store: UserDefaults(suiteName: "group.com.vishwajeet.dime"))
   var option: Int = 1
   var notificationString: String {
     if showNotifications {
@@ -86,7 +86,7 @@ struct SettingsView: View {
   let featureRequestEmail = SupportEmail(
     toAddress: "rafasohhh@gmail.com", subject: "Feature Request")
 
-  @AppStorage("numberEntryType", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+  @AppStorage("numberEntryType", store: UserDefaults(suiteName: "group.com.vishwajeet.dime"))
   var numberEntryType: Int = 2
 
   var numberEntryString: String {
@@ -97,23 +97,23 @@ struct SettingsView: View {
     }
   }
 
-  @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+  @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.vishwajeet.dime"))
   var showCents: Bool = true
 
-  @AppStorage("animated", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var animated:
+  @AppStorage("animated", store: UserDefaults(suiteName: "group.com.vishwajeet.dime")) var animated:
     Bool = true
 
-  @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency:
+  @AppStorage("currency", store: UserDefaults(suiteName: "group.com.vishwajeet.dime")) var currency:
     String = Locale.current.currencyCode!
 
-  @AppStorage("incomeTracking", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+  @AppStorage("incomeTracking", store: UserDefaults(suiteName: "group.com.vishwajeet.dime"))
   var incomeTracking: Bool = true
     
-  @AppStorage("showExpenseOrIncomeSign", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+  @AppStorage("showExpenseOrIncomeSign", store: UserDefaults(suiteName: "group.com.vishwajeet.dime"))
   var showExpenseOrIncomeSign: Bool = true
 
   @AppStorage(
-    "showUpcomingTransactions", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+    "showUpcomingTransactions", store: UserDefaults(suiteName: "group.com.vishwajeet.dime"))
   var showUpcoming: Bool = true
 
   var upcomingString: String {
@@ -124,7 +124,7 @@ struct SettingsView: View {
     }
   }
 
-    @AppStorage("haptics", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+    @AppStorage("haptics", store: UserDefaults(suiteName: "group.com.vishwajeet.dime"))
     var hapticType: Int = 1
 
     var hapticString: String {
@@ -217,9 +217,9 @@ struct SettingsView: View {
                   incomeTracking.toggle()
 
                   if !incomeTracking {
-                    UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.set(
+                    UserDefaults(suiteName: "group.com.vishwajeet.dime")!.set(
                       false, forKey: "insightsViewIncomeFiltering")
-                    UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.set(
+                    UserDefaults(suiteName: "group.com.vishwajeet.dime")!.set(
                       3, forKey: "logInsightsType")
                   }
                 })
@@ -627,7 +627,7 @@ struct TipJarAlert: View {
 
   @State private var offset: CGFloat = 0
 
-  @AppStorage("bottomEdge", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+  @AppStorage("bottomEdge", store: UserDefaults(suiteName: "group.com.vishwajeet.dime"))
   var bottomEdge: Double = 15
 
   @State var opacity = 0.0

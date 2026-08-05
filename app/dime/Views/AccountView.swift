@@ -91,7 +91,7 @@ struct AccountListView: View {
     @Environment(\.colorScheme) var systemColorScheme
     @EnvironmentObject var dataController: DataController
 
-    @AppStorage("bottomEdge", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var bottomEdge: Double = 15
+    @AppStorage("bottomEdge", store: UserDefaults(suiteName: "group.com.vishwajeet.dime")) var bottomEdge: Double = 15
 
     @State private var offset: CGFloat = 0
     @FetchRequest(sortDescriptors: [SortDescriptor(\.order)]) private var accounts: FetchedResults<Account>
