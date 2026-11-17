@@ -564,7 +564,7 @@ struct SettingsView: View {
 
     let fileName = "export.csv"
     let path = NSURL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(fileName)
-    var csvText = "Date,Note,Amount,Category,Type\n"
+    var csvText = "Date,Note,Amount,Category,Type,Original Amount,Original Currency,Exchange Rate\n"
 
     for transaction in transactions {
       var string = transaction.wrappedNote
@@ -578,8 +578,16 @@ struct SettingsView: View {
 
       string.removeAll(where: { $0 == "," })
 
+      // foreign-currency entries keep the amount as typed; empty for home-currency rows
+      let original: String
+      if let code = transaction.originalCurrency, transaction.exchangeRate > 0 {
+        original = "\(transaction.originalAmount),\(code),\(transaction.exchangeRate)"
+      } else {
+        original = ",,"
+      }
+
       csvText +=
-        "\(transaction.wrappedDate),\(string),\(String(format: "%.2f", transaction.wrappedAmount)),\(transaction.category?.wrappedName ?? ""),\(type)\n"
+        "\(transaction.wrappedDate),\(string),\(String(format: "%.2f", transaction.wrappedAmount)),\(transaction.category?.wrappedName ?? ""),\(type),\(original)\n"
     }
 
     do {

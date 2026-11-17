@@ -52,6 +52,8 @@ struct ImportDataView: View {
 
     @State private var remainingColumns = [Int]()
     @State private var selectedColumns = [Int]()
+    // columns written by Dime's own export: original amount, currency, rate
+    @State private var currencyColumns: [Int]?
 
     var indexColumnWidth: CGFloat {
         let additionalPadding: Double
@@ -846,8 +848,15 @@ struct ImportDataView: View {
 
         var holdingRows = data.components(separatedBy: .newlines).filter { $0 != "" }
 
+        currencyColumns = nil
         if !holdingRows[0].containsDigits {
-            holdingRows.removeFirst()
+            let header = holdingRows.removeFirst().components(separatedBy: ",").map {
+                $0.trimmingCharacters(in: .whitespaces).lowercased()
+            }
+            let indices = ["original amount", "original currency", "exchange rate"].compactMap { header.firstIndex(of: $0) }
+            if indices.count == 3 {
+                currencyColumns = indices
+            }
         }
 
         guard !holdingRows.isEmpty else {
@@ -906,7 +915,18 @@ struct ImportDataView: View {
             if let transactionDate = dateFormatter.date(from: row[dateColumnIndex]) {
                 if let rowCategory = categoryDictionary[row[categoryColumnIndex]] {
                     if let transactionAmount = Double(row[amountColumnIndex]) {
-                        _ = dataController.newTransaction(note: row[noteColumnIndex], category: rowCategory, income: rowCategory.income, amount: abs(transactionAmount), date: transactionDate, repeatType: 0, repeatCoefficient: 1, delay: false)
+                        let transaction = dataController.newTransaction(note: row[noteColumnIndex], category: rowCategory, income: rowCategory.income, amount: abs(transactionAmount), date: transactionDate, repeatType: 0, repeatCoefficient: 1, delay: false)
+
+                        if let currencyColumns, currencyColumns.allSatisfy({ $0 < row.count }),
+                           let originalAmount = Double(row[currencyColumns[0]]),
+                           let rate = Double(row[currencyColumns[2]]), rate > 0 {
+                            let code = row[currencyColumns[1]].trimmingCharacters(in: .whitespaces)
+                            if !code.isEmpty {
+                                transaction.originalAmount = abs(originalAmount)
+                                transaction.originalCurrency = code
+                                transaction.exchangeRate = rate
+                            }
+                        }
                     } else {
                         processingState = .error
                         errorMessage = "Invalid values in amount column."
