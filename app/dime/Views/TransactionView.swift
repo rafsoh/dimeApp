@@ -361,7 +361,6 @@ struct TransactionView: View {
                                     .contentShape(Circle())
                             }
                         }
-                        .accessibilityRemoveTraits(.isButton)
                         .accessibilityLabel(repeatButtonAccessibility)
                         .popover(
                             present: $showRecurring,
@@ -858,7 +857,7 @@ struct TransactionView: View {
                 .animation(.easeOut(duration: 0.25), value: showingDatePicker)
             }
         }
-        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+        .dynamicTypeSize(...DynamicTypeSize.accessibility2)
         .animation(.easeOut(duration: 0.2), value: showToast)
         .ignoresSafeArea(.keyboard, edges: .all)
         .frame(maxHeight: .infinity)
@@ -866,6 +865,7 @@ struct TransactionView: View {
         .edgesIgnoringSafeArea(.all)
         .onChange(of: showToast) { newValue in
             if newValue {
+                UIAccessibility.post(notification: .announcement, argument: NSLocalizedString(toastTitle, comment: ""))
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                     showToast = false
                 }

@@ -306,3 +306,10 @@
 "SELECT BUDGET IN WIDGET OPTIONS" = "Выберите бюджет в настройках виджета";
 
 "Time Period" = "Time Period";
+
+/* Accessibility */
+"Log" = "Журнал";
+"Delete digit" = "Удалить цифру";
+"Decimal point" = "Десятичная запятая";
+"Save transaction" = "Сохранить транзакцию";
+"Permanently erases all data" = "Безвозвратно удаляет все данные";

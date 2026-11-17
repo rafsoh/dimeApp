@@ -128,6 +128,13 @@ struct DeleteAllAlert: View {
         .frame(height: 45)
         .frame(maxWidth: .infinity)
         .padding(.bottom, 8)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text("Delete Literally Everything"))
+        .accessibilityHint(Text("Permanently erases all data"))
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction {
+          completedLongPress = true
+        }
         .gesture(
           LongPressGesture(minimumDuration: 2)
             .updating(

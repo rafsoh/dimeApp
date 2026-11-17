@@ -163,7 +163,7 @@ struct TabButton: View {
                 .foregroundColor(currentTab == image ? Color.DarkIcon : Color.GreyIcon)
         }
         .buttonStyle(BouncyButton(duration: 0.3, scale: 0.6))
-        .accessibilityLabel("\(image) tab")
+        .accessibilityLabel(Text(LocalizedStringKey(image)))
         .accessibilityAddTraits(
             currentTab == image
                 ? [.isButton, .isSelected]

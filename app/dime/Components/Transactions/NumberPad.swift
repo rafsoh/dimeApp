@@ -28,6 +28,9 @@ struct NumberPad: View {
 
     @State private var engine: CHHapticEngine?
 
+    @ScaledMetric(relativeTo: .title) private var keyFontSize: CGFloat = 34
+    @ScaledMetric(relativeTo: .title) private var keyIconSize: CGFloat = 32
+
     var body: some View {
         GeometryReader { proxy in
             VStack(spacing: proxy.size.height * 0.04) {
@@ -45,25 +48,28 @@ struct NumberPad: View {
                         } label: {
                             Image("tag-cross")
                                 .resizable()
-                                .frame(width: 32, height: 32)
+                                .frame(width: min(keyIconSize, proxy.size.height * 0.16), height: min(keyIconSize, proxy.size.height * 0.16))
                                 .frame(width: proxy.size.width * 0.3, height: proxy.size.height * 0.22)
                                 .background(Color.DarkBackground)
                                 .foregroundColor(Color.LightIcon)
                                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                         }
                         .buttonStyle(NumPadButton())
+                        .accessibilityLabel(Text("Delete digit"))
                     } else {
                         Button {
                             isEditingDecimal = true
                         } label: {
                             Text(".")
-                                .font(.system(size: 34, weight: .regular, design: .rounded))
+                                .font(.system(size: keyFontSize, weight: .regular, design: .rounded))
+                                .minimumScaleFactor(0.5)
                                 .frame(width: proxy.size.width * 0.3, height: proxy.size.height * 0.22)
                                 .background(Color.SecondaryBackground)
                                 .foregroundColor(Color.PrimaryText)
                                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                         }
                         .buttonStyle(NumPadButton())
+                        .accessibilityLabel(Text("Decimal point"))
                     }
 
                     NumberButton(number: 0, size: proxy.size)
@@ -74,18 +80,20 @@ struct NumberPad: View {
                         Group {
                             if #available(iOS 17.0, *) {
                                 Image(systemName: "checkmark.square.fill")
-                                    .font(.system(size: 30, weight: .medium, design: .rounded))
+                                    .font(.system(size: keyIconSize - 2, weight: .medium, design: .rounded))
                                     .symbolEffect(.bounce.up.byLayer, value: price != 0 && category != nil)
                             } else {
                                 Image(systemName: "checkmark.square.fill")
-                                    .font(.system(size: 30, weight: .medium, design: .rounded))
+                                    .font(.system(size: keyIconSize - 2, weight: .medium, design: .rounded))
                             }
                         }
+                        .minimumScaleFactor(0.5)
                         .frame(width: proxy.size.width * 0.3, height: proxy.size.height * 0.22)
                         .foregroundColor(Color.LightIcon)
                         .background(Color.DarkBackground, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                     }
                     .buttonStyle(NumPadButton())
+                    .accessibilityLabel(Text("Save transaction"))
                 }
             }
             .frame(width: proxy.size.width, height: proxy.size.height)
@@ -211,7 +219,8 @@ struct NumberPad: View {
             }
         } label: {
             Text("\(number)")
-                .font(.system(size: 34, weight: .regular, design: .rounded))
+                .font(.system(size: keyFontSize, weight: .regular, design: .rounded))
+                .minimumScaleFactor(0.5)
                 .frame(width: size.width * 0.3, height: size.height * 0.22)
                 .background(Color.SecondaryBackground)
                 .foregroundColor(Color.PrimaryText)
@@ -288,7 +297,7 @@ struct NumberPadTextView: View {
         case .xxxLarge:
             return 62
         default:
-            return 50
+            return dynamicTypeSize.isAccessibilitySize ? 68 : 50
         }
     }
 
@@ -334,9 +343,11 @@ struct NumberPadTextView: View {
            .foregroundColor(Color.SubtitleText)
            .padding(7)
            .background(Color.SecondaryBackground, in: Circle())
-           .contentShape(Circle())
+           .frame(minWidth: 44, minHeight: 44)
+           .contentShape(Rectangle())
        }
        .disabled(price == 0 && !isEditingDecimal)
+       .accessibilityLabel(Text("Delete digit"))
    }
 
     public func deleteLastDigit() {

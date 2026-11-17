@@ -306,3 +306,10 @@
 "left" = "restant";
 "SELECT BUDGET" = "Sélectionner le budget";
 "SELECT BUDGET IN WIDGET OPTIONS" = "Sélectionner un budget dans les options du widget";
+
+/* Accessibility */
+"Log" = "Journal";
+"Delete digit" = "Supprimer le chiffre";
+"Decimal point" = "Virgule décimale";
+"Save transaction" = "Enregistrer la transaction";
+"Permanently erases all data" = "Efface définitivement toutes les données";

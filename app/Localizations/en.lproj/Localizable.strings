@@ -307,3 +307,10 @@
 "left" = "left";
 "SELECT BUDGET" = "SELECT BUDGET";
 "SELECT BUDGET IN WIDGET OPTIONS" = "SELECT BUDGET IN WIDGET OPTIONS";
+
+/* Accessibility */
+"Log" = "Log";
+"Delete digit" = "Delete digit";
+"Decimal point" = "Decimal point";
+"Save transaction" = "Save transaction";
+"Permanently erases all data" = "Permanently erases all data";
