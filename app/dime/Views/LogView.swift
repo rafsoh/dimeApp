@@ -1236,6 +1236,14 @@ struct SingleTransactionView: View {
         return numberFormatter.string(from: NSNumber(value: transaction.amount)) ?? "$0"
     }
 
+    /// The amount as entered, when the transaction was logged in a foreign currency.
+    var originalAmountString: String? {
+        guard let code = transaction.originalCurrency, code != currency, transaction.exchangeRate > 0 else {
+            return nil
+        }
+        return transaction.originalAmount.formatted(.currency(code: code))
+    }
+
     var body: some View {
         ZStack(alignment: .trailing) {
             Image(systemName: "xmark")
@@ -1283,24 +1291,33 @@ struct SingleTransactionView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                if transaction.income {
-                    Text(showExpenseOrIncomeSign ? "+\(transactionAmountString)" : transactionAmountString)
-                        .font(.system(.title3, design: .rounded).weight(.medium))
-                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                        .foregroundColor(future ? Color.SubtitleText : Color.IncomeGreen)
-                        .minimumScaleFactor(0.7)
-                        .lineLimit(1)
-                        .layoutPriority(1)
+                VStack(alignment: .trailing, spacing: 2) {
+                    if transaction.income {
+                        Text(showExpenseOrIncomeSign ? "+\(transactionAmountString)" : transactionAmountString)
+                            .font(.system(.title3, design: .rounded).weight(.medium))
+                            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                            .foregroundColor(future ? Color.SubtitleText : Color.IncomeGreen)
+                            .minimumScaleFactor(0.7)
+                            .lineLimit(1)
 
-                } else {
-                    Text(showExpenseOrIncomeSign ? "-\(transactionAmountString)" : transactionAmountString)
-                        .font(.system(.title3, design: .rounded).weight(.medium))
-                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                        .foregroundColor(future ? Color.SubtitleText : Color.PrimaryText)
-                        .minimumScaleFactor(0.7)
-                        .lineLimit(1)
-                        .layoutPriority(1)
+                    } else {
+                        Text(showExpenseOrIncomeSign ? "-\(transactionAmountString)" : transactionAmountString)
+                            .font(.system(.title3, design: .rounded).weight(.medium))
+                            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                            .foregroundColor(future ? Color.SubtitleText : Color.PrimaryText)
+                            .minimumScaleFactor(0.7)
+                            .lineLimit(1)
+                    }
+
+                    if let originalAmountString {
+                        Text(originalAmountString)
+                            .font(.system(.subheadline, design: .rounded).weight(.medium))
+                            .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+                            .foregroundColor(future ? Color.EvenLighterText : Color.SubtitleText)
+                            .lineLimit(1)
+                    }
                 }
+                .layoutPriority(1)
             }
             .id(refreshID)
             .padding(.vertical, 8)
@@ -1340,7 +1357,7 @@ struct SingleTransactionView: View {
             }
             .offset(x: offset)
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("\(transaction.wrappedNote), \(currencySymbol)\(String(format: "%.2f", transaction.wrappedAmount)), Transaction Category: \(transaction.category?.wrappedName ?? "Unknown"), Transaction made at \(timeConverterAccessibilityLabel(date: transaction.wrappedDate))")
+            .accessibilityLabel("\(transaction.wrappedNote), \(currencySymbol)\(String(format: "%.2f", transaction.wrappedAmount))\(originalAmountString.map { " (\($0))" } ?? ""), Transaction Category: \(transaction.category?.wrappedName ?? "Unknown"), Transaction made at \(timeConverterAccessibilityLabel(date: transaction.wrappedDate))")
         }
         .onChange(of: deletePopup) { _ in
             if deletePopup {
