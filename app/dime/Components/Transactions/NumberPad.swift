@@ -18,9 +18,17 @@ struct NumberPad: View {
     @Binding var isEditingDecimal: Bool
     @Binding var decimalValuesAssigned: AssignedDecimal
     var showingNotePicker: Bool = false
+    /// Currency being entered, when it differs from the home currency.
+    var entryCurrency: String? = nil
     var submit: () -> Void
 
     @AppStorage("numberEntryType", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var numberEntryType: Int = 1
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode ?? "USD"
+
+    /// Minor-unit digits of the active currency (2 for EUR, 0 for JPY, 3 for KWD).
+    var fractionDigits: Int {
+        ExchangeRates.fractionDigits(for: entryCurrency ?? currency)
+    }
     @AppStorage("haptics", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
         var hapticType: Int = 1
 
@@ -58,7 +66,9 @@ struct NumberPad: View {
                         .accessibilityLabel(Text("Delete digit"))
                     } else {
                         Button {
-                            isEditingDecimal = true
+                            if fractionDigits > 0 {
+                                isEditingDecimal = true
+                            }
                         } label: {
                             Text(".")
                                 .font(.system(size: keyFontSize, weight: .regular, design: .rounded))
@@ -164,7 +174,7 @@ struct NumberPad: View {
 
     public func deleteLastDigit() {
         if numberEntryType == 1 {
-            price = Double(Int(price * 10)) / 100
+            price = removingLastDigit(price, fractionDigits: fractionDigits)
         } else if !isEditingDecimal {
             price = Double(Int(price / 10))
         } else {
@@ -198,8 +208,7 @@ struct NumberPad: View {
             }
 
             if numberEntryType == 1 {
-                price *= 10
-                price += Double(number) / 100
+                price = appendingDigit(number, to: price, fractionDigits: fractionDigits)
             } else {
                 if isEditingDecimal {
                     switch decimalValuesAssigned {
@@ -230,6 +239,20 @@ struct NumberPad: View {
         .disabled(disabled)
         .buttonStyle(NumPadButton())
     }
+}
+
+/// Cash-register entry: typing shifts digits in from the right, so with 2 minor digits "599" is 5.99
+/// and with 0 minor digits (JPY) it is 599. Works in integer minor units to avoid float drift.
+func appendingDigit(_ digit: Int, to price: Double, fractionDigits: Int) -> Double {
+    let factor = pow(10, Double(fractionDigits))
+    let units = (price * factor).rounded() * 10 + Double(digit)
+    return units / factor
+}
+
+func removingLastDigit(_ price: Double, fractionDigits: Int) -> Double {
+    let factor = pow(10, Double(fractionDigits))
+    let units = ((price * factor).rounded() / 10).rounded(.down)
+    return units / factor
 }
 
 func splitDouble(_ num: Double) -> [String] {
@@ -265,9 +288,13 @@ struct NumberPadTextView: View {
 
     @AppStorage("numberEntryType", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var numberEntryType: Int = 1
 
+    var fractionDigits: Int {
+        ExchangeRates.fractionDigits(for: entryCurrency ?? currency)
+    }
+
     public var amount: String {
         if numberEntryType == 1 {
-            return String(format: "%.2f", price)
+            return String(format: "%.\(fractionDigits)f", price)
         }
         if isEditingDecimal {
             switch decimalValuesAssigned {
@@ -356,7 +383,7 @@ struct NumberPadTextView: View {
 
     public func deleteLastDigit() {
         if numberEntryType == 1 {
-            price = Double(Int(price * 10)) / 100
+            price = removingLastDigit(price, fractionDigits: fractionDigits)
         } else if !isEditingDecimal {
             price = Double(Int(price / 10))
         } else {

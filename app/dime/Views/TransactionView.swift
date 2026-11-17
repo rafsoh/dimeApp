@@ -820,7 +820,8 @@ struct TransactionView: View {
                         category: $category,
                         isEditingDecimal: $isEditingDecimal,
                         decimalValuesAssigned: $decimalValuesAssigned,
-                        showingNotePicker: showingNotePicker
+                        showingNotePicker: showingNotePicker,
+                        entryCurrency: isForeignEntry ? entryCurrency : nil
                     ) {
                         submit()
                     }
