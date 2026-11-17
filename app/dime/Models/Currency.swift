@@ -41,3 +41,78 @@ extension Currency {
         return currencies
     }
 }
+
+/// Exchange rates for entering transactions in a foreign currency.
+/// Rates come from Frankfurter (ECB reference rates) and are cached per currency pair,
+/// so the last known rate is still available offline.
+enum ExchangeRates {
+    private static let defaults = UserDefaults(suiteName: "group.com.rafaelsoh.dime")
+    private static let recentKey = "recentEntryCurrencies"
+
+    struct FrankfurterResponse: Decodable {
+        let rates: [String: Double]
+    }
+
+    static func cachedRate(from: String, to: String) -> Double? {
+        let value = defaults?.double(forKey: "rate_\(from)_\(to)") ?? 0
+        return value > 0 ? value : nil
+    }
+
+    static func cache(rate: Double, from: String, to: String) {
+        defaults?.set(rate, forKey: "rate_\(from)_\(to)")
+    }
+
+    /// Rate to convert 1 unit of `from` into `to`, for the given day.
+    static func fetchRate(from: String, to: String, on date: Date) async throws -> Double {
+        let path: String
+        if Calendar.current.startOfDay(for: date) >= Calendar.current.startOfDay(for: Date.now) {
+            path = "latest"
+        } else {
+            let formatter = DateFormatter()
+            formatter.calendar = Calendar(identifier: .gregorian)
+            formatter.locale = Locale(identifier: "en_US_POSIX")
+            formatter.dateFormat = "yyyy-MM-dd"
+            path = formatter.string(from: date)
+        }
+
+        guard let url = URL(string: "https://api.frankfurter.dev/v1/\(path)?from=\(from)&to=\(to)") else {
+            throw URLError(.badURL)
+        }
+
+        let (data, response) = try await URLSession.shared.data(from: url)
+
+        guard (response as? HTTPURLResponse)?.statusCode == 200 else {
+            throw URLError(.badServerResponse)
+        }
+
+        guard let rate = try JSONDecoder().decode(FrankfurterResponse.self, from: data).rates[to], rate > 0 else {
+            throw URLError(.cannotParseResponse)
+        }
+
+        cache(rate: rate, from: from, to: to)
+        return rate
+    }
+
+    static var recentCurrencies: [String] {
+        defaults?.stringArray(forKey: recentKey) ?? []
+    }
+
+    static func markRecent(_ code: String) {
+        var list = recentCurrencies.filter { $0 != code }
+        list.insert(code, at: 0)
+        defaults?.set(Array(list.prefix(5)), forKey: recentKey)
+    }
+
+    static func fractionDigits(for code: String) -> Int {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = code
+        return formatter.maximumFractionDigits
+    }
+
+    /// Converts an amount and rounds it to the target currency's minor units.
+    static func convert(_ amount: Double, rate: Double, to code: String) -> Double {
+        let factor = pow(10, Double(fractionDigits(for: code)))
+        return (amount * rate * factor).rounded() / factor
+    }
+}
