@@ -313,3 +313,13 @@
 "Decimal point" = "Десятичная запятая";
 "Save transaction" = "Сохранить транзакцию";
 "Permanently erases all data" = "Безвозвратно удаляет все данные";
+
+/* Foreign currency entry */
+"Other Currency" = "Другая валюта";
+"Set Exchange Rate" = "Указать курс";
+"Fetching rate…" = "Загрузка курса…";
+"No exchange rate" = "Нет курса";
+"Exchange Rate" = "Курс обмена";
+"Rate" = "Курс";
+"Missing Exchange Rate" = "Нет курса обмена";
+"Save" = "Сохранить";

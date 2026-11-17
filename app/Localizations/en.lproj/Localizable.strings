@@ -314,3 +314,13 @@
 "Decimal point" = "Decimal point";
 "Save transaction" = "Save transaction";
 "Permanently erases all data" = "Permanently erases all data";
+
+/* Foreign currency entry */
+"Other Currency" = "Other Currency";
+"Set Exchange Rate" = "Set Exchange Rate";
+"Fetching rate…" = "Fetching rate…";
+"No exchange rate" = "No exchange rate";
+"Exchange Rate" = "Exchange Rate";
+"Rate" = "Rate";
+"Missing Exchange Rate" = "Missing Exchange Rate";
+"Save" = "Save";

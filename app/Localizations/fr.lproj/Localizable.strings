@@ -313,3 +313,13 @@
 "Decimal point" = "Virgule décimale";
 "Save transaction" = "Enregistrer la transaction";
 "Permanently erases all data" = "Efface définitivement toutes les données";
+
+/* Foreign currency entry */
+"Other Currency" = "Autre devise";
+"Set Exchange Rate" = "Définir le taux de change";
+"Fetching rate…" = "Récupération du taux…";
+"No exchange rate" = "Aucun taux de change";
+"Exchange Rate" = "Taux de change";
+"Rate" = "Taux";
+"Missing Exchange Rate" = "Taux de change manquant";
+"Save" = "Enregistrer";

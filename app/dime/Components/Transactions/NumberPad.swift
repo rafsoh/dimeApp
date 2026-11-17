@@ -251,8 +251,12 @@ struct NumberPadTextView: View {
     @Binding var decimalValuesAssigned: AssignedDecimal
 
     @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    /// Currency the amount is being entered in, when it differs from the home currency.
+    var entryCurrency: String? = nil
+
     var currencySymbol: String {
-        return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
+        let code = entryCurrency ?? currency
+        return Locale.current.localizedCurrencySymbol(forCurrencyCode: code) ?? code
     }
 //
 //    var displayNumbers: [String] {

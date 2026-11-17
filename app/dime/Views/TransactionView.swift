@@ -224,6 +224,115 @@ struct TransactionView: View {
     @State var decimalValuesAssigned: AssignedDecimal = .none
     @State private var priceString: String = "0"
 
+    // foreign currency entry
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+    var homeCurrency: String = Locale.current.currencyCode ?? "USD"
+    @State private var entryCurrency: String?
+    @State private var exchangeRate: Double?
+    @State private var fetchingRate = false
+    @State private var showCurrencyPicker = false
+    @State private var showManualRate = false
+    @State private var manualRateText = ""
+
+    private var isForeignEntry: Bool {
+        if let entryCurrency {
+            return entryCurrency != homeCurrency
+        }
+        return false
+    }
+
+    private var convertedPrice: Double? {
+        guard isForeignEntry, let exchangeRate else { return nil }
+        return ExchangeRates.convert(price, rate: exchangeRate, to: homeCurrency)
+    }
+
+    private func loadRate() {
+        guard isForeignEntry, let from = entryCurrency else {
+            exchangeRate = nil
+            return
+        }
+        let to = homeCurrency
+        // keep the stored (historic or manual) rate when opening an edit
+        if let edited = toEdit, edited.originalCurrency == from, edited.exchangeRate > 0 {
+            exchangeRate = edited.exchangeRate
+            return
+        }
+        exchangeRate = ExchangeRates.cachedRate(from: from, to: to)
+        fetchingRate = true
+        Task {
+            let fresh = try? await ExchangeRates.fetchRate(from: from, to: to, on: date)
+            await MainActor.run {
+                if entryCurrency == from, let fresh {
+                    exchangeRate = fresh
+                }
+                fetchingRate = false
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var currencyChip: some View {
+        Menu {
+            Button {
+                entryCurrency = nil
+            } label: {
+                Text(homeCurrency)
+            }
+            ForEach(ExchangeRates.recentCurrencies.filter { $0 != homeCurrency }, id: \.self) { code in
+                Button {
+                    entryCurrency = code
+                } label: {
+                    Text(code)
+                }
+            }
+            Divider()
+            Button {
+                showCurrencyPicker = true
+            } label: {
+                Text("Other Currency")
+            }
+            if isForeignEntry {
+                Button {
+                    manualRateText = exchangeRate.map { String($0) } ?? ""
+                    showManualRate = true
+                } label: {
+                    Text("Set Exchange Rate")
+                }
+            }
+        } label: {
+            HStack(spacing: 4) {
+                Text(entryCurrency ?? homeCurrency)
+                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .foregroundColor(Color.PrimaryText)
+                Image(systemName: "chevron.down")
+                    .font(.system(.caption2, design: .rounded).weight(.bold))
+                    .foregroundColor(Color.SubtitleText)
+
+                if isForeignEntry {
+                    Group {
+                        if let convertedPrice {
+                            Text("≈ \(convertedPrice.formatted(.currency(code: homeCurrency)))")
+                        } else if fetchingRate {
+                            Text("Fetching rate…")
+                        } else {
+                            Text("No exchange rate")
+                        }
+                    }
+                    .font(.system(.subheadline, design: .rounded))
+                    .foregroundColor(Color.SubtitleText)
+                    .lineLimit(1)
+                }
+            }
+            .padding(.horizontal, 12)
+            .frame(minHeight: 32)
+            .background(Color.SecondaryBackground, in: Capsule())
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+        }
+        .accessibilityLabel(Text("Currency"))
+        .accessibilityValue(Text(entryCurrency ?? homeCurrency))
+    }
+
     var body: some View {
         GeometryReader { proxy in
             VStack(spacing: 8) {
@@ -441,7 +550,8 @@ struct TransactionView: View {
 
                     // number display and note view
                     VStack(spacing: 8) {
-                        NumberPadTextView(price: $price, isEditingDecimal: $isEditingDecimal, decimalValuesAssigned: $decimalValuesAssigned)
+                        NumberPadTextView(price: $price, isEditingDecimal: $isEditingDecimal, decimalValuesAssigned: $decimalValuesAssigned, entryCurrency: isForeignEntry ? entryCurrency : nil)
+                        currencyChip
                         NoteView(note: $note, focused: $textFieldFocused)
                     }
                 }
@@ -895,7 +1005,13 @@ struct TransactionView: View {
                     repeatCoefficient = Int(transaction.recurringCoefficient)
                     price = transaction.wrappedAmount
 
-                    if transaction.wrappedAmount.truncatingRemainder(dividingBy: 1) > 0 && numberEntryType == 2 {
+                    if let original = transaction.originalCurrency, original != homeCurrency, transaction.exchangeRate > 0 {
+                        entryCurrency = original
+                        exchangeRate = transaction.exchangeRate
+                        price = transaction.originalAmount
+                    }
+
+                    if price.truncatingRemainder(dividingBy: 1) > 0 && numberEntryType == 2 {
                         isEditingDecimal = true
                         decimalValuesAssigned = .second
                     }
@@ -905,6 +1021,45 @@ struct TransactionView: View {
                     }
                 }
             }
+        }
+        .onChange(of: entryCurrency) { newValue in
+            if let newValue, newValue != homeCurrency {
+                ExchangeRates.markRecent(newValue)
+            }
+            // snap the typed amount to the new currency's minor units (e.g. no cents for JPY)
+            let factor = pow(10, Double(ExchangeRates.fractionDigits(for: newValue ?? homeCurrency)))
+            price = (price * factor).rounded() / factor
+            if factor == 1 {
+                isEditingDecimal = false
+                decimalValuesAssigned = .none
+            }
+            loadRate()
+        }
+        .onChange(of: date) { _ in
+            // keep a stored rate when editing; refetch only for new entries
+            if toEdit == nil {
+                loadRate()
+            }
+        }
+        .sheet(isPresented: $showCurrencyPicker) {
+            EntryCurrencyPicker(selection: $entryCurrency)
+        }
+        .alert(Text("Exchange Rate"), isPresented: $showManualRate) {
+            TextField("Rate", text: $manualRateText)
+                .keyboardType(.decimalPad)
+            Button("Save") {
+                let formatter = NumberFormatter()
+                formatter.numberStyle = .decimal
+                if let value = formatter.number(from: manualRateText)?.doubleValue ?? Double(manualRateText), value > 0 {
+                    exchangeRate = value
+                    if let from = entryCurrency {
+                        ExchangeRates.cache(rate: value, from: from, to: homeCurrency)
+                    }
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("1 \(entryCurrency ?? "") = ? \(homeCurrency)")
         }
         .sheet(isPresented: $showCategorySheet) {
             CategoryView(mode: .transaction, income: income)
@@ -1013,9 +1168,23 @@ struct TransactionView: View {
 
             generator.notificationOccurred(.error)
             return
+        } else if isForeignEntry && exchangeRate == nil {
+            toastImage = "arrow.left.arrow.right"
+            toastTitle = "Missing Exchange Rate"
+            showToast = true
+            generator.notificationOccurred(.error)
+            manualRateText = ""
+            showManualRate = true
+            return
         }
 
         generator.notificationOccurred(.success)
+
+        // amounts are always stored in the home currency; the original entry is kept alongside
+        let storedAmount = convertedPrice ?? price
+        let originalCurrency = isForeignEntry ? entryCurrency : nil
+        let originalAmount = isForeignEntry ? price : 0
+        let storedRate = isForeignEntry ? (exchangeRate ?? 0) : 0
 
         if let editedTransaction = toEdit {
             if note.trimmingCharacters(in: .whitespacesAndNewlines) == "" {
@@ -1030,7 +1199,10 @@ struct TransactionView: View {
 
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 withAnimation(.easeInOut(duration: 0.5)) {
-                    editedTransaction.amount = price
+                    editedTransaction.amount = storedAmount
+                    editedTransaction.originalAmount = originalAmount
+                    editedTransaction.originalCurrency = originalCurrency
+                    editedTransaction.exchangeRate = storedRate
                     editedTransaction.date = date
                     editedTransaction.income = income
 
@@ -1078,7 +1250,10 @@ struct TransactionView: View {
             transaction.category = unwrappedCategory
         }
 
-        transaction.amount = price
+        transaction.amount = storedAmount
+        transaction.originalAmount = originalAmount
+        transaction.originalCurrency = originalCurrency
+        transaction.exchangeRate = storedRate
         transaction.date = date
         transaction.id = UUID()
 
@@ -1790,5 +1965,55 @@ struct ButtonView: View {
             .background(Color.SecondaryBackground)
             .foregroundColor(Color.PrimaryText)
             .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+}
+
+struct EntryCurrencyPicker: View {
+    @Binding var selection: String?
+    @Environment(\.dismiss) var dismiss
+    @State private var query = ""
+
+    private var currencies: [Currency] {
+        let all = Currency.allCurrencies
+        guard !query.isEmpty else { return all }
+        return all.filter {
+            $0.code.localizedCaseInsensitiveContains(query) || $0.name.localizedCaseInsensitiveContains(query)
+        }
+    }
+
+    var body: some View {
+        NavigationView {
+            List(currencies, id: \.self) { currency in
+                Button {
+                    selection = currency.code
+                    dismiss()
+                } label: {
+                    HStack(spacing: 10) {
+                        Text(currency.code)
+                            .font(.system(.body, design: .rounded).weight(.semibold))
+                            .foregroundColor(Color.SubtitleText)
+                            .frame(minWidth: 45, alignment: .leading)
+                        Text(currency.name)
+                            .font(.system(.body, design: .rounded))
+                            .foregroundColor(Color.PrimaryText)
+                            .lineLimit(1)
+                        Spacer()
+                        if currency.code == selection {
+                            Image(systemName: "checkmark")
+                                .foregroundColor(Color.DarkIcon)
+                        }
+                    }
+                }
+            }
+            .listStyle(.plain)
+            .searchable(text: $query)
+            .navigationTitle(Text("Currencies"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+            }
+        }
     }
 }
