@@ -16,6 +16,7 @@
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="income" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="symbol" optional="YES" attributeType="String"/>
         <attribute name="order" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <relationship name="budget" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="Budget" inverseName="category" inverseEntity="Budget"/>
         <relationship name="templates" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="TemplateTransaction" inverseName="category" inverseEntity="TemplateTransaction"/>

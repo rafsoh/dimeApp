@@ -135,17 +135,21 @@ struct IncomeCategoryEntity: AppEntity, Identifiable {
     @Property(title: "Emoji")
     var emoji: String
 
+    /// SF Symbol used when Shortcuts shows the item.
+    var icon: String = CategorySymbols.fallback
+
     @Property(title: "Income")
     var income: Bool
 
     var displayRepresentation: DisplayRepresentation {
-        DisplayRepresentation(title: "\(emoji) \(name)")
+        DisplayRepresentation(title: "\(name)", image: .init(systemName: icon))
     }
 
-    init(id: UUID, name: String, emoji: String, income: Bool) {
+    init(id: UUID, name: String, emoji: String, icon: String = CategorySymbols.fallback, income: Bool) {
         self.id = id
         self.name = name
         self.emoji = emoji
+        self.icon = icon
         self.income = income
     }
 }
@@ -161,7 +165,7 @@ struct IncomeCategoryQuery: EntityStringQuery {
 
         return categories.compactMap { category in
             if let id = category.id {
-                return IncomeCategoryEntity(id: id, name: category.wrappedName, emoji: category.wrappedEmoji, income: category.income)
+                return IncomeCategoryEntity(id: id, name: category.wrappedName, emoji: category.wrappedEmoji, icon: category.wrappedIcon, income: category.income)
             } else {
                 return nil
             }
@@ -174,7 +178,7 @@ struct IncomeCategoryQuery: EntityStringQuery {
 
             if let match = try? dataController.findCategory(withId: identifier) {
                 if let id = match.id {
-                    return IncomeCategoryEntity(id: id, name: match.wrappedName, emoji: match.wrappedEmoji, income: match.income)
+                    return IncomeCategoryEntity(id: id, name: match.wrappedName, emoji: match.wrappedEmoji, icon: match.wrappedIcon, income: match.income)
                 } else {
                     return nil
                 }
@@ -189,7 +193,7 @@ struct IncomeCategoryQuery: EntityStringQuery {
 
         return dataController.getAllCategories(income: true).compactMap { category in
             if let id = category.id {
-                return IncomeCategoryEntity(id: id, name: category.wrappedName, emoji: category.wrappedEmoji, income: category.income)
+                return IncomeCategoryEntity(id: id, name: category.wrappedName, emoji: category.wrappedEmoji, icon: category.wrappedIcon, income: category.income)
             } else {
                 return nil
             }
@@ -211,17 +215,21 @@ struct ExpenseCategoryEntity: AppEntity, Identifiable {
     @Property(title: "Emoji")
     var emoji: String
 
+    /// SF Symbol used when Shortcuts shows the item.
+    var icon: String = CategorySymbols.fallback
+
     @Property(title: "Income")
     var income: Bool
 
     var displayRepresentation: DisplayRepresentation {
-        DisplayRepresentation(title: "\(emoji) \(name)")
+        DisplayRepresentation(title: "\(name)", image: .init(systemName: icon))
     }
 
-    init(id: UUID, name: String, emoji: String, income: Bool) {
+    init(id: UUID, name: String, emoji: String, icon: String = CategorySymbols.fallback, income: Bool) {
         self.id = id
         self.name = name
         self.emoji = emoji
+        self.icon = icon
         self.income = income
     }
 }
@@ -237,7 +245,7 @@ struct ExpenseCategoryQuery: EntityStringQuery {
 
         return categories.compactMap { category in
             if let id = category.id {
-                return ExpenseCategoryEntity(id: id, name: category.wrappedName, emoji: category.wrappedEmoji, income: category.income)
+                return ExpenseCategoryEntity(id: id, name: category.wrappedName, emoji: category.wrappedEmoji, icon: category.wrappedIcon, income: category.income)
             } else {
                 return nil
             }
@@ -249,7 +257,7 @@ struct ExpenseCategoryQuery: EntityStringQuery {
             let dataController = DataController.shared
             if let match = try? dataController.findCategory(withId: identifier) {
                 if let id = match.id {
-                    return ExpenseCategoryEntity(id: id, name: match.wrappedName, emoji: match.wrappedEmoji, income: match.income)
+                    return ExpenseCategoryEntity(id: id, name: match.wrappedName, emoji: match.wrappedEmoji, icon: match.wrappedIcon, income: match.income)
                 } else {
                     return nil
                 }
@@ -264,7 +272,7 @@ struct ExpenseCategoryQuery: EntityStringQuery {
 
         return dataController.getAllCategories(income: false).compactMap { category in
             if let id = category.id {
-                return ExpenseCategoryEntity(id: id, name: category.wrappedName, emoji: category.wrappedEmoji, income: category.income)
+                return ExpenseCategoryEntity(id: id, name: category.wrappedName, emoji: category.wrappedEmoji, icon: category.wrappedIcon, income: category.income)
             } else {
                 return nil
             }
@@ -286,14 +294,18 @@ struct BudgetEntity: AppEntity, Identifiable {
     @Property(title: "Emoji")
     var emoji: String
 
+    /// SF Symbol used when Shortcuts shows the item.
+    var icon: String = CategorySymbols.fallback
+
     var displayRepresentation: DisplayRepresentation {
-        DisplayRepresentation(title: "\(emoji) \(name)")
+        DisplayRepresentation(title: "\(name)", image: .init(systemName: icon))
     }
 
-    init(id: UUID, name: String, emoji: String) {
+    init(id: UUID, name: String, emoji: String, icon: String = CategorySymbols.fallback) {
         self.id = id
         self.name = name
         self.emoji = emoji
+        self.icon = icon
     }
 }
 
@@ -308,7 +320,7 @@ struct BudgetQuery: EntityStringQuery {
 
         return budgets.compactMap { budget in
             if let id = budget.id {
-                return BudgetEntity(id: id, name: budget.wrappedName, emoji: budget.wrappedEmoji)
+                return BudgetEntity(id: id, name: budget.wrappedName, emoji: budget.wrappedEmoji, icon: budget.wrappedIcon)
             } else {
                 return nil
             }
@@ -321,7 +333,7 @@ struct BudgetQuery: EntityStringQuery {
 
             if let match = try? dataController.findBudget(withId: identifier) {
                 if let id = match.id {
-                    return BudgetEntity(id: id, name: match.wrappedName, emoji: match.wrappedEmoji)
+                    return BudgetEntity(id: id, name: match.wrappedName, emoji: match.wrappedEmoji, icon: match.wrappedIcon)
                 } else {
                     return nil
                 }
@@ -336,7 +348,7 @@ struct BudgetQuery: EntityStringQuery {
 
         return dataController.getAllBudgets().compactMap { budget in
             if let id = budget.id {
-                return BudgetEntity(id: id, name: budget.wrappedName, emoji: budget.wrappedEmoji)
+                return BudgetEntity(id: id, name: budget.wrappedName, emoji: budget.wrappedEmoji, icon: budget.wrappedIcon)
             } else {
                 return nil
             }

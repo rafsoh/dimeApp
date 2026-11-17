@@ -36,13 +36,13 @@
 "This action cannot be undone, and all %@ transactions would be deleted." = "Это действие необратимо, все записи из '%@' будут удалены";
 "Category Name" = "Имя категории";
 "Missing Name" = "Нет имени";
-"Missing Emoji" = "Нет эмодзи";
+"Missing Emoji" = "Нет значка";
 "Incomplete Entry" = "Незаконченная запись";
 "Missing Information" = "Нет информации";
 "This action cannot be undone." = "Это действие необратимо";
 "Duplicate Found" = "Найден дубликат";
 "Please Edit Accordingly" = "Попробуйте другое название или эмодзи";
-"Please Change Emoji" = "Пожалуйста, измените эмодзи";
+"Please Change Emoji" = "Смените значок";
 "Please Change Name" = "Пожалуйста, измените название";
 "Food" = "Еда";
 "Transport" = "Транспорт";
@@ -323,3 +323,7 @@
 "Rate" = "Курс";
 "Missing Exchange Rate" = "Нет курса обмена";
 "Save" = "Сохранить";
+
+/* Category icons */
+"Duplicate Emoji" = "Значок уже используется";
+"Choose icon" = "Выберите значок";

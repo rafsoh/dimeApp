@@ -68,7 +68,7 @@ struct BudgetWidgetProvider: IntentTimelineProvider {
                 holdingTotal += transaction.wrappedAmount
             }
 
-            let returnBudget = HoldingBudget(type: Int(budget.type), emoji: budget.wrappedEmoji, name: budget.wrappedName, colour: budget.wrappedColour, budgetAmount: budget.amount)
+            let returnBudget = HoldingBudget(type: Int(budget.type), emoji: budget.wrappedIcon, name: budget.wrappedName, colour: budget.wrappedColour, budgetAmount: budget.amount)
 
             let percentageOfDays: Double
 
@@ -198,7 +198,7 @@ struct BudgetWidgetEntryView: View {
                     HStack(alignment: .top) {
                         VStack(alignment: .leading, spacing: 2.4) {
                             HStack(spacing: 5) {
-                                Text(entry.budget.emoji)
+                                CategoryIcon(entry.budget.emoji)
                                     .font(.system(size: 9))
                                 Text(entry.budget.name.uppercased())
                                     .font(.system(size: 12, weight: .semibold, design: .rounded))
@@ -291,7 +291,7 @@ struct BudgetWidgetEntryView: View {
                     HStack(alignment: .top) {
                         VStack(alignment: .leading, spacing: 2.4) {
                             HStack(spacing: 5) {
-                                Text(entry.budget.emoji)
+                                CategoryIcon(entry.budget.emoji)
                                     .font(.system(size: 9))
                                 Text(entry.budget.name.uppercased())
                                     .font(.system(size: 12, weight: .semibold, design: .rounded))

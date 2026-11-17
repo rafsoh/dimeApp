@@ -212,7 +212,7 @@
 //
 //    var body: some View {
 //        VStack(spacing: 6) {
-//            Text(transaction.wrappedEmoji)
+//            CategoryIcon(transaction.wrappedIcon)
 //                .font(.system(size: 14, weight: .semibold, design: .rounded))
 ////                .padding(5)
 ////                .background(blend(over: transactionColor, withAlpha: 0.3), in: RoundedRectangle(cornerRadius: 8))

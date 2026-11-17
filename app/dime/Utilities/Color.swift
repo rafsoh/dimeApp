@@ -317,3 +317,60 @@ extension View {
         }
     }
 }
+
+// MARK: - Category icons
+
+extension Color {
+    /// Whether a `#RRGGBB` colour is light enough to need a dark glyph on top (WCAG relative luminance).
+    static func isLight(hex: String) -> Bool {
+        let clean = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        guard clean.count >= 6, let value = UInt64(clean.suffix(6), radix: 16) else { return true }
+        func channel(_ c: UInt64) -> Double {
+            let v = Double(c) / 255
+            return v <= 0.03928 ? v / 12.92 : pow((v + 0.055) / 1.055, 2.4)
+        }
+        let luminance = 0.2126 * channel(value >> 16 & 0xFF) + 0.7152 * channel(value >> 8 & 0xFF) + 0.0722 * channel(value & 0xFF)
+        // pick whichever of black/white contrasts more
+        return (luminance + 0.05) / 0.05 > 1.05 / (luminance + 0.05)
+    }
+}
+
+/// A category's SF Symbol on its own; size it with `.font`, tint it with `.foregroundColor`.
+struct CategoryIcon: View {
+    let icon: String
+
+    init(_ icon: String) {
+        self.icon = icon
+    }
+
+    var body: some View {
+        Image(systemName: UIImage(systemName: icon) == nil ? CategorySymbols.fallback : icon)
+            .symbolRenderingMode(.monochrome)
+            .accessibilityHidden(true)
+    }
+}
+
+/// The category's symbol on a circle in its colour, with a black or white glyph chosen for contrast.
+struct CategoryBadge: View {
+    let icon: String
+    let colour: String
+    var size: CGFloat = 40
+    var outlined = false
+
+    var body: some View {
+        ZStack {
+            if outlined {
+                Circle()
+                    .strokeBorder(Color(hex: colour), lineWidth: 2)
+            } else {
+                Circle()
+                    .fill(Color(hex: colour))
+            }
+
+            CategoryIcon(icon)
+                .font(.system(size: size * 0.45, weight: .semibold))
+                .foregroundColor(outlined ? Color(hex: colour) : (Color.isLight(hex: colour) ? Color.black.opacity(0.8) : Color.white))
+        }
+        .frame(width: size, height: size)
+    }
+}

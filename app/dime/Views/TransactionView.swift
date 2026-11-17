@@ -704,7 +704,7 @@ struct TransactionView: View {
                                 } else {
                                     if let unwrappedCategory = category {
                                         HStack(spacing: 5) {
-                                            Text(unwrappedCategory.wrappedEmoji)
+                                            CategoryIcon(unwrappedCategory.wrappedIcon)
                                                 .font(.system(.footnote, design: .rounded).weight(.semibold))
 
                                             Text(unwrappedCategory.wrappedName)
@@ -1481,7 +1481,7 @@ struct CategoryPickerView: View {
                             ForEach(categories) { item in
                                 if item != initialCategory {
                                     HStack(spacing: 7) {
-                                        Text(item.wrappedEmoji)
+                                        CategoryIcon(item.wrappedIcon)
                                             .font(.system(.footnote, design: .rounded))
                                             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                                         //                                                    .font(.system(size: 14))

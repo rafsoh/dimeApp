@@ -38,13 +38,13 @@
 "This action cannot be undone, and all %@ transactions would be deleted." = "This action cannot be undone, and all %@ transactions would be deleted.";
 "Category Name" = "Category Name";
 "Missing Name" = "Missing Name";
-"Missing Emoji" = "Missing Emoji";
+"Missing Emoji" = "Missing Icon";
 "Incomplete Entry" = "Incomplete Entry";
 "Missing Information" = "Missing Information";
 "This action cannot be undone." = "This action cannot be undone.";
 "Duplicate Found" = "Duplicate Found";
 "Please Edit Accordingly" = "Please Edit Accordingly";
-"Please Change Emoji" = "Please Change Emoji";
+"Please Change Emoji" = "Please Change Icon";
 "Please Change Name" = "Please Change Name";
 "Food" = "Food";
 "Transport" = "Transport";
@@ -324,3 +324,7 @@
 "Rate" = "Rate";
 "Missing Exchange Rate" = "Missing Exchange Rate";
 "Save" = "Save";
+
+/* Category icons */
+"Duplicate Emoji" = "Duplicate Icon";
+"Choose icon" = "Choose icon";

@@ -7,7 +7,6 @@
 
 import Combine
 import CoreHaptics
-import Popovers
 import SwiftUI
 import UIKit
 
@@ -434,7 +433,7 @@ struct CategoryListView: View {
                             } else {
                                 ForEach(categories) { category in
                                     HStack(spacing: 10) {
-                                        Text(category.wrappedEmoji)
+                                        CategoryIcon(category.wrappedIcon)
                                             .font(.system(.subheadline, design: .rounded))
                                             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
 //                                            .font(.system(size: 15))
@@ -515,7 +514,7 @@ struct CategoryListView: View {
                             } else {
                                 ForEach(categories) { category in
                                     HStack(spacing: 10) {
-                                        Text(category.wrappedEmoji)
+                                        CategoryIcon(category.wrappedIcon)
                                             .font(.system(.subheadline, design: .rounded))
                                             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
 //                                            .font(.system(size: 15))
@@ -764,6 +763,7 @@ struct NewCategoryAlert: View {
     // state
     @State private var newName = ""
     @State private var newEmoji = ""
+    @State private var showingSymbolPicker = false
     @State private var showingColourPicker = false
     @State private var selectedColour: String = "#FFFFFF"
 
@@ -902,32 +902,18 @@ struct NewCategoryAlert: View {
 
                 Spacer()
 
-                ZStack {
-                    EmojiTextField(text: $newEmoji)
-                        .focused($focusedField, equals: .emoji)
-                        .onReceive(Just(newEmoji), perform: { _ in
-                            if String(self.newEmoji.onlyEmoji().suffix(1)) != self.newEmoji.onlyEmoji().prefix(1) {
-                                self.newEmoji = String(self.newEmoji.onlyEmoji().suffix(1))
-                            } else {
-                                self.newEmoji = String(self.newEmoji.onlyEmoji().prefix(1))
-                            }
-                        })
-                        .font(.system(size: 160))
-                        .padding(8)
-                        .frame(width: 80, height: 80, alignment: .center)
-                        .background {
-                            RoundedRectangle(cornerRadius: 13, style: .continuous)
-                                .strokeBorder((focusedField == .emoji && !showingColourPicker) ? Color.SubtitleText : Color.clear, lineWidth: 2.2)
-                                .background(RoundedRectangle(cornerRadius: 13, style: .continuous).fill(Color.SecondaryBackground))
+                Button {
+                    showingSymbolPicker = true
+                } label: {
+                    CategoryBadge(icon: newEmoji.isEmpty ? "square.dashed" : newEmoji, colour: selectedColour, size: 80)
+                        .overlay {
+                            Circle().strokeBorder(Color.Outline, lineWidth: 1)
                         }
-
-                    if newEmoji == "" {
-                        Image("emoji-happy")
-                            .resizable()
-                            .foregroundColor(Color.PrimaryText)
-                            .frame(width: 35, height: 35, alignment: .center)
-                            .allowsHitTesting(false)
-                    }
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text("Choose icon"))
+                .sheet(isPresented: $showingSymbolPicker) {
+                    CategorySymbolPicker(selection: $newEmoji, colour: selectedColour)
                 }
 
                 Spacer()
@@ -949,22 +935,12 @@ struct NewCategoryAlert: View {
                                     }
                                 }
                         }
-                        .popover(present: $showingColourPicker, attributes: {
-                            $0.position = .absolute(
-                                originAnchor: .topLeft,
-                                popoverAnchor: .bottomLeft
-                            )
-                            $0.rubberBandingMode = .none
-                            $0.sourceFrameInset = UIEdgeInsets(top: -10, left: 0, bottom: 0, right: 0)
-                            $0.presentation.animation = .easeInOut(duration: 0.2)
-                            $0.dismissal.animation = .easeInOut(duration: 0.3)
-                        }) {
+                        .popover(isPresented: $showingColourPicker) {
                             ColourPickerView(selectedColor: $selectedColour, showMenu: $showingColourPicker, showNativePicker: $showNativePicker)
                                 .environment(\.managedObjectContext, self.moc)
-
-                        } background: {
-                            Color.PrimaryBackground.opacity(0.3)
-                        }
+                                .padding(12)
+                                .compactPopover()
+                            }
                     }
 //
 //                    HStack(spacing: 8) {
@@ -1071,7 +1047,7 @@ struct NewCategoryAlert: View {
                 toastTitle = "Missing Emoji"
                 toastImage = "person.fill"
 
-                focusedField = .emoji
+                showingSymbolPicker = true
             case .missingName:
                 toastTitle = "Missing Name"
                 toastImage = "character.cursor.ibeam"
@@ -1084,7 +1060,7 @@ struct NewCategoryAlert: View {
                 toastTitle = "Duplicate Emoji"
                 toastImage = "person.fill"
 
-                focusedField = .emoji
+                showingSymbolPicker = true
             case .duplicateName:
                 toastTitle = "Duplicate Name"
                 toastImage = "character.cursor.ibeam"
@@ -1106,7 +1082,8 @@ struct NewCategoryAlert: View {
             if income {
                 let category = Category(context: moc)
                 category.name = newName.trimmingCharacters(in: .whitespaces).capitalized
-                category.emoji = newEmoji
+                category.symbol = newEmoji
+                category.emoji = CategorySymbols.emoji(forSymbol: newEmoji)
                 category.dateCreated = Date.now
                 category.id = UUID()
                 category.colour = "IncomeGreen"
@@ -1119,7 +1096,8 @@ struct NewCategoryAlert: View {
             } else {
                 let category = Category(context: moc)
                 category.name = newName.trimmingCharacters(in: .whitespaces).capitalized
-                category.emoji = newEmoji
+                category.symbol = newEmoji
+                category.emoji = CategorySymbols.emoji(forSymbol: newEmoji)
                 category.dateCreated = Date.now
                 category.id = UUID()
                 category.income = false
@@ -1150,7 +1128,7 @@ struct NewCategoryAlert: View {
                 dismiss()
                 return
             } else {
-                focusedField = .emoji
+                focusedField = .name
                 toastImage = "checkmark.circle.fill"
                 positive = true
                 showToast = true
@@ -1232,6 +1210,7 @@ struct EditCategoryAlert: View {
     // state
     @State private var newName = ""
     @State private var newEmoji = ""
+    @State private var showingSymbolPicker = false
     @State private var showingColourPicker = false
     @State private var selectedColour: String = "#FFFFFF"
 
@@ -1321,32 +1300,18 @@ struct EditCategoryAlert: View {
 
                 Spacer()
 
-                ZStack {
-                    EmojiTextField(text: $newEmoji)
-                        .focused($focusedField, equals: .emoji)
-                        .onReceive(Just(newEmoji), perform: { _ in
-                            if String(self.newEmoji.onlyEmoji().suffix(1)) != self.newEmoji.onlyEmoji().prefix(1) {
-                                self.newEmoji = String(self.newEmoji.onlyEmoji().suffix(1))
-                            } else {
-                                self.newEmoji = String(self.newEmoji.onlyEmoji().prefix(1))
-                            }
-                        })
-                        .font(.system(size: 160))
-                        .padding(8)
-                        .frame(width: 80, height: 80, alignment: .center)
-                        .background {
-                            RoundedRectangle(cornerRadius: 13, style: .continuous)
-                                .strokeBorder((focusedField == .emoji && !showingColourPicker) ? Color.SubtitleText : Color.clear, lineWidth: 2.2)
-                                .background(RoundedRectangle(cornerRadius: 13, style: .continuous).fill(Color.SecondaryBackground))
+                Button {
+                    showingSymbolPicker = true
+                } label: {
+                    CategoryBadge(icon: newEmoji.isEmpty ? "square.dashed" : newEmoji, colour: selectedColour, size: 80)
+                        .overlay {
+                            Circle().strokeBorder(Color.Outline, lineWidth: 1)
                         }
-
-                    if newEmoji == "" {
-                        Image("emoji-happy")
-                            .resizable()
-                            .foregroundColor(Color.PrimaryText)
-                            .frame(width: 35, height: 35, alignment: .center)
-                            .allowsHitTesting(false)
-                    }
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text("Choose icon"))
+                .sheet(isPresented: $showingSymbolPicker) {
+                    CategorySymbolPicker(selection: $newEmoji, colour: selectedColour)
                 }
 
                 Spacer()
@@ -1368,22 +1333,12 @@ struct EditCategoryAlert: View {
                                     }
                                 }
                         }
-                        .popover(present: $showingColourPicker, attributes: {
-                            $0.position = .absolute(
-                                originAnchor: .topLeft,
-                                popoverAnchor: .bottomLeft
-                            )
-                            $0.rubberBandingMode = .none
-                            $0.sourceFrameInset = UIEdgeInsets(top: -10, left: 0, bottom: 0, right: 0)
-                            $0.presentation.animation = .easeInOut(duration: 0.2)
-                            $0.dismissal.animation = .easeInOut(duration: 0.3)
-                        }) {
+                        .popover(isPresented: $showingColourPicker) {
                             ColourPickerView(selectedColor: $selectedColour, showMenu: $showingColourPicker, showNativePicker: $showNativePicker, toEdit: toEdit)
                                 .environment(\.managedObjectContext, self.moc)
-
-                        } background: {
-                            Color.PrimaryBackground.opacity(0.3)
-                        }
+                                .padding(12)
+                                .compactPopover()
+                            }
                     }
 
                     NormalTextField(text: $newName, placeholder: "Category Name", action: verification)
@@ -1444,7 +1399,7 @@ struct EditCategoryAlert: View {
         }
         .onAppear {
             newName = toEdit.wrappedName
-            newEmoji = toEdit.wrappedEmoji
+            newEmoji = toEdit.wrappedIcon
             selectedColour = toEdit.wrappedColour
         }
     }
@@ -1466,7 +1421,7 @@ struct EditCategoryAlert: View {
                 toastTitle = "Missing Emoji"
                 toastImage = "person.fill"
 
-                focusedField = .emoji
+                showingSymbolPicker = true
             case .missingName:
                 toastTitle = "Missing Name"
                 toastImage = "character.cursor.ibeam"
@@ -1479,7 +1434,7 @@ struct EditCategoryAlert: View {
                 toastTitle = "Duplicate Emoji"
                 toastImage = "person.fill"
 
-                focusedField = .emoji
+                showingSymbolPicker = true
             case .duplicateName:
                 toastTitle = "Duplicate Name"
                 toastImage = "character.cursor.ibeam"
@@ -1496,12 +1451,18 @@ struct EditCategoryAlert: View {
 
             if toEdit.income {
                 toEdit.name = newName.trimmingCharacters(in: .whitespaces).capitalized
-                toEdit.emoji = newEmoji
+                if newEmoji != toEdit.wrappedIcon {
+                    toEdit.symbol = newEmoji
+                    toEdit.emoji = CategorySymbols.emoji(forSymbol: newEmoji)
+                }
 
                 dataController.save()
             } else {
                 toEdit.name = newName.trimmingCharacters(in: .whitespaces).capitalized
-                toEdit.emoji = newEmoji
+                if newEmoji != toEdit.wrappedIcon {
+                    toEdit.symbol = newEmoji
+                    toEdit.emoji = CategorySymbols.emoji(forSymbol: newEmoji)
+                }
                 toEdit.colour = selectedColour
 
                 dataController.save()
@@ -1686,7 +1647,7 @@ struct SuggestedCategoriesView: View {
             Section(header: Text("SUGGESTED").foregroundColor(Color.SubtitleText)) {
                 ForEach(suggestions, id: \.self) { category in
                     HStack(spacing: 8) {
-                        Text(category.emoji)
+                        CategoryIcon(CategorySymbols.symbol(forEmoji: category.emoji))
 //                            .font(.system(size: 15))
                             .font(.system(.subheadline, design: .rounded))
                             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
@@ -1728,6 +1689,7 @@ struct SuggestedCategoriesView: View {
                             let suggestedCategory = Category(context: moc)
                             suggestedCategory.name = NSLocalizedString(category.name, comment: "category name")
                             suggestedCategory.emoji = category.emoji
+                            suggestedCategory.symbol = CategorySymbols.symbol(forEmoji: category.emoji)
                             suggestedCategory.dateCreated = Date.now
                             suggestedCategory.id = UUID()
                             suggestedCategory.colour = selectedColour
@@ -1751,6 +1713,7 @@ struct SuggestedCategoriesView: View {
                             let suggestedCategory = Category(context: moc)
                             suggestedCategory.name = NSLocalizedString(category.name, comment: "category name")
                             suggestedCategory.emoji = category.emoji
+                            suggestedCategory.symbol = CategorySymbols.symbol(forEmoji: category.emoji)
                             suggestedCategory.dateCreated = Date.now
                             suggestedCategory.id = UUID()
                             suggestedCategory.colour = "#76FBB0"
@@ -2013,4 +1976,63 @@ struct OpenAICompletionsResponse: Decodable {
 
 struct OpenAICompletionsOptions: Decodable {
     let text: String
+}
+
+
+/// Grid of SF Symbols for a category, previewed in the category's colour.
+struct CategorySymbolPicker: View {
+    @Binding var selection: String
+    let colour: String
+
+    @Environment(\.dismiss) private var dismiss
+
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: 12), count: 6)
+
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                LazyVGrid(columns: columns, spacing: 12) {
+                    ForEach(CategorySymbols.all.filter { UIImage(systemName: $0) != nil }, id: \.self) { symbol in
+                        Button {
+                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                            selection = symbol
+                            dismiss()
+                        } label: {
+                            CategoryBadge(icon: symbol, colour: selection == symbol ? colour : "#E9E9EB", size: 46)
+                                .overlay {
+                                    if selection == symbol {
+                                        Circle().strokeBorder(Color.PrimaryText, lineWidth: 2).padding(-4)
+                                    }
+                                }
+                                .frame(maxWidth: .infinity, minHeight: 54)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(Text(symbol.replacingOccurrences(of: ".fill", with: "").replacingOccurrences(of: ".", with: " ")))
+                        .accessibilityAddTraits(selection == symbol ? .isSelected : [])
+                    }
+                }
+                .padding(16)
+            }
+            .navigationTitle(Text("Choose icon"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+            }
+        }
+    }
+}
+
+
+extension View {
+    /// Keeps a SwiftUI popover as a bubble on iPhone (iOS 16.4+, glass on iOS 26) instead of a full sheet.
+    @ViewBuilder
+    func compactPopover() -> some View {
+        if #available(iOS 16.4, *) {
+            presentationCompactAdaptation(.popover)
+        } else {
+            self
+        }
+    }
 }

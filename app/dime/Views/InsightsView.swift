@@ -261,10 +261,14 @@ struct HorizontalPieChartView: View {
 
                                 HStack(spacing: 10) {
 
-                                    Text(category.category.fullName)
-                                        .font(.system(.title3, design: .rounded).weight(.semibold))
-                                        .foregroundColor(Color.PrimaryText)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                    HStack(spacing: 8) {
+                                        CategoryIcon(category.category.wrappedIcon)
+                                            .foregroundColor(boxColor)
+                                        Text(category.category.wrappedName)
+                                            .foregroundColor(Color.PrimaryText)
+                                    }
+                                    .font(.system(.title3, design: .rounded).weight(.semibold))
+                                    .frame(maxWidth: .infinity, alignment: .leading)
 
                                     Text("\(currencySymbol)\(category.amount, specifier: (showCents && category.amount < 100) ? "%.2f" : "%.0f")")
                                         .font(.system(categoryFilterMode && categoryFilter == category.category ? .title3 : .body, design: .rounded).weight(.medium))

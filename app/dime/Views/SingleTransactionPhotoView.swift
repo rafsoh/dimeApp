@@ -85,7 +85,7 @@ struct SingleTransactionPhotoView: View {
 
     var body: some View {
         HStack(spacing: 25) {
-            EmojiLogView(emoji: (transaction.category?.wrappedEmoji ?? ""),
+            EmojiLogView(icon: (transaction.category?.wrappedIcon ?? CategorySymbols.fallback),
                          colour: (transaction.category?.wrappedColour ?? "#FFFFFF"), future: future, huge: true)
                 .frame(width: 100, height: 100, alignment: .center)
                 .overlay(alignment: .bottomTrailing) {

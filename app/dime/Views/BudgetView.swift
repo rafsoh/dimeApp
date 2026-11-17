@@ -191,8 +191,10 @@ struct ActualBudgetView: View {
                 } else {
                     VStack(spacing: 5) {
                         Spacer()
-                        Text("🙈")
-                            .font(.system(.largeTitle, design: .rounded))
+                        Image(systemName: "chart.pie")
+                            .font(.system(size: 48, weight: .regular))
+                            .foregroundColor(Color.SubtitleText)
+                            .accessibilityHidden(true)
 //                            .font(.system(size: 45))
                             .padding(.bottom, 9)
 
@@ -686,7 +688,7 @@ struct SingleBudgetView: View {
                             }
                             .frame(width: 40, height: 40)
                             .overlay {
-                                Text(budget.wrappedEmoji)
+                                CategoryIcon(budget.wrappedIcon)
                                     .font(.system(size: 20))
                             }
 
@@ -793,7 +795,7 @@ struct SingleBudgetView: View {
                     HStack {
                         VStack(alignment: .leading, spacing: 0.5) {
                             HStack(spacing: 4) {
-                                Text(budget.wrappedEmoji)
+                                CategoryIcon(budget.wrappedIcon)
                                     .font(.system(.caption, design: .rounded))
 //                                    .font(.system(size: 11.5))
 
@@ -1557,7 +1559,7 @@ struct TimeBudgetView: View {
             // budget name and emoji and time left
             VStack(spacing: 10) {
                 HStack(spacing: 7.5) {
-                    Text(budget.wrappedEmoji)
+                    CategoryIcon(budget.wrappedIcon)
                         .font(.system(.subheadline, design: .rounded))
                     Text(budget.wrappedName)
                         .font(.system(.title3, design: .rounded).weight(.medium))

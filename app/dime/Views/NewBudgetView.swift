@@ -861,7 +861,7 @@ struct BrandNewBudgetView: View {
             }
         } label: {
             HStack(spacing: 5) {
-                Text(category.wrappedEmoji)
+                CategoryIcon(category.wrappedIcon)
                     .font(.system(.subheadline, design: .rounded))
                     .font(.system(size: 15))
                 Text(category.wrappedName)

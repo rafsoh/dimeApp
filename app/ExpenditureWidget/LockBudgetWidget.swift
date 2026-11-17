@@ -80,7 +80,7 @@ struct LockBudgetWidgetProvider: IntentTimelineProvider {
                 holdingTotal += transaction.wrappedAmount
             }
 
-            let returnBudget = HoldingBudget(type: Int(budget.type), emoji: budget.wrappedEmoji, name: budget.wrappedName, colour: budget.wrappedColour, budgetAmount: budget.amount)
+            let returnBudget = HoldingBudget(type: Int(budget.type), emoji: budget.wrappedIcon, name: budget.wrappedName, colour: budget.wrappedColour, budgetAmount: budget.amount)
 
             let timeLeft: String
 
@@ -173,7 +173,7 @@ struct LockBudgetWidgetEntryView: View {
             if entry.configuration.budget == nil {
                 Text("Select budget in widget options")
             } else {
-                Text("\(entry.budget.emoji) \(currencySymbol)\(difference, specifier: (showCents && difference < 100) ? "%.2f" : "%.0f") \(subtitle)")
+                Text("\(Image(systemName: entry.budget.emoji)) \(currencySymbol)\(difference, specifier: (showCents && difference < 100) ? "%.2f" : "%.0f") \(subtitle)")
                     .widgetURL(URL(string: "dimeapp://budget?budget=\(entry.budget.name)"))
             }
 
@@ -191,7 +191,7 @@ struct LockBudgetWidgetEntryView: View {
                     .containerBackground(for: .widget) { AccessoryWidgetBackground() }
                 } else {
                     Gauge(value: percent < 1 ? percent : 1) {
-                        Text(entry.budget.emoji)
+                        CategoryIcon(entry.budget.emoji)
                     } currentValueLabel: {
                         Text("\(Int(round(percent * 100)))%")
                     }
@@ -216,7 +216,7 @@ struct LockBudgetWidgetEntryView: View {
                 } else {
                     if #available(iOS 16.0, *) {
                         Gauge(value: percent < 1 ? percent : 1) {
-                            Text(entry.budget.emoji)
+                            CategoryIcon(entry.budget.emoji)
                         } currentValueLabel: {
                             Text("\(Int(round(percent * 100)))%")
                         }

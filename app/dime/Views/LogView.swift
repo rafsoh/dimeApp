@@ -1266,7 +1266,7 @@ struct SingleTransactionView: View {
                 .offset(x: max(-80, offset))
 
             HStack(spacing: 12) {
-                EmojiLogView(emoji: (transaction.category?.wrappedEmoji ?? ""),
+                EmojiLogView(icon: (transaction.category?.wrappedIcon ?? CategorySymbols.fallback),
                              colour: (transaction.category?.wrappedColour ?? "#FFFFFF"), future: future)
                     .fixedSize(horizontal: true, vertical: true)
                     .overlay(alignment: .bottomTrailing) {
@@ -1477,39 +1477,20 @@ func dateFormatter(date: Date) -> String {
 }
 
 struct EmojiLogView: View {
-    let emoji: String
+    let icon: String
     let colour: String
     let future: Bool
     let huge: Bool
 
-    var body: some View {
-        ZStack {
-            if future {
-                RoundedRectangle(cornerRadius: 9, style: .continuous)
-                    .stroke(Color(hex: colour).opacity(0.73), lineWidth: 2)
-                    .foregroundColor(.clear)
-            } else {
-                RoundedRectangle(cornerRadius: huge ? 20 : 9, style: .continuous)
-                    .fill(blend(over: Color(hex: colour), withAlpha: 0.73))
-//                RoundedRectangle(cornerRadius: 9, style: .continuous)
-//                    .fill(Color.white)
-//
-//                RoundedRectangle(cornerRadius: 9, style: .continuous)
-//                    .fill(Color(hex: colour).opacity(0.73))
-            }
+    @ScaledMetric(relativeTo: .title3) private var badgeSize: CGFloat = 40
 
-            Text(emoji)
-                .font(.system(huge ? .title : .title3))
-                // future ? .caption :
-                .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-                .padding(8)
-//                .font(.system(size: huge ? 45 : future ? 16: 20))
-        }
-        .opacity(future ? 0.6 : 1)
+    var body: some View {
+        CategoryBadge(icon: icon, colour: colour, size: huge ? badgeSize * 1.4 : badgeSize, outlined: future)
+            .opacity(future ? 0.6 : 1)
     }
 
-    init(emoji: String, colour: String, future: Bool, huge: Bool = false) {
-        self.emoji = emoji
+    init(icon: String, colour: String, future: Bool, huge: Bool = false) {
+        self.icon = icon
         self.colour = colour
         self.future = future
         self.huge = huge
@@ -1877,7 +1858,7 @@ struct CategoryStepperView: View {
                     HStack(spacing: 8) {
                         ForEach(categories, id: \.self) { item in
                             HStack(spacing: 5) {
-                                Text(item.wrappedEmoji)
+                                CategoryIcon(item.wrappedIcon)
                                     .font(.system(.footnote, design: .rounded).weight(.medium))
                                     .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
 //                                    .font(.system(size: 13))

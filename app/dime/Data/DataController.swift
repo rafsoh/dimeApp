@@ -533,7 +533,7 @@ class DataController: ObservableObject {
             var nameArray = [String]()
 
             incomeCategories.forEach { category in
-                emojiArray.append(category.wrappedEmoji)
+                emojiArray.append(category.wrappedIcon)
                 nameArray.append(category.wrappedName)
             }
 
@@ -555,7 +555,7 @@ class DataController: ObservableObject {
             var nameArray = [String]()
 
             expenseCategories.forEach { category in
-                emojiArray.append(category.wrappedEmoji)
+                emojiArray.append(category.wrappedIcon)
                 nameArray.append(category.wrappedName)
             }
 
@@ -581,6 +581,9 @@ class DataController: ObservableObject {
             return (CategoryError.missingEmoji, 0)
         }
 
+        // an unchanged icon can't clash; legacy emoji categories share symbols
+        let iconChanged = emoji != toEdit.wrappedIcon
+
         if toEdit.income {
             let fetchRequest = fetchRequestForCategories(income: true)
             var incomeCategories = results(for: fetchRequest)
@@ -593,13 +596,15 @@ class DataController: ObservableObject {
             var nameArray = [String]()
 
             incomeCategories.forEach { category in
-                emojiArray.append(category.wrappedEmoji)
+                emojiArray.append(category.wrappedIcon)
                 nameArray.append(category.wrappedName)
             }
 
-            if emojiArray.contains(emoji) && nameArray.contains(name) {
+            let iconTaken = iconChanged && emojiArray.contains(emoji)
+
+            if iconTaken && nameArray.contains(name) {
                 return (CategoryError.duplicate, 0)
-            } else if emojiArray.contains(emoji) {
+            } else if iconTaken {
                 return (CategoryError.duplicateEmoji, 0)
             } else if nameArray.contains(name) {
                 return (CategoryError.duplicateName, 0)
@@ -619,13 +624,15 @@ class DataController: ObservableObject {
             var nameArray = [String]()
 
             expenseCategories.forEach { category in
-                emojiArray.append(category.wrappedEmoji)
+                emojiArray.append(category.wrappedIcon)
                 nameArray.append(category.wrappedName)
             }
 
-            if emojiArray.contains(emoji) && nameArray.contains(name) {
+            let iconTaken = iconChanged && emojiArray.contains(emoji)
+
+            if iconTaken && nameArray.contains(name) {
                 return (CategoryError.duplicate, 0)
-            } else if emojiArray.contains(emoji) {
+            } else if iconTaken {
                 return (CategoryError.duplicateEmoji, 0)
             } else if nameArray.contains(name) {
                 return (CategoryError.duplicateName, 0)

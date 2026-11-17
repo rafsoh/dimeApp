@@ -566,7 +566,7 @@ struct ImportDataView: View {
                                                     .foregroundColor(Color.SubtitleText)
 
                                                 HStack(spacing: 5) {
-                                                    Text(unwrappedCategory.wrappedEmoji)
+                                                    CategoryIcon(unwrappedCategory.wrappedIcon)
 //                                                        .font(.system(size: 15))
                                                         .font(.system(.subheadline, design: .rounded))
 
@@ -1155,7 +1155,7 @@ struct MatchCategoryStepperView: View {
 
         } label: {
             HStack(spacing: 5) {
-                Text(categoryInput.wrappedEmoji)
+                CategoryIcon(categoryInput.wrappedIcon)
                     .font(.system(.footnote, design: .rounded))
 
 //                    .font(.system(size: 13))
