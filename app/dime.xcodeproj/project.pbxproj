@@ -57,7 +57,6 @@
 		532C58BC2A629C3900DA2C81 /* NewBudgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 532C58BB2A629C3900DA2C81 /* NewBudgetView.swift */; };
 		533182D328A0D61D00DEBFA3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5327D294287C698900F76ADF /* Assets.xcassets */; };
 		53326B2C2ADC3C8D0027C693 /* TestDragToAdd.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53326B2B2ADC3C8D0027C693 /* TestDragToAdd.swift */; };
-		533A38F42AA49E5900F66957 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 533A38F32AA49E5900F66957 /* Alamofire */; };
 		533D1C2C2AE791F400894764 /* ShortcutsEntities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 530C89D52A793B6C00B5028D /* ShortcutsEntities.swift */; };
 		533D1C2D2AE791F500894764 /* ShortcutsEntities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 530C89D52A793B6C00B5028D /* ShortcutsEntities.swift */; };
 		533D1C2E2AE791F500894764 /* ShortcutsEntities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 530C89D52A793B6C00B5028D /* ShortcutsEntities.swift */; };
@@ -83,7 +82,6 @@
 		537152E628AD243E00E93EC4 /* TestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5327D2D1287C6B5E00F76ADF /* TestView.swift */; };
 		53756F632AC3C25E0065D0C2 /* sample.csv in Resources */ = {isa = PBXBuildFile; fileRef = 53756F622AC3C25E0065D0C2 /* sample.csv */; };
 		5383D85E287D9A0100D1B9BA /* CloudKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5383D85D287D9A0100D1B9BA /* CloudKit.framework */; };
-		538A32AA2A505AC6008AEF8C /* BottomSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 538A32A92A505AC6008AEF8C /* BottomSheet.swift */; };
 		538D10752A5AB7E7008F1AFB /* IsScrolling in Frameworks */ = {isa = PBXBuildFile; productRef = 538D10742A5AB7E7008F1AFB /* IsScrolling */; };
 		53980E5C28A77B62009CC4E2 /* Helper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53980E5B28A77B62009CC4E2 /* Helper.swift */; };
 		53980E5D28A77B62009CC4E2 /* Helper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53980E5B28A77B62009CC4E2 /* Helper.swift */; };
@@ -156,8 +154,6 @@
 		AECE7F9E2AED1A6800B57267 /* SuggestedTransactions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AECE7F9D2AED1A6800B57267 /* SuggestedTransactions.swift */; };
 		D63B204A2D8728C300CAFB20 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = D63B20462D8728C300CAFB20 /* Localizable.strings */; };
 		D63B204B2D8728C300CAFB20 /* Localizable.stringsdict in Resources */ = {isa = PBXBuildFile; fileRef = D63B20482D8728C300CAFB20 /* Localizable.stringsdict */; };
-		D6A4DE202D61744400F7F751 /* SwiftUIIntrospect in Frameworks */ = {isa = PBXBuildFile; productRef = D6A4DE1F2D61744400F7F751 /* SwiftUIIntrospect */; };
-		D6A4DE242D61744400F7F751 /* SwiftUIIntrospect-Static in Frameworks */ = {isa = PBXBuildFile; productRef = D6A4DE232D61744400F7F751 /* SwiftUIIntrospect-Static */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -276,7 +272,6 @@
 		537152DE28AD0E7900E93EC4 /* BudgetIntentUI.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BudgetIntentUI.entitlements; sourceTree = "<group>"; };
 		53756F622AC3C25E0065D0C2 /* sample.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sample.csv; sourceTree = "<group>"; };
 		5383D85D287D9A0100D1B9BA /* CloudKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CloudKit.framework; path = System/Library/Frameworks/CloudKit.framework; sourceTree = SDKROOT; };
-		538A32A92A505AC6008AEF8C /* BottomSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BottomSheet.swift; sourceTree = "<group>"; };
 		53980E5B28A77B62009CC4E2 /* Helper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Helper.swift; sourceTree = "<group>"; };
 		53A32B3728AB6C6400628905 /* Line.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Line.swift; sourceTree = "<group>"; };
 		53A4147628B3B559008C30E7 /* WelcomeSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeSheetView.swift; sourceTree = "<group>"; };
@@ -357,14 +352,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D6A4DE242D61744400F7F751 /* SwiftUIIntrospect-Static in Frameworks */,
-				D6A4DE202D61744400F7F751 /* SwiftUIIntrospect in Frameworks */,
 				53A4148028B7DA4C008C30E7 /* ConfettiSwiftUI in Frameworks */,
 				5383D85E287D9A0100D1B9BA /* CloudKit.framework in Frameworks */,
 				53DCFAA12A498FBF0063FCDE /* CloudKitSyncMonitor in Frameworks */,
 				5327D2E6287C6CC300F76ADF /* Popovers in Frameworks */,
 				538D10752A5AB7E7008F1AFB /* IsScrolling in Frameworks */,
-				533A38F42AA49E5900F66957 /* Alamofire in Frameworks */,
 				536715ED28E1E9A3008461F2 /* StoreKit.framework in Frameworks */,
 				53B1D1A8289A60D500E28062 /* CrookedText in Frameworks */,
 			);
@@ -487,7 +479,6 @@
 				53B1D1A4289383B100E28062 /* FontExtension.swift */,
 				53A4147C28B7C70D008C30E7 /* AppVersion.swift */,
 				534973D528CB5A75000201F9 /* URLExtension.swift */,
-				538A32A92A505AC6008AEF8C /* BottomSheet.swift */,
 				536A2A142A59C47400D81E02 /* Wiggle.swift */,
 				536A2A162A5A7C5D00D81E02 /* OffsetHelper.swift */,
 				533D1C3B2AE7BB6900894764 /* DynamicType.swift */,
@@ -731,9 +722,6 @@
 				53A4147F28B7DA4C008C30E7 /* ConfettiSwiftUI */,
 				53DCFAA02A498FBF0063FCDE /* CloudKitSyncMonitor */,
 				538D10742A5AB7E7008F1AFB /* IsScrolling */,
-				533A38F32AA49E5900F66957 /* Alamofire */,
-				D6A4DE1F2D61744400F7F751 /* SwiftUIIntrospect */,
-				D6A4DE232D61744400F7F751 /* SwiftUIIntrospect-Static */,
 			);
 			productName = dime;
 			productReference = 5327D283287C697400F76ADF /* dime.app */;
@@ -795,8 +783,6 @@
 				53A4147E28B7DA4C008C30E7 /* XCRemoteSwiftPackageReference "ConfettiSwiftUI" */,
 				53DCFA9F2A498FBF0063FCDE /* XCRemoteSwiftPackageReference "CloudKitSyncMonitor" */,
 				538D10732A5AB7E7008F1AFB /* XCRemoteSwiftPackageReference "IsScrolling" */,
-				533A38F22AA49E0100F66957 /* XCRemoteSwiftPackageReference "Alamofire" */,
-				D6A4DE1E2D61744400F7F751 /* XCRemoteSwiftPackageReference "SwiftUI-Introspect" */,
 			);
 			productRefGroup = 5327D284287C697400F76ADF /* Products */;
 			projectDirPath = "";
@@ -909,7 +895,6 @@
 				53D6BDCE2AF73BDA00F5728E /* SettingsWeekStartView.swift in Sources */,
 				53D6BDCA2AF73B7A00F5728E /* SettingsAppIconView.swift in Sources */,
 				5327D2DA287C6B5F00F76ADF /* TestView.swift in Sources */,
-				538A32AA2A505AC6008AEF8C /* BottomSheet.swift in Sources */,
 				5327D2D9287C6B5F00F76ADF /* HomeView.swift in Sources */,
 				53BC2A422A8B21930019E4A8 /* MainModel.xcdatamodeld in Sources */,
 				53D6BDCC2AF73BC800F5728E /* SettingsCurrencyView.swift in Sources */,
@@ -1518,14 +1503,6 @@
 				minimumVersion = 1.0.0;
 			};
 		};
-		533A38F22AA49E0100F66957 /* XCRemoteSwiftPackageReference "Alamofire" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/Alamofire/Alamofire";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 5.8.0;
-			};
-		};
 		538D10732A5AB7E7008F1AFB /* XCRemoteSwiftPackageReference "IsScrolling" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/fatbobman/IsScrolling.git";
@@ -1558,14 +1535,6 @@
 				minimumVersion = 1.2.1;
 			};
 		};
-		D6A4DE1E2D61744400F7F751 /* XCRemoteSwiftPackageReference "SwiftUI-Introspect" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/siteline/SwiftUI-Introspect";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.0;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1573,11 +1542,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 5327D2E4287C6CC300F76ADF /* XCRemoteSwiftPackageReference "Popovers" */;
 			productName = Popovers;
-		};
-		533A38F32AA49E5900F66957 /* Alamofire */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 533A38F22AA49E0100F66957 /* XCRemoteSwiftPackageReference "Alamofire" */;
-			productName = Alamofire;
 		};
 		538D10742A5AB7E7008F1AFB /* IsScrolling */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -1598,16 +1562,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 53DCFA9F2A498FBF0063FCDE /* XCRemoteSwiftPackageReference "CloudKitSyncMonitor" */;
 			productName = CloudKitSyncMonitor;
-		};
-		D6A4DE1F2D61744400F7F751 /* SwiftUIIntrospect */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = D6A4DE1E2D61744400F7F751 /* XCRemoteSwiftPackageReference "SwiftUI-Introspect" */;
-			productName = SwiftUIIntrospect;
-		};
-		D6A4DE232D61744400F7F751 /* SwiftUIIntrospect-Static */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = D6A4DE1E2D61744400F7F751 /* XCRemoteSwiftPackageReference "SwiftUI-Introspect" */;
-			productName = "SwiftUIIntrospect-Static";
 		};
 /* End XCSwiftPackageProductDependency section */
 
