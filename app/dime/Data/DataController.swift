@@ -147,6 +147,7 @@ class DataController: ObservableObject {
                 newTransaction.originalAmount = transaction.originalAmount
                 newTransaction.originalCurrency = transaction.originalCurrency
                 newTransaction.exchangeRate = transaction.exchangeRate
+                newTransaction.tags = transaction.tags
                 newTransaction.date = holdingDate
                 newTransaction.id = UUID()
                 newTransaction.income = transaction.income
@@ -189,9 +190,10 @@ class DataController: ObservableObject {
             newTransaction.note = transaction.wrappedNote
             newTransaction.category = transaction.category
             newTransaction.amount = transaction.wrappedAmount
-                newTransaction.originalAmount = transaction.originalAmount
-                newTransaction.originalCurrency = transaction.originalCurrency
-                newTransaction.exchangeRate = transaction.exchangeRate
+            newTransaction.originalAmount = transaction.originalAmount
+            newTransaction.originalCurrency = transaction.originalCurrency
+            newTransaction.exchangeRate = transaction.exchangeRate
+            newTransaction.tags = transaction.tags
             newTransaction.date = transaction.nextTransactionDate
             newTransaction.id = UUID()
             newTransaction.income = transaction.income
@@ -316,6 +318,27 @@ class DataController: ObservableObject {
             return output
         } else {
             return results.first
+        }
+    }
+
+    /// Every tag used so far, most used first, for suggestions while tagging.
+    func getAllTags() -> [String] {
+        let request: NSFetchRequest<Transaction> = Transaction.fetchRequest()
+        request.predicate = NSPredicate(format: "tags != nil AND tags != ''")
+        request.propertiesToFetch = ["tags"]
+
+        var counts: [String: Int] = [:]
+        var spellings: [String: [String: Int]] = [:]
+        for transaction in results(for: request) {
+            for tag in transaction.wrappedTags {
+                let key = tag.lowercased()
+                counts[key, default: 0] += 1
+                spellings[key, default: [:]][tag, default: 0] += 1
+            }
+        }
+        return counts.sorted { $0.value == $1.value ? $0.key < $1.key : $0.value > $1.value }.map { entry in
+            // show the most common spelling, ties broken alphabetically
+            spellings[entry.key]?.sorted { $0.value == $1.value ? $0.key < $1.key : $0.value > $1.value }.first?.key ?? entry.key
         }
     }
 

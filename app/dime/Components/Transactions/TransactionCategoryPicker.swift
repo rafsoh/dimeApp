@@ -15,55 +15,51 @@ struct NewCategoryPickerView: View {
     @FetchRequest private var categories: FetchedResults<Category>
     @Environment(\.colorScheme) var colorScheme
 
-    let layout = [
-        GridItem(.flexible(), spacing: 10),
-        GridItem(.flexible())
-    ]
+    // compact tiles: four per row, so ~16 categories fit without scrolling
+    let layout = Array(repeating: GridItem(.flexible(), spacing: 8), count: 4)
 
     var body: some View {
         ScrollView(showsIndicators: false) {
-            LazyVGrid(columns: layout, spacing: 10) {
+            LazyVGrid(columns: layout, spacing: 8) {
                 ForEach(categories) { item in
-                    HStack(spacing: 7) {
-                        Text(item.wrappedEmoji)
-                            .font(.system(.subheadline, design: .rounded))
-
-                        Text(item.wrappedName)
-                            .font(.system(.body, design: .rounded).weight(.semibold))
-                            .lineLimit(1)
-                    }
-                    .id(item.id)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 11)
-                    .padding(.vertical, 9)
-                    .foregroundColor(Color(hex: item.wrappedColour))
-                    .background(
-                        Color(hex: item.wrappedColour).opacity(0.35),
-                        in: RoundedRectangle(cornerRadius: 11.5, style: .continuous)
-                    )
-                    .contentShape(Rectangle())
-                    .overlay {
-                        if item == category {
-                            RoundedRectangle(cornerRadius: 11.5, style: .continuous)
-                                .strokeBorder(Color(hex: item.wrappedColour),
-                                              style: StrokeStyle(lineWidth: 2))
-                        }
-                    }
-                    .onTapGesture {
+                    Button {
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
                         withAnimation {
                             category = item
+                            showPicker = false
                         }
+                    } label: {
+                        VStack(spacing: 4) {
+                            CategoryIcon(item.wrappedIcon)
+                                .font(.system(.title2, design: .rounded))
 
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            withAnimation {
-                                showPicker = false
+                            Text(item.wrappedName)
+                                .font(.system(.caption, design: .rounded).weight(.semibold))
+                                .foregroundColor(Color.PrimaryText)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
+                        }
+                        .padding(.horizontal, 4)
+                        .frame(maxWidth: .infinity, minHeight: 66)
+                        .background(
+                            Color(hex: item.wrappedColour).opacity(item == category ? 0.4 : 0.18),
+                            in: RoundedRectangle(cornerRadius: 13, style: .continuous)
+                        )
+                        .overlay {
+                            if item == category {
+                                RoundedRectangle(cornerRadius: 13, style: .continuous)
+                                    .strokeBorder(Color(hex: item.wrappedColour), lineWidth: 2)
                             }
                         }
+                        .contentShape(RoundedRectangle(cornerRadius: 13, style: .continuous))
                     }
-                    .opacity(category != nil ? (category == item ? 1 : 0.5) : 1)
-
+                    .buttonStyle(.plain)
+                    .id(item.id)
+                    .accessibilityLabel(Text(item.wrappedName))
+                    .accessibilityAddTraits(item == category ? .isSelected : [])
                 }
             }
+            .padding(.bottom, 60) // room above the Edit button
         }
         .keyboardAwareHeight(showToolbar: false)
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)

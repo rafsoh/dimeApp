@@ -327,3 +327,10 @@
 /* Category icons */
 "Duplicate Emoji" = "Icône en double";
 "Choose icon" = "Choisir une icône";
+"Done" = "OK";
+
+/* Tags & keypad */
+"Tag" = "Étiquette";
+"Add tag" = "Ajouter une étiquette";
+"Remove tag %@" = "Supprimer l’étiquette %@";
+"Double zero" = "Double zéro";

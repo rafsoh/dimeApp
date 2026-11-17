@@ -327,3 +327,10 @@
 /* Category icons */
 "Duplicate Emoji" = "Значок уже используется";
 "Choose icon" = "Выберите значок";
+"Done" = "Готово";
+
+/* Tags & keypad */
+"Tag" = "Тег";
+"Add tag" = "Добавить тег";
+"Remove tag %@" = "Удалить тег %@";
+"Double zero" = "Два нуля";

@@ -32,6 +32,23 @@ extension Transaction {
         category?.wrappedColour ?? ""
     }
 
+    /// Free-form tags, stored comma-separated (commas are stripped from tag names).
+    var wrappedTags: [String] {
+        get {
+            (tags ?? "").split(separator: ",").map { String($0) }.filter { !$0.isEmpty }
+        }
+        set {
+            let cleaned = newValue.map(Transaction.cleanTag).filter { !$0.isEmpty }
+            tags = cleaned.isEmpty ? nil : cleaned.joined(separator: ",")
+        }
+    }
+
+    static func cleanTag(_ tag: String) -> String {
+        tag.replacingOccurrences(of: ",", with: " ")
+            .replacingOccurrences(of: ";", with: " ")
+            .trimmingCharacters(in: CharacterSet(charactersIn: "#").union(.whitespacesAndNewlines))
+    }
+
     var nextTransactionDate: Date {
         if recurringType == 1 {
             return Calendar.current.date(byAdding: .day, value: Int(recurringCoefficient), to: day ?? Date.now)!

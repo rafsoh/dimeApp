@@ -100,12 +100,6 @@ struct TransactionView: View {
         }
     }
 
-    var dateString: String {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "d MMM yyyy"
-        return dateFormatter.string(from: date)
-    }
-
     var showTime: Bool {
         let roundedFont = UIFont.rounded(ofSize: fontSize, weight: .semibold)
 
@@ -227,6 +221,8 @@ struct TransactionView: View {
     // foreign currency entry
     @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
     var homeCurrency: String = Locale.current.currencyCode ?? "USD"
+    @State private var tags: [String] = []
+    @State private var tagSuggestions: [String] = []
     @State private var entryCurrency: String?
     @State private var exchangeRate: Double?
     @State private var fetchingRate = false
@@ -554,6 +550,7 @@ struct TransactionView: View {
                         NumberPadTextView(price: $price, isEditingDecimal: $isEditingDecimal, decimalValuesAssigned: $decimalValuesAssigned, entryCurrency: isForeignEntry ? entryCurrency : nil)
                         currencyChip
                         NoteView(note: $note, focused: $textFieldFocused)
+                        TagsRow(tags: $tags, suggestions: tagSuggestions)
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -943,18 +940,28 @@ struct TransactionView: View {
                         showingDatePicker = false
                     }
 
-                    DatePicker("Date", selection: $date)
-                        .datePickerStyle(.graphical)
-                        .padding(.horizontal, 15)
-                        .padding(.vertical, 8)
-                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 13))
-                        .padding(17)
-                        .onChange(of: dateString) { _ in
+                    VStack(spacing: 4) {
+                        DatePicker("Date", selection: $date)
+                            .datePickerStyle(.graphical)
 
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                showingDatePicker = false
-                            }
-
+                        // stays open after picking a day, so the time can be changed too
+                        Button {
+                            showingDatePicker = false
+                        } label: {
+                            Text("Done")
+                                .font(.system(.body, design: .rounded).weight(.semibold))
+                                .foregroundColor(Color.LightIcon)
+                                .frame(maxWidth: .infinity, minHeight: 44)
+                                .background(Color.DarkBackground, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.bottom, 7)
+                    }
+                    .padding(.horizontal, 15)
+                    .padding(.vertical, 8)
+                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 13))
+                    .padding(17)
+                        .onChange(of: date) { _ in
                             if date > Date.now {
                                 animateIcon = true
                             } else {
@@ -1001,11 +1008,14 @@ struct TransactionView: View {
             }
         }
         .onAppear {
+            tagSuggestions = dataController.getAllTags()
             DispatchQueue.main.async {
                 if let transaction = toEdit {
                     repeatType = Int(transaction.recurringType)
                     repeatCoefficient = Int(transaction.recurringCoefficient)
                     price = transaction.wrappedAmount
+
+                    tags = transaction.wrappedTags
 
                     if let original = transaction.originalCurrency, original != homeCurrency, transaction.exchangeRate > 0 {
                         entryCurrency = original
@@ -1205,6 +1215,7 @@ struct TransactionView: View {
                     editedTransaction.originalAmount = originalAmount
                     editedTransaction.originalCurrency = originalCurrency
                     editedTransaction.exchangeRate = storedRate
+                    editedTransaction.wrappedTags = tags
                     editedTransaction.date = date
                     editedTransaction.income = income
 
@@ -1256,6 +1267,7 @@ struct TransactionView: View {
         transaction.originalAmount = originalAmount
         transaction.originalCurrency = originalCurrency
         transaction.exchangeRate = storedRate
+        transaction.wrappedTags = tags
         transaction.date = date
         transaction.id = UUID()
 
@@ -2019,3 +2031,138 @@ struct EntryCurrencyPicker: View {
         }
     }
 }
+
+
+/// Free-form tags under the note: chips you can remove, "+ Tag" to add, suggestions from earlier tags.
+struct TagsRow: View {
+    @Binding var tags: [String]
+    var suggestions: [String]
+
+    @State private var adding = false
+    @State private var draft = ""
+    @FocusState private var fieldFocused: Bool
+
+    private var matchingSuggestions: [String] {
+        let used = Set(tags.map { $0.lowercased() })
+        let query = Transaction.cleanTag(draft).lowercased()
+        return suggestions
+            .filter { !used.contains($0.lowercased()) }
+            .filter { query.isEmpty || $0.lowercased().hasPrefix(query) }
+            .prefix(6)
+            .map { $0 }
+    }
+
+    private func add(_ raw: String) {
+        let tag = Transaction.cleanTag(raw)
+        guard !tag.isEmpty, !tags.contains(where: { $0.caseInsensitiveCompare(tag) == .orderedSame }) else {
+            draft = ""
+            return
+        }
+        withAnimation(.easeOut(duration: 0.2)) {
+            tags.append(tag)
+        }
+        draft = ""
+    }
+
+    var body: some View {
+        VStack(spacing: 6) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 6) {
+                    ForEach(tags, id: \.self) { tag in
+                        Button {
+                            withAnimation(.easeOut(duration: 0.2)) {
+                                tags.removeAll { $0 == tag }
+                            }
+                        } label: {
+                            HStack(spacing: 4) {
+                                Text("#\(tag)")
+                                Image(systemName: "xmark")
+                                    .font(.system(.caption2, design: .rounded).weight(.bold))
+                                    .foregroundColor(Color.SubtitleText)
+                            }
+                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                            .foregroundColor(Color.PrimaryText)
+                            .padding(.horizontal, 10)
+                            .frame(minHeight: 32)
+                            .background(Color.SecondaryBackground, in: Capsule())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(Text("Remove tag \(tag)"))
+                    }
+
+                    if adding {
+                        TextField("Tag", text: $draft)
+                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .submitLabel(.done)
+                            .focused($fieldFocused)
+                            .frame(minWidth: 70, maxWidth: 140)
+                            .padding(.horizontal, 10)
+                            .frame(minHeight: 32)
+                            .background(Color.SecondaryBackground, in: Capsule())
+                            .onSubmit {
+                                add(draft)
+                                adding = false
+                            }
+                            .onChange(of: draft) { newValue in
+                                // typing a comma or space finishes a tag
+                                if let last = newValue.last, last == "," || last == " " {
+                                    add(String(newValue.dropLast()))
+                                }
+                            }
+                            .onAppear { fieldFocused = true }
+                    } else {
+                        Button {
+                            adding = true
+                        } label: {
+                            Label {
+                                Text("Tag")
+                            } icon: {
+                                Image(systemName: "number")
+                            }
+                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                            .foregroundColor(Color.SubtitleText)
+                            .padding(.horizontal, 10)
+                            .frame(minHeight: 32)
+                            .background(
+                                Capsule().strokeBorder(Color.Outline, style: StrokeStyle(lineWidth: 1.5, dash: [4]))
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(Text("Add tag"))
+                    }
+                }
+                .padding(.horizontal, 2)
+            }
+            .frame(maxWidth: .infinity)
+
+            if adding && fieldFocused && !matchingSuggestions.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 6) {
+                        ForEach(matchingSuggestions, id: \.self) { suggestion in
+                            Button {
+                                add(suggestion)
+                            } label: {
+                                Text("#\(suggestion)")
+                                    .font(.system(.footnote, design: .rounded).weight(.semibold))
+                                    .foregroundColor(Color.SubtitleText)
+                                    .padding(.horizontal, 9)
+                                    .frame(minHeight: 28)
+                                    .background(Color.SecondaryBackground.opacity(0.6), in: Capsule())
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+            }
+        }
+        .onChange(of: fieldFocused) { focused in
+            if !focused {
+                add(draft)
+                adding = false
+            }
+        }
+    }
+}
+

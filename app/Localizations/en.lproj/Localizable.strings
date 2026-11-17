@@ -328,3 +328,10 @@
 /* Category icons */
 "Duplicate Emoji" = "Duplicate Icon";
 "Choose icon" = "Choose icon";
+"Done" = "Done";
+
+/* Tags & keypad */
+"Tag" = "Tag";
+"Add tag" = "Add tag";
+"Remove tag %@" = "Remove tag %@";
+"Double zero" = "Double zero";

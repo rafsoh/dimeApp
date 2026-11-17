@@ -40,73 +40,82 @@ struct NumberPad: View {
     @ScaledMetric(relativeTo: .title) private var keyIconSize: CGFloat = 32
 
     var body: some View {
-        GeometryReader { proxy in
-            VStack(spacing: proxy.size.height * 0.04) {
-                ForEach(numPadNumbers, id: \.self) { array in
-                    HStack(spacing: proxy.size.width * 0.05) {
-                        ForEach(array, id: \.self) { singleNumber in
-                            NumberButton(number: singleNumber, size: proxy.size)
+        VStack(spacing: 10) {
+            // borderless keys on one glass panel (flat panel before iOS 26)
+            VStack(spacing: 0) {
+                ForEach(numPadNumbers, id: \.self) { row in
+                    HStack(spacing: 0) {
+                        ForEach(row, id: \.self) { number in
+                            digitKey(number)
                         }
                     }
                 }
-                HStack(spacing: proxy.size.width * 0.05) {
+
+                HStack(spacing: 0) {
                     if numberEntryType == 1 {
-                        Button {
-                            deleteLastDigit()
+                        PadKey {
+                            typeDigit(0)
+                            typeDigit(0)
                         } label: {
-                            Image("tag-cross")
-                                .resizable()
-                                .frame(width: min(keyIconSize, proxy.size.height * 0.16), height: min(keyIconSize, proxy.size.height * 0.16))
-                                .frame(width: proxy.size.width * 0.3, height: proxy.size.height * 0.22)
-                                .background(Color.DarkBackground)
-                                .foregroundColor(Color.LightIcon)
-                                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                            Text("00")
+                                .font(.system(size: keyFontSize * 0.85, weight: .regular, design: .rounded))
                         }
-                        .buttonStyle(NumPadButton())
-                        .accessibilityLabel(Text("Delete digit"))
+                        .disabled(isAtLimit)
+                        .accessibilityLabel(Text("Double zero"))
                     } else {
-                        Button {
+                        PadKey {
                             if fractionDigits > 0 {
                                 isEditingDecimal = true
                             }
                         } label: {
                             Text(".")
                                 .font(.system(size: keyFontSize, weight: .regular, design: .rounded))
-                                .minimumScaleFactor(0.5)
-                                .frame(width: proxy.size.width * 0.3, height: proxy.size.height * 0.22)
-                                .background(Color.SecondaryBackground)
-                                .foregroundColor(Color.PrimaryText)
-                                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                         }
-                        .buttonStyle(NumPadButton())
                         .accessibilityLabel(Text("Decimal point"))
                     }
 
-                    NumberButton(number: 0, size: proxy.size)
+                    digitKey(0)
 
-                    Button {
-                        submit()
+                    PadKey {
+                        deleteLastDigit()
                     } label: {
-                        Group {
-                            if #available(iOS 17.0, *) {
-                                Image(systemName: "checkmark.square.fill")
-                                    .font(.system(size: keyIconSize - 2, weight: .medium, design: .rounded))
-                                    .symbolEffect(.bounce.up.byLayer, value: price != 0 && category != nil)
-                            } else {
-                                Image(systemName: "checkmark.square.fill")
-                                    .font(.system(size: keyIconSize - 2, weight: .medium, design: .rounded))
-                            }
-                        }
-                        .minimumScaleFactor(0.5)
-                        .frame(width: proxy.size.width * 0.3, height: proxy.size.height * 0.22)
-                        .foregroundColor(Color.LightIcon)
-                        .background(Color.DarkBackground, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        Image(systemName: "delete.left")
+                            .font(.system(size: keyIconSize * 0.75, weight: .medium, design: .rounded))
                     }
-                    .buttonStyle(NumPadButton())
-                    .accessibilityLabel(Text("Save transaction"))
+                    .accessibilityLabel(Text("Delete digit"))
                 }
             }
-            .frame(width: proxy.size.width, height: proxy.size.height)
+            .padding(6)
+            .dimeGlass(
+                RoundedRectangle(cornerRadius: 28, style: .continuous),
+                fallback: Color.SecondaryBackground.opacity(0.6)
+            )
+
+            Button {
+                submit()
+            } label: {
+                HStack(spacing: 8) {
+                    if #available(iOS 17.0, *) {
+                        Image(systemName: "checkmark")
+                            .symbolEffect(.bounce.up.byLayer, value: price != 0 && category != nil)
+                    } else {
+                        Image(systemName: "checkmark")
+                    }
+                    Text("Save")
+                }
+                .font(.system(.title3, design: .rounded).weight(.semibold))
+                .foregroundColor(Color.LightIcon)
+                .frame(maxWidth: .infinity, minHeight: 56)
+                .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .dimeGlass(
+                    RoundedRectangle(cornerRadius: 20, style: .continuous),
+                    fallback: Color.DarkBackground,
+                    interactive: true,
+                    solid: true
+                )
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text("Save transaction"))
         }
         .padding(.bottom, 15)
         .keyboardAwareHeight(showToolbar: showingNotePicker)
@@ -192,52 +201,81 @@ struct NumberPad: View {
         }
     }
 
-    @ViewBuilder
-    private func NumberButton(number: Int, size: CGSize) -> some View {
-        var disabled: Bool {
-            price >= 100000000
+    private var isAtLimit: Bool {
+        price >= 100000000
+    }
+
+    private func typeDigit(_ number: Int) {
+        if isAtLimit {
+            return
         }
 
-        Button {
-            if disabled {
-                return
-            }
+        if hapticType == 2 {
+            hapticTap()
+        }
 
-            if hapticType == 2 {
-                hapticTap()
-            }
-
-            if numberEntryType == 1 {
-                price = appendingDigit(number, to: price, fractionDigits: fractionDigits)
-            } else {
-                if isEditingDecimal {
-                    switch decimalValuesAssigned {
-                        case .none:
-                            price += Double(number) / 10
-                            decimalValuesAssigned = .first
-                        case .first:
-                            price += Double(number) / 100
-                            decimalValuesAssigned = .second
-                        case .second:
-                            return
-                    }
-                } else {
-                    price *= 10
-                    price += Double(number)
+        if numberEntryType == 1 {
+            price = appendingDigit(number, to: price, fractionDigits: fractionDigits)
+        } else {
+            if isEditingDecimal {
+                switch decimalValuesAssigned {
+                    case .none:
+                        price += Double(number) / 10
+                        decimalValuesAssigned = .first
+                    case .first:
+                        price += Double(number) / 100
+                        decimalValuesAssigned = .second
+                    case .second:
+                        return
                 }
+            } else {
+                price *= 10
+                price += Double(number)
             }
+        }
+    }
+
+    private func digitKey(_ number: Int) -> some View {
+        PadKey {
+            typeDigit(number)
         } label: {
             Text("\(number)")
                 .font(.system(size: keyFontSize, weight: .regular, design: .rounded))
-                .minimumScaleFactor(0.5)
-                .frame(width: size.width * 0.3, height: size.height * 0.22)
-                .background(Color.SecondaryBackground)
-                .foregroundColor(Color.PrimaryText)
-                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                .opacity(disabled ? 0.6 : 1)
         }
-        .disabled(disabled)
-        .buttonStyle(NumPadButton())
+        .disabled(isAtLimit)
+    }
+}
+
+/// A borderless number-pad key: fills its cell, shows a soft highlight while pressed.
+struct PadKey<Label: View>: View {
+    var action: () -> Void
+    @ViewBuilder var label: () -> Label
+
+    @Environment(\.isEnabled) private var isEnabled
+
+    var body: some View {
+        Button(action: action) {
+            label()
+                .minimumScaleFactor(0.5)
+                .foregroundColor(Color.PrimaryText)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .contentShape(Rectangle())
+                .opacity(isEnabled ? 1 : 0.4)
+        }
+        .buttonStyle(PadKeyStyle())
+    }
+}
+
+struct PadKeyStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .background(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(Color.PrimaryText.opacity(configuration.isPressed ? 0.08 : 0))
+                    .padding(3)
+            )
+            .scaleEffect(configuration.isPressed ? 0.94 : 1)
+            .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
     }
 }
 
@@ -335,7 +373,7 @@ struct NumberPadTextView: View {
     var body: some View {
         HStack(alignment: .lastTextBaseline, spacing: 0) {
             Group {
-                Text(currencySymbol)
+                Text(currencySymbol + " ")
                     .font(.system(.largeTitle, design: .rounded))
                     .foregroundColor(Color.SubtitleText)
 
@@ -354,32 +392,9 @@ struct NumberPadTextView: View {
         }
         .minimumScaleFactor(0.5)
         .lineLimit(1)
-        .padding(.horizontal, numberEntryType == 2 ? 40 : 0)
         .frame(maxWidth: .infinity)
-        .overlay(alignment: .trailing) {
-            if numberEntryType == 2 {
-                DeleteButton()
-            }
-        }
 //        .animation(.snappy.delay(0.1), value: displayNumbers)
     }
-
-    @ViewBuilder
-   func DeleteButton() -> some View {
-       Button {
-         deleteLastDigit()
-       } label: {
-         Image(systemName: "delete.left.fill")
-           .font(.system(size: 16, weight: .semibold))
-           .foregroundColor(Color.SubtitleText)
-           .padding(7)
-           .background(Color.SecondaryBackground, in: Circle())
-           .frame(minWidth: 44, minHeight: 44)
-           .contentShape(Rectangle())
-       }
-       .disabled(price == 0 && !isEditingDecimal)
-       .accessibilityLabel(Text("Delete digit"))
-   }
 
     public func deleteLastDigit() {
         if numberEntryType == 1 {

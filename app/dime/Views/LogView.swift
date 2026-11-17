@@ -739,15 +739,16 @@ struct FilteredSearchView: View {
         let beginPredicate = NSPredicate(format: "%K BEGINSWITH[cd] %@", #keyPath(Transaction.note), searchQuery)
         let containPredicate = NSPredicate(format: "%K CONTAINS[cd] %@", #keyPath(Transaction.note), searchQuery)
         let containPredicate1 = NSPredicate(format: "%K CONTAINS[cd] %@", #keyPath(Transaction.category.name), searchQuery)
+        let tagPredicate = NSPredicate(format: "%K CONTAINS[cd] %@", #keyPath(Transaction.tags), Transaction.cleanTag(searchQuery))
 
         let compound: NSCompoundPredicate
 
         // allow searching by amount too
         if let amount = Double(searchQuery) {
             let amountPredicate = NSPredicate(format: "amount == %@", NSNumber(value: amount))
-            compound = NSCompoundPredicate(orPredicateWithSubpredicates: [beginPredicate, containPredicate, containPredicate1, amountPredicate])
+            compound = NSCompoundPredicate(orPredicateWithSubpredicates: [beginPredicate, containPredicate, containPredicate1, tagPredicate, amountPredicate])
         } else {
-            compound = NSCompoundPredicate(orPredicateWithSubpredicates: [beginPredicate, containPredicate, containPredicate1])
+            compound = NSCompoundPredicate(orPredicateWithSubpredicates: [beginPredicate, containPredicate, containPredicate1, tagPredicate])
         }
 
         _transactions = SectionedFetchRequest<Date?, Transaction>(sectionIdentifier: \.day, sortDescriptors: [
@@ -1287,7 +1288,7 @@ struct SingleTransactionView: View {
                         .foregroundColor(future ? Color.SubtitleText : Color.PrimaryText)
                         .lineLimit(1)
 
-                    Text(getSubtitle())
+                    Text(transaction.wrappedTags.isEmpty ? getSubtitle() : getSubtitle() + " · " + transaction.wrappedTags.map { "#\($0)" }.joined(separator: " "))
                         .font(.system(.subheadline, design: .rounded).weight(.medium))
                         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
                         .foregroundColor(future ? Color.EvenLighterText : Color.SubtitleText)

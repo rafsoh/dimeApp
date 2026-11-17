@@ -54,6 +54,7 @@ struct ImportDataView: View {
     @State private var selectedColumns = [Int]()
     // columns written by Dime's own export: original amount, currency, rate
     @State private var currencyColumns: [Int]?
+    @State private var tagsColumn: Int?
 
     var indexColumnWidth: CGFloat {
         let additionalPadding: Double
@@ -849,6 +850,7 @@ struct ImportDataView: View {
         var holdingRows = data.components(separatedBy: .newlines).filter { $0 != "" }
 
         currencyColumns = nil
+        tagsColumn = nil
         if !holdingRows[0].containsDigits {
             let header = holdingRows.removeFirst().components(separatedBy: ",").map {
                 $0.trimmingCharacters(in: .whitespaces).lowercased()
@@ -857,6 +859,7 @@ struct ImportDataView: View {
             if indices.count == 3 {
                 currencyColumns = indices
             }
+            tagsColumn = header.firstIndex(of: "tags")
         }
 
         guard !holdingRows.isEmpty else {
@@ -916,6 +919,10 @@ struct ImportDataView: View {
                 if let rowCategory = categoryDictionary[row[categoryColumnIndex]] {
                     if let transactionAmount = Double(row[amountColumnIndex]) {
                         let transaction = dataController.newTransaction(note: row[noteColumnIndex], category: rowCategory, income: rowCategory.income, amount: abs(transactionAmount), date: transactionDate, repeatType: 0, repeatCoefficient: 1, delay: false)
+
+                        if let tagsColumn, tagsColumn < row.count {
+                            transaction.wrappedTags = row[tagsColumn].components(separatedBy: ";")
+                        }
 
                         if let currencyColumns, currencyColumns.allSatisfy({ $0 < row.count }),
                            let originalAmount = Double(row[currencyColumns[0]]),
