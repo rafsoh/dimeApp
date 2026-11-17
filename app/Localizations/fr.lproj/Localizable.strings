@@ -346,3 +346,7 @@
 "Tap to Undo" = "Touchez pour annuler";
 "Image Saved" = "Image enregistrée";
 "Check it out in Photos" = "Retrouvez-la dans Photos";
+
+/* Store errors */
+"Your data couldn't be loaded" = "Impossible de charger vos données";
+"Nothing has been deleted. Free up some storage or update the app, then open Dime again." = "Rien n’a été supprimé. Libérez de l’espace ou mettez l’app à jour, puis rouvrez Dime.";

@@ -47,6 +47,11 @@ struct ContentView: View {
 
             HomeView(topEdge: topEdge, bottomEdge: bottomEdge == 0 ? 15 : bottomEdge)
                 .ignoresSafeArea(.all, edges: .bottom)
+                .overlay {
+                    if let message = dataController.storeLoadError {
+                        StoreErrorView(message: message)
+                    }
+                }
                 .preferredColorScheme(colourScheme == 1 ? .light : colourScheme == 2 ? .dark : nil)
                 .fullScreenCover(isPresented: $showIntro) {
                     WelcomeSheetView()
@@ -180,5 +185,38 @@ struct ContentView: View {
                 }
             }
         }
+    }
+}
+
+
+/// Shown instead of crashing when the database can't be opened (e.g. a failed migration or a full disk).
+struct StoreErrorView: View {
+    let message: String
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "externaldrive.badge.exclamationmark")
+                .font(.system(size: 48))
+                .foregroundColor(Color.AlertRed)
+                .accessibilityHidden(true)
+
+            Text("Your data couldn't be loaded")
+                .font(.system(.title3, design: .rounded).weight(.semibold))
+                .foregroundColor(Color.PrimaryText)
+
+            Text("Nothing has been deleted. Free up some storage or update the app, then open Dime again.")
+                .font(.system(.body, design: .rounded))
+                .foregroundColor(Color.SubtitleText)
+                .multilineTextAlignment(.center)
+
+            Text(message)
+                .font(.system(.footnote, design: .monospaced))
+                .foregroundColor(Color.SubtitleText)
+                .multilineTextAlignment(.center)
+                .textSelection(.enabled)
+        }
+        .padding(30)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.PrimaryBackground)
     }
 }
