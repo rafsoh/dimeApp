@@ -19,13 +19,9 @@ struct CustomTabBar: View {
 
     @FetchRequest(sortDescriptors: []) private var transactions: FetchedResults<Transaction>
 
-    @State var count = 0
     @Binding var counter: Int
 
     var launchAdd: Bool
-
-    @AppStorage("confetti", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var confetti: Bool = false
-    @AppStorage("firstTransactionViewLaunch", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var firstLaunch: Bool = true
 
     @State var animate = false
 
@@ -79,28 +75,7 @@ struct CustomTabBar: View {
         .padding(.bottom, bottomEdge - 10)
         .frame(maxWidth: .infinity)
         .background(Color.PrimaryBackground)
-        .fullScreenCover(isPresented: $addTransaction, onDismiss: {
-            if confetti {
-                if count != transactions.count {
-                    counter += 1
-                }
-            }
-
-            if firstLaunch {
-                firstLaunch = false
-            }
-
-        }, content: {
-            TransactionView(toEdit: nil)
-        })
-        .onChange(of: launchAdd) { _ in
-            addTransaction = true
-        }
-        .onChange(of: addTransaction) { _ in
-            if addTransaction {
-                count = transactions.count
-            }
-        }
+        .addTransactionFlow(isPresented: $addTransaction, counter: $counter, launchAdd: launchAdd)
         .onChange(of: transactions.count) { _ in
             if !transactions.isEmpty {
                 self.animate = false
@@ -108,16 +83,54 @@ struct CustomTabBar: View {
                 self.animate = true
             }
         }
-        .onOpenURL { url in
-            guard
-                url.host == "newExpense"
+    }
+}
 
-            else {
-                return
+/// Presents the new-transaction screen: from a button, the `dimeapp://newExpense` link,
+/// or `launchAdd` after unlocking. Fires confetti when an entry was actually added.
+/// Shared by the custom tab bar and the native iOS 26 tab bar.
+struct AddTransactionFlow: ViewModifier {
+    @Binding var isPresented: Bool
+    @Binding var counter: Int
+    var launchAdd: Bool
+
+    @FetchRequest(sortDescriptors: []) private var transactions: FetchedResults<Transaction>
+    @AppStorage("confetti", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var confetti: Bool = false
+    @AppStorage("firstTransactionViewLaunch", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var firstLaunch: Bool = true
+    @State private var count = 0
+
+    func body(content: Content) -> some View {
+        content
+            .fullScreenCover(isPresented: $isPresented, onDismiss: {
+                if confetti && count != transactions.count {
+                    counter += 1
+                }
+
+                if firstLaunch {
+                    firstLaunch = false
+                }
+            }, content: {
+                TransactionView(toEdit: nil)
+            })
+            .onChange(of: launchAdd) { _ in
+                isPresented = true
             }
+            .onChange(of: isPresented) { newValue in
+                if newValue {
+                    count = transactions.count
+                }
+            }
+            .onOpenURL { url in
+                if url.host == "newExpense" {
+                    isPresented = true
+                }
+            }
+    }
+}
 
-            addTransaction = true
-        }
+extension View {
+    func addTransactionFlow(isPresented: Binding<Bool>, counter: Binding<Int>, launchAdd: Bool) -> some View {
+        modifier(AddTransactionFlow(isPresented: isPresented, counter: counter, launchAdd: launchAdd))
     }
 }
 
