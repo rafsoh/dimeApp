@@ -303,6 +303,7 @@ struct ExpenditureWidgetEntryView: View {
                                     HStack(spacing: 5) {
                                         Capsule()
                                             .fill(Color(hex: transaction.colour))
+                                            .widgetAccent()
                                             .frame(width: 4, height: 12)
 
                                         Text(transaction.note)
@@ -498,6 +499,7 @@ struct ExpenditureWidgetEntryView: View {
                                     HStack(spacing: 8) {
                                         RoundedRectangle(cornerRadius: 5)
                                             .fill(Color(hex: transaction.colour))
+                                            .widgetAccent()
                                             .frame(width: 15, height: 15)
 
                                         Text(transaction.note)

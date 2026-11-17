@@ -351,3 +351,6 @@
 /* Store errors */
 "Your data couldn't be loaded" = "Your data couldn't be loaded";
 "Nothing has been deleted. Free up some storage or update the app, then open Dime again." = "Nothing has been deleted. Free up some storage or update the app, then open Dime again.";
+
+/* Control Center */
+"Open Dime straight to a new expense." = "Open Dime straight to a new expense.";

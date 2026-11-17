@@ -350,3 +350,6 @@
 /* Store errors */
 "Your data couldn't be loaded" = "Не удалось загрузить данные";
 "Nothing has been deleted. Free up some storage or update the app, then open Dime again." = "Ничего не удалено. Освободите место или обновите приложение, затем снова откройте Dime.";
+
+/* Control Center */
+"Open Dime straight to a new expense." = "Открывает Dime сразу на новом расходе.";

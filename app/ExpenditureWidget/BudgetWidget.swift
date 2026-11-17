@@ -197,6 +197,7 @@ struct BudgetWidgetEntryView: View {
                             HStack(spacing: 5) {
                                 CategoryIcon(entry.budget.emoji)
                                     .font(.system(size: 9))
+                                    .widgetAccent()
                                 Text(entry.budget.name.uppercased())
                                     .font(.system(size: 12, weight: .semibold, design: .rounded))
                                     .lineLimit(1)
@@ -290,6 +291,7 @@ struct BudgetWidgetEntryView: View {
                             HStack(spacing: 5) {
                                 CategoryIcon(entry.budget.emoji)
                                     .font(.system(size: 9))
+                                    .widgetAccent()
                                 Text(entry.budget.name.uppercased())
                                     .font(.system(size: 12, weight: .semibold, design: .rounded))
                                     .lineLimit(1)
