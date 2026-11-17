@@ -144,6 +144,9 @@ class DataController: ObservableObject {
                 newTransaction.note = transaction.wrappedNote
                 newTransaction.category = transaction.category
                 newTransaction.amount = transaction.wrappedAmount
+                newTransaction.originalAmount = transaction.originalAmount
+                newTransaction.originalCurrency = transaction.originalCurrency
+                newTransaction.exchangeRate = transaction.exchangeRate
                 newTransaction.date = holdingDate
                 newTransaction.id = UUID()
                 newTransaction.income = transaction.income
@@ -186,6 +189,9 @@ class DataController: ObservableObject {
             newTransaction.note = transaction.wrappedNote
             newTransaction.category = transaction.category
             newTransaction.amount = transaction.wrappedAmount
+                newTransaction.originalAmount = transaction.originalAmount
+                newTransaction.originalCurrency = transaction.originalCurrency
+                newTransaction.exchangeRate = transaction.exchangeRate
             newTransaction.date = transaction.nextTransactionDate
             newTransaction.id = UUID()
             newTransaction.income = transaction.income
