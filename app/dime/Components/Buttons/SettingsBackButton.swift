@@ -14,6 +14,6 @@ struct SettingsBackButton: View {
       .font(.system(.subheadline, design: .rounded).weight(.semibold))
       .foregroundColor(Color.SubtitleText)
       .padding(8)
-      .background(Color.SecondaryBackground, in: Circle())
+      .dimeGlass(Circle(), interactive: true)
   }
 }

@@ -127,7 +127,12 @@ struct MyButtonStyle: ButtonStyle {
             .font(.system(size: 20, weight: .bold))
             .foregroundColor(Color.LightIcon)
             .frame(width: 65, height: 38)
-            .background(configuration.isPressed ? Color.SubtitleText : Color.DarkBackground, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
+            .dimeGlass(
+                RoundedRectangle(cornerRadius: 13, style: .continuous),
+                fallback: configuration.isPressed ? Color.SubtitleText : Color.DarkBackground,
+                interactive: true,
+                solid: true
+            )
     }
 }
 

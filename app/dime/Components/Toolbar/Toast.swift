@@ -21,8 +21,10 @@ struct Toast: View {
                     .foregroundColor(toastColor)
             }
             .padding(8)
-            .background(
-                toastColor.opacity(0.23), in: RoundedRectangle(cornerRadius: 9, style: .continuous)
+            .dimeGlass(
+                RoundedRectangle(cornerRadius: 9, style: .continuous),
+                fallback: toastColor.opacity(0.23),
+                tint: toastColor.opacity(0.18)
             )
             .transition(AnyTransition.opacity.combined(with: .move(edge: .top)))
             .frame(maxWidth: 250)

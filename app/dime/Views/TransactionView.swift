@@ -350,9 +350,10 @@ struct TransactionView: View {
                                 .foregroundColor(Color.AlertRed)
                         }
                         .padding(8)
-                        .background(
-                            Color.AlertRed.opacity(0.23),
-                            in: RoundedRectangle(cornerRadius: 9, style: .continuous)
+                        .dimeGlass(
+                            RoundedRectangle(cornerRadius: 9, style: .continuous),
+                            fallback: Color.AlertRed.opacity(0.23),
+                            tint: Color.AlertRed.opacity(0.18)
                         )
                         .transition(AnyTransition.opacity.combined(with: .move(edge: .top)))
                         .frame(maxWidth: dynamicTypeSize > .xLarge ? 250 : 200)
