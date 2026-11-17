@@ -7,7 +7,6 @@
 
 import Combine
 import Foundation
-import Popovers
 import SwiftUI
 import WidgetKit
 
@@ -26,7 +25,6 @@ struct TemplateTransactionView: View {
     @State var category: Category?
     @State private var repeatType = 0
     @State private var repeatCoefficient = 1
-    @State private var showRecurring = false
     @State var income = false
 
     var transactionTypeString: String {
@@ -268,8 +266,8 @@ struct TemplateTransactionView: View {
                             .accessibilityLabel("delete transaction")
                         }
 
-                        Button {
-                            showRecurring = true
+                        Menu {
+                            RecurringMenuItems(repeatType: $repeatType, repeatCoefficient: $repeatCoefficient, showPicker: $showPicker)
                         } label: {
                             if repeatType > 0 {
                                 Image(systemName: "repeat")
@@ -294,22 +292,7 @@ struct TemplateTransactionView: View {
                                     .contentShape(Circle())
                             }
                         }
-                        .accessibilityRemoveTraits(.isButton)
                         .accessibilityLabel(repeatButtonAccessibility)
-                        .popover(present: $showRecurring, attributes: {
-                            $0.position = .absolute(
-                                originAnchor: .bottom,
-                                popoverAnchor: .top
-                            )
-                            $0.rubberBandingMode = .none
-                            $0.sourceFrameInset = UIEdgeInsets(top: 0, left: 0, bottom: -10, right: 0)
-                            $0.presentation.animation = .easeInOut(duration: 0.2)
-                            $0.dismissal.animation = .easeInOut(duration: 0.3)
-                        }) {
-                            RecurringPickerView(repeatType: $repeatType, repeatCoefficient: $repeatCoefficient, showMenu: $showRecurring, showPicker: $showPicker)
-                        } background: {
-                            backgroundColor.opacity(0.6)
-                        }
                     }
                     .frame(maxWidth: .infinity)
                 }

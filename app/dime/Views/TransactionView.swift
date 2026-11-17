@@ -7,7 +7,6 @@
 
 import Combine
 import Foundation
-import Popovers
 import SwiftUI
 
 struct TransactionView: View {
@@ -33,7 +32,6 @@ struct TransactionView: View {
     @State private var date = Date.now
     @State private var repeatType = 0
     @State private var repeatCoefficient = 1
-    @State private var showRecurring = false
     @State var income = false
 
     var transactionTypeString: String {
@@ -439,8 +437,8 @@ struct TransactionView: View {
                             .accessibilityLabel("delete transaction")
                         }
 
-                        Button {
-                            showRecurring = true
+                        Menu {
+                            RecurringMenuItems(repeatType: $repeatType, repeatCoefficient: $repeatCoefficient, showPicker: $showPicker)
                         } label: {
                             if repeatType > 0 {
                                 Image(systemName: "repeat")
@@ -468,25 +466,6 @@ struct TransactionView: View {
                             }
                         }
                         .accessibilityLabel(repeatButtonAccessibility)
-                        .popover(
-                            present: $showRecurring,
-                            attributes: {
-                                $0.position = .absolute(
-                                    originAnchor: .bottom,
-                                    popoverAnchor: .top
-                                )
-                                $0.rubberBandingMode = .none
-                                $0.sourceFrameInset = UIEdgeInsets(top: 0, left: 0, bottom: -10, right: 0)
-                                $0.presentation.animation = .easeInOut(duration: 0.2)
-                                $0.dismissal.animation = .easeInOut(duration: 0.3)
-                            }
-                        ) {
-                            RecurringPickerView(
-                                repeatType: $repeatType, repeatCoefficient: $repeatCoefficient,
-                                showMenu: $showRecurring, showPicker: $showPicker)
-                        } background: {
-                            backgroundColor.opacity(0.6)
-                        }
                     }
                     .frame(maxWidth: .infinity)
                 }
@@ -1648,156 +1627,6 @@ struct NoteView: View {
     }
 }
 
-struct RecurringPickerView: View {
-    @Namespace var animation
-    @Binding var repeatType: Int
-    @Binding var repeatCoefficient: Int
-    @Binding var showMenu: Bool
-
-    @Binding var showPicker: Bool
-
-    let stringArray = ["none", "daily", "weekly", "monthly"]
-    let stringArray2 = ["", "days", "weeks", "months"]
-
-    @AppStorage("bottomEdge", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
-    var bottomEdge: Double = 15
-
-    @State private var offset: CGFloat = 0
-
-    @State var holdingType = 0
-    @State var holdingCoefficient = 0
-
-    @AppStorage("colourScheme", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
-    var colourScheme: Int = 0
-
-    @Environment(\.colorScheme) var systemColorScheme
-
-    var darkMode: Bool {
-        (colourScheme == 0 && systemColorScheme == .dark) || colourScheme == 2
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 1) {
-            ForEach(stringArray, id: \.self) { string in
-                HStack {
-                    Text(LocalizedStringKey(string))
-                        .font(.system(.body, design: .rounded).weight(.medium))
-                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                        .lineLimit(1)
-                    Spacer()
-
-                    if repeatType == (stringArray.firstIndex(of: string) ?? 0) && repeatCoefficient == 1 {
-                        Image(systemName: "checkmark")
-                            .font(.system(.footnote, design: .rounded).weight(.medium))
-                            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                        //                            .font(.system(size: 14, weight: .medium))
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                //                .font(.system(size: 18, weight: .medium, design: .rounded))
-                .padding(5)
-                .background {
-                    if repeatType == (stringArray.firstIndex(of: string) ?? 0) && repeatCoefficient == 1 {
-                        RoundedRectangle(cornerRadius: 6)
-                            .fill(
-                                darkMode
-                                ? Color("AlwaysDarkSecondaryBackground") : Color("AlwaysLightSecondaryBackground")
-                            )
-                            .matchedGeometryEffect(id: "TAB", in: animation)
-                    }
-                }
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    if repeatType == (stringArray.firstIndex(of: string) ?? 0) && repeatCoefficient == 1 {
-                        showMenu = false
-                    } else {
-                        withAnimation(.easeIn(duration: 0.15)) {
-                            repeatType = (stringArray.firstIndex(of: string) ?? 0)
-                            repeatCoefficient = 1
-                        }
-
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                            showMenu = false
-                        }
-                    }
-                }
-            }
-
-            HStack {
-                if repeatCoefficient == 1 {
-                    Text("custom")
-                } else {
-                    if repeatType == 1 {
-                        Text(String(repeatCoefficient) + " " + String(localized: "\(repeatCoefficient) days"))
-                    } else if repeatType == 2 {
-                        Text(String(repeatCoefficient) + " " + String(localized: "\(repeatCoefficient) weeks"))
-                    } else if repeatType == 3 {
-                        Text(String(repeatCoefficient) + " " + String(localized: "\(repeatCoefficient) months"))
-                    }
-                }
-
-                Spacer()
-
-                if repeatCoefficient > 1 {
-                    Image(systemName: "checkmark")
-                        .font(.system(.footnote, design: .rounded).weight(.medium))
-                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                    //                        .font(.system(size: 14, weight: .medium))
-                }
-            }
-            .lineLimit(1)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .font(.system(.body, design: .rounded).weight(.medium))
-            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-            //            .font(.system(size: 18, weight: .medium, design: .rounded))
-            .padding(5)
-            .background {
-                if repeatCoefficient > 1 {
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(
-                            darkMode
-                            ? Color("AlwaysDarkSecondaryBackground") : Color("AlwaysLightSecondaryBackground")
-                        )
-                        .matchedGeometryEffect(id: "TAB", in: animation)
-                }
-            }
-            .contentShape(Rectangle())
-            .onTapGesture {
-                if repeatCoefficient == 1 {
-                    repeatCoefficient = 2
-                    repeatType = 2
-
-                    holdingType = repeatType
-                    holdingCoefficient = repeatCoefficient
-                }
-
-                withAnimation {
-                    showPicker = true
-                }
-            }
-            .onChange(of: showPicker) { newValue in
-                // holdingType != repeatType || holdingCoefficient != repeatCoefficient
-                if !newValue {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                        showMenu = false
-                    }
-                }
-            }
-        }
-        .foregroundColor(darkMode ? Color("AlwaysLightBackground") : Color("AlwaysDarkBackground"))
-        .padding(4)
-        .frame(width: 150)
-        .background(
-            RoundedRectangle(cornerRadius: 9).fill(
-                darkMode ? Color("AlwaysDarkBackground") : Color("AlwaysLightBackground")
-            ).shadow(color: darkMode ? Color.clear : Color.gray.opacity(0.25), radius: 6)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 9).stroke(
-                darkMode ? Color.gray.opacity(0.1) : Color.clear, lineWidth: 1.3))
-    }
-}
-
 struct CustomRecurringView: View {
     @Binding var repeatType: Int
     @Binding var repeatCoefficient: Int
@@ -2166,3 +1995,58 @@ struct TagsRow: View {
     }
 }
 
+
+/// Native (glass on iOS 26) repeat menu: none / daily / weekly / monthly, plus a custom interval.
+struct RecurringMenuItems: View {
+    @Binding var repeatType: Int
+    @Binding var repeatCoefficient: Int
+    @Binding var showPicker: Bool
+
+    private let names = ["none", "daily", "weekly", "monthly"]
+
+    private var simpleSelection: Binding<Int> {
+        Binding(
+            get: { repeatCoefficient == 1 || repeatType == 0 ? repeatType : -1 },
+            set: { newValue in
+                withAnimation(.easeOut(duration: 0.2)) {
+                    repeatType = newValue
+                    repeatCoefficient = 1
+                }
+            }
+        )
+    }
+
+    var body: some View {
+        Picker("Repeat", selection: simpleSelection) {
+            ForEach(names.indices, id: \.self) { index in
+                Text(LocalizedStringKey(names[index])).tag(index)
+            }
+        }
+
+        Button {
+            showPicker = true
+        } label: {
+            if repeatCoefficient > 1 && repeatType > 0 {
+                Label {
+                    Text(customDescription)
+                } icon: {
+                    Image(systemName: "checkmark")
+                }
+            } else {
+                Label {
+                    Text("custom")
+                } icon: {
+                    Image(systemName: "slider.horizontal.3")
+                }
+            }
+        }
+    }
+
+    private var customDescription: String {
+        switch repeatType {
+        case 1: return String(repeatCoefficient) + " " + String(localized: "\(repeatCoefficient) days")
+        case 2: return String(repeatCoefficient) + " " + String(localized: "\(repeatCoefficient) weeks")
+        default: return String(repeatCoefficient) + " " + String(localized: "\(repeatCoefficient) months")
+        }
+    }
+}

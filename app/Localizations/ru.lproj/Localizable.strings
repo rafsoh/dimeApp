@@ -323,10 +323,6 @@
 "Rate" = "Курс";
 "Missing Exchange Rate" = "Нет курса обмена";
 "Save" = "Сохранить";
-
-/* Category icons */
-"Duplicate Emoji" = "Значок уже используется";
-"Choose icon" = "Выберите значок";
 "Done" = "Готово";
 
 /* Tags & keypad */
@@ -334,3 +330,13 @@
 "Add tag" = "Добавить тег";
 "Remove tag %@" = "Удалить тег %@";
 "Double zero" = "Два нуля";
+
+/* Search & filter */
+"Search your log" = "Поиск по журналу";
+"Notes, categories, tags or amounts" = "Заметки, категории, теги или суммы";
+"Search" = "Поиск";
+"Filter" = "Фильтр";
+
+/* Category icons */
+"Duplicate Emoji" = "Значок уже используется";
+"Choose icon" = "Выберите значок";

@@ -323,10 +323,6 @@
 "Rate" = "Taux";
 "Missing Exchange Rate" = "Taux de change manquant";
 "Save" = "Enregistrer";
-
-/* Category icons */
-"Duplicate Emoji" = "Icône en double";
-"Choose icon" = "Choisir une icône";
 "Done" = "OK";
 
 /* Tags & keypad */
@@ -334,3 +330,13 @@
 "Add tag" = "Ajouter une étiquette";
 "Remove tag %@" = "Supprimer l’étiquette %@";
 "Double zero" = "Double zéro";
+
+/* Search & filter */
+"Search your log" = "Rechercher dans le journal";
+"Notes, categories, tags or amounts" = "Notes, catégories, étiquettes ou montants";
+"Search" = "Rechercher";
+"Filter" = "Filtrer";
+
+/* Category icons */
+"Duplicate Emoji" = "Icône en double";
+"Choose icon" = "Choisir une icône";

@@ -324,10 +324,6 @@
 "Rate" = "Rate";
 "Missing Exchange Rate" = "Missing Exchange Rate";
 "Save" = "Save";
-
-/* Category icons */
-"Duplicate Emoji" = "Duplicate Icon";
-"Choose icon" = "Choose icon";
 "Done" = "Done";
 
 /* Tags & keypad */
@@ -335,3 +331,13 @@
 "Add tag" = "Add tag";
 "Remove tag %@" = "Remove tag %@";
 "Double zero" = "Double zero";
+
+/* Search & filter */
+"Search your log" = "Search your log";
+"Notes, categories, tags or amounts" = "Notes, categories, tags or amounts";
+"Search" = "Search";
+"Filter" = "Filter";
+
+/* Category icons */
+"Duplicate Emoji" = "Duplicate Icon";
+"Choose icon" = "Choose icon";

@@ -138,7 +138,11 @@ struct HomeView: View {
             }
 
             if appLockVM.isAppLockEnabled && fromURL2 {
-                currentTab = "Log"
+                if #available(iOS 26.0, *) {
+                    currentTab = "Search"
+                } else {
+                    currentTab = "Log"
+                }
 
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     launchSearch.toggle()
@@ -157,7 +161,11 @@ struct HomeView: View {
         }
         .onOpenURL { url in
             if url.host == "search" {
-                currentTab = "Log"
+                if #available(iOS 26.0, *) {
+                    currentTab = "Search"
+                } else {
+                    currentTab = "Log"
+                }
             } else if url.host == "insights" {
                 currentTab = "Insights"
             } else if url.host == "budget" {
@@ -225,6 +233,10 @@ struct HomeView: View {
                 SettingsView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .tabBarHiddenInNavigation(tabBarManager.inNavigationLink)
+            }
+
+            Tab(value: "Search", role: .search) {
+                LogSearchView()
             }
         }
         .tint(Color.PrimaryText)

@@ -8,7 +8,6 @@
 import CloudKitSyncMonitor
 import CoreData
 import Foundation
-import Popovers
 import SwiftUI
 
 struct LogView: View {
@@ -42,7 +41,6 @@ struct LogView: View {
     let subtitleText = ["today", "this week", "this month", "this year"]
 
     // show filter menu
-    @State var showFilter = false
     @State var filter = FilterType.all
 
     // filters
@@ -95,88 +93,53 @@ struct LogView: View {
         } else {
             VStack(spacing: 0) {
                 VStack(spacing: 18) {
-                    HStack {
-                        Button {
-                            searchMode = true
-                        } label: {
-                            Image(systemName: "magnifyingglass")
-//                                .font(.system(size: 23, weight: .regular))
-                                .font(.system(.title2, design: .rounded).weight(.regular))
-                                .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-                                .foregroundColor(Color.DarkIcon)
-                                .padding(5)
-                                .contentShape(Rectangle())
-                                .background {
-                                    RoundedRectangle(cornerRadius: 7)
-                                        .fill(Color.SecondaryBackground)
-                                        .scaleEffect(progress == 1 ? 1.5 : 1.0)
-                                        .opacity(progress)
-                                }
+                    HStack(spacing: 10) {
+                        // iOS 26 searches from the tab bar's search tab; older versions keep a header button
+                        if !usesSearchTab {
+                            Button {
+                                searchMode = true
+                            } label: {
+                                Image(systemName: "magnifyingglass")
+                                    .font(.system(.body, design: .rounded).weight(.semibold))
+                                    .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+                                    .foregroundColor(Color.PrimaryText)
+                                    .frame(width: 44, height: 44)
+                                    .dimeGlass(Circle(), interactive: true)
+                                    .contentShape(Circle())
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Search")
                         }
-                        .accessibilityLabel("Search")
 
-                        Spacer()
-
-                        switch filter {
-                        case .all:
-//                            Text(navBarText)
-//                            .font(.system(size: 16, weight: .semibold, design: .rounded))
-//                            .opacity(0)
-                            EmptyView()
-                        case .category:
-                            filterTagView(text: "filter-tag-category")
-                        case .day:
-                            filterTagView(text: "filter-tag-day")
-                        case .week:
-                            filterTagView(text: "filter-tag-week")
-                        case .month:
-                            filterTagView(text: "filter-tag-month")
-                        case .recurring:
-                            filterTagView(text: "filter-tag-recurring")
-                        case .type:
-                            filterTagView(text: "filter-tag-type")
-                        case .upcoming:
-                            filterTagView(text: "filter-tag-upcoming")
+                        if filter != .all {
+                            activeFilterChip
+                                .transition(.opacity.combined(with: .scale(scale: 0.9)))
                         }
 
                         Spacer()
 
-                        Button {
-                            showFilter = true
-                        } label: {
-                            Image(systemName: filter == .all ? "triangle" : "triangle.tophalf.filled")
-                                .font(.system(.title2, design: .rounded).weight(.regular))
-                                .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-                                .foregroundColor(Color.DarkIcon)
-                                .rotationEffect(Angle(degrees: 180))
-                                .padding(5)
-                                .contentShape(Rectangle())
-                                .background {
-                                    if showFilter {
-                                        RoundedRectangle(cornerRadius: 7)
-                                            .fill(Color.SecondaryBackground)
-                                    }
-//                                    if pullStatus == .filter || showFilter {
-//                                        RoundedRectangle(cornerRadius: 7)
-//                                            .fill(Color.SecondaryBackground)
-//                                            .scaleEffect(released == .filter ? 1.2 : 1.0)
-//                                            .opacity(released  == .filter ? 0.5 : 1.0)
-//                                    }
+                        Menu {
+                            Picker("Filter", selection: $filter.animation(.easeOut(duration: 0.2))) {
+                                ForEach(FilterType.allCases, id: \.self) { option in
+                                    Label(LocalizedStringKey(option.rawValue), systemImage: FilterType.imageDictionary[option] ?? "")
+                                        .tag(option)
                                 }
+                            }
+                        } label: {
+                            Image(systemName: "line.3.horizontal.decrease")
+                                .font(.system(.body, design: .rounded).weight(.semibold))
+                                .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+                                .foregroundColor(filter == .all ? Color.PrimaryText : Color.LightIcon)
+                                .frame(width: 44, height: 44)
+                                .dimeGlass(
+                                    Circle(),
+                                    fallback: filter == .all ? Color.SecondaryBackground : Color.DarkBackground,
+                                    interactive: true,
+                                    solid: filter != .all
+                                )
+                                .contentShape(Circle())
                         }
                         .accessibilityLabel("Filter")
-                        .popover(present: $showFilter, attributes: {
-                            $0.position = .absolute(
-                                originAnchor: .bottomRight,
-                                popoverAnchor: .topRight
-                            )
-                            $0.rubberBandingMode = .none
-                            $0.sourceFrameInset = UIEdgeInsets(top: 0, left: 0, bottom: -10, right: 0)
-                            $0.presentation.animation = .easeInOut(duration: 0.2)
-                            $0.dismissal.animation = .easeInOut(duration: 0.3)
-                        }) {
-                            FilterPickerView(filterType: $filter, showMenu: $showFilter)
-                        }
                     }
 
                     switch filter {
@@ -288,7 +251,9 @@ struct LogView: View {
                 }
             }
             .onChange(of: launchSearch) { _ in
-                searchMode = true
+                if !usesSearchTab {
+                    searchMode = true
+                }
             }
             .onAppear {
                 if !NSUbiquitousKeyValueStore.default.bool(forKey: "icloud_sync") {
@@ -308,12 +273,58 @@ struct LogView: View {
 //                }
 //            }
             .onOpenURL { url in
-                guard url.host == "search" else {
+                guard url.host == "search", !usesSearchTab else {
                     return
                 }
                 searchMode = true
             }
         }
+    }
+
+    private var usesSearchTab: Bool {
+        if #available(iOS 26.0, *) {
+            return true
+        }
+        return false
+    }
+
+    private var filterChipText: LocalizedStringKey {
+        switch filter {
+        case .all: return ""
+        case .category: return "filter-tag-category"
+        case .day: return "filter-tag-day"
+        case .week: return "filter-tag-week"
+        case .month: return "filter-tag-month"
+        case .recurring: return "filter-tag-recurring"
+        case .type: return "filter-tag-type"
+        case .upcoming: return "filter-tag-upcoming"
+        }
+    }
+
+    /// The active filter as a glass chip; tapping it clears the filter.
+    private var activeFilterChip: some View {
+        Button {
+            withAnimation(.easeOut(duration: 0.2)) {
+                filter = .all
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Text(filterChipText)
+                    .lineLimit(1)
+                Image(systemName: "xmark")
+                    .font(.system(.caption, design: .rounded).weight(.bold))
+                    .foregroundColor(Color.SubtitleText)
+            }
+            .font(.system(.body, design: .rounded).weight(.semibold))
+            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+            .foregroundColor(Color.PrimaryText)
+            .padding(.horizontal, 14)
+            .frame(minHeight: 44)
+            .dimeGlass(Capsule(), interactive: true)
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text("remove filter"))
     }
 
     @ViewBuilder
@@ -386,7 +397,7 @@ struct NumberView: AnimatableModifier {
     func body(content _: Content) -> some View {
         HStack(alignment: .lastTextBaseline, spacing: 2) {
             Group {
-                Text(netTotal ? (positive ? "+\(currencySymbol)" : "-\(currencySymbol)") : currencySymbol)
+                Text((netTotal ? (positive ? "+\(currencySymbol)" : "-\(currencySymbol)") : currencySymbol) + " ")
                     .font(.system(.largeTitle, design: .rounded))
                     .foregroundColor(Color.SubtitleText) +
 
@@ -410,7 +421,6 @@ struct LogInsightsView: View {
     let showCents: Bool
     let currencySymbol: String
 
-    @State var showMenu1 = false
     let subtitleText = ["today", "this week", "this month", "this year", "all time"]
 
     @AppStorage("logInsightsTimeFrame", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var timeframe = 2
@@ -503,31 +513,45 @@ struct LogInsightsView: View {
     var body: some View {
         VStack(spacing: -3) {
             VStack(spacing: 2) {
-                HStack(spacing: 4) {
-                    Text(LocalizedStringKey(headingText))
+                HStack(spacing: 6) {
+                    // what the total shows: net, income or spending
+                    Menu {
+                        Picker("Total", selection: $insightsType.animation(.easeOut(duration: 0.2))) {
+                            Label("Net Total", systemImage: "plusminus").tag(1)
+                            Label("Total Income", systemImage: "plus").tag(2)
+                            Label("Total Spent", systemImage: "minus").tag(3)
+                        }
+                    } label: {
+                        HStack(spacing: 3) {
+                            Text(LocalizedStringKey(headingText))
+                            Image(systemName: "chevron.down")
+                                .font(.system(.caption2, design: .rounded).weight(.bold))
+                                .foregroundColor(Color.SubtitleText)
+                        }
                         .font(.system(.body, design: .rounded).weight(.medium))
                         .foregroundColor(Color.PrimaryText.opacity(0.9))
-                    Button {
-                        showMenu1 = true
-                    } label: {
-                        Text(LocalizedStringKey(subtitleText[timeframe - 1]))
-                            .padding(2)
-                            .padding(.horizontal, 6)
-                            .font(.system(.body, design: .rounded).weight(.medium))
-                            .foregroundColor(Color.PrimaryText.opacity(9))
-                            .overlay(Capsule().stroke(Color.Outline, lineWidth: 1.3))
+                        .frame(minHeight: 36)
                     }
-                    .popover(present: $showMenu1, attributes: {
-                        $0.position = .absolute(
-                            originAnchor: .bottom,
-                            popoverAnchor: .top
-                        )
-                        $0.rubberBandingMode = .none
-                        $0.sourceFrameInset = UIEdgeInsets(top: 0, left: 0, bottom: -10, right: 0)
-                        $0.presentation.animation = .easeInOut(duration: 0.2)
-                        $0.dismissal.animation = .easeInOut(duration: 0.3)
-                    }) {
-                        TimePickerView(showMenu: $showMenu1, timeframe: $timeframe)
+
+                    // period
+                    Menu {
+                        Picker("Period", selection: $timeframe.animation(.easeOut(duration: 0.2))) {
+                            ForEach(1...subtitleText.count, id: \.self) { index in
+                                Text(LocalizedStringKey(subtitleText[index - 1])).tag(index)
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text(LocalizedStringKey(subtitleText[timeframe - 1]))
+                            Image(systemName: "chevron.up.chevron.down")
+                                .font(.system(.caption2, design: .rounded).weight(.bold))
+                                .foregroundColor(Color.SubtitleText)
+                        }
+                        .font(.system(.body, design: .rounded).weight(.medium))
+                        .foregroundColor(Color.PrimaryText)
+                        .padding(.horizontal, 12)
+                        .frame(minHeight: 36)
+                        .dimeGlass(Capsule(), interactive: true)
                     }
                 }
 
@@ -535,32 +559,6 @@ struct LogInsightsView: View {
                     .modifier(NumberView(number: amount, dynamicTypeSize: _dynamicTypeSize.wrappedValue, netTotal: insightsType == 1, positive: netTotal.positive))
             }
             .padding(7)
-            .contentShape(Rectangle())
-            .contextMenu {
-                if insightsType != 3 {
-                    Button {
-                        insightsType = 3
-                    } label: {
-                        Label("Total Spent", systemImage: "minus")
-                    }
-                }
-
-                if insightsType != 2 {
-                    Button {
-                        insightsType = 2
-                    } label: {
-                        Label("Total Income", systemImage: "plus")
-                    }
-                }
-
-                if insightsType != 1 {
-                    Button {
-                        insightsType = 1
-                    } label: {
-                        Label("Net Total", systemImage: "alternatingcurrent")
-                    }
-                }
-            }
 
             if totalSpent != 0 && totalIncome != 0 && insightsType == 1 {
                 HStack {
@@ -711,8 +709,10 @@ struct FilteredSearchView: View {
         VStack {
             if searchQuery != "" && transactions.count == 0 {
                 VStack(spacing: 2) {
-                    Text("📭️")
-                        .font(.system(size: 50))
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 44, weight: .regular))
+                        .foregroundColor(Color.SubtitleText)
+                        .accessibilityHidden(true)
                         .padding(.bottom, 15)
                     Text("No entries found.")
                         .font(.system(.title3, design: .rounded).weight(.medium))
@@ -757,154 +757,6 @@ struct FilteredSearchView: View {
         ], predicate: compound)
 
         self.searchQuery = searchQuery
-    }
-}
-
-struct TimePickerView: View {
-    @Namespace var animation
-
-    let timeframes = ["today", "this week", "this month", "this year", "all time"]
-
-    @Binding var showMenu: Bool
-    @Binding var timeframe: Int
-    @State var holdingTimeframe = 0
-
-    @AppStorage("colourScheme", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var colourScheme: Int = 0
-
-    @Environment(\.colorScheme) var systemColorScheme
-
-    var darkMode: Bool {
-        (colourScheme == 0 && systemColorScheme == .dark) || colourScheme == 2
-    }
-
-    @Environment(\.dynamicTypeSize) var dynamicTypeSize
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 1) {
-            ForEach(timeframes.indices, id: \.self) { index in
-                HStack {
-                    Text(LocalizedStringKey(timeframes[index]))
-                        .font(.system(.body, design: .rounded).weight(.medium))
-                        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-
-                    Spacer()
-
-                    if holdingTimeframe == index + 1 {
-                        Image(systemName: "checkmark")
-                            .font(.system(.footnote, design: .rounded).weight(.medium))
-                            .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-//                            .font(.system(size: 14, weight: .medium))
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-//                .font(.system(size: 18, weight: .medium, design: .rounded))
-                .padding(5)
-                .background {
-                    if holdingTimeframe == index + 1 {
-                        RoundedRectangle(cornerRadius: 6)
-                            .fill(darkMode ? Color("AlwaysDarkSecondaryBackground") : Color("AlwaysLightSecondaryBackground"))
-                            .matchedGeometryEffect(id: "TAB", in: animation)
-                    }
-                }
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    if holdingTimeframe == index + 1 {
-                        showMenu = false
-                    } else {
-                        withAnimation(.easeIn(duration: 0.15)) {
-                            holdingTimeframe = index + 1
-                        }
-
-                        timeframe = index + 1
-
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                            showMenu = false
-                        }
-                    }
-                }
-                .accessibilityElement(children: .ignore)
-            }
-        }
-        .foregroundColor(darkMode ? Color("AlwaysLightBackground") : Color("AlwaysDarkBackground"))
-        .padding(4)
-        .frame(width: dynamicTypeSize > .xxLarge ? 185 : 160)
-        .background(RoundedRectangle(cornerRadius: 9).fill(darkMode ? Color("AlwaysDarkBackground") : Color("AlwaysLightBackground")).shadow(color: darkMode ? Color.clear : Color.gray.opacity(0.25), radius: 6))
-        .overlay(RoundedRectangle(cornerRadius: 9).stroke(darkMode ? Color.gray.opacity(0.1) : Color.clear, lineWidth: 1.3))
-        .onAppear {
-            holdingTimeframe = timeframe
-        }
-    }
-}
-
-struct FilterPickerView: View {
-    @Namespace var animation
-    @Namespace var animation1
-    @Binding var filterType: FilterType
-    @Binding var showMenu: Bool
-
-    @AppStorage("colourScheme", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var colourScheme: Int = 0
-
-    @Environment(\.colorScheme) var systemColorScheme
-    @Environment(\.dynamicTypeSize) var dynamicTypeSize
-
-    var darkMode: Bool {
-        (colourScheme == 0 && systemColorScheme == .dark) || colourScheme == 2
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 1) {
-            ForEach(FilterType.allCases, id: \.self) { filter in
-                HStack {
-                    Image(systemName: FilterType.imageDictionary[filter] ?? "")
-//                        .font(.system(size: 16))
-                        .font(.system(.callout, design: .rounded).weight(.regular))
-                        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-                        .frame(width: 20)
-                    Text(LocalizedStringKey(filter.rawValue))
-//                        .font(.system(size: 18, weight: .medium, design: .rounded))
-                        .font(.system(.body, design: .rounded).weight(.medium))
-                        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-                        .lineLimit(1)
-                    Spacer()
-
-                    if filterType == filter {
-                        Image(systemName: "checkmark")
-                            .font(.system(.footnote, design: .rounded).weight(.medium))
-                            .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-//                            .font(.system(size: 14, weight: .medium))
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(5)
-                .background {
-                    if filterType == filter {
-                        RoundedRectangle(cornerRadius: 6)
-                            .fill(darkMode ? Color("AlwaysDarkSecondaryBackground") : Color("AlwaysLightSecondaryBackground"))
-                            .matchedGeometryEffect(id: "TAB", in: animation)
-                    }
-                }
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    if filterType == filter {
-                        showMenu = false
-                    } else {
-                        withAnimation(.easeIn(duration: 0.15)) {
-                            filterType = filter
-                        }
-
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            showMenu = false
-                        }
-                    }
-                }
-                .accessibilityElement(children: .ignore)
-            }
-        }
-        .foregroundColor(darkMode ? Color("AlwaysLightBackground") : Color("AlwaysDarkBackground"))
-        .padding(4)
-        .frame(width: dynamicTypeSize > .xLarge ? 220 : 190)
-        .background(RoundedRectangle(cornerRadius: 9).fill(darkMode ? Color("AlwaysDarkBackground") : Color("AlwaysLightBackground")).shadow(color: darkMode ? Color.clear : Color.gray.opacity(0.25), radius: 6))
-        .overlay(RoundedRectangle(cornerRadius: 9).stroke(darkMode ? Color.gray.opacity(0.1) : Color.clear, lineWidth: 1.3))
     }
 }
 
@@ -2275,4 +2127,33 @@ func dayTotal(dayTransaction: [Transaction]) -> Double {
     }
 
     return total
+}
+
+
+/// iOS 26 search tab: native glass search field at the bottom, results grouped by day.
+@available(iOS 26.0, *)
+struct LogSearchView: View {
+    @State private var query = ""
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                if query.isEmpty {
+                    ContentUnavailableView {
+                        Label("Search your log", systemImage: "magnifyingglass")
+                    } description: {
+                        Text("Notes, categories, tags or amounts")
+                    }
+                    .padding(.top, 80)
+                } else {
+                    FilteredSearchView(searchQuery: query)
+                        .padding(.horizontal, 20)
+                }
+            }
+            .scrollDismissesKeyboard(.interactively)
+            .background(Color.PrimaryBackground)
+            .navigationTitle(Text("Search"))
+            .searchable(text: $query, prompt: Text("Search entry by note"))
+        }
+    }
 }

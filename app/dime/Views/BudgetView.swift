@@ -7,7 +7,6 @@
 
 import CrookedText
 import Foundation
-import Popovers
 import SwiftUI
 
 struct BudgetView: View {
@@ -994,7 +993,7 @@ struct BudgetDollarView: View {
     var body: some View {
         HStack(alignment: .lastTextBaseline, spacing: 1.3) {
             Group {
-                Text(currencySymbol)
+                Text(currencySymbol + " ")
                     .font(.system(dynamicTypeSizes.symbol, design: .rounded).weight(.medium))
                     .foregroundColor(red ? Color("BudgetRed") : Color.SubtitleText) +
 
@@ -1020,7 +1019,7 @@ struct DetailedBudgetDollarView: View {
     var body: some View {
         HStack(alignment: .lastTextBaseline, spacing: 1.3) {
             Group {
-                Text(currencySymbol)
+                Text(currencySymbol + " ")
                     .font(.system(.title2, design: .rounded).weight(.medium))
                     .foregroundColor(Color.SubtitleText) +
 
@@ -1048,7 +1047,7 @@ struct DetailedBudgetDifferenceDollarView: View {
     var body: some View {
         HStack(alignment: .lastTextBaseline, spacing: 1.3) {
             Group {
-                Text(currencySymbol)
+                Text(currencySymbol + " ")
                     .font(.system(.title2, design: .rounded).weight(.medium))
                     .foregroundColor(red ? Color("BudgetRed") : Color.SubtitleText) +
 
