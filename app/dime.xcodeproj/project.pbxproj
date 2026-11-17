@@ -299,6 +299,7 @@
 		53B9079A2AE818710001F496 /* RoundedTriangle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundedTriangle.swift; sourceTree = "<group>"; };
 		53B9079C2AE818A00001F496 /* CustomCapsule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomCapsule.swift; sourceTree = "<group>"; };
 		53B9079E2AE818B90001F496 /* Ring.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Ring.swift; sourceTree = "<group>"; };
+		53BC2A462A8B21920019E4A8 /* MainModel 3.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "MainModel 3.xcdatamodel"; sourceTree = "<group>"; };
 		53BC2A402A8B21920019E4A8 /* MainModel 2.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "MainModel 2.xcdatamodel"; sourceTree = "<group>"; };
 		53BC2A412A8B21920019E4A8 /* MainModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = MainModel.xcdatamodel; sourceTree = "<group>"; };
 		53D0297F28C5BC0300443F2B /* Currency.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Currency.swift; sourceTree = "<group>"; };
@@ -1614,10 +1615,11 @@
 		53BC2A3F2A8B21920019E4A8 /* MainModel.xcdatamodeld */ = {
 			isa = XCVersionGroup;
 			children = (
+				53BC2A462A8B21920019E4A8 /* MainModel 3.xcdatamodel */,
 				53BC2A402A8B21920019E4A8 /* MainModel 2.xcdatamodel */,
 				53BC2A412A8B21920019E4A8 /* MainModel.xcdatamodel */,
 			);
-			currentVersion = 53BC2A402A8B21920019E4A8 /* MainModel 2.xcdatamodel */;
+			currentVersion = 53BC2A462A8B21920019E4A8 /* MainModel 3.xcdatamodel */;
 			path = MainModel.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;
