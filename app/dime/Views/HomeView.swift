@@ -53,39 +53,24 @@ struct HomeView: View {
 
     @State var showPopup = false
 
-    // Hiding Native TabBar...
+    @State var addTransaction = false
+
+    // Hiding Native TabBar (pre-iOS 26 uses the custom bar; iOS 26 uses the native glass bar)
     init(topEdge: CGFloat, bottomEdge: CGFloat) {
-        UITabBar.appearance().isHidden = true
+        if #unavailable(iOS 26.0) {
+            UITabBar.appearance().isHidden = true
+        }
         self.topEdge = topEdge
         self.bottomEdge = bottomEdge
     }
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            TabView(selection: $currentTab) {
-                LogView(topEdge: topEdge, bottomEdge: bottomEdge, launchSearch: launchSearch)
-                    .ignoresSafeArea(.all)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .tag("Log")
-
-                InsightsView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .tag("Insights")
-
-                BudgetView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .tag("Budget")
-
-                SettingsView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .tag("Settings")
+            if #available(iOS 26.0, *) {
+                nativeTabs
+            } else {
+                legacyTabs
             }
-            .allowsHitTesting(showPopup ? false : true)
-            .environmentObject(toastPresenter)
-            .environmentObject(transactionManager)
-
-            CustomTabBar(currentTab: $currentTab, topEdge: topEdge, bottomEdge: bottomEdge, counter: $counter, launchAdd: launchAdd)
-                .offset(y: tabBarManager.hideTab ? (70 + bottomEdge) : 0)
 
             if showPopup {
                 Rectangle()
@@ -179,6 +164,113 @@ struct HomeView: View {
                 currentTab = "Budget"
             }
         }
+    }
+
+    // MARK: - Tab shells
+
+    /// iOS 15–18: page-style TabView driven by the custom tab bar.
+    @ViewBuilder
+    private var legacyTabs: some View {
+        TabView(selection: $currentTab) {
+            LogView(topEdge: topEdge, bottomEdge: bottomEdge, launchSearch: launchSearch)
+                .ignoresSafeArea(.all)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .tag("Log")
+
+            InsightsView()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .tag("Insights")
+
+            BudgetView()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .tag("Budget")
+
+            SettingsView()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .tag("Settings")
+        }
+        .allowsHitTesting(showPopup ? false : true)
+        .environmentObject(toastPresenter)
+        .environmentObject(transactionManager)
+
+        CustomTabBar(currentTab: $currentTab, topEdge: topEdge, bottomEdge: bottomEdge, counter: $counter, launchAdd: launchAdd)
+            .offset(y: tabBarManager.hideTab ? (70 + bottomEdge) : 0)
+    }
+
+    /// iOS 26: native Liquid Glass tab bar with labels, minimising on scroll,
+    /// and "New Expense" as the bar's bottom accessory.
+    @available(iOS 26.0, *)
+    private var nativeTabs: some View {
+        TabView(selection: $currentTab) {
+            Tab("Log", image: "Log", value: "Log") {
+                LogView(topEdge: topEdge, bottomEdge: bottomEdge, launchSearch: launchSearch)
+                    .ignoresSafeArea(.all)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .tabBarHiddenInNavigation(tabBarManager.inNavigationLink)
+            }
+
+            Tab("Insights", image: "Insights", value: "Insights") {
+                InsightsView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .tabBarHiddenInNavigation(tabBarManager.inNavigationLink)
+            }
+
+            Tab("Budget", image: "Budget", value: "Budget") {
+                BudgetView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .tabBarHiddenInNavigation(tabBarManager.inNavigationLink)
+            }
+
+            Tab("Settings", image: "Settings", value: "Settings") {
+                SettingsView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .tabBarHiddenInNavigation(tabBarManager.inNavigationLink)
+            }
+        }
+        .tint(Color.PrimaryText)
+        .tabBarMinimizeBehavior(.onScrollDown)
+        .tabViewBottomAccessory {
+            NewExpenseAccessory {
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                addTransaction = true
+            }
+        }
+        .allowsHitTesting(showPopup ? false : true)
+        .environmentObject(toastPresenter)
+        .environmentObject(transactionManager)
+        .addTransactionFlow(isPresented: $addTransaction, counter: $counter, launchAdd: launchAdd)
+    }
+}
+
+@available(iOS 26.0, *)
+private extension View {
+    /// Detail screens pushed from Budget and Settings hide the bar, as the custom bar did.
+    func tabBarHiddenInNavigation(_ hidden: Bool) -> some View {
+        toolbar(hidden ? .hidden : .automatic, for: .tabBar)
+    }
+}
+
+/// The "+" of the iOS 26 tab bar: a labelled accessory above the bar that folds inline when the bar minimises.
+@available(iOS 26.0, *)
+struct NewExpenseAccessory: View {
+    var action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Label {
+                Text("New Expense")
+            } icon: {
+                Image(systemName: "plus")
+                    .fontWeight(.bold)
+            }
+            .font(.system(.body, design: .rounded).weight(.semibold))
+            .foregroundStyle(Color.PrimaryText)
+            .labelStyle(.titleAndIcon)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text("Add New Transaction"))
     }
 }
 
