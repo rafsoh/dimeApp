@@ -7,6 +7,7 @@
 
 import CoreData
 import Foundation
+import os
 import SwiftUI
 import WidgetKit
 
@@ -31,6 +32,11 @@ class DataController: ObservableObject {
     static let shared = DataController()
 
     var container = NSPersistentCloudKitContainer(name: "MainModel")
+
+    /// Set when the database could not be opened; the app shows a message instead of crashing.
+    @Published var storeLoadError: String?
+
+    private let logger = Logger(subsystem: "com.rafaelsoh.dime", category: "data")
 
     init() {
         let description = NSPersistentStoreDescription()
@@ -65,7 +71,11 @@ class DataController: ObservableObject {
         container.loadPersistentStores { description, error in
 
             if let error = error as NSError? {
-                fatalError("Unresolved error \(error), \(error.userInfo) for \(description)")
+                self.logger.fault("Store failed to load: \(error), \(error.userInfo, privacy: .private)")
+                DispatchQueue.main.async {
+                    self.storeLoadError = error.localizedDescription
+                }
+                return
             }
 
             self.container.viewContext.automaticallyMergesChangesFromParent = true
@@ -126,12 +136,20 @@ class DataController: ObservableObject {
         let fetchRequest4: NSFetchRequest<NSFetchRequestResult> = MainBudget.fetchRequest()
         let batchDeleteRequest4 = NSBatchDeleteRequest(fetchRequest: fetchRequest4)
         _ = try? container.viewContext.executeAndMergeChanges(using: batchDeleteRequest4)
+
+        let fetchRequest5: NSFetchRequest<NSFetchRequestResult> = TemplateTransaction.fetchRequest()
+        let batchDeleteRequest5 = NSBatchDeleteRequest(fetchRequest: fetchRequest5)
+        _ = try? container.viewContext.executeAndMergeChanges(using: batchDeleteRequest5)
     }
 
     func save() {
-        if container.viewContext.hasChanges {
-            try? container.viewContext.save()
+        guard container.viewContext.hasChanges else { return }
+
+        do {
+            try container.viewContext.save()
             WidgetCenter.shared.reloadAllTimelines()
+        } catch {
+            logger.error("Save failed: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -140,6 +158,13 @@ class DataController: ObservableObject {
             var holdingDate = transaction.nextTransactionDate
 
             while holdingDate <= Calendar.current.startOfDay(for: Date.now) {
+                // an invalid rule (unknown type, zero interval) ends the series instead of crashing or looping
+                guard let newDate = RecurrenceRule.nextDate(
+                    after: holdingDate, type: Int(transaction.recurringType), coefficient: Int(transaction.recurringCoefficient)
+                ) else {
+                    break
+                }
+
                 let newTransaction = Transaction(context: container.viewContext)
                 newTransaction.note = transaction.wrappedNote
                 newTransaction.category = transaction.category
@@ -157,24 +182,14 @@ class DataController: ObservableObject {
 
                 newTransaction.onceRecurring = true
 
-                var newDate: Date?
-
-                if transaction.recurringType == 1 {
-                    newDate = Calendar.current.date(byAdding: .day, value: Int(transaction.recurringCoefficient), to: holdingDate)!
-                } else if transaction.recurringType == 2 {
-                    newDate = Calendar.current.date(byAdding: .day, value: Int(transaction.recurringCoefficient * 7), to: holdingDate)!
-                } else if transaction.recurringType == 3 {
-                    newDate = Calendar.current.date(byAdding: .month, value: Int(transaction.recurringCoefficient), to: holdingDate)!
-                }
-
-                if newDate! > Calendar.current.startOfDay(for: Date.now) {
+                if newDate > Calendar.current.startOfDay(for: Date.now) {
                     newTransaction.recurringType = transaction.recurringType
                     newTransaction.recurringCoefficient = transaction.recurringCoefficient
                 } else {
                     newTransaction.recurringType = 0
                 }
 
-                holdingDate = newDate!
+                holdingDate = newDate
             }
 
             transaction.recurringType = 0
@@ -220,14 +235,16 @@ class DataController: ObservableObject {
         let mainBudget = results(for: fetchRequestForMainBudget())
 
         budgets.forEach { budget in
-            while budget.endDate <= Date.now {
-                budget.startDate = budget.endDate
+            let current = BudgetPeriod.currentStart(from: budget.startDate ?? Date.now, type: Int(budget.type))
+            if current != budget.startDate {
+                budget.startDate = current
             }
         }
 
         mainBudget.forEach { budget in
-            while budget.endDate <= Date.now {
-                budget.startDate = budget.endDate
+            let current = BudgetPeriod.currentStart(from: budget.startDate ?? Date.now, type: Int(budget.type))
+            if current != budget.startDate {
+                budget.startDate = current
             }
         }
 

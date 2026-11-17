@@ -307,3 +307,7 @@
 "left" = "left";
 "SELECT BUDGET" = "SELECT BUDGET";
 "SELECT BUDGET IN WIDGET OPTIONS" = "SELECT BUDGET IN WIDGET OPTIONS";
+
+/* Store errors */
+"Your data couldn't be loaded" = "Your data couldn't be loaded";
+"Nothing has been deleted. Free up some storage or update the app, then open Dime again." = "Nothing has been deleted. Free up some storage or update the app, then open Dime again.";

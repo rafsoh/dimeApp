@@ -79,14 +79,18 @@
 		537152DF28AD0EB300E93EC4 /* DataController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5327D2AC287C6AD200F76ADF /* DataController.swift */; };
 		537152E028AD0EB600E93EC4 /* DataController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5327D2AC287C6AD200F76ADF /* DataController.swift */; };
 		537152E328AD0EC100E93EC4 /* Helper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53980E5B28A77B62009CC4E2 /* Helper.swift */; };
+		81DA7544BBA7F9A799013620 /* Schedule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 677C6CDA68E5B7A6C8BEDEFD /* Schedule.swift */; };
 		537152E428AD0EC100E93EC4 /* Helper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53980E5B28A77B62009CC4E2 /* Helper.swift */; };
+		4D3F04F86935959495833A0A /* Schedule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 677C6CDA68E5B7A6C8BEDEFD /* Schedule.swift */; };
 		537152E628AD243E00E93EC4 /* TestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5327D2D1287C6B5E00F76ADF /* TestView.swift */; };
 		53756F632AC3C25E0065D0C2 /* sample.csv in Resources */ = {isa = PBXBuildFile; fileRef = 53756F622AC3C25E0065D0C2 /* sample.csv */; };
 		5383D85E287D9A0100D1B9BA /* CloudKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5383D85D287D9A0100D1B9BA /* CloudKit.framework */; };
 		538A32AA2A505AC6008AEF8C /* BottomSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 538A32A92A505AC6008AEF8C /* BottomSheet.swift */; };
 		538D10752A5AB7E7008F1AFB /* IsScrolling in Frameworks */ = {isa = PBXBuildFile; productRef = 538D10742A5AB7E7008F1AFB /* IsScrolling */; };
 		53980E5C28A77B62009CC4E2 /* Helper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53980E5B28A77B62009CC4E2 /* Helper.swift */; };
+		74D207F82991BED517B12E49 /* Schedule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 677C6CDA68E5B7A6C8BEDEFD /* Schedule.swift */; };
 		53980E5D28A77B62009CC4E2 /* Helper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53980E5B28A77B62009CC4E2 /* Helper.swift */; };
+		93AC5B703E9908FE8A188AF2 /* Schedule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 677C6CDA68E5B7A6C8BEDEFD /* Schedule.swift */; };
 		53A32B3828AB6C6400628905 /* Line.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53A32B3728AB6C6400628905 /* Line.swift */; };
 		53A32B3928AB6C8700628905 /* Line.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53A32B3728AB6C6400628905 /* Line.swift */; };
 		53A4147728B3B559008C30E7 /* WelcomeSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53A4147628B3B559008C30E7 /* WelcomeSheetView.swift */; };
@@ -278,6 +282,7 @@
 		5383D85D287D9A0100D1B9BA /* CloudKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CloudKit.framework; path = System/Library/Frameworks/CloudKit.framework; sourceTree = SDKROOT; };
 		538A32A92A505AC6008AEF8C /* BottomSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BottomSheet.swift; sourceTree = "<group>"; };
 		53980E5B28A77B62009CC4E2 /* Helper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Helper.swift; sourceTree = "<group>"; };
+		677C6CDA68E5B7A6C8BEDEFD /* Schedule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Schedule.swift; sourceTree = "<group>"; };
 		53A32B3728AB6C6400628905 /* Line.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Line.swift; sourceTree = "<group>"; };
 		53A4147628B3B559008C30E7 /* WelcomeSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeSheetView.swift; sourceTree = "<group>"; };
 		53A4147828B6625D008C30E7 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -499,6 +504,7 @@
 			children = (
 				53BC2A3F2A8B21920019E4A8 /* MainModel.xcdatamodeld */,
 				53980E5B28A77B62009CC4E2 /* Helper.swift */,
+				677C6CDA68E5B7A6C8BEDEFD /* Schedule.swift */,
 				5327D2AC287C6AD200F76ADF /* DataController.swift */,
 			);
 			path = Data;
@@ -878,6 +884,7 @@
 				53BC2A442A8B234F0019E4A8 /* MainModel.xcdatamodeld in Sources */,
 				5313EC6028ACE941000EAB0C /* IntentHandler.swift in Sources */,
 				537152E328AD0EC100E93EC4 /* Helper.swift in Sources */,
+				81DA7544BBA7F9A799013620 /* Schedule.swift in Sources */,
 				537152DF28AD0EB300E93EC4 /* DataController.swift in Sources */,
 				533D1C2D2AE791F500894764 /* ShortcutsEntities.swift in Sources */,
 				5311A22C29F04EF300A5BE20 /* WidgetConfiguration.intentdefinition in Sources */,
@@ -892,6 +899,7 @@
 				53BC2A452A8B234F0019E4A8 /* MainModel.xcdatamodeld in Sources */,
 				5313EC6B28ACE941000EAB0C /* IntentViewController.swift in Sources */,
 				537152E428AD0EC100E93EC4 /* Helper.swift in Sources */,
+				4D3F04F86935959495833A0A /* Schedule.swift in Sources */,
 				537152E028AD0EB600E93EC4 /* DataController.swift in Sources */,
 				533D1C2E2AE791F500894764 /* ShortcutsEntities.swift in Sources */,
 				5311A22D29F04EF300A5BE20 /* WidgetConfiguration.intentdefinition in Sources */,
@@ -987,6 +995,7 @@
 				5327D2D8287C6B5F00F76ADF /* SettingsView.swift in Sources */,
 				536FA6C32A7F941B00C52490 /* BudgetInsightsIntent.swift in Sources */,
 				53980E5C28A77B62009CC4E2 /* Helper.swift in Sources */,
+				74D207F82991BED517B12E49 /* Schedule.swift in Sources */,
 				53D6BDD22AF73C5D00F5728E /* SettingsNotificationView.swift in Sources */,
 				53A4147928B6625D008C30E7 /* AppDelegate.swift in Sources */,
 				5327D2DD287C6B5F00F76ADF /* InsightsView.swift in Sources */,
@@ -1019,6 +1028,7 @@
 				5321E1DE291FE2CE00D5A931 /* CategoryCreationErrors.swift in Sources */,
 				53D520FC2AAF1190000AC055 /* TemplateTransactionWidget.swift in Sources */,
 				53980E5D28A77B62009CC4E2 /* Helper.swift in Sources */,
+				93AC5B703E9908FE8A188AF2 /* Schedule.swift in Sources */,
 				53D0298128C62BF600443F2B /* Currency.swift in Sources */,
 				53A32B3928AB6C8700628905 /* Line.swift in Sources */,
 			);

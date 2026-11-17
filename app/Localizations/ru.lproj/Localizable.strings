@@ -306,3 +306,7 @@
 "SELECT BUDGET IN WIDGET OPTIONS" = "Выберите бюджет в настройках виджета";
 
 "Time Period" = "Time Period";
+
+/* Store errors */
+"Your data couldn't be loaded" = "Не удалось загрузить данные";
+"Nothing has been deleted. Free up some storage or update the app, then open Dime again." = "Ничего не удалено. Освободите место или обновите приложение, затем снова откройте Dime.";

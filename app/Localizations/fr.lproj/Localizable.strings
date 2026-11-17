@@ -306,3 +306,7 @@
 "left" = "restant";
 "SELECT BUDGET" = "Sélectionner le budget";
 "SELECT BUDGET IN WIDGET OPTIONS" = "Sélectionner un budget dans les options du widget";
+
+/* Store errors */
+"Your data couldn't be loaded" = "Impossible de charger vos données";
+"Nothing has been deleted. Free up some storage or update the app, then open Dime again." = "Rien n’a été supprimé. Libérez de l’espace ou mettez l’app à jour, puis rouvrez Dime.";
