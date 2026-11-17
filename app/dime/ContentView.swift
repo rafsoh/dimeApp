@@ -61,9 +61,6 @@ struct ContentView: View {
         }
         .ignoresSafeArea(.keyboard)
         .onAppear {
-//            UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.set(false, forKey: "newTransactionAdded")
-//            WidgetCenter.shared.reloadTimelines(ofKind: "TemplateTransactions")
-
             if appLockVM.isAppLockEnabled {
                 appLockVM.appLockValidation()
             }

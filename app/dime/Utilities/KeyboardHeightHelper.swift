@@ -22,12 +22,6 @@ class KeyboardHeightHelper: ObservableObject {
 
             self.keyboardHeight = keyboardRect.height
         }
-
-//        NotificationCenter.default.addObserver(forName: UIResponder.keyboardDidHideNotification,
-//                                               object: nil,
-//                                               queue: .main) { (notification) in
-//                                                self.keyboardHeight = 0
-//        }
     }
 
     init() {
@@ -79,7 +73,6 @@ extension UIApplication {
 struct KeyboardAwareModifier: ViewModifier {
     @AppStorage("keyboard", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var savedKeyboardHeight: Double = .init(UIScreen.main.bounds.height / 2.5)
     var showToolbar: Bool
-//    @State private var keyboardHeight: CGFloat = 250
 
     private var keyboardHeightPublisher: AnyPublisher<CGFloat, Never> {
         Publishers.Merge(

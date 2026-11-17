@@ -164,7 +164,6 @@ struct TemplateTransactionView: View {
     @Namespace var animation
 
     var body: some View {
-//        ScrollView {
         GeometryReader { proxy in
             VStack(spacing: 8) {
                 // income/expense picker
@@ -254,7 +253,6 @@ struct TemplateTransactionView: View {
                             Button {
                                 toDelete = toEdit
                                 deleteMode = true
-
                             } label: {
                                 Image(systemName: "trash.fill")
                                     .font(.system(size: 16, weight: .semibold))
@@ -410,7 +408,6 @@ struct TemplateTransactionView: View {
                                         Image(systemName: "checkmark.square.fill")
                                             .font(.system(size: 30, weight: .medium, design: .rounded))
                                             .symbolEffect(.bounce.up.byLayer, value: transactionValue != 0 && category != nil)
-//                                            .symbolEffectsRemoved()
                                     } else {
                                         Image(systemName: "checkmark.square.fill")
                                             .font(.system(size: 30, weight: .medium, design: .rounded))
@@ -426,7 +423,6 @@ struct TemplateTransactionView: View {
                     .frame(width: proxy.size.width, height: proxy.size.height)
                 }
                 .padding(.bottom, 15)
-//                .keyboardAwareHeight()
             }
             .padding(17)
             .frame(width: proxy.size.width, height: proxy.size.height)
@@ -465,7 +461,6 @@ struct TemplateTransactionView: View {
                             }
 
                             dismiss()
-
                         } label: {
                             Text("Delete")
                                 .font(.system(size: 20, weight: .semibold, design: .rounded))
@@ -481,7 +476,6 @@ struct TemplateTransactionView: View {
                                 deleteMode = false
                                 toDelete = nil
                             }
-
                         } label: {
                             Text("Cancel")
                                 .font(.system(size: 20, weight: .semibold, design: .rounded))
@@ -577,7 +571,6 @@ struct TemplateTransactionView: View {
                     numbers1.removeLast()
                 }
             }
-
         } label: {
             Image(systemName: "delete.left.fill")
                 .font(.system(size: 16, weight: .semibold))
@@ -673,7 +666,6 @@ struct TemplateTransactionView: View {
             dataController.save()
 
             dismiss()
-
         } else {
             let transaction = TemplateTransaction(context: moc)
             if note.trimmingCharacters(in: .whitespacesAndNewlines) == "" {
@@ -704,7 +696,6 @@ struct TemplateTransactionView: View {
     }
 
     init(order: Int) {
-
         let dataController = DataController.shared
 
         let toEdit = dataController.getTemplateTransaction(order: order)
@@ -762,7 +753,6 @@ struct CategoryRowPickerView: View {
                         RoundedRectangle(cornerRadius: 11.5, style: .continuous)
                             .stroke(Color.Outline, lineWidth: 1.5)
                     )
-
             } else {
                 GeometryReader { gp in
                     ZStack {
@@ -829,7 +819,6 @@ struct CategoryRowPickerView: View {
                             .frame(maxWidth: .infinity, alignment: .trailing)
 
                             .allowsHitTesting(false) // << now works !!
-
                     }.fixedSize(horizontal: false, vertical: true)
                 }
                 .frame(height: 36)
@@ -846,18 +835,10 @@ struct CategoryRowPickerView: View {
                         .font(.system(size: 16, weight: .semibold, design: .rounded))
                         .foregroundColor(Color.SubtitleText)
                 }
-
-//                        Text("Edit")
-//                            .font(.system(size: 17.5, weight: .semibold, design: .rounded))
-//                            .lineLimit(1)
             }
             .padding(.horizontal, 9)
             .frame(height: 36)
             .background(Color.SecondaryBackground, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-//                    .overlay(
-//                        RoundedRectangle(cornerRadius: 11.5, style: .continuous)
-//                            .stroke(Color.Outline, lineWidth: 1.5)
-//                    )
             .onTapGesture {
                 showCategorySheet = true
             }
@@ -886,10 +867,6 @@ struct CategoryRowPickerView: View {
 
     init(category: Binding<Category?>?, income: Bool) {
         _selectedCategory = category ?? Binding.constant(nil)
-//        self.categories = categories
-//        let dataController = DataController.shared
-//        let fetchRequest = dataController.fetchRequestForCategories(income: income)
-//        self.categories = dataController.results(for: fetchRequest)
         self.income = income
     }
 }
@@ -1011,12 +988,6 @@ struct SettingsQuickAddWidgetDraggingView: View {
                 }
             })
             .id(refreshID)
-//
-//            VStack {
-//                ForEach(transactions) { transaction in
-//                    Text(transaction.category?.wrappedName ?? "")
-//                }
-//            }
         }
         .padding(15)
         .frame(width: 245)
@@ -1146,7 +1117,6 @@ class GridViewModel: ObservableObject {
     }
 
     func updateIndices() {
-//        let dataController = DataController()
         let dataController = DataController.shared
         for (index, element) in gridItems.enumerated() {
             if let transaction = element.transaction {

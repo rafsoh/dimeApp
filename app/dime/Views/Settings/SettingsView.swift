@@ -154,7 +154,6 @@ struct SettingsView: View {
           Text("Settings")
             .font(.system(.title, design: .rounded).weight(.semibold))
 
-            //                        .font(.system(size: 25, weight: .semibold, design: .rounded))
             .accessibility(addTraits: .isHeader)
           Spacer()
         }
@@ -167,13 +166,11 @@ struct SettingsView: View {
             Text("GENERAL")
               .font(.system(.footnote, design: .rounded).weight(.semibold))
 
-              //                            .font(.system(size: 12, weight: .semibold, design: .rounded))
               .foregroundColor(Color.SubtitleText)
               .padding(.horizontal, 10)
               .frame(maxWidth: .infinity, alignment: .leading)
 
             VStack(spacing: 13) {
-
               NavigationLink(destination: SettingsNotificationsView()) {
                 SettingsRowView(
                   systemImage: "bell.fill", title: "Notifications", colour: 102,
@@ -227,7 +224,6 @@ struct SettingsView: View {
               NavigationLink(destination: SettingsWeekStartView()) {
                 SettingsRowView(systemImage: "calendar", title: "Time Frames", colour: 109)
               }
-                
             }
             .padding(10)
             .background(Color.SettingsBackground, in: RoundedRectangle(cornerRadius: 9))
@@ -248,7 +244,6 @@ struct SettingsView: View {
             Text("APPEARANCE")
               .font(.system(.footnote, design: .rounded).weight(.semibold))
 
-              //                            .font(.system(size: 12, weight: .semibold, design: .rounded))
               .foregroundColor(Color.SubtitleText)
               .padding(.horizontal, 10)
               .frame(maxWidth: .infinity, alignment: .leading)
@@ -289,7 +284,6 @@ struct SettingsView: View {
                 onTap: {
                   animated.toggle()
                 })
-
             }
             .padding(10)
             .background(Color.SettingsBackground, in: RoundedRectangle(cornerRadius: 9))
@@ -310,7 +304,6 @@ struct SettingsView: View {
             Text("DATA")
               .font(.system(.footnote, design: .rounded).weight(.semibold))
 
-              //                            .font(.system(size: 12, weight: .semibold, design: .rounded))
               .foregroundColor(Color.SubtitleText)
               .padding(.horizontal, 10)
               .frame(maxWidth: .infinity, alignment: .leading)
@@ -340,11 +333,6 @@ struct SettingsView: View {
                   optionalText: iCloudString)
               }
 
-              //
-              //                            NavigationLink(destination: SettingsQuickAddWidgetView()) {
-              //                                SettingsRowView(systemImage: "bolt.square.fill", title: "Quick-Add Widget", colour: 115)
-              //                            }
-
               Button {
                 showImportGuide = true
               } label: {
@@ -373,13 +361,11 @@ struct SettingsView: View {
             Text("OTHERS")
               .font(.system(.footnote, design: .rounded).weight(.semibold))
 
-              //                            .font(.system(size: 12, weight: .semibold, design: .rounded))
               .foregroundColor(Color.SubtitleText)
               .padding(.horizontal, 10)
               .frame(maxWidth: .infinity, alignment: .leading)
 
             VStack(spacing: 13) {
-
                 NavigationLink(destination: SettingsHapticsView()) {
                   SettingsRowView(
                     systemImage: "hand.tap.fill", title: "Haptics", colour: 100,
@@ -453,7 +439,6 @@ struct SettingsView: View {
               Text("Version \(UIApplication.appVersion ?? "") (\(UIApplication.buildNumber ?? ""))")
                 .font(.system(.footnote, design: .rounded).weight(.medium))
 
-                //                                .font(.system(size: 14, weight: .medium, design: .rounded))
                 .foregroundColor(Color.SubtitleText)
 
               Text("·")
@@ -633,14 +618,6 @@ struct TipJarAlert: View {
     }
   }
 
-  //    var sortedProducts: [SKProduct] {
-  //        let holding = unlockManager.loadedProducts.sorted {
-  //            $0.price.doubleValue > $1.price.doubleValue
-  //        }
-  //
-  //        return holding
-  //    }
-
   var body: some View {
     ZStack(alignment: .bottom) {
       Color.PrimaryBackground.opacity(opacity)
@@ -669,7 +646,6 @@ struct TipJarAlert: View {
           ProgressView {
             Text("Loading")
               .font(.system(.body, design: .rounded).weight(.medium))
-              //                            .font(.system(size: 18, weight: .medium, design: .rounded))
               .foregroundColor(Color.SubtitleText)
               .frame(maxWidth: .infinity)
               .frame(height: 200)
@@ -678,7 +654,6 @@ struct TipJarAlert: View {
           Text("Unable to load tip options, please try again later 🥲")
             .font(.system(.body, design: .rounded).weight(.medium))
 
-            //                        .font(.system(size: 18, weight: .medium, design: .rounded))
             .multilineTextAlignment(.center)
             .foregroundColor(Color.SubtitleText)
             .frame(maxWidth: .infinity)
@@ -689,11 +664,8 @@ struct TipJarAlert: View {
               Image(systemName: "heart.fill")
                 .font(.system(.callout, design: .rounded))
 
-              //                                .font(.system(size: 16))
               Text("Tip Jar")
                 .font(.system(.title2, design: .rounded).weight(.medium))
-
-              //                                .font(.system(size: 22, weight: .medium, design: .rounded))
             }
             .foregroundColor(.PrimaryText)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -710,7 +682,6 @@ struct TipJarAlert: View {
                 Image(systemName: "xmark")
                   .font(.system(.subheadline, design: .rounded).weight(.semibold))
 
-                  //                                    .font(.system(size: 14, weight: .semibold))
                   .foregroundColor(Color.SubtitleText)
                   .padding(7)
                   .background(Color.SecondaryBackground, in: Circle())
@@ -724,7 +695,6 @@ struct TipJarAlert: View {
             )
             .font(.system(.callout, design: .rounded).weight(.medium))
 
-            //                            .font(.system(size: 16, weight: .medium, design: .rounded))
             .foregroundColor(.SubtitleText)
             .padding(.bottom, 20)
 
@@ -738,7 +708,6 @@ struct TipJarAlert: View {
             Text(bottomCaption)
               .font(.system(.subheadline, design: .rounded).weight(.medium))
 
-              //                                .font(.system(size: 14, weight: .medium, design: .rounded))
               .frame(maxWidth: .infinity)
               .foregroundColor(.SubtitleText)
           }
@@ -777,7 +746,6 @@ struct TipJarAlert: View {
               DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                 dismiss()
               }
-
             } else {
               withAnimation {
                 offset = 0
@@ -824,7 +792,6 @@ struct ProductView: View {
     .foregroundColor(.PrimaryText)
     .font(.system(.body, design: .rounded).weight(.semibold))
     .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-    //        .font(.system(size: 18, weight: .semibold, design: .rounded))
   }
 
   func unlock(_ product: SKProduct) {
@@ -857,8 +824,6 @@ struct SettingsRowView: View {
       Image(systemName: systemImage)
         .font(.system(.body, design: .rounded))
 
-        //                .font(.system(size: 17))
-        //                .padding(5)
         .foregroundColor(.white)
         .frame(
           width: dynamicTypeSize > .xLarge ? 40 : 30, height: dynamicTypeSize > .xLarge ? 40 : 30,
@@ -869,7 +834,6 @@ struct SettingsRowView: View {
       Text(LocalizedStringKey(title))
         .font(.system(.body, design: .rounded).weight(.medium))
 
-        //                .font(.system(size: 17, weight: .medium, design: .rounded))
         .lineLimit(1)
         .foregroundColor(Color.PrimaryText)
 
@@ -879,7 +843,6 @@ struct SettingsRowView: View {
         Text(optionalText!)
           .font(.system(.body, design: .rounded))
 
-          //                    .font(.system(size: 17, weight: .regular, design: .rounded))
           .foregroundColor(.DarkIcon.opacity(0.6))
           .layoutPriority(1)
           .padding(.trailing, -8)
@@ -887,7 +850,6 @@ struct SettingsRowView: View {
 
       Image(systemName: "chevron.forward")
         .font(.system(.subheadline, design: .rounded))
-        //                .font(.system(size: 15))
         .foregroundColor(.DarkIcon.opacity(0.6))
     }
     .frame(maxWidth: .infinity)

@@ -63,7 +63,6 @@ struct Provider: IntentTimelineProvider {
     }
 
     func loadAmount(type: TimePeriod, insightsType: InsightsType) -> Double {
-//        let dataController = DataController()
         let dataController = DataController.shared
 
         let timeframe: Int
@@ -101,7 +100,6 @@ struct Provider: IntentTimelineProvider {
     }
 
     func loadTransactions(type: TimePeriod, count: Int) -> [HoldingTransaction] {
-//        let dataController = DataController()
         let dataController = DataController.shared
         let itemRequest = dataController.fetchRequestForRecentTransactionsWithCount(type: type, count: count)
         let holding = dataController.results(for: itemRequest)
@@ -295,7 +293,6 @@ struct ExpenditureWidgetEntryView: View {
                                 .frame(maxHeight: .infinity, alignment: .bottom)
                             }
                             .padding(.top, 12)
-
                         } else {
                             VStack(alignment: .leading, spacing: 5) {
                                 Text("RECENT EXPENSES")
@@ -391,7 +388,6 @@ struct ExpenditureWidgetEntryView: View {
                                 .frame(maxHeight: .infinity, alignment: .bottom)
                             }
                             .padding(.top, 12)
-
                         } else {
                             VStack(alignment: .leading, spacing: 5) {
                                 Text("RECENT EXPENSES")
@@ -492,7 +488,6 @@ struct ExpenditureWidgetEntryView: View {
                                 }
                             }
                             .frame(maxHeight: .infinity)
-
                         } else {
                             VStack(alignment: .leading, spacing: 6) {
                                 Text("RECENT EXPENSES")
@@ -620,7 +615,6 @@ struct RecentTransactionsDollarView: View {
                     .font(.system(bigger ? .title : .title3, design: .rounded).weight(.medium))
                     .foregroundColor(Color.PrimaryText)
             }
-
         }
         .minimumScaleFactor(0.5)
         .lineLimit(1)

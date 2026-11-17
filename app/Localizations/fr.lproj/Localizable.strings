@@ -340,3 +340,9 @@
 /* Category icons */
 "Duplicate Emoji" = "Icône en double";
 "Choose icon" = "Choisir une icône";
+
+/* Toasts */
+"Log Deleted" = "Entrée supprimée";
+"Tap to Undo" = "Touchez pour annuler";
+"Image Saved" = "Image enregistrée";
+"Check it out in Photos" = "Retrouvez-la dans Photos";

@@ -84,26 +84,6 @@ struct LineGraph: View {
                         // Gradient...
                         LinearGradient(gradient: getGradient(totalPoints: Double(data.count), range: Double(range)), startPoint: .leading, endPoint: .trailing)
                     )
-
-//                 Path Bacground Coloring...
-//                FillBG()
-//                // Clipping the shape...
-//                    .clipShape(
-//
-//                        Path{path in
-//
-//                            // drawing the points..
-//                            path.move(to: CGPoint(x: 0, y: 0))
-//
-//                            path.addLines(points)
-//
-//                            path.addLine(to: CGPoint(x: proxy.size.width, y: height))
-//
-//                            path.addLine(to: CGPoint(x: 0, y: height))
-//                        }
-//                    )
-//                    .opacity(graphProgress)
-//
             }
             .overlay(
                 // Drag Indiccator...
@@ -127,18 +107,6 @@ struct LineGraph: View {
                     .padding(.horizontal, 7)
                     .background(Color.SecondaryBackground, in: RoundedRectangle(cornerRadius: 6))
                     .padding(.bottom, 4)
-//                    Text(currentPlot?.dateString ?? "")
-//                        .font(.caption.bold())
-//                        .foregroundColor(Color.PrimaryText)
-//                        .padding(.vertical,6)
-//                        .frame(width: 100)
-//                        .background(Color.SecondaryBackground,in: Capsule())
-//                        .offset(x: translation < 10 ? 30 : 0)
-//                        .offset(x: translation > (proxy.size.width - 60) ? -30 : 0)
-//
-//                    Rectangle()
-//                        .fill(Color.SecondaryBackground)
-//                        .frame(width: 1,height: 25)
 
                     DottedLine()
 
@@ -150,19 +118,6 @@ struct LineGraph: View {
                         .stroke(Color.PrimaryBackground, lineWidth: 2.5)
                         .background(Circle().fill(overlayColor))
                         .frame(width: 14, height: 11)
-//                    Circle()
-//                        .fill(color)
-
-//                        .overlay(
-//
-//                            Circle()
-//                                .fill(Color.DarkIcon.opacity(0.85))
-//                                .frame(width: 6.5, height: 6.5)
-//                        )
-
-//                    Rectangle()
-//                        .fill(Color.SecondaryBackground)
-//                        .frame(width: 1,height: 50)
                 }
                 // Fixed Frame..
                 // For Gesture Calculation...
@@ -189,11 +144,9 @@ struct LineGraph: View {
 
                 // removing half width...
                 offset = CGSize(width: points[index].x - 40, height: points[index].y - height)
-
             }.onEnded { _ in
 
                 withAnimation { showPlot = false }
-
             }.updating($isDrag, body: { _, out, _ in
                 out = true
             }))
@@ -224,10 +177,6 @@ struct LineGraph: View {
         }
     }
 
-//    @ViewBuilder
-//    func FillBG()->some View{
-//        let color = green ? Color.IncomeGreen : Color.AlertRed
-//        Color.red
     ////        LinearGradient(colors: [
     ////
     ////            color
@@ -240,7 +189,6 @@ struct LineGraph: View {
     ////                .opacity(0.1), count: 4)
     ////            + Array(repeating:                     Color.clear, count: 2)
     ////            , startPoint: .top, endPoint: .bottom)
-//    }
 }
 
 // MARK: Animated Path

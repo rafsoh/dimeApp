@@ -340,3 +340,9 @@
 /* Category icons */
 "Duplicate Emoji" = "Значок уже используется";
 "Choose icon" = "Выберите значок";
+
+/* Toasts */
+"Log Deleted" = "Запись удалена";
+"Tap to Undo" = "Нажмите, чтобы отменить";
+"Image Saved" = "Изображение сохранено";
+"Check it out in Photos" = "Найдите его в Фото";

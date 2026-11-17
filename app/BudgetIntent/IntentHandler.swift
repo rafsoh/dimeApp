@@ -8,7 +8,6 @@
 import Intents
 
 class IntentHandler: INExtension, BudgetWidgetConfigurationIntentHandling {
-//    let dataController = DataController()
     let dataController = DataController.shared
 
     func provideBudgetOptionsCollection(for _: BudgetWidgetConfigurationIntent, with completion: @escaping (INObjectCollection<WidgetBudget>?, Error?) -> Void) {

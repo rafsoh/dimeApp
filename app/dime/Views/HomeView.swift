@@ -103,20 +103,20 @@ struct HomeView: View {
                     }
             }
         }
-        .toast(isPresenting: $toastPresenter.showToast, duration: 4, tapToDismiss: true, offsetY: 12, alert: {
-            AlertToast(displayMode: .hud, type: .systemImage("checkmark.circle.fill", Color.IncomeGreen), title: "Image Saved", subTitle: "Check it out in Photos")
-        })
-        .toast(isPresenting: $transactionManager.showToast, duration: 4, tapToDismiss: true, offsetY: 12, alert: {
-            AlertToast(displayMode: .hud, type: .systemImage("arrow.uturn.backward.circle.fill", Color.AlertRed), title: "Log Deleted", subTitle: "Tap to Undo")
-        }, onTap: {
-            withAnimation(.easeInOut(duration: 0.5)) {
-                moc.rollback()
-            }
-            transactionManager.toDelete = nil
-        }, completion: {
-            dataController.save()
-            transactionManager.toDelete = nil
-        })
+        .hudToast(isPresented: $toastPresenter.showToast, icon: "checkmark.circle.fill", tint: Color.IncomeGreen,
+                  title: "Image Saved", subtitle: "Check it out in Photos")
+        .hudToast(isPresented: $transactionManager.showToast, icon: "arrow.uturn.backward.circle.fill", tint: Color.AlertRed,
+                  title: "Log Deleted", subtitle: "Tap to Undo",
+                  onTap: {
+                      withAnimation(.easeInOut(duration: 0.5)) {
+                          moc.rollback()
+                      }
+                      transactionManager.toDelete = nil
+                  },
+                  onTimeout: {
+                      dataController.save()
+                      transactionManager.toDelete = nil
+                  })
         .onChange(of: transactionManager.showPopup) { newValue in
             withAnimation {
                 showPopup = newValue

@@ -28,9 +28,6 @@ struct InsightsView: View {
         }
     }
 
-//    @State private var holdingIncome = false
-//    @Namespace var animation
-
     var body: some View {
         if transactions.isEmpty {
             VStack(spacing: 5) {
@@ -41,13 +38,11 @@ struct InsightsView: View {
 
                 Text("Analyse Your Expenditure")
                     .font(.system(.title2, design: .rounded).weight(.medium))
-//                    .font(.system(size: 23.5, weight: .medium, design: .rounded))
                     .foregroundColor(Color.PrimaryText.opacity(0.8))
                     .multilineTextAlignment(.center)
 
                 Text("As transactions start piling up")
                     .font(.system(.body, design: .rounded).weight(.medium))
-//                    .font(.system(size: 18, weight: .medium, design: .rounded))
                     .foregroundColor(Color.SubtitleText.opacity(0.7))
                     .multilineTextAlignment(.center)
             }
@@ -57,7 +52,6 @@ struct InsightsView: View {
             .ignoresSafeArea(.all)
             .background(Color.PrimaryBackground)
             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-
         } else {
             VStack(spacing: 5) {
                 HStack {
@@ -251,7 +245,6 @@ struct HorizontalPieChartView: View {
                                 let boxColor = category.category.income ? Color(hex: Color.colorArray[categories.firstIndex(of: category) ?? 0]) : Color(hex: category.category.wrappedColour)
 
                                 HStack(spacing: 10) {
-
                                     HStack(spacing: 8) {
                                         CategoryIcon(category.category.wrappedIcon)
                                             .foregroundColor(boxColor)
@@ -281,9 +274,7 @@ struct HorizontalPieChartView: View {
                                                 .padding(5)
                                                 .background(Color.SecondaryBackground, in: Circle())
                                         }
-
                                     } else {
-
                                         Text("\(category.percent * 100, specifier: "%.0f")%")
                                             .font(.system(.subheadline, design: .rounded).weight(.semibold))
                                             .foregroundColor(boxColor)
@@ -310,9 +301,7 @@ struct HorizontalPieChartView: View {
                                         }
                                     }
                                 }
-
                             }
-
                         }
                     }
                 }
@@ -434,7 +423,6 @@ struct FilteredCategoryInsightsView: View {
                 SortDescriptor(\.day, order: .reverse),
                 SortDescriptor(\.date, order: .reverse)
             ], predicate: andPredicate)
-
         } else {
             _transactions = SectionedFetchRequest<Date?, Transaction>(sectionIdentifier: \.day, sortDescriptors: [
                 SortDescriptor(\.day, order: .reverse),
@@ -457,7 +445,6 @@ struct FilteredDateInsightsView: View {
     
     @AppStorage("showExpenseOrIncomeSign", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
     var showExpenseOrIncomeSign: Bool = true
-
 
     var body: some View {
         VStack(spacing: 0) {
@@ -547,7 +534,6 @@ struct FilteredInsightsView: View {
         if let unwrappedIncome = income {
             let incomePredicate = NSPredicate(format: "income = %d", unwrappedIncome)
             andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate, incomePredicate])
-
         } else {
             andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate])
         }
@@ -756,7 +742,6 @@ struct SingleGraphView: View {
                         Text(selectedCategoryName)
                             .lineLimit(1)
                             .font(.system(.callout, design: .rounded).weight(.semibold))
-//                            .font(.system(size: 14, weight: .semibold, design: .rounded))
                             .foregroundColor(Color.SubtitleText)
 
                         InsightsDollarView(amount: selectedCategoryAmount, currencySymbol: currencySymbol, showCents: showCents)
@@ -980,8 +965,6 @@ struct WeekGraphView: View {
         } else {
             return false
         }
-//
-//        return abs(offset) > UIScreen.main.bounds.width * 0.3
     }
 
     @State var showingWeek = Date.now
@@ -993,8 +976,6 @@ struct WeekGraphView: View {
 
     @AppStorage("insightsViewIncomeFiltering", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var income: Bool = true
     @AppStorage("incomeTracking", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var incomeTracking: Bool = true
-
-//    @Environment(\.dynamicTypeMultiplier) var multiplier
 
     @State var incomeFiltering: Bool = true
 
@@ -1160,14 +1141,6 @@ struct AverageLineView: View {
     var getMax: Int
     var average: Double
 
-//    @AppStorage("animated", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var animated: Bool = true
-//    @State var showLine: Bool = false
-//    @State var offset: CGFloat
-
-//    var calculatedOffset: CGFloat {
-//        return getOffset(maxi: getMax, average: average)
-//    }
-
     var body: some View {
         HStack(spacing: 2) {
             PencilView(text: getAverageText(average: average))
@@ -1177,43 +1150,8 @@ struct AverageLineView: View {
                 .frame(height: 1)
                 .frame(maxWidth: .infinity)
         }
-//        .opacity(showLine ? 1 : 0)
         .offset(y: getOffset(maxi: getMax, average: average))
         .opacity((average / Double(getMax)) < 0.1 || (average / Double(getMax)) > 0.9 ? 0 : 1)
-//        .onAppear {
-//            DispatchQueue.main.sync {
-//                withAnimation(.interactiveSpring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.8)) {
-//                    print(calculatedOffset)
-//                    offset = calculatedOffset
-//                }
-//            }
-//        }
-//        .onChange(of: showLine) { newValue in
-//            if newValue {
-//                DispatchQueue.main.asyncAfter(deadline: .now()) {
-//                    if !animated {
-//                        offset = calculatedOffset
-//                    } else {
-//                        
-//                    }
-//                }
-//            }
-//        }
-//        .onChange(of: calculatedOffset) { newValue in
-//            print(calculatedOffset)
-//            if newValue != 0 {
-//                if showLine {
-//                    if !animated {
-//                        offset = calculatedOffset
-//                    } else {
-//                        withAnimation(.interactiveSpring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.8)) {
-//                            offset = calculatedOffset
-//                        }
-//                    }
-//                }
-//            }
-//        }
-
     }
 }
 
@@ -1299,7 +1237,6 @@ struct SingleWeekBarGraphView: View {
             AverageLineView(getMax: getMax, average: weekAverage)
                 .opacity(actualDays <= 1 ? 0 : 1)
                 .id(refreshID)
-
         }
         .onChange(of: selectedDate) { _ in
             selectedDateAmount = dayDictionary[selectedDate ?? Date.now] ?? 0.0
@@ -1356,11 +1293,6 @@ struct MonthGraphView: View {
 
     var startOfCurrentMonth: Date {
         return getStartOfMonth(startDay: firstDayOfMonth)
-//        let calendar = Calendar(identifier: .gregorian)
-//
-//        let dateComponents = calendar.dateComponents([.month, .year], from: Date.now)
-//
-//        return  calendar.date(from: dateComponents) ?? Date.now
     }
 
     // start of month of the earliest transaction
@@ -1371,10 +1303,6 @@ struct MonthGraphView: View {
             let date = transactions[0].day ?? Date.now
 
             return calculateStartOfMonthPeriod(earliestDate: date, startOfMonthDay: firstDayOfMonth)
-//
-//            let dateComponents = calendar.dateComponents([.month, .year], from: date)
-//
-//            return  calendar.date(from: dateComponents) ?? Date.now
         }
     }
 
@@ -1401,8 +1329,6 @@ struct MonthGraphView: View {
         } else {
             return false
         }
-//
-//        return abs(offset) > UIScreen.main.bounds.width * 0.3
     }
 
     @State var showingMonth = Date.now
@@ -1414,8 +1340,6 @@ struct MonthGraphView: View {
 
     @AppStorage("insightsViewIncomeFiltering", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var income: Bool = true
     @AppStorage("incomeTracking", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var incomeTracking: Bool = true
-
-//    @Environment(\.dynamicTypeMultiplier) var multiplier
 
     @State var incomeFiltering: Bool = true
 
@@ -1564,30 +1488,6 @@ struct MonthGraphView: View {
                         }
                     }
                 }
-
-//                Group {
-//                    if !incomeFiltering {
-//                        FilteredInsightsView(startDate: showingMonth, type: 2)
-//                            .padding(.bottom, 70)
-//                    } else {
-//                        if selectedDate != nil {
-//                            FilteredDateInsightsView(date: selectedDate ?? Date.now, income: income)
-//                                .padding(.bottom, 70)
-//
-//                        } else if categoryFilterMode {
-//                            FilteredCategoryInsightsView(category: categoryFilter, date: showingMonth, type: .month)
-//                                .padding(.bottom, 70)
-//                        } else {
-//                            FilteredInsightsView(startDate: showingMonth, income: income, type: 2)
-//                                .padding(.bottom, 70)
-//                        }
-//                    }
-//                }
-//                .padding(.horizontal, 20)
-//                .onTapGesture {
-//                    selectedDate = nil
-//                    categoryFilterMode = false
-//                }
             }
         }
         .onReceive(self.didSave) { _ in
@@ -1635,7 +1535,6 @@ struct SingleMonthBarGraphView: View {
                     Text("0")
                         .font(.system(size: 12, weight: .regular, design: .rounded))
                         .foregroundColor(Color.SubtitleText)
-
                 }
                 .frame(height: barHeight)
                 .padding(.trailing, 3)
@@ -1681,17 +1580,13 @@ struct SingleMonthBarGraphView: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
-
             }
             .frame(maxWidth: .infinity)
-
-            //                .frame(maxHeight: .infinity)
 
             // average line
 
             AverageLineView(getMax: getMax, average: monthAverage)
                 .opacity(actualDays <= 1 ? 0 : 1)
-
         }
         .onChange(of: selectedDate) { _ in
             selectedDateAmount = dayDictionary[selectedDate ?? Date.now] ?? 0.0
@@ -1780,8 +1675,6 @@ struct YearGraphView: View {
         } else {
             return false
         }
-//
-//        return abs(offset) > UIScreen.main.bounds.width * 0.3
     }
 
     @State var showingYear = Date.now
@@ -1793,8 +1686,6 @@ struct YearGraphView: View {
 
     @AppStorage("insightsViewIncomeFiltering", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var income: Bool = true
     @AppStorage("incomeTracking", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var incomeTracking: Bool = true
-//
-//    @Environment(\.dynamicTypeMultiplier) var multiplier
 
     @State var incomeFiltering: Bool = true
 
@@ -1991,7 +1882,6 @@ struct SingleYearBarGraphView: View {
                     Text("0")
                         .font(.system(size: 12, weight: .regular, design: .rounded))
                         .foregroundColor(Color.SubtitleText)
-
                 }
                 .frame(height: barHeight)
                 .padding(.trailing, 3)
@@ -2037,7 +1927,6 @@ struct SingleYearBarGraphView: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
-
             }
             .frame(maxWidth: .infinity)
 
@@ -2045,7 +1934,6 @@ struct SingleYearBarGraphView: View {
 
             AverageLineView(getMax: getMax, average: yearAverage)
                 .opacity(actualMonths <= 1 ? 0 : 1)
-
         }
         .onChange(of: selectedDate) { _ in
             selectedDateAmount = monthDictionary[selectedDate ?? Date.now] ?? 0.0
@@ -2145,17 +2033,6 @@ struct AnimatedHorizontalBarGraph: View {
 
             Spacer(minLength: 0)
         }
-//        .onAppear {
-//            DispatchQueue.main.asyncAfter(deadline: .now()) {
-//                if !animated {
-//                    showBar = true
-//                } else {
-//                    withAnimation(.easeInOut(duration: 0.7).delay(Double(index) * 0.5)) {
-//                        showBar = true
-//                    }
-//                }
-//            }
-//        }
     }
 }
 
@@ -2249,13 +2126,10 @@ struct SwipeArrowView: View {
         VStack(spacing: 8) {
             Image(systemName: left ? "arrow.backward.circle.fill" : "arrow.forward.circle.fill")
                 .font(.system(.body, design: .rounded).weight(.medium))
-//                                        .font(.system(size: 18, weight: .medium))
-                //                                .scaleEffect(changeTime ? 1.3 : 1)
                 .foregroundColor(changeTime ? Color.PrimaryText : Color.SecondaryBackground)
 
             Text(swipeString)
                 .font(.system(.subheadline, design: .rounded).weight(.semibold))
-//                                        .font(.system(size: 14, weight: .semibold, design: .rounded))
                 .multilineTextAlignment(.center)
                 .foregroundColor(changeTime ? Color.PrimaryText : Color.SecondaryBackground)
         }
@@ -2270,12 +2144,10 @@ struct SwipeEndView: View {
         VStack(spacing: 8) {
             Image(systemName: left ? "eyeglasses" : "sun.haze.fill")
                 .font(.system(.title2, design: .rounded).weight(.medium))
-//                                        .font(.system(size: 22, weight: .medium))
                 .foregroundColor(Color.SubtitleText)
 
             Text(left ? "That's all, buddy." : "Into the unknown.")
                 .font(.system(.subheadline, design: .rounded).weight(.semibold))
-//                                        .font(.system(size: 14, weight: .semibold, design: .rounded))
                 .frame(width: 90)
                 .multilineTextAlignment(.center)
                 .foregroundColor(Color.SubtitleText)

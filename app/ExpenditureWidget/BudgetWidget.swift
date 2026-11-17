@@ -50,7 +50,6 @@ struct BudgetWidgetProvider: IntentTimelineProvider {
     }
 
     func loadData(budgetId: String) -> (total: Double, percentage: Double, budget: HoldingBudget) {
-//        let dataController = DataController()
         let dataController = DataController.shared
 
         if let objectIDURL = URL(string: budgetId) {
@@ -170,7 +169,6 @@ struct BudgetWidgetEntryView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Color.PrimaryBackground)
             }
-
         } else if entry.budget.emoji == "failed" {
             if #available(iOS 17.0, *) {
                 Text("Budget no longer exists - please select new budget from widget options.")
@@ -191,7 +189,6 @@ struct BudgetWidgetEntryView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Color.PrimaryBackground)
             }
-
         } else {
             if #available(iOS 17.0, *) {
                 VStack(spacing: 12) {
@@ -405,7 +402,6 @@ struct WidgetBudgetDollarView: View {
                     .font(.system(.title3, design: .rounded).weight(.medium))
                     .foregroundColor(red ? Color("BudgetRed") : Color.PrimaryText)
             }
-
         }
         .minimumScaleFactor(0.5)
         .lineLimit(1)

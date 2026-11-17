@@ -60,7 +60,6 @@ struct MainBudgetWidgetProvider: TimelineProvider {
     }
 
     func loadData() -> (found: Bool, totalSpent: Double, budgetAmount: Double, percentage: Double, type: Int, startDate: Date) {
-//        let dataController = DataController()
         let dataController = DataController.shared
 
         return dataController.fetchRequestForMainBudgetWidget()
@@ -108,13 +107,11 @@ struct MainBudgetWidgetEntryView: View {
             let endComponents = DateComponents(day: 7, second: -1)
             let endWeekDate = Calendar.current.date(byAdding: endComponents, to: entry.startDate)!
             return formatDateRange(date1: entry.startDate, date2: endWeekDate)
-//            return dateFormatter.string(from: entry.startDate) + " - " + dateFormatter.string(from: endWeekDate)
         case 3:
             dateFormatter.dateFormat = "d MMM"
             let endComponents = DateComponents(month: 1, second: -1)
             let endWeekDate = Calendar.current.date(byAdding: endComponents, to: entry.startDate)!
             return formatDateRange(date1: entry.startDate, date2: endWeekDate)
-//            return dateFormatter.string(from: entry.startDate) + " - " + dateFormatter.string(from: endWeekDate)
         case 4:
             dateFormatter.dateFormat = "d MMM yy"
             return dateFormatter.string(from: entry.startDate)
@@ -209,7 +206,6 @@ struct MainBudgetWidgetEntryView: View {
                             Text("\(Int(round(percent * 100)))%")
                         }
                         .gaugeStyle(AccessoryCircularGaugeStyle())
-
                     } else {
                         EmptyView()
                     }

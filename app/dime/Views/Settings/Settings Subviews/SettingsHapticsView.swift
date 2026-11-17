@@ -60,10 +60,6 @@ struct SettingsHapticsView: View {
                         withAnimation(.easeIn(duration: 0.15)) {
                             hapticType = option
                         }
-
-//                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-//                            self.presentationMode.wrappedValue.dismiss()
-//                        }
                     }
                     .padding(.vertical, 9)
                     .overlay(alignment: .bottom) {

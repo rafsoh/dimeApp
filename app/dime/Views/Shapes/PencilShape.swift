@@ -29,7 +29,6 @@ struct PencilView: View {
                     .font(.system(size: fontSize, weight: .bold, design: .rounded))
                     .foregroundStyle(Color.PrimaryText)
                     .padding(.horizontal, horizontalPadding)
-
             }
     }
 }
@@ -44,7 +43,6 @@ struct Pencil: Shape {
 
         var path = Path()
 
-//        path.move(to: CGPoint(x: cornerRadius, y: rect.minY))
         path.move(to: CGPoint(x: rect.width - (offsetLength + flagLength), y: rect.minY))
 
         let angle = atan(height/flagLength)

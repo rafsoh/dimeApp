@@ -28,8 +28,6 @@ struct BudgetIntent: AppIntent {
             throw $budget.needsValueError()
         }
 
-//        let dataController = DataController()
-
         let dataController = DataController.shared
 
         var amount: Double = 0

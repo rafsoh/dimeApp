@@ -24,13 +24,11 @@ struct BudgetView: View {
 
                 Text("Budget Your Finances")
                     .font(.system(.title2, design: .rounded).weight(.medium))
-//                    .font(.system(size: 23.5, weight: .medium, design: .rounded))
                     .multilineTextAlignment(.center)
                     .foregroundColor(Color.PrimaryText.opacity(0.8))
 
                 Text("Link budgets to categories and set appropriate expenditure goals")
                     .font(.system(.body, design: .rounded).weight(.medium))
-//                    .font(.system(size: 18, weight: .medium, design: .rounded))
                     .multilineTextAlignment(.center)
                     .foregroundColor(Color.SubtitleText.opacity(0.7))
             }
@@ -39,7 +37,6 @@ struct BudgetView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .ignoresSafeArea(.all)
             .background(Color.PrimaryBackground)
-
         } else {
             ActualBudgetView()
         }
@@ -85,7 +82,6 @@ struct ActualBudgetView: View {
                 HStack {
                     Text("Budgets")
                         .font(.system(.title, design: .rounded).weight(.semibold))
-//                        .font(.system(size: 25, weight: .semibold, design: .rounded))
                         .accessibility(addTraits: .isHeader)
 
                     Button {
@@ -93,7 +89,6 @@ struct ActualBudgetView: View {
                     } label: {
                         Image(systemName: "plus")
                             .font(.system(.subheadline, design: .rounded).weight(.semibold))
-//                            .font(.system(size: 14, weight: .semibold))
                             .foregroundColor(Color.SubtitleText)
                             .padding(4)
                             .background(Color.SecondaryBackground, in: Circle())
@@ -158,7 +153,6 @@ struct ActualBudgetView: View {
                                         }
                                     }
                                 }
-
                             } else {
                                 LazyVGrid(columns: layout, spacing: 15) {
                                     ForEach(budgets, id: \.self) { budget in
@@ -194,18 +188,15 @@ struct ActualBudgetView: View {
                             .font(.system(size: 48, weight: .regular))
                             .foregroundColor(Color.SubtitleText)
                             .accessibilityHidden(true)
-//                            .font(.system(size: 45))
                             .padding(.bottom, 9)
 
                         Text("No Budgets Found")
                             .font(.system(.title2, design: .rounded).weight(.medium))
-//                            .font(.system(size: 23.5, weight: .medium, design: .rounded))
                             .multilineTextAlignment(.center)
                             .foregroundColor(Color.PrimaryText.opacity(0.8))
 
                         Text("Add your first budget today!")
                             .font(.system(.body, design: .rounded).weight(.medium))
-//                            .font(.system(size: 18, weight: .medium, design: .rounded))
                             .multilineTextAlignment(.center)
                             .foregroundColor(Color.SubtitleText.opacity(0.7))
 
@@ -413,7 +404,6 @@ struct MainBudgetView: View {
 
                 CrookedText(text: String(localized: "OVERALL SPENT: \(percentString1)"), radius: width / 2 + 8)
                     .font(.system(.footnote, design: .rounded).weight(.medium))
-//                    .font(.system(size: 13, weight: .medium, design: .rounded))
                     .foregroundColor(Color.SubtitleText)
                     .frame(width: width, height: 10)
 
@@ -424,7 +414,6 @@ struct MainBudgetView: View {
 
                     Text("\(budgetAmount >= totalSpent ? "left" : "over") \(budgetType)")
                         .font(.system(.subheadline, design: .rounded).weight(.medium))
-//                        .font(.system(size: 15, weight: .medium, design: .rounded))
                         .foregroundColor(Color.SubtitleText)
                 }
             }
@@ -445,7 +434,6 @@ struct MainBudgetView: View {
                 }
             }
             .font(.system(.caption2, design: .rounded).weight(.medium))
-//            .font(.system(size: 10, weight: .medium, design: .rounded))
             .frame(width: width)
             .foregroundColor(Color.SubtitleText)
         }
@@ -456,13 +444,11 @@ struct MainBudgetView: View {
         .contextMenu {
             Button {
                 toEdit = budget
-
             } label: {
                 Label("Edit", systemImage: "pencil")
             }
             Button {
                 toDelete = budget
-
             } label: {
                 Label("Delete", systemImage: "xmark.bin")
             }
@@ -665,7 +651,6 @@ struct SingleBudgetView: View {
                 ZStack(alignment: .trailing) {
                     Image(systemName: "xmark")
                         .font(.system(.footnote, design: .rounded).weight(.bold))
-//                        .font(.system(size: 13, weight: .bold))
                         .foregroundColor(deleteConfirm ? Color.AlertRed : Color.SubtitleText)
                         .padding(5)
                         .background(deleteConfirm ? Color.AlertRed.opacity(0.23) : Color.SecondaryBackground, in: Circle())
@@ -694,13 +679,11 @@ struct SingleBudgetView: View {
                             VStack(alignment: .leading, spacing: -0.5) {
                                 Text(budget.wrappedName)
                                     .font(.system(.body, design: .rounded).weight(.semibold))
-//                                    .font(.system(size: 18, weight: .semibold, design: .rounded))
                                     .lineLimit(1)
                                     .foregroundColor(Color.PrimaryText)
 
                                 Text("\(timeLeft) • \(percentString1) spent")
                                     .font(.system(.footnote, design: .rounded).weight(.medium))
-//                                    .font(.system(size: 13, weight: .medium, design: .rounded))
                                     .lineLimit(1)
                                     .foregroundColor(Color.SubtitleText)
                             }
@@ -722,7 +705,6 @@ struct SingleBudgetView: View {
                     .contextMenu {
                         Button {
                             toEdit = budget
-
                         } label: {
                             Label("Edit", systemImage: "pencil")
                         }
@@ -768,7 +750,6 @@ struct SingleBudgetView: View {
                                         dataController.save()
                                     }
                                 }
-
                             } else if deletePopup {
                                 withAnimation(.easeInOut(duration: 0.3)) {
                                     offset = 0
@@ -796,18 +777,15 @@ struct SingleBudgetView: View {
                             HStack(spacing: 4) {
                                 CategoryIcon(budget.wrappedIcon)
                                     .font(.system(.caption, design: .rounded))
-//                                    .font(.system(size: 11.5))
 
                                 Text(budget.wrappedName)
                                     .font(.system(.subheadline, design: .rounded).weight(.semibold))
-//                                    .font(.system(size: 15, weight: .semibold, design: .rounded))
                                     .lineLimit(1)
                                     .foregroundColor(Color.PrimaryText)
                             }
 
                             Text(timeLeft)
                                 .font(.system(.footnote, design: .rounded).weight(.semibold))
-//                                .font(.system(size: 13, weight: .semibold, design: .rounded))
                                 .foregroundColor(Color.SubtitleText)
                                 .multilineTextAlignment(.leading)
                         }
@@ -823,7 +801,6 @@ struct SingleBudgetView: View {
                             if totalSpent < budgetAmount {
                                 Text("\(percentString1) SPENT")
                                     .font(.system(.caption2, design: .rounded).weight(.semibold))
-//                                    .font(.system(size: 11, weight: .semibold, design: .rounded))
                                     .lineLimit(1)
                                     .foregroundColor(totalSpent / budgetAmount > 1 ? Color("BudgetRed") : Color.IncomeGreen)
                                     .padding(.bottom, 5)
@@ -874,7 +851,6 @@ struct SingleBudgetView: View {
                 .contextMenu {
                     Button {
                         toEdit = budget
-
                     } label: {
                         Label("Edit", systemImage: "pencil")
                     }
@@ -1100,7 +1076,6 @@ struct DeleteBudgetAlert: View {
                         moc.delete(toDelete)
                         dataController.save()
                     }
-
                 } label: {
                     DeleteButton(text: "Delete", red: true)
                 }
@@ -1110,7 +1085,6 @@ struct DeleteBudgetAlert: View {
                     withAnimation(.easeOut(duration: 0.7)) {
                         dismiss()
                     }
-
                 } label: {
                     DeleteButton(text: "Cancel", red: false)
                 }
@@ -1183,7 +1157,6 @@ struct DeleteMainBudgetAlert: View {
                         moc.delete(toDelete)
                         dataController.save()
                     }
-
                 } label: {
                     DeleteButton(text: "Delete", red: true)
                 }
@@ -1193,7 +1166,6 @@ struct DeleteMainBudgetAlert: View {
                     withAnimation(.easeOut(duration: 0.7)) {
                         dismiss()
                     }
-
                 } label: {
                     DeleteButton(text: "Cancel", red: false)
                 }
@@ -1332,7 +1304,6 @@ struct DetailedMainBudgetView: View {
                     .padding(.vertical, 6)
                     .padding(.horizontal, 8)
                     .fixedSize(horizontal: false, vertical: /*@START_MENU_TOKEN@*/true/*@END_MENU_TOKEN@*/)
-//                    .frame(height: 30, alignment: .center)
                     .background(Color.SecondaryBackground, in: Capsule())
                 }
 
@@ -1509,8 +1480,6 @@ struct TimeBudgetView: View {
         }
     }
 
-    // for week, month, year only
-
     var daysLeftNumber: Int {
         let calendar = Calendar.current
 
@@ -1594,7 +1563,6 @@ struct TimeBudgetView: View {
 
                             Text("left each day")
                                 .font(.system(.subheadline, design: .rounded).weight(.medium))
-//                                .font(.system(size: 15, weight: .medium, design: .rounded))
                                 .foregroundColor(Color.SubtitleText)
                         }
                         .frame(maxWidth: .infinity, alignment: .trailing)
@@ -1608,7 +1576,6 @@ struct TimeBudgetView: View {
 
                     Text(differenceSubtitle)
                         .font(.system(.subheadline, design: .rounded).weight(.medium))
-//                        .font(.system(size: 15, weight: .medium, design: .rounded))
                         .foregroundColor(Color.SubtitleText)
                 }
                 .padding(.horizontal, 25)
@@ -1724,16 +1691,6 @@ struct FilteredCategoryDayBudgetView: View {
                 totalSpent = holding
             }
         }
-//        .fullScreenCover(item: $toDelete, onDismiss: {
-//            toDelete = nil
-//        }) { transaction in
-//            DeleteTransactionAlert(toDelete: transaction, stopRecurring: false)
-//        }
-//        .fullScreenCover(item: $toEdit, onDismiss: {
-//            toEdit = nil
-//        }) { transaction in
-//            TransactionView(toEdit: transaction)
-//        }
         .frame(maxHeight: .infinity)
     }
 
@@ -2002,8 +1959,6 @@ struct TimeMainBudgetView: View {
             }
         }
     }
-
-    // for week, month, year only
 
     var daysLeftNumber: Int {
         let calendar = Calendar.current

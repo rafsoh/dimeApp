@@ -38,7 +38,6 @@ struct DonutSemicircle: Shape {
 
         var path = Path()
         path.move(to: CGPoint(x: radius - weirdLength, y: rect.maxY))
-//        path.move(to:CGPoint(x: rect.width * 0.3, y: rect.maxY))
 
         let firstControlPoint = CGPoint(x: radius - radius * cos(cornerAngle), y: rect.maxY - radius * sin(cornerAngle))
 
@@ -60,7 +59,6 @@ struct DonutSemicircle: Shape {
             thirdControlPointFrom = CGPoint(x: radius + (innerRadius + weirderLength) * cos(CGFloat(180 * (1 - percent)).toRadians()), y: radius - (innerRadius + weirderLength) * sin(CGFloat(180 * (1 - percent)).toRadians()))
             thirdControlPoint = CGPoint(x: radius + innerRadius * cos(CGFloat(180 * (1 - percent)).toRadians()), y: radius - innerRadius * sin(CGFloat(180 * (1 - percent)).toRadians()))
             thirdControlPointTo = CGPoint(x: radius + innerRadius * cos(stupidAngle + CGFloat(180 * (1 - percent)).toRadians()), y: radius - innerRadius * sin(stupidAngle + CGFloat(180 * (1 - percent)).toRadians()))
-
         } else if percent < 0.5 {
             secondControlPoint = CGPoint(x: radius - radius * cos(CGFloat(180 * percent).toRadians()), y: radius - radius * sin(CGFloat(180 * percent).toRadians()))
             secondControlPointTo = CGPoint(x: radius - weirdLength * cos(CGFloat(180 * percent).toRadians()), y: radius - weirdLength * sin(CGFloat(180 * percent).toRadians()))

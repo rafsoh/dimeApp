@@ -51,9 +51,6 @@ struct SingleDayPhotoView: View {
             .frame(maxWidth: .infinity)
             .background(Color.PrimaryBackground, in: RoundedRectangle(cornerRadius: 40))
             .shadow(color: Color.Outline, radius: 30)
-//            .background(Color.neuBackground, in: RoundedRectangle(cornerRadius: 40))
-//            .shadow(color: .dropShadow, radius: 45, x: 40, y: 40)
-//            .shadow(color: .dropLight, radius: 45, x: -40, y: -40)
         }
         .padding(60)
         .background(Color.PrimaryBackground)
@@ -117,7 +114,6 @@ struct SingleTransactionPhotoView: View {
                             .foregroundColor(Color.EvenLighterText)
                             .lineLimit(1)
                     }
-
                 } else {
                     if swapTimeLabel {
                         Text(transaction.wrappedCategoryName)
@@ -151,7 +147,6 @@ struct SingleTransactionPhotoView: View {
                     .layoutPriority(1)
             }
         }
-//        .background(Color.SecondaryBackground, in: RoundedRectangle(cornerRadius: 40))
 
         .frame(maxWidth: .infinity)
     }

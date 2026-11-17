@@ -27,15 +27,6 @@
         "revision" : "70ae8691bdfb62698571e69bd855acf4030795ea",
         "version" : "0.0.1"
       }
-    },
-    {
-      "identity" : "isscrolling",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/fatbobman/IsScrolling.git",
-      "state" : {
-        "revision" : "7def8d8f789a326b6f725a76cee8ec3fa69511df",
-        "version" : "1.1.2"
-      }
     }
   ],
   "version" : 3

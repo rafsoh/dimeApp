@@ -53,7 +53,6 @@ struct CustomCapsuleProgress: View {
                 .foregroundColor(percent == 1 ? Color.IncomeGreen : topStroke)
                 .font(.system(.footnote, design: .rounded).weight(.bold))
                 .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                .font(.system(size: 12, weight: .bold, design: .rounded))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

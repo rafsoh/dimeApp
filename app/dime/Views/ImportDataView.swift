@@ -151,14 +151,12 @@ struct ImportDataView: View {
                         Text("Processing Import")
                             .font(.system(.title2, design: .rounded).weight(.medium))
 
-//                            .font(.system(size: 22, weight: .medium, design: .rounded))
                             .foregroundColor(Color.SubtitleText)
                     case .success:
 
                         Image(systemName: "checkmark")
                             .font(.system(.title2, design: .rounded).weight(.semibold))
 
-//                            .font(.system(size: 21, weight: .semibold, design: .rounded))
                             .foregroundColor(Color.IncomeGreen)
                             .frame(width: 35, height: 35)
                             .background(Color.IncomeGreen.opacity(0.3), in: Circle())
@@ -166,13 +164,11 @@ struct ImportDataView: View {
                         Text("Import Successful")
                             .font(.system(.title2, design: .rounded).weight(.medium))
 
-//                            .font(.system(size: 22, weight: .medium, design: .rounded))
                             .foregroundColor(Color.IncomeGreen)
                     case .error:
                         Image(systemName: "x")
                             .font(.system(.title2, design: .rounded).weight(.semibold))
 
-//                            .font(.system(size: 21, weight: .semibold, design: .rounded))
                             .foregroundColor(Color.AlertRed)
                             .frame(width: 35, height: 35)
                             .background(Color.Alert.opacity(0.3), in: Circle())
@@ -180,13 +176,11 @@ struct ImportDataView: View {
                         Text("Import Failed")
                             .font(.system(.title2, design: .rounded).weight(.medium))
 
-//                            .font(.system(size: 22, weight: .medium, design: .rounded))
                             .foregroundColor(Color.PrimaryText)
 
                         Text(errorMessage)
                             .font(.system(.subheadline, design: .rounded).weight(.medium))
 
-//                            .font(.system(size: 15, weight: .medium, design: .rounded))
                             .foregroundColor(Color.SubtitleText)
                     }
                 }
@@ -258,13 +252,11 @@ struct ImportDataView: View {
                             Image(systemName: "exclamationmark.triangle.fill")
                                 .font(.system(.subheadline, design: .rounded).weight(.semibold))
 
-//                                .font(.system(size: 15, weight: .semibold))
                                 .foregroundColor(Color.AlertRed)
 
                             Text(toastMessage)
                                 .font(.system(.callout, design: .rounded).weight(.semibold))
 
-//                                .font(.system(size: 16, weight: .semibold, design: .rounded))
                                 .foregroundColor(Color.AlertRed)
                         }
                         .padding(8)
@@ -283,8 +275,6 @@ struct ImportDataView: View {
                                 .foregroundColor(.PrimaryText)
                                 .font(.system(.title2, design: .rounded).weight(.semibold))
 
-//                                .font(.system(size: 26, weight: .semibold, design: .rounded))
-
                             Spacer()
                         }
                         .frame(maxWidth: .infinity)
@@ -293,15 +283,12 @@ struct ImportDataView: View {
                             .foregroundColor(.SubtitleText)
                             .font(.system(.body, design: .rounded).weight(.medium))
 
-//                            .font(.system(size: 17, weight: .medium, design: .rounded))
                             .frame(maxWidth: .infinity, alignment: .leading)
                     } else {
                         HStack {
                             Text(instructions[progress - 1].title)
                                 .foregroundColor(Color.PrimaryText)
                                 .font(.system(.title2, design: .rounded).weight(.semibold))
-
-//                                .font(.system(size: 26, weight: .semibold, design: .rounded))
 
                             if progress == 7 {
                                 Button {
@@ -334,12 +321,9 @@ struct ImportDataView: View {
                         Image(systemName: "info.circle.fill")
                             .font(.system(.subheadline, design: .rounded).weight(.medium))
 
-//                            .font(.system(size: 15, weight: .semibold, design: .rounded))
-
                         Text("Additional Pointers")
                             .font(.system(.body, design: .rounded).weight(.semibold))
 
-//                            .font(.system(size: 17, weight: .semibold, design: .rounded))
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .padding(12)
@@ -359,7 +343,6 @@ struct ImportDataView: View {
                         Text("Sampled Rows from Import CSV")
                             .font(.system(.subheadline, design: .rounded).weight(.semibold))
 
-//                            .font(.system(size: 15, weight: .semibold, design: .rounded))
                             .foregroundColor(Color.SubtitleText)
 
                         ScrollView(.horizontal, showsIndicators: false) {
@@ -375,7 +358,6 @@ struct ImportDataView: View {
                                                 .foregroundStyle(Color.SubtitleText)
                                                 .font(.system(.subheadline, design: .rounded).weight(.bold))
 
-//                                                .font(.system(size: 15, weight: .bold, design: .rounded))
                                                 .padding(.horizontal, 8)
                                                 .frame(width: indexColumnWidth, height: 30, alignment: .leading)
                                                 .overlay(Rectangle().stroke(Color.Outline, lineWidth: 1))
@@ -394,12 +376,9 @@ struct ImportDataView: View {
                                                         Image(systemName: labels[index].image)
                                                             .font(.system(.caption, design: .rounded).weight(.semibold))
 
-//                                                            .font(.system(size: 12, weight: .semibold, design: .rounded))
-
                                                         Text(labels[index].label)
                                                             .font(.system(.subheadline, design: .rounded).weight(.semibold))
 
-//                                                            .font(.system(size: 14, weight: .semibold, design: .rounded))
                                                             .frame(maxWidth: .infinity, alignment: .leading)
                                                     }
                                                     .padding(.horizontal, 10)
@@ -419,7 +398,6 @@ struct ImportDataView: View {
                                                         .foregroundStyle(Color.PrimaryText)
                                                         .font(.system(.subheadline, design: .rounded).weight(.medium))
 
-//                                                        .font(.system(size: 15, weight: .medium, design: .rounded))
                                                         .padding(.horizontal, 8)
                                                         .frame(width: columnWidth, height: 30, alignment: .leading)
                                                         .overlay(Rectangle().stroke(Color.Outline, lineWidth: 1))
@@ -445,12 +423,9 @@ struct ImportDataView: View {
                                                 Image(systemName: labels[progress - 2].image)
                                                     .font(.system(.caption, design: .rounded).weight(.semibold))
 
-//                                                    .font(.system(size: 12, weight: .semibold, design: .rounded))
-
                                                 Text(labels[progress - 2].label)
                                                     .font(.system(.subheadline, design: .rounded).weight(.semibold))
 
-//                                                    .font(.system(size: 14, weight: .semibold, design: .rounded))
                                                     .frame(maxWidth: .infinity, alignment: .leading)
                                             }
                                             .padding(.horizontal, 10)
@@ -475,13 +450,11 @@ struct ImportDataView: View {
                         Text("Sample from 'Date' Column")
                             .font(.system(.subheadline, design: .rounded).weight(.semibold))
 
-//                            .font(.system(size: 15, weight: .semibold, design: .rounded))
                             .foregroundColor(Color.SubtitleText)
 
                         Text(sampleDateString)
                             .font(.system(.title3, design: .rounded).weight(.semibold))
 
-//                            .font(.system(size: 20, weight: .semibold, design: .rounded))
                             .foregroundColor(Color.PrimaryText)
                             .frame(width: 300, height: 40)
                             .overlay(
@@ -494,21 +467,18 @@ struct ImportDataView: View {
                             Image(systemName: "calendar")
                                 .font(.system(.callout, design: .rounded).weight(.semibold))
 
-//                                .font(.system(size: 16, weight: .semibold))
                                 .foregroundColor(Color.SubtitleText)
 
                             TextField("Date Format", text: $dateFormatString)
                                 .foregroundColor(Color.PrimaryText)
                                 .font(.system(.title3, design: .rounded).weight(.semibold))
 
-//                                .font(.system(size: 20, weight: .semibold, design: .rounded))
                                 .frame(maxWidth: .infinity)
 
                             if validDateFormatString {
                                 Image(systemName: "checkmark.circle.fill")
                                     .font(.system(.callout, design: .rounded).weight(.semibold))
 
-//                                        .font(.system(size: 16, weight: .semibold))
                                     .foregroundColor(Color.IncomeGreen)
                             } else if !validDateFormatString && dateFormatString != "" {
                                 ProgressView()
@@ -537,7 +507,6 @@ struct ImportDataView: View {
                         Text("\(numberOfLinkedCategories)/^[\(uniqueCategories.count) category](inflect: true) linked")
                             .font(.system(.subheadline, design: .rounded).weight(.semibold))
 
-//                            .font(.system(size: 15, weight: .semibold, design: .rounded))
                             .foregroundColor(Color.SubtitleText)
 
                         TabView(selection: $pageIndex) {
@@ -548,9 +517,7 @@ struct ImportDataView: View {
                                             .font(.system(.title3, design: .rounded).weight(.semibold))
 
                                             .lineLimit(1)
-//                                            .font(.system(size: 20, weight: .semibold, design: .rounded))
                                             .foregroundColor(Color.PrimaryText)
-//                                            .frame(height: 36)
                                             .padding(.vertical, 6)
                                             .padding(.horizontal, 10)
                                             .overlay(
@@ -568,19 +535,15 @@ struct ImportDataView: View {
 
                                                 HStack(spacing: 5) {
                                                     CategoryIcon(unwrappedCategory.wrappedIcon)
-//                                                        .font(.system(size: 15))
                                                         .font(.system(.subheadline, design: .rounded))
 
                                                     Text(unwrappedCategory.wrappedName)
                                                         .font(.system(.title3, design: .rounded).weight(.semibold))
 
                                                         .lineLimit(1)
-
-//                                                        .font(.system(size: 19, weight: .semibold, design: .rounded))
                                                 }
                                                 .padding(.vertical, 6)
                                                 .padding(.horizontal, 10)
-//                                                .frame(height: 36)
                                                 .foregroundColor(Color(hex: unwrappedCategory.wrappedColour))
                                                 .background(Color(hex: unwrappedCategory.wrappedColour).opacity(0.35), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                                                 .minimumScaleFactor(0.7)
@@ -631,18 +594,13 @@ struct ImportDataView: View {
                             UIImpactFeedbackGenerator(style: .light).impactOccurred()
 
                             importing = true
-
                         } label: {
                             HStack(spacing: 6) {
                                 Text("Import")
                                     .font(.system(.title3, design: .rounded).weight(.semibold))
 
-//                                    .font(.system(size: 19, weight: .semibold, design: .rounded))
-
                                 Image(systemName: "square.and.arrow.up.fill")
                                     .font(.system(.subheadline, design: .rounded).weight(.semibold))
-
-//                                    .font(.system(size: 15, weight: .semibold, design: .rounded))
                             }
                             .frame(height: 50)
                             .frame(maxWidth: .infinity)
@@ -655,18 +613,13 @@ struct ImportDataView: View {
                             exportSample = true
                         } label: {
                             HStack(spacing: 6) {
-//                                Image(systemName: "doc.text")
-//                                    .font(.system(size: 13, weight: .semibold, design: .rounded))
                                 Text("Sample Sheet")
                                     .underline()
                                     .font(.system(.body, design: .rounded).weight(.semibold))
-
-//                                    .font(.system(size: 18, weight: .semibold, design: .rounded))
                             }
                             .foregroundColor(Color.SubtitleText)
                         }
                     }
-
                 } else {
                     Button {
                         if progress == 7 {
@@ -680,7 +633,6 @@ struct ImportDataView: View {
                                 showToast = true
                                 toastMessage = "Unlinked Categories"
                             }
-
                         } else if progress > 5 {
                             withAnimation(.interactiveSpring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.8)) {
                                 progress += 1
@@ -756,7 +708,6 @@ struct ImportDataView: View {
                         Text("Continue")
                             .font(.system(.title3, design: .rounded).weight(.semibold))
 
-//                            .font(.system(size: 19, weight: .semibold, design: .rounded))
                             .frame(height: 50)
                             .frame(maxWidth: .infinity)
                             .foregroundColor(Color.LightIcon)
@@ -914,7 +865,6 @@ struct ImportDataView: View {
         let categoryDictionary: [String: Category] = Dictionary(uniqueKeysWithValues: uniqueCategories.map { ($0.excelValue, $0.category!) })
 
         rows.forEach { row in
-//            let rowCategory = categoryDictionary[row[categoryColumnIndex]]
             if let transactionDate = dateFormatter.date(from: row[dateColumnIndex]) {
                 if let rowCategory = categoryDictionary[row[categoryColumnIndex]] {
                     if let transactionAmount = Double(row[amountColumnIndex]) {
@@ -999,7 +949,6 @@ struct ImportDataView: View {
                 Text("\(number)")
                     .font(.system(.body, design: .rounded).weight(.bold))
 
-//                    .font(.system(size: 17, weight: .bold, design: .rounded))
                     .foregroundColor(Color.SubtitleText)
             }
             .frame(width: 25, height: 25)
@@ -1007,7 +956,6 @@ struct ImportDataView: View {
             Text(text)
                 .font(.system(.body, design: .rounded).weight(.medium))
 
-//                .font(.system(size: 17, weight: .medium, design: .rounded))
                 .foregroundColor(Color.PrimaryText)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -1031,29 +979,6 @@ struct MatchCategoryStepperView: View {
     @Binding var pageIndex: Int
     var categories: [Category]
     var maxIndex: Int
-//
-//    @Environment(\.dynamicTypeSize) var dynamicTypeSize
-//
-//    var fontSize: CGFloat {
-//        switch dynamicTypeSize {
-//        case .xSmall:
-//            return 14
-//        case .small:
-//            return 15
-//        case .medium:
-//            return 16
-//        case .large:
-//            return 17
-//        case .xLarge:
-//            return 19
-//        case .xxLarge:
-//            return 21
-//        case .xxxLarge:
-//            return 23
-//        default:
-//            return 23
-//        }
-//    }
 
     var body: some View {
         VStack {
@@ -1062,20 +987,17 @@ struct MatchCategoryStepperView: View {
                     Image(systemName: "tray.full.fill")
                         .font(.system(.title, design: .rounded))
 
-//                        .font(.system(size: 28, weight: .regular, design: .rounded))
                         .foregroundColor(Color.SubtitleText.opacity(0.7))
                         .padding(.top, 20)
 
                     Text("No remaining\ncategories.")
                         .font(.system(.callout, design: .rounded).weight(.medium))
 
-//                        .font(.system(size: 16, weight: .medium, design: .rounded))
                         .multilineTextAlignment(.center)
                         .foregroundColor(Color.SubtitleText.opacity(0.7))
                         .padding(.bottom, 20)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-
             } else {
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 8) {
@@ -1101,7 +1023,6 @@ struct MatchCategoryStepperView: View {
             RoundedRectangle(cornerRadius: 11, style: .continuous)
                 .stroke(Color.Outline, lineWidth: 2)
         }
-//        .background(Color.PrimaryBackground, in: )
     }
 
     func getRows() -> [[Category]] {
@@ -1128,14 +1049,11 @@ struct MatchCategoryStepperView: View {
                 rows.append(currentRow)
                 currentRow.removeAll()
                 currentRow.append(category)
-
             } else {
                 currentRow.append(category)
             }
         }
 
-        // Safe check...
-        // if having any value storing it in rows...
         if !currentRow.isEmpty {
             rows.append(currentRow)
             currentRow.removeAll()
@@ -1159,17 +1077,13 @@ struct MatchCategoryStepperView: View {
                     }
                 }
             }
-
         } label: {
             HStack(spacing: 5) {
                 CategoryIcon(categoryInput.wrappedIcon)
                     .font(.system(.footnote, design: .rounded))
 
-//                    .font(.system(size: 13))
                 Text(categoryInput.wrappedName)
                     .font(.system(.body, design: .rounded).weight(.semibold))
-
-//                    .font(.system(size: 17, weight: .semibold, design: .rounded))
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
@@ -1182,7 +1096,6 @@ struct MatchCategoryStepperView: View {
                                       style: StrokeStyle(lineWidth: 1.5))
                 }
             }
-//            .opacity(category == nil ? 1 : (category == categoryInput ? 1 : 0.4))
         }
         .buttonStyle(BouncyButton(duration: 0.2, scale: 0.8))
     }

@@ -161,24 +161,6 @@ struct NumberPad: View {
         } catch {
             print("Failed to play pattern: \(error.localizedDescription).")
         }
-
-//        
-//        var events = [CHHapticEvent]()
-//
-//        // create one intense, sharp tap
-//        let intensity = CHHapticEventParameter(parameterID: .hapticIntensity, value: 1)
-//        let sharpness = CHHapticEventParameter(parameterID: .hapticSharpness, value: 1)
-//        let event = CHHapticEvent(eventType: .hapticTransient, parameters: [intensity, sharpness], relativeTime: 0)
-//        events.append(event)
-//
-//        // convert those events into a pattern and play it immediately
-//        do {
-//            let pattern = try CHHapticPattern(events: events, parameters: [])
-//            let player = try engine?.makePlayer(with: pattern)
-//            try player?.start(atTime: 0)
-//        } catch {
-//            print("Failed to play pattern: \(error.localizedDescription).")
-//        }
     }
 
     public func deleteLastDigit() {
@@ -319,10 +301,6 @@ struct NumberPadTextView: View {
         let code = entryCurrency ?? currency
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: code) ?? code
     }
-//
-//    var displayNumbers: [String] {
-//        return splitDouble(price)
-//    }
 
     @AppStorage("numberEntryType", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var numberEntryType: Int = 1
 
@@ -377,23 +355,14 @@ struct NumberPadTextView: View {
                     .font(.system(.largeTitle, design: .rounded))
                     .foregroundColor(Color.SubtitleText)
 
-//                ForEach(displayNumbers, id: \.self) { number in
-//                    Text(number)
-//                        .font(.system(size: largerFontSize, weight: .regular, design: .rounded))
-//                        .foregroundColor(Color.PrimaryText)
-//                        .transition(AnyTransition.opacity.combined(with: .scale).combined(with: .move(edge: .trailing)))
-//                }
-
                 + Text(amount)
                     .font(.system(size: largerFontSize, weight: .regular, design: .rounded))
                     .foregroundColor(Color.PrimaryText)
-
             }
         }
         .minimumScaleFactor(0.5)
         .lineLimit(1)
         .frame(maxWidth: .infinity)
-//        .animation(.snappy.delay(0.1), value: displayNumbers)
     }
 
     public func deleteLastDigit() {

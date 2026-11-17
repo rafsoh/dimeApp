@@ -6,7 +6,6 @@ struct Toolbar<Content>: View where Content: View {
 
     var body: some View {
         HStack(spacing: 8) {
-//            BackButton(presentationMode: <#T##Binding<PresentationMode>#>)
             Spacer()
             if let title = title {
                 Text(title)

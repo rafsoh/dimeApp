@@ -77,14 +77,6 @@ struct NewCategoryPickerView: View {
                 RoundedRectangle(cornerRadius: 11.5, style: .continuous).fill(Color.SecondaryBackground).shadow(
                     color: colorScheme == .light ? Color.Outline  : Color.clear, radius: 6)
             )
-//            .background(
-//                Color.SecondaryBackground,
-//                in: RoundedRectangle(cornerRadius: 11.5, style: .continuous)
-//            )
-//            .overlay {
-//                RoundedRectangle(cornerRadius: 11.5, style: .continuous)
-//                    .strokeBorder(Color.Outline, style: StrokeStyle(lineWidth: 2, dash: [10]))
-//            }
             .contentShape(Rectangle())
             .onTapGesture {
                 let impactMed = UIImpactFeedbackGenerator(style: .light)
@@ -94,7 +86,6 @@ struct NewCategoryPickerView: View {
             }
             .padding(.bottom, 15)
         }
-
     }
 
     init(

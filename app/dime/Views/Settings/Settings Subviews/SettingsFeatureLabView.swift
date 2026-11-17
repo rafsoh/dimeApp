@@ -14,8 +14,6 @@ struct SettingsGoofyView: View {
   @AppStorage("confetti", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var confetti:
     Bool = false
 
-  //    @AppStorage("chromatic", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var chromatic: Bool = false
-
   @AppStorage("logViewLineGraph", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
   var lineGraph: Bool = false
 
@@ -36,7 +34,6 @@ struct SettingsGoofyView: View {
       Text("Feature Lab")
         .font(.system(.title3, design: .rounded).weight(.semibold))
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-        //                .font(.system(size: 20, weight: .semibold, design: .rounded))
         .foregroundColor(Color.PrimaryText)
         .frame(maxWidth: .infinity)
         .overlay(alignment: .leading) {
@@ -61,7 +58,6 @@ struct SettingsGoofyView: View {
         Text("Experimental features - proceed with caution.")
           .font(.system(.caption, design: .rounded).weight(.medium))
           .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-          //                    .font(.system(size: 12, weight: .medium, design: .rounded))
           .foregroundColor(Color.SubtitleText)
           .padding(.horizontal, 15)
           .frame(maxWidth: .infinity, alignment: .leading)
@@ -75,7 +71,6 @@ struct SettingsGoofyView: View {
         )
         .font(.system(.caption, design: .rounded).weight(.medium))
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-        //                    .font(.system(size: 12, weight: .medium, design: .rounded))
         .foregroundColor(Color.SubtitleText)
         .padding(.horizontal, 15)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -89,22 +84,11 @@ struct SettingsGoofyView: View {
         )
         .font(.system(.caption, design: .rounded).weight(.medium))
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-        //                    .font(.system(size: 12, weight: .medium, design: .rounded))
         .foregroundColor(Color.SubtitleText)
         .padding(.horizontal, 15)
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.bottom, 30)
       }
-
-      //            ToggleRow(text: "Miles-Morales Effect", bool: $chromatic, id: 5)
-      //            .background(Color.SettingsBackground, in: RoundedRectangle(cornerRadius: 9))
-      //
-      //            Text("Enables a chromatic abberation effect on the 'New Transaction' page when a future date is set.")
-      //                .font(.system(size: 12, weight: .medium, design: .rounded))
-      //                .foregroundColor(Color.SubtitleText)
-      //                .padding(.horizontal, 15)
-      //                .frame(maxWidth: .infinity, alignment: .leading)
-      //                .padding(.bottom, 30)
     }
     .modifier(SettingsSubviewModifier())
   }
@@ -115,7 +99,6 @@ struct SettingsGoofyView: View {
       Text(text)
         .font(.system(.body, design: .rounded))
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-        //                .font(.system(size: 17, weight: .regular, design: .rounded))
         .foregroundColor(Color.PrimaryText)
 
       Spacer()

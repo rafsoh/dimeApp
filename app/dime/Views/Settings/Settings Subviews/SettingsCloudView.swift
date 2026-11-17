@@ -18,7 +18,6 @@ struct SettingsCloudView: View {
       Text("iCloud Sync")
         .font(.system(.title3, design: .rounded).weight(.semibold))
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-        //                .font(.system(size: 20, weight: .semibold, design: .rounded))
         .foregroundColor(Color.PrimaryText)
         .frame(maxWidth: .infinity)
         .overlay(alignment: .leading) {
@@ -73,6 +72,5 @@ struct SettingsCloudView: View {
       iCloudStorage = NSUbiquitousKeyValueStore.default.bool(forKey: "icloud_sync")
     }
     .modifier(SettingsSubviewModifier())
-
   }
 }

@@ -79,11 +79,6 @@ struct BrandNewBudgetView: View {
         return Calendar.current.date(byAdding: .year, value: -1, to: Date.now)!
     }
 
-    // stage 5
-//    var budgetAmount: Double {
-//        return (amount as NSString).doubleValue
-//    }
-
     @AppStorage("numberEntryType", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var numberEntryType: Int = 1
 
     @State private var price: Double = 0
@@ -272,7 +267,6 @@ struct BrandNewBudgetView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .foregroundColor(Color.PrimaryText)
                         .font(.system(.title3, design: .rounded).weight(.medium))
-//                        .font(.system(size: 20, weight: .medium, design: .rounded))
                         .padding(8)
                         .background {
                             if !categoryBudget {
@@ -281,7 +275,6 @@ struct BrandNewBudgetView: View {
                                     .matchedGeometryEffect(id: "TAB1", in: animation)
                             }
                         }
-//                        .frame(height: 40)
                         .contentShape(Rectangle())
                         .onTapGesture {
                             withAnimation(.easeIn(duration: 0.15)) {
@@ -301,7 +294,6 @@ struct BrandNewBudgetView: View {
                         .foregroundColor(Color.PrimaryText)
                         .font(.system(.title3, design: .rounded).weight(.medium))
                         .padding(8)
-//                        .frame(height: 40)
                         .background {
                             if categoryBudget {
                                 RoundedRectangle(cornerRadius: 6)
@@ -327,13 +319,11 @@ struct BrandNewBudgetView: View {
                         VStack(spacing: 12) {
                             Image(systemName: "tray.full.fill")
                                 .font(.system(.largeTitle, design: .rounded))
-//                                .font(.system(size: 38, weight: .regular, design: .rounded))
                                 .foregroundColor(Color.SubtitleText.opacity(0.7))
                                 .padding(.top, 20)
 
                             Text("No remaining\ncategories.")
                                 .font(.system(.title3, design: .rounded).weight(.medium))
-//                                .font(.system(size: 21, weight: .medium, design: .rounded))
                                 .multilineTextAlignment(.center)
                                 .foregroundColor(Color.SubtitleText.opacity(0.7))
                                 .padding(.bottom, 20)
@@ -341,7 +331,6 @@ struct BrandNewBudgetView: View {
                             Spacer()
                         }
                         .frame(maxHeight: .infinity)
-
                     } else {
                         ScrollView(showsIndicators: false) {
                             VStack(spacing: 10) {
@@ -380,9 +369,7 @@ struct BrandNewBudgetView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .foregroundColor(Color.PrimaryText)
                             .font(.system(.title3, design: .rounded).weight(.medium))
-//                            .font(.system(size: 20, weight: .medium, design: .rounded))
                             .padding(8)
-//                            .frame(height: 40)
                             .background {
                                 if time == budgetTimeFrame {
                                     RoundedRectangle(cornerRadius: 6)
@@ -424,14 +411,11 @@ struct BrandNewBudgetView: View {
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                         .foregroundColor(Color.PrimaryText)
                                         .font(.system(.title3, design: .rounded).weight(.medium))
-//                                        .font(.system(size: 20, weight: .medium, design: .rounded))
                                         .padding(8)
-//                                        .frame(height: 40)
                                         .background {
                                             if chosenDayWeek == (weekdays.firstIndex(of: day)! + 1) {
                                                 RoundedRectangle(cornerRadius: 6)
                                                     .fill(Color.SecondaryBackground)
-//                                                    .matchedGeometryEffect(id: "TAB3", in: animation)
                                             }
                                         }
                                         .id(weekdays.firstIndex(of: day)! + 1)
@@ -476,7 +460,6 @@ struct BrandNewBudgetView: View {
                                             if chosenDayMonth == day {
                                                 RoundedRectangle(cornerRadius: 6)
                                                     .fill(Color.SecondaryBackground)
-//                                                    .matchedGeometryEffect(id: "TAB3", in: animation)
                                             }
                                         }
                                         .contentShape(Rectangle())
@@ -496,7 +479,6 @@ struct BrandNewBudgetView: View {
                         .modifier(PickerStyle(colorScheme: colorScheme))
                         .frame(height: min(heightOfPicker, 250))
                     case .year:
-                        // in: oneYearAgo...Date.now,
                         DatePicker("Date", selection: $chosenDayYear, in: oneYearAgo ... Date.now, displayedComponents: .date)
                             .datePickerStyle(.graphical)
                             .tint(Color.AlertRed)
@@ -518,7 +500,6 @@ struct BrandNewBudgetView: View {
                     if budgetTimeFrame != .day && price > 0 {
                         Text(amountPerDayString)
                             .font(.system(.subheadline, design: .rounded).weight(.semibold))
-//                            .font(.system(size: 15, weight: .semibold, design: .rounded))
                             .foregroundColor(Color.SubtitleText)
                             .padding(4)
                             .padding(.horizontal, 7)
@@ -572,7 +553,6 @@ struct BrandNewBudgetView: View {
                 } label: {
                     Text("Continue")
                         .font(.system(.title3, design: .rounded).weight(.semibold))
-//                        .font(.system(size: 19, weight: .semibold, design: .rounded))
 
                         .padding(.vertical, 12)
                         .frame(maxWidth: .infinity)
@@ -618,21 +598,6 @@ struct BrandNewBudgetView: View {
                         isEditingDecimal = true
                         decimalValuesAssigned = .second
                     }
-//                    let string = String(format: "%.2f", unwrappedEditedBudget.amount)
-//
-//                    var stringArray = string.compactMap { String($0) }
-//
-//                    
-//                    numbers = stringArray.compactMap { Int($0) }
-//
-//                    if round(unwrappedEditedBudget.amount) == unwrappedEditedBudget.amount {
-//                        stringArray.removeLast()
-//                        stringArray.removeLast()
-//                        stringArray.removeLast()
-//                        numbers1 = stringArray
-//                    } else {
-//                        numbers1 = stringArray
-//                    }
                 } else {
                     chosenDayWeek = firstWeekday
                     chosenDayMonth = firstDayOfMonth
@@ -661,20 +626,6 @@ struct BrandNewBudgetView: View {
                         isEditingDecimal = true
                         decimalValuesAssigned = .second
                     }
-//                    let string = String(format: "%.2f", unwrappedEditedMainBudget.amount)
-//
-//                    var stringArray = string.compactMap { String($0) }
-//
-//                    numbers = stringArray.compactMap { Int($0) }
-//
-//                    if round(unwrappedEditedMainBudget.amount) == unwrappedEditedMainBudget.amount {
-//                        stringArray.removeLast()
-//                        stringArray.removeLast()
-//                        stringArray.removeLast()
-//                        numbers1 = stringArray
-//                    } else {
-//                        numbers1 = stringArray
-//                    }
                 } else {
                     chosenDayWeek = firstWeekday
                     chosenDayMonth = firstDayOfMonth
@@ -819,12 +770,6 @@ struct BrandNewBudgetView: View {
 
         categories.forEach { category in
 
-//            let roundedFont = UIFont.rounded(ofSize: UIFont.textStyleSize(.title3), weight: .semibold)
-//
-//            let attributes = [NSAttributedString.Key.font: roundedFont]
-//
-//            let size = (category.fullName as NSString).size(withAttributes: attributes)
-
             let categoryWidth = category.fullName.widthOfRoundedString(size: UIFont.textStyleSize(.title3), weight: .semibold) + 12 + 12 + 10
 
             totalWidth += categoryWidth
@@ -835,14 +780,11 @@ struct BrandNewBudgetView: View {
                 rows.append(currentRow)
                 currentRow.removeAll()
                 currentRow.append(category)
-
             } else {
                 currentRow.append(category)
             }
         }
 
-        // Safe check...
-        // if having any value storing it in rows...
         if !currentRow.isEmpty {
             rows.append(currentRow)
             currentRow.removeAll()
@@ -866,7 +808,6 @@ struct BrandNewBudgetView: View {
                     .font(.system(size: 15))
                 Text(category.wrappedName)
                     .font(.system(.title3, design: .rounded).weight(.semibold))
-//                    .font(.system(size: 19, weight: .semibold, design: .rounded))
             }
             .padding(.horizontal, 11)
             .padding(.vertical, 7)
@@ -939,8 +880,6 @@ struct BrandNewBudgetView: View {
 
         let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [budgetPredicate, incomePredicate])
 
-//        self.toEdit = toEdit
-
         _categories = FetchRequest<Category>(sortDescriptors: [
             SortDescriptor(\.order)
         ], predicate: andPredicate)
@@ -953,55 +892,13 @@ struct RowProgressIndicator: View {
     let initialProgess: Double
 
     var body: some View {
-//        ZStack(alignment: .leading) {
-//            Rectangle()
-//                .foregroundColor(Color.SecondaryBackground)
-//                .frame(maxWidth: .infinity)
-//
-//            GeometryReader { proxy in
-//                Rectangle()
-//                    .foregroundColor(Color.DarkBackground)
-//                    .frame(width: proxy.size.width * CGFloat((Double(progress) - initialProgess + 1)/count), height: 5)
-//            }
-//            .frame(maxWidth: .infinity)
-//        }
-//        .frame(height: 5)
-//        .frame(maxWidth: .infinity)
-//        .mask {
-//            HStack(spacing: 5) {
-//                ForEach(0..<Int(count), id: \.self) { num in
-//                    Capsule()
-//                        .frame(height: 5)
-//                        .frame(maxWidth: /*@START_MENU_TOKEN@*/.infinity/*@END_MENU_TOKEN@*/)
-//                        .onTapGesture {
-//                            print("tapped")
-//                        }
-//
-//                }
-//            }
-//        }
-//
-
         HStack(spacing: 6) {
             ForEach(0 ..< Int(count), id: \.self) { num in
                 Capsule()
                     .frame(width: 15, height: 5)
                     .foregroundColor(num == progress - Int(initialProgess) ? Color.DarkBackground : Color.SecondaryBackground)
-
-//                    .transaction { transaction in
-//                        transaction.animation = .easeIn.delay(0.2)
-//                    }
-//                    .onTapGesture {
-//                        print("tapped")
-//                    }
             }
         }
         .padding(.bottom, 20)
-//        .overlay(alignment: .leading) {
-//            Capsule()
-//                .frame(width: 30, height: 5)
-//                .offset(x: CGFloat((progress - Int(initialProgess)) * 11))
-//                .foregroundColor(Color.DarkBackground)
-//        }
     }
 }

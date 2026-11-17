@@ -51,7 +51,6 @@ struct InsightsProvider: IntentTimelineProvider {
     }
 
     func loadData(type: InsightsTimePeriod, income: Bool) -> (amount: Double, maximum: Double, average: Double, numberOfDays: Int, dates: [Date], dateDictionary: [Date: Double], categories: [HoldingCategory]) {
-//        let dataController = DataController()
         let dataController = DataController.shared
         let itemRequest = dataController.fetchRequestForWidgetInsights(type: type, income: income)
         let categoryRequest = dataController.fetchRequestForCategories(income: income)
@@ -488,7 +487,6 @@ struct InsightsWidgetEntryView: View {
                     .background(Color.PrimaryBackground)
 
                     InsightsWidgetCategoryBreakdownView(amount: entry.amount, income: entry.income, categories: entry.categories, duration: entry.duration, ios17: true)
-//                    .frame(width: proxy.size.width * 0.43)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -747,7 +745,6 @@ struct HorizontalBarGraph: View {
                         RoundedRectangle(cornerRadius: 0.09 + (0.25 * category.percent * 100), style: .continuous)
                             .fill(income ? Color(hex: Color.colorArray[categories.firstIndex(of: category) ?? 0]) : Color(hex: category.colour))
                             .frame(width: (proxy.size.width * (1.0 - (0.015 * Double(categories.count - 1)))) * category.percent)
-
                     } else {
                         RoundedRectangle(cornerRadius: 3.5, style: .continuous)
                             .fill(income ? Color(hex: Color.colorArray[categories.firstIndex(of: category) ?? 0]) : Color(hex: category.colour))
@@ -775,7 +772,6 @@ struct InsightsWidgetDollarView: View {
                     .font(.system(.title3, design: .rounded).weight(.medium))
                     .foregroundColor(Color.PrimaryText)
             }
-
         }
         .minimumScaleFactor(0.5)
         .lineLimit(1)

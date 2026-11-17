@@ -37,35 +37,6 @@ struct NewTransactionIntent: AppIntent {
     @Parameter(title: "Recurring Frequency", default: .weekly)
     var recurringType: RepeatType
 
-//    struct CategoryOptionsProvider: DynamicOptionsProvider {
-//
-//        func results() async throws -> ItemCollection<CategoryEntity> {
-//            let dataController = DataController()
-//
-//            let categories = dataController.getAllCategories().map { CategoryEntity(id: $0.id!, name: $0.wrappedName, emoji: $0.wrappedEmoji, income: $0.income)
-//            }
-//
-//            let incomeCategories = categories.filter { $0.income }
-//            let expenseCategories = categories.filter { !$0.income }
-//
-//            return ItemCollection {
-//                ItemSection(
-//                    "Income Categories",
-//                    items: incomeCategories.map {
-//                        IntentItem<CategoryEntity>.init($0)
-//                    }
-//                )
-//                ItemSection(
-//                    "Expense Categories",
-//                    items: expenseCategories.map {
-//                        IntentItem<CategoryEntity>.init($0)
-//                    }
-//                )
-//
-//            }
-//        }
-//    }
-
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
         if expenseCategory == nil && incomeCategory == nil {

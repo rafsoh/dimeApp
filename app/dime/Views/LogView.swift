@@ -54,14 +54,6 @@ struct LogView: View {
     var bottomEdge: CGFloat
     var launchSearch: Bool
 
-    // drag to open
-//    enum PullToReach {
-//        case none, search, filter
-//    }
-
-//    @State var pullStatus: PullToReach = .none
-//    @State var released: PullToReach = .none
-
     @State var progress = 0.0
 
     var body: some View {
@@ -75,13 +67,11 @@ struct LogView: View {
 
                 Text("Your Log is Empty")
                     .font(.system(.title2, design: .rounded).weight(.medium))
-//                    .font(.system(size: 23.5, weight: .medium, design: .rounded))
                     .multilineTextAlignment(.center)
                     .foregroundColor(Color.PrimaryText.opacity(0.8))
 
                 Text("Press the plus button\nto add your first entry")
                     .font(.system(.body, design: .rounded).weight(.medium))
-//                    .font(.system(size: 18, weight: .medium, design: .rounded))
                     .multilineTextAlignment(.center)
                     .foregroundColor(Color.SubtitleText.opacity(0.7))
             }
@@ -89,7 +79,6 @@ struct LogView: View {
             .frame(height: 250, alignment: .top)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.PrimaryBackground)
-
         } else {
             VStack(spacing: 0) {
                 VStack(spacing: 18) {
@@ -177,53 +166,13 @@ struct LogView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-//
-//                CustomRefreshView {
-//                    VStack {
-//
-//                    }
-//
-//                } onRefresh: {
-//                    searchMode = true
-//                }
-//
-
-//                ScrollView(showsIndicators: false) {
-//                    if filter == .all {
-//                        LogInsightsView(navBarText: $navBarText, showCents: showCents, currencySymbol: currencySymbol)
-//
-//                    }
-//
-//
-//                    TransactionsList(filter: filter, category: categoryFilter, date: dateFilter, week: weekFilter, month: monthFilter, income: income)
-//                        .zIndex(0)
-//                        .padding(.horizontal, 20)
-//                        .padding(.bottom, 70 + bottomEdge)
                 ////                        .offsetExtractor(coordinateSpace: "Scroll") { rect in
                 ////                            DispatchQueue.main.async {
                 ////                                print(rect.minY)
                 ////                                pullStatus = rect.minY > 355 ? (rect.minY > 410 ? .filter : .search) : .none
                 ////                            }
                 ////                        }
-//                }
-//                .frame(maxWidth: .infinity, maxHeight: .infinity)
-//                .onReceive(scrollDelegate.gestureEnded) { _ in
-//                    if pullStatus == .filter {
-//                        showFilter = true
-//                        released = .filter
-//                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-//                    } else if pullStatus == .search {
-//                        released = .search
-//                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-//                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-//                            searchMode = true
-//                        }
-//
-//                    }
-//                }
             }
-//            .onAppear(perform: scrollDelegate.addGesture)
-//            .onDisappear(perform: scrollDelegate.removeGesture)
             .background(Color.PrimaryBackground)
             .fullScreenCover(isPresented: $searchMode) {
                 SearchView()
@@ -260,18 +209,6 @@ struct LogView: View {
                     dataController.updateRecurringTransactions()
                 }
             }
-//            .animation(.spring(duration: 0.5), value: released)
-//            .animation(.spring(response: 0.4, dampingFraction: 0.6), value: pullStatus)
-//            .onChange(of: pullStatus) { newValue in
-//                if newValue != .none && released == .none {
-//                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-//                }
-//            }
-//            .onChange(of: released) { _ in
-//                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-//                    released = .none
-//                }
-//            }
             .onOpenURL { url in
                 guard url.host == "search", !usesSearchTab else {
                     return
@@ -340,8 +277,6 @@ struct LogView: View {
                 }
             } label: {
                 Image(systemName: "xmark")
-//                    .resizable()
-//                    .frame(width: 11, height: 11)
                     .font(.system(.caption, design: .rounded).weight(.regular))
                     .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                     .foregroundColor(Color.PrimaryText.opacity(0.7))
@@ -351,7 +286,6 @@ struct LogView: View {
         .padding(4)
         .padding(.horizontal, 6)
         .background(Color.SecondaryBackground, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-//        .font(.system(size: 17, weight: .medium, design: .rounded))
         .foregroundColor(Color.PrimaryText)
     }
 }
@@ -408,7 +342,6 @@ struct NumberView: AnimatableModifier {
         }
         .minimumScaleFactor(0.5)
         .lineLimit(1)
-
     }
 }
 
@@ -562,22 +495,9 @@ struct LogInsightsView: View {
 
             if totalSpent != 0 && totalIncome != 0 && insightsType == 1 {
                 HStack {
-//                    if showCents {
-//                        Text("+\(totalIncome, specifier: "%.2f")")
-//                            .font(.system(size: 18, weight: .medium, design: .rounded))
-//                            .foregroundColor(Color.IncomeGreen)
-//                            .lineLimit(1)
-//                    } else {
-//                        Text("+\(Int(floor(totalIncome)))")
-//                            .font(.system(size: 18, weight: .medium, design: .rounded))
-//                            .foregroundColor(Color.IncomeGreen)
-//                            .lineLimit(1)
-//                    }
-
                     Text("+\(formatNumber(showCents: showCents, number: totalIncome))")
                         .font(.system(.title2, design: .rounded).weight(.medium))
                         .minimumScaleFactor(0.5)
-//                        .font(.system(size: 18, weight: .medium, design: .rounded))
                         .foregroundColor(Color.IncomeGreen)
                         .lineLimit(1)
 
@@ -589,21 +509,8 @@ struct LogInsightsView: View {
                     Text("-\(formatNumber(showCents: showCents, number: totalSpent))")
                         .font(.system(.title2, design: .rounded).weight(.medium))
                         .minimumScaleFactor(0.5)
-//                        .font(.system(size: 18, weight: .medium, design: .rounded))
                         .foregroundColor(Color.AlertRed)
                         .lineLimit(1)
-
-//                    if showCents {
-//                        Text("-\(totalSpent, specifier: "%.2f")")
-//                            .font(.system(size: 18, weight: .medium, design: .rounded))
-//                            .foregroundColor(Color.AlertRed)
-//                            .lineLimit(1)
-//                    } else {
-//                        Text("-\(Int(floor(totalSpent)))")
-//                            .font(.system(size: 18, weight: .medium, design: .rounded))
-//                            .foregroundColor(Color.AlertRed)
-//                            .lineLimit(1)
-//                    }
                 }
                 .padding(.bottom, 13)
             }
@@ -640,7 +547,6 @@ struct SearchView: View {
             HStack(spacing: 9) {
                 HStack {
                     Image(systemName: "magnifyingglass")
-//                        .font(.system(size: 17))
                         .font(.system(.body, design: .rounded).weight(.regular))
                         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                         .foregroundColor(Color.DarkIcon.opacity(0.8))
@@ -655,7 +561,6 @@ struct SearchView: View {
                         }
                         .font(.system(.body, design: .rounded).weight(.regular))
                         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                        .font(.system(size: 17, weight: .regular, design: .rounded))
                         .foregroundColor(Color.PrimaryText)
 
                     if searchQuery != "" {
@@ -665,7 +570,6 @@ struct SearchView: View {
                             Image(systemName: "xmark.circle.fill")
                                 .font(.system(.subheadline, design: .rounded).weight(.regular))
                                 .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                                .font(.system(size: 15))
                                 .foregroundColor(Color.SubtitleText)
                                 .background(Color.SecondaryBackground)
                         }
@@ -682,7 +586,6 @@ struct SearchView: View {
                         .foregroundColor(Color.PrimaryText)
                         .font(.system(.body, design: .rounded).weight(.medium))
                         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                        .font(.system(size: 18, weight: .medium, design: .rounded))
                 }
             }
             
@@ -717,12 +620,10 @@ struct FilteredSearchView: View {
                     Text("No entries found.")
                         .font(.system(.title3, design: .rounded).weight(.medium))
                         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                        .font(.system(size: 18, weight: .medium, design: .rounded))
                         .foregroundColor(Color.PrimaryText)
                     Text("Try a different search query!")
                         .font(.system(.subheadline, design: .rounded).weight(.regular))
                         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                        .font(.system(size: 14, weight: .regular, design: .rounded))
                         .foregroundColor(Color.SubtitleText)
                 }
                 .frame(alignment: .center)
@@ -842,7 +743,6 @@ struct ListView: View {
                         }
                         .font(.system(.callout, design: .rounded).weight(.semibold))
                         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                        .font(.system(size: 14, weight: .semibold, design: .rounded))
                         .foregroundColor(Color.SubtitleText)
                         .accessibilityElement(children: .ignore)
                         .accessibilityLabel("\(currencySymbol)\(String(format: "%.2f", filtered.string)) was spent \(dateConverterAccessibilityLabel(date: day.id ?? Date.now))")
@@ -867,7 +767,7 @@ struct ListView: View {
 
                             UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
 
-                            self.toastPresenter.showToast.toggle()
+                            self.toastPresenter.showToast = true
                         } label: {
                             Label("Save as Photo", systemImage: "square.and.arrow.up")
                         }
@@ -939,7 +839,6 @@ struct FutureListView: View {
 
                 return date1 > date2
             }
-
         } else {
             return fetchedResults.sorted { itemA, itemB in
                 let date1 = itemA.wrappedDate > Date.now ? itemA.wrappedDate : itemA.nextTransactionDate
@@ -1002,7 +901,6 @@ struct FutureListView: View {
                     }
                     .font(.system(.callout, design: .rounded).weight(.semibold))
                     .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                    .font(.system(size: 14, weight: .semibold, design: .rounded))
                     .foregroundColor(Color.SubtitleText)
                     .accessibilityElement(children: .ignore)
 
@@ -1051,13 +949,6 @@ struct SingleTransactionView: View {
     @EnvironmentObject var dataController: DataController
     @EnvironmentObject var transactionManager: OverallTransactionManager
 
-    // delete mode
-//    @State private var toDelete: Transaction?
-//    @State var deleteMode = false
-//
-//    // edit mode
-//    @State private var toEdit: Transaction?
-
     @State private var offset: CGFloat = 0
     @State private var deleted: Bool = false
     var deletePopup: Bool {
@@ -1104,13 +995,11 @@ struct SingleTransactionView: View {
     var body: some View {
         ZStack(alignment: .trailing) {
             Image(systemName: "xmark")
-//                .font(.system(size: 13, weight: .bold))
                 .font(.system(.caption, design: .rounded).weight(.bold))
                 .dynamicTypeSize(...DynamicTypeSize.xLarge)
                 .foregroundColor(deleteConfirm ? Color.AlertRed : Color.SubtitleText)
                 .padding(5)
                 .background(deleteConfirm ? Color.AlertRed.opacity(0.23) : Color.SecondaryBackground, in: Circle())
-//                .scaleEffect(imageScale)
                 .scaleEffect(deleteConfirm ? 1.1 : 1)
                 .contentShape(Circle())
                 .opacity(deleted ? 0 : 1)
@@ -1156,7 +1045,6 @@ struct SingleTransactionView: View {
                             .foregroundColor(future ? Color.SubtitleText : Color.IncomeGreen)
                             .minimumScaleFactor(0.7)
                             .lineLimit(1)
-
                     } else {
                         Text(showExpenseOrIncomeSign ? "-\(transactionAmountString)" : transactionAmountString)
                             .font(.system(.title3, design: .rounded).weight(.medium))
@@ -1204,9 +1092,6 @@ struct SingleTransactionView: View {
                         transactionManager.toDelete = transaction
                         transactionManager.future = future
                         transactionManager.showPopup = true
-
-//                        toDelete = transaction
-//                        deleteMode = true
                     } label: {
                         Label("Delete", systemImage: "xmark.bin")
                     }
@@ -1259,13 +1144,9 @@ struct SingleTransactionView: View {
                                     moc.delete(transaction)
                                     transactionManager.showToast = true
                                     transactionManager.toDelete = transaction
-//                                    transactionManager.future = future
-//                                    transactionManager.toDelete = transaction
-//                                    transactionManager.deletionType = .instant
                                 }
                             }
                         }
-
                     } else if deletePopup {
                         withAnimation(.easeInOut(duration: 0.3)) {
                             offset = 0
@@ -1274,9 +1155,6 @@ struct SingleTransactionView: View {
                         transactionManager.future = future
                         transactionManager.toDelete = transaction
                         transactionManager.showPopup = true
-//
-//                        toDelete = transaction
-//                        deleteMode = true
                     } else {
                         withAnimation(.easeInOut(duration: 0.3)) {
                             offset = 0
@@ -1295,9 +1173,6 @@ struct SingleTransactionView: View {
             if newValue == nil {
                 deleted = false
                 offset = 0
-//                withAnimation(.easeInOut(duration: 0.3)){
-//                   offset = 0
-//                }
             }
         }
     }
@@ -1376,14 +1251,12 @@ struct DeleteTransactionAlert: View {
                 Text(stopRecurring ? "Stop Recurring?" : "Delete '\(unwrappedToDelete.wrappedNote)'?")
                     .font(.system(.title2, design: .rounded).weight(.medium))
                     .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                    .font(.system(size: 25, weight: .medium, design: .rounded))
                     .foregroundColor(.PrimaryText)
                     .accessibilityLabel("Delete \(unwrappedToDelete.wrappedNote) transaction confirmation. This action cannot be undone.")
 
                 Text(stopRecurring ? "The transaction will no longer be automatically logged." : "This action cannot be undone.")
                     .font(.system(.title3, design: .rounded).weight(.medium))
                     .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                    .font(.system(size: 20, weight: .medium, design: .rounded))
                     .foregroundColor(.SubtitleText)
                     .padding(.bottom, 25)
                     .accessibility(hidden: true)
@@ -1398,7 +1271,6 @@ struct DeleteTransactionAlert: View {
                         }
                     } else {
                         withAnimation(.easeInOut(duration: 0.5)) {
-                            //                            moc.delete(toDelete)
                             moc.delete(unwrappedToDelete)
                             transactionManager.showToast = true
                         }
@@ -1415,30 +1287,8 @@ struct DeleteTransactionAlert: View {
                 }
             }
             .padding(13)
-            //            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
             .background(RoundedRectangle(cornerRadius: 13).fill(Color.PrimaryBackground).shadow(color: systemColorScheme == .dark ? Color.clear : Color.gray.opacity(0.25), radius: 6))
             .overlay(RoundedRectangle(cornerRadius: 13).stroke(systemColorScheme == .dark ? Color.gray.opacity(0.1) : Color.clear, lineWidth: 1.3))
-//            .offset(y: offset)
-//            .gesture(
-//                DragGesture()
-//                    .onChanged { gesture in
-//                        if gesture.translation.height < 0 {
-//                            offset = gesture.translation.height / 3
-//                        } else {
-//                            offset = gesture.translation.height
-//                        }
-//                    }
-//                    .onEnded { value in
-//                        if value.translation.height > 20 {
-//                            dismiss()
-//                        } else {
-//                            withAnimation {
-//                                offset = 0
-//                            }
-//
-//                        }
-//                    }
-//            )
             .padding(.horizontal, 17)
             .padding(.bottom, bottomEdge == 0 ? 13 : bottomEdge)
         }
@@ -1608,13 +1458,11 @@ struct NoResultsView: View {
                 Image(systemName: "tray.full.fill")
                     .font(.system(.largeTitle, design: .rounded))
                     .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                    .font(.system(size: 38, weight: .regular, design: .rounded))
                     .foregroundColor(Color.SubtitleText)
 
                 Text("No entries found.")
                     .font(.system(.title3, design: .rounded).weight(.medium))
                     .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                    .font(.system(size: 21, weight: .medium, design: .rounded))
                     .foregroundColor(Color.SubtitleText)
 
                 Spacer()
@@ -1625,11 +1473,6 @@ struct NoResultsView: View {
         } else {
             VStack(spacing: 12) {
                 Spacer()
-
-                //            Text("📭️")
-                //                .font(.system(size: 45))
-                //                .padding(.bottom, 9)
-                //                .accessibility(hidden: true)
 
                 Image(systemName: "tray.full.fill")
                     .font(.system(size: 38, weight: .regular, design: .rounded))
@@ -1660,12 +1503,10 @@ struct CategoryStepperView: View {
                 Image(systemName: "plus")
                     .font(.system(.body, design: .rounded).weight(.semibold))
                     .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                    .font(.system(size: 18, weight: .semibold))
                     .foregroundColor(Color.IncomeGreen)
                     .padding(7)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .aspectRatio(1.0, contentMode: .fit)
-//                    .frame(width: 36, height: 36)
                     .background(Color.IncomeGreen.opacity(0.23), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                     .contentShape(Rectangle())
                     .onTapGesture {
@@ -1684,12 +1525,10 @@ struct CategoryStepperView: View {
                 Image(systemName: "minus")
                     .font(.system(.body, design: .rounded).weight(.semibold))
                     .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                    .font(.system(size: 18, weight: .semibold))
                     .foregroundColor(Color.AlertRed)
                     .padding(7)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .aspectRatio(1.0, contentMode: .fit)
-//                    .frame(width: 36, height: 36)
                     .background(Color.AlertRed.opacity(0.23), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                     .contentShape(Rectangle())
                     .onTapGesture {
@@ -1714,9 +1553,7 @@ struct CategoryStepperView: View {
                                 CategoryIcon(item.wrappedIcon)
                                     .font(.system(.footnote, design: .rounded).weight(.medium))
                                     .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                                    .font(.system(size: 13))
                                 Text(item.wrappedName)
-//                                    .font(.system(size: 17.5, weight: .medium, design: .rounded))
                                     .font(.system(.body, design: .rounded).weight(.medium))
                                     .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                             }
@@ -1724,7 +1561,6 @@ struct CategoryStepperView: View {
                             .padding(.horizontal, 11)
                             .padding(.vertical, 7)
                             .fixedSize(horizontal: false, vertical: true)
-//                            .frame(height: 36)
                             .foregroundColor(categoryFilter == item ? Color(hex: item.wrappedColour) : Color.PrimaryText)
                             .background(getBackground(category: item), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                             .overlay {
@@ -1740,8 +1576,6 @@ struct CategoryStepperView: View {
                                     value.scrollTo(item.id, anchor: .leading)
                                 }
                             }
-//                            .accessibilityElement(children: .ignore)
-//                            .accessibilityLabel("filter \(item.wrappedName) transactions button")
                         }
                     }
                 }
@@ -1790,7 +1624,6 @@ struct IncomeFilterToggleView: View {
     var body: some View {
         HStack(spacing: 0) {
             Text("Expense")
-//                .font(.system(size: 17, weight: .semibold, design: .rounded))
                 .font(.system(.body, design: .rounded).weight(.semibold))
                 .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                 .foregroundColor(income == false ? Color.PrimaryText : Color.SubtitleText)
@@ -1813,7 +1646,6 @@ struct IncomeFilterToggleView: View {
                 }
 
             Text("filter-picker-income")
-//                .font(.system(size: 17, weight: .semibold, design: .rounded))
                 .font(.system(.body, design: .rounded).weight(.semibold))
                 .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                 .foregroundColor(income == true ? Color.PrimaryText : Color.SubtitleText)
@@ -1878,7 +1710,6 @@ struct DateStepperView: View {
             Text(dateString)
                 .font(.system(.title3, design: .rounded).weight(.bold))
                 .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                .font(.system(size: 20, weight: .bold, design: .rounded))
                 .accessibilityLabel("showing transactions on \(dateString)")
 
             Spacer()
@@ -2128,7 +1959,6 @@ func dayTotal(dayTransaction: [Transaction]) -> Double {
 
     return total
 }
-
 
 /// iOS 26 search tab: native glass search field at the bottom, results grouped by day.
 @available(iOS 26.0, *)

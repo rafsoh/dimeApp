@@ -42,7 +42,6 @@ struct SettingsCurrencyView: View {
                   .font(.system(.body, design: .rounded).weight(.semibold))
                   .foregroundColor(Color.SubtitleText)
                   .lineLimit(1)
-                  //                                    .layoutPriority(1)
                   .frame(width: dynamicTypeSize > .xLarge ? 55 : 45, alignment: .leading)
                 Text(currency.name)
                   .font(.system(.body, design: .rounded))

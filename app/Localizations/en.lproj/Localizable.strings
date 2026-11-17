@@ -341,3 +341,9 @@
 /* Category icons */
 "Duplicate Emoji" = "Duplicate Icon";
 "Choose icon" = "Choose icon";
+
+/* Toasts */
+"Log Deleted" = "Log Deleted";
+"Tap to Undo" = "Tap to Undo";
+"Image Saved" = "Image Saved";
+"Check it out in Photos" = "Check it out in Photos";

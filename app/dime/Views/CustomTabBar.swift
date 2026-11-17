@@ -51,7 +51,6 @@ struct CustomTabBar: View {
                     impactMed.impactOccurred()
 
                     addTransaction = true
-
                 } label: {
                     Image(systemName: "plus")
                 }
@@ -156,7 +155,6 @@ struct BouncyButton: ButtonStyle {
     public func makeBody(configuration: Self.Configuration) -> some View {
         return configuration.label
             .scaleEffect(configuration.isPressed ? scale : 1)
-//            .scaleEffect(configuration.isPressed ? 1.3 : 1)
             .animation(.easeOut(duration: duration), value: configuration.isPressed)
     }
 }

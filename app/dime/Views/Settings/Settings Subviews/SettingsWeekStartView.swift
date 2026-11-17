@@ -176,10 +176,6 @@ struct SettingsWeekStartView: View {
   }
 
   func getOrdinal(_ number: Int) -> String {
-    //        if number == 1 {
-    //            return String(localized: "Start")
-    //        }
-    //
     let formatter = NumberFormatter()
     formatter.numberStyle = .ordinal
 

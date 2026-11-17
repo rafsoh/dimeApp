@@ -40,18 +40,6 @@ class DataController: ObservableObject {
         description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
         description.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
 
-//        let keyValueStore = NSUbiquitousKeyValueStore.default
-//
-//        if keyValueStore.object(forKey: "icloud_sync") == nil {
-//            keyValueStore.set(true, forKey: "icloud_sync")
-//        }
-//
-//        if !keyValueStore.bool(forKey: "icloud_sync") {
-//            description.cloudKitContainerOptions = nil
-//        } else {
-//            description.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: "iCloud.com.rafaelsoh.dime")
-//        }
-
         description.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: "iCloud.com.rafaelsoh.dime")
 
         let groupID = "group.com.rafaelsoh.dime"
@@ -71,14 +59,6 @@ class DataController: ObservableObject {
             self.container.viewContext.automaticallyMergesChangesFromParent = true
         }
 
-//        #if DEBUG
-//            do {
-//                // Use the container to initialize the development schema.
-//                try container.initializeCloudKitSchema(options: [])
-//            } catch {
-//                // Handle any errors.
-//            }
-//        #endif
 ////        do {
 ////            try container.initializeCloudKitSchema()
 ////        } catch {
@@ -184,7 +164,6 @@ class DataController: ObservableObject {
             transaction.recurringType = 0
 
             save()
-
         } else if Calendar.current.isDateInToday(transaction.nextTransactionDate) {
             let newTransaction = Transaction(context: container.viewContext)
             newTransaction.note = transaction.wrappedNote
@@ -495,10 +474,6 @@ class DataController: ObservableObject {
         }
 
         return filtered
-//
-//        let notes = transactions.map { $0.wrappedNote }
-//
-//        return Array(Set(notes))
     }
 
     @available(iOS 16, *)
@@ -772,7 +747,6 @@ class DataController: ObservableObject {
 
             return itemRequest
         }
-
     }
 
     func getShortcutInsights(type: Int, timeframe: Int, optionalIncome: Bool?, categories: [Category]) -> Double {
@@ -1278,8 +1252,6 @@ class DataController: ObservableObject {
             let currentWeek = calendar.date(from: dateComponents)!
 
             if currentWeek == date {
-//                let fromDate = Calendar.current.startOfDay(for: currentWeek)
-//                let toDate = Calendar.current.startOfDay(for: Date.now)
                 let numberOfDays = Calendar.current.dateComponents([.day], from: currentWeek, to: Date.now)
 
                 weekAverage = totalForWeek / Double((numberOfDays.day! + 1))
@@ -1426,20 +1398,11 @@ class DataController: ObservableObject {
         } else if type == 2 {
             let next = calendar.date(byAdding: .month, value: 1, to: date) ?? Date.now
 
-//            let endOfPeriod = calendar.date(byAdding: .day, value: -1, to: next) ?? Date.now
-//
             if next > Date.now {
                 endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), Date.now as CVarArg)
             } else {
                 endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), next as CVarArg)
             }
-//
-//            if calendar.isDate(date, equalTo: Date.now, toGranularity: .month) {
-//                endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), Date.now as CVarArg)
-//            } else {
-//
-//                endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), next as CVarArg)
-//            }
         } else {
             if calendar.isDate(date, equalTo: Date.now, toGranularity: .year) {
                 endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), Date.now as CVarArg)
@@ -1513,17 +1476,6 @@ class DataController: ObservableObject {
 
                 return (holdingSpent, holdingIncome, absoluteNet, positive, abs(net) / Double(numDays.day! + 1))
             }
-//            if calendar.isDate(date, equalTo: Date.now, toGranularity: .month) {
-//                let numDays = Calendar.current.dateComponents([.day], from: date, to: Date.now)
-//
-//                return (holdingSpent, holdingIncome, absoluteNet, positive, abs(net) / Double(numDays.day! + 1))
-//            } else {
-//
-//                let range = calendar.range(of: .day, in: .month, for: date)!
-//                let numDays = range.count
-//
-//                return (holdingSpent, holdingIncome, absoluteNet, positive, abs(net) / Double(numDays))
-//            }
         } else {
             if calendar.isDate(date, equalTo: Date.now, toGranularity: .year) {
                 let numDays = Calendar.current.dateComponents([.month], from: date, to: Date.now)
@@ -1695,7 +1647,6 @@ class DataController: ObservableObject {
             }
 
             return (true, holdingTotal, budget.amount, percentageOfDays, Int(budget.type), budget.startDate!)
-
         } else {
             return (false, 0, 0, 0, 0, Date.now)
         }

@@ -17,6 +17,5 @@ struct DimeWidgets: WidgetBundle {
         LockBudgetWidget()
         MainBudgetWidget()
         NewExpenseWidget()
-//        TemplateTransactionWidget()
     }
 }
