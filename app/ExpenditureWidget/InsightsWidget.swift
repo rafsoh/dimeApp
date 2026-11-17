@@ -390,7 +390,7 @@ struct InsightsWidgetEntryView: View {
                                                 VStack(spacing: 3) {
                                                     ZStack(alignment: .bottom) {
                                                         RoundedRectangle(cornerRadius: 3.5, style: .continuous)
-                                                            .fill(Color.SecondaryBackground)
+                                                            .fill(Color.SecondaryBackground).widgetTrack()
                                                             .frame(height: proxy.size.height * 0.85)
 
                                                         RoundedRectangle(cornerRadius: 3.5, style: .continuous)
@@ -411,7 +411,7 @@ struct InsightsWidgetEntryView: View {
                                             ForEach(entry.dates, id: \.self) { day in
                                                 ZStack(alignment: .bottom) {
                                                     Capsule()
-                                                        .fill(Color.SecondaryBackground)
+                                                        .fill(Color.SecondaryBackground).widgetTrack()
                                                         .frame(height: proxy.size.height * 0.85)
 
                                                     Capsule()
@@ -437,7 +437,7 @@ struct InsightsWidgetEntryView: View {
                                             ForEach(entry.dates, id: \.self) { day in
                                                 ZStack(alignment: .bottom) {
                                                     RoundedRectangle(cornerRadius: 2.7, style: .continuous)
-                                                        .fill(Color.SecondaryBackground)
+                                                        .fill(Color.SecondaryBackground).widgetTrack()
                                                         .frame(height: proxy.size.height * 0.85)
 
                                                     RoundedRectangle(cornerRadius: 2.7, style: .continuous)
@@ -535,7 +535,7 @@ struct InsightsWidgetEntryView: View {
                                                 VStack(spacing: 3) {
                                                     ZStack(alignment: .bottom) {
                                                         RoundedRectangle(cornerRadius: 3.5, style: .continuous)
-                                                            .fill(Color.SecondaryBackground)
+                                                            .fill(Color.SecondaryBackground).widgetTrack()
                                                             .frame(height: proxy.size.height * 0.85)
 
                                                         RoundedRectangle(cornerRadius: 3.5, style: .continuous)
@@ -556,7 +556,7 @@ struct InsightsWidgetEntryView: View {
                                             ForEach(entry.dates, id: \.self) { day in
                                                 ZStack(alignment: .bottom) {
                                                     Capsule()
-                                                        .fill(Color.SecondaryBackground)
+                                                        .fill(Color.SecondaryBackground).widgetTrack()
                                                         .frame(height: proxy.size.height * 0.85)
 
                                                     Capsule()
@@ -582,7 +582,7 @@ struct InsightsWidgetEntryView: View {
                                             ForEach(entry.dates, id: \.self) { day in
                                                 ZStack(alignment: .bottom) {
                                                     RoundedRectangle(cornerRadius: 2.7, style: .continuous)
-                                                        .fill(Color.SecondaryBackground)
+                                                        .fill(Color.SecondaryBackground).widgetTrack()
                                                         .frame(height: proxy.size.height * 0.85)
 
                                                     RoundedRectangle(cornerRadius: 2.7, style: .continuous)

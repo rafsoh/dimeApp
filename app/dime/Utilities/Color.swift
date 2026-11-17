@@ -8,6 +8,7 @@
 import Combine
 import Foundation
 import SwiftUI
+import WidgetKit
 
 extension Color {
     static let colourMigrationDictionary: [String: String] = [
@@ -279,6 +280,40 @@ private struct ColorPickerSheet: UIViewRepresentable {
             let top = getTopViewController(from: uiView)
             top?.present(modal, animated: true)
             context.coordinator.didPresent = true
+        }
+    }
+}
+
+// MARK: - Tinted & clear home screen
+
+/// In the tinted and clear home-screen modes every colour is flattened to one tint,
+/// so a grey track and a dark progress fill would look identical. Tracks fade back,
+/// and the data itself is marked accentable so it takes the accent tint.
+@available(iOS 16.0, *)
+private struct WidgetTrack: ViewModifier {
+    @Environment(\.widgetRenderingMode) private var renderingMode
+
+    func body(content: Content) -> some View {
+        content.opacity(renderingMode == .fullColor ? 1 : 0.25)
+    }
+}
+
+extension View {
+    @ViewBuilder
+    func widgetTrack() -> some View {
+        if #available(iOS 16.0, *) {
+            modifier(WidgetTrack())
+        } else {
+            self
+        }
+    }
+
+    @ViewBuilder
+    func widgetAccent() -> some View {
+        if #available(iOS 16.0, *) {
+            widgetAccentable()
+        } else {
+            self
         }
     }
 }

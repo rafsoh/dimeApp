@@ -224,12 +224,13 @@ struct BudgetWidgetEntryView: View {
                             ZStack(alignment: .bottom) {
                                 ZStack {
                                     DonutSemicircle(percent: 1, cornerRadius: 4, width: 15)
-                                        .fill(Color.SecondaryBackground)
+                                        .fill(Color.SecondaryBackground).widgetTrack()
                                         .frame(width: proxy.size.width, height: proxy.size.width / 2)
 
                                     if entry.totalSpent / entry.budget.budgetAmount < 0.97 {
                                         DonutSemicircle(percent: 1 - (entry.totalSpent / entry.budget.budgetAmount), cornerRadius: 4, width: 15)
                                             .fill(Color(hex: entry.budget.colour))
+                                            .widgetAccent()
                                             .frame(width: proxy.size.width, height: proxy.size.width / 2)
                                     }
                                 }
@@ -316,12 +317,13 @@ struct BudgetWidgetEntryView: View {
                             ZStack(alignment: .bottom) {
                                 ZStack {
                                     DonutSemicircle(percent: 1, cornerRadius: 4, width: 15)
-                                        .fill(Color.SecondaryBackground)
+                                        .fill(Color.SecondaryBackground).widgetTrack()
                                         .frame(width: proxy.size.width, height: proxy.size.width / 2)
 
                                     if entry.totalSpent / entry.budget.budgetAmount < 0.97 {
                                         DonutSemicircle(percent: 1 - (entry.totalSpent / entry.budget.budgetAmount), cornerRadius: 4, width: 15)
                                             .fill(Color(hex: entry.budget.colour))
+                                            .widgetAccent()
                                             .frame(width: proxy.size.width, height: proxy.size.width / 2)
                                     }
                                 }

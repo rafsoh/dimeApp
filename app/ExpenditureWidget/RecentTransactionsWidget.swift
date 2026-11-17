@@ -291,7 +291,7 @@ struct ExpenditureWidgetEntryView: View {
                                 }
                                 .padding(.vertical, 5)
                                 .frame(maxWidth: .infinity)
-                                .background(RoundedRectangle(cornerRadius: 8).fill(Color.SecondaryBackground))
+                                .background(RoundedRectangle(cornerRadius: 8).fill(Color.SecondaryBackground).widgetTrack())
                                 .frame(maxHeight: .infinity, alignment: .bottom)
                             }
                             .padding(.top, 12)
@@ -341,7 +341,7 @@ struct ExpenditureWidgetEntryView: View {
                                     }
                                     .padding(.vertical, 5)
                                     .frame(maxWidth: .infinity)
-                                    .background(RoundedRectangle(cornerRadius: 8).fill(Color.SecondaryBackground))
+                                    .background(RoundedRectangle(cornerRadius: 8).fill(Color.SecondaryBackground).widgetTrack())
                                     .frame(maxHeight: .infinity, alignment: .bottom)
                                 }
                             }
@@ -387,7 +387,7 @@ struct ExpenditureWidgetEntryView: View {
                                 }
                                 .padding(.vertical, 5)
                                 .frame(maxWidth: .infinity)
-                                .background(RoundedRectangle(cornerRadius: 8).fill(Color.SecondaryBackground))
+                                .background(RoundedRectangle(cornerRadius: 8).fill(Color.SecondaryBackground).widgetTrack())
                                 .frame(maxHeight: .infinity, alignment: .bottom)
                             }
                             .padding(.top, 12)
@@ -437,7 +437,7 @@ struct ExpenditureWidgetEntryView: View {
                                     }
                                     .padding(.vertical, 5)
                                     .frame(maxWidth: .infinity)
-                                    .background(RoundedRectangle(cornerRadius: 8).fill(Color.SecondaryBackground))
+                                    .background(RoundedRectangle(cornerRadius: 8).fill(Color.SecondaryBackground).widgetTrack())
                                     .frame(maxHeight: .infinity, alignment: .bottom)
                                 }
                             }
@@ -488,7 +488,7 @@ struct ExpenditureWidgetEntryView: View {
                                     }
                                     .padding(.vertical, 6)
                                     .frame(width: 200)
-                                    .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Color.SecondaryBackground))
+                                    .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Color.SecondaryBackground).widgetTrack())
                                 }
                             }
                             .frame(maxHeight: .infinity)
@@ -539,7 +539,7 @@ struct ExpenditureWidgetEntryView: View {
                                         }
                                         .padding(.vertical, 6)
                                         .frame(width: 200)
-                                        .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Color.SecondaryBackground))
+                                        .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Color.SecondaryBackground).widgetTrack())
                                     }
                                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                                 }
