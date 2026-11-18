@@ -85,6 +85,34 @@ private func dimeGlassStyle(tint: Color?, interactive: Bool) -> Glass {
     return glass
 }
 
+// round icon button used in custom top bars: interactive glass on ios 26+, the original flat filled circle before
+struct DimeCircleIcon<Content: View>: View {
+    var fill: Color
+    var tint: Color?
+    var size: CGFloat
+    @ViewBuilder var content: () -> Content
+
+    init(fill: Color, tint: Color? = nil, size: CGFloat = 33, @ViewBuilder content: @escaping () -> Content) {
+        self.fill = fill
+        self.tint = tint
+        self.size = size
+        self.content = content
+    }
+
+    var body: some View {
+        if #available(iOS 26, *) {
+            content()
+                .frame(width: size, height: size)
+                .dimeGlass(in: Circle(), interactive: true, tint: tint, fallback: fill)
+        } else {
+            Circle()
+                .fill(fill)
+                .frame(width: size, height: size)
+                .overlay { content() }
+        }
+    }
+}
+
 // on/off switch used by the custom settings toggles: glass thumb on ios 26+, the original capsule and circle before
 struct DimeSwitch: View {
     var isOn: Bool
