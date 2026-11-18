@@ -11,7 +11,7 @@ struct BackButton: View {
     var presentationMode: Binding<PresentationMode>
 
     var body: some View {
-        ToolbarButton(systemName: "chevron.left") {
+        ToolbarButton(systemName: "chevron.left", accessibilityLabel: "Back") {
             presentationMode.wrappedValue.dismiss()
         }
     }

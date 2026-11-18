@@ -477,7 +477,7 @@ struct SettingsView: View {
               .multilineTextAlignment(.center)
           }
           .padding(.horizontal, 25)
-          .padding(.bottom, 95)
+          .tabBarBottomPadding(95)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
@@ -517,17 +517,7 @@ struct SettingsView: View {
 
       Spacer()
 
-      ZStack(alignment: bool ? .trailing : .leading) {
-        Capsule()
-          .frame(width: 42, height: 28)
-          .foregroundColor(bool ? .green : .gray.opacity(0.8))
-
-        Circle()
-          .foregroundColor(Color.white)
-          .padding(2)
-          .frame(width: 28, height: 28)
-          .matchedGeometryEffect(id: "toggle\(color)", in: animation)
-      }
+      DimeSwitch(isOn: bool, id: "toggle\(color)", namespace: animation)
       .onTapGesture {
         withAnimation {
           onTap()

@@ -21,7 +21,7 @@ struct StepperButtonView: View {
                 .font(.system(.subheadline, design: .rounded))
                 .foregroundColor(Color.SubtitleText)
                 .padding(8)
-                .background(Color.SecondaryBackground, in: Circle())
+                .dimeGlass(in: Circle(), interactive: true, fallback: Color.SecondaryBackground)
                 .opacity(disabled ? 0.3 : 1)
         }
     }

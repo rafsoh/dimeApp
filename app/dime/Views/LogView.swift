@@ -107,12 +107,13 @@ struct LogView: View {
                                 .foregroundColor(Color.DarkIcon)
                                 .padding(5)
                                 .contentShape(Rectangle())
-                                .background {
+                                .backgroundBeforeIOS26 {
                                     RoundedRectangle(cornerRadius: 7)
                                         .fill(Color.SecondaryBackground)
                                         .scaleEffect(progress == 1 ? 1.5 : 1.0)
                                         .opacity(progress)
                                 }
+                                .dimeGlassIcon()
                         }
                         .accessibilityLabel("Search")
 
@@ -152,7 +153,7 @@ struct LogView: View {
                                 .rotationEffect(Angle(degrees: 180))
                                 .padding(5)
                                 .contentShape(Rectangle())
-                                .background {
+                                .backgroundBeforeIOS26 {
                                     if showFilter {
                                         RoundedRectangle(cornerRadius: 7)
                                             .fill(Color.SecondaryBackground)
@@ -164,6 +165,7 @@ struct LogView: View {
 //                                            .opacity(released  == .filter ? 0.5 : 1.0)
 //                                    }
                                 }
+                                .dimeGlassIcon()
                         }
                         .accessibilityLabel("Filter")
                         .popover(present: $showFilter, attributes: {
@@ -211,7 +213,7 @@ struct LogView: View {
                     TransactionsList(filter: filter, category: categoryFilter, date: dateFilter, week: weekFilter, month: monthFilter, income: income)
                         .zIndex(0)
                         .padding(.horizontal, 20)
-                        .padding(.bottom, 70 + bottomEdge)
+                        .tabBarBottomPadding(70 + bottomEdge)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
@@ -1981,7 +1983,7 @@ struct IncomeFilterToggleView: View {
                 }
         }
         .padding(3)
-        .overlay(Capsule().stroke(Color.Outline.opacity(0.4), lineWidth: 1.3))
+        .dimeGlassCapsule(strokeFallback: Color.Outline.opacity(0.4))
     }
 }
 

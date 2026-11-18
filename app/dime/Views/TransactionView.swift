@@ -293,7 +293,7 @@ struct TransactionView: View {
                         }
                         .padding(3)
                         .fixedSize(horizontal: true, vertical: true)
-                        .overlay(Capsule().stroke(Color.Outline.opacity(0.4), lineWidth: 1.3))
+                        .dimeGlassCapsule(strokeFallback: Color.Outline.opacity(0.4))
                     }
                 }
                 //                .frame(height: 50, alignment: .top)
@@ -309,7 +309,7 @@ struct TransactionView: View {
                                 .dynamicTypeSize(...DynamicTypeSize.xxLarge)
                                 .foregroundColor(Color.SubtitleText)
                                 .padding(7)
-                                .background(Color.SecondaryBackground, in: Circle())
+                                .dimeGlass(in: Circle(), interactive: true, fallback: Color.SecondaryBackground)
                                 .contentShape(Circle())
                         }
 
@@ -327,7 +327,7 @@ struct TransactionView: View {
                                     .dynamicTypeSize(...DynamicTypeSize.xxLarge)
                                     .foregroundColor(Color.AlertRed)
                                     .padding(7)
-                                    .background(Color.AlertRed.opacity(0.23), in: Circle())
+                                    .dimeGlass(in: Circle(), interactive: true, tint: Color.AlertRed.opacity(0.3), fallback: Color.AlertRed.opacity(0.23))
                                     .contentShape(Circle())
                             }
                             .accessibilityLabel("delete transaction")
@@ -350,14 +350,14 @@ struct TransactionView: View {
                                     }
                                     .foregroundColor(Color.IncomeGreen)
                                     .padding(7)
-                                    .background(Color.IncomeGreen.opacity(0.23), in: Circle())
+                                    .dimeGlass(in: Circle(), interactive: true, tint: Color.IncomeGreen.opacity(0.3), fallback: Color.IncomeGreen.opacity(0.23))
                                     .contentShape(Circle())
                             } else {
                                 Image(systemName: "repeat")
                                     .font(.system(size: 16, weight: .semibold))
                                     .foregroundColor(Color.SubtitleText)
                                     .padding(7)
-                                    .background(Color.SecondaryBackground, in: Circle())
+                                    .dimeGlass(in: Circle(), interactive: true, fallback: Color.SecondaryBackground)
                                     .contentShape(Circle())
                             }
                         }

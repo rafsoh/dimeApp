@@ -1128,23 +1128,23 @@ struct WeekGraphView: View {
                 Group {
                     if !incomeFiltering {
                         FilteredInsightsView(startDate: showingWeek, type: 1)
-                            .padding(.bottom, 70)
+                            .tabBarBottomPadding(70)
                             .padding(.horizontal, 20)
                     } else {
                         if selectedDate == nil {
                             HorizontalPieChartView(date: showingWeek, categoryFilter: $categoryFilter, categoryFilterMode: $categoryFilterMode, selectedDate: $selectedDate, chosenAmount: $chosenCategoryAmount, chosenName: $chosenCategoryName, type: .week, income: income)
                                 .padding(.horizontal, 30)
-                                .padding(.bottom, 70)
+                                .tabBarBottomPadding(70)
                                 .id(refreshID1)
 
                             if categoryFilterMode {
                                 FilteredCategoryInsightsView(category: categoryFilter, date: showingWeek, type: .week)
-                                    .padding(.bottom, 70)
+                                    .tabBarBottomPadding(70)
                                     .padding(.horizontal, 20)
                             }
                         } else {
                             FilteredDateInsightsView(date: selectedDate ?? Date.now, income: income)
-                                .padding(.bottom, 70)
+                                .tabBarBottomPadding(70)
                                 .padding(.horizontal, 20)
                         }
                     }
@@ -1549,23 +1549,23 @@ struct MonthGraphView: View {
                 Group {
                     if !incomeFiltering {
                         FilteredInsightsView(startDate: showingMonth, type: 2)
-                            .padding(.bottom, 70)
+                            .tabBarBottomPadding(70)
                             .padding(.horizontal, 20)
                     } else {
                         if selectedDate == nil {
                             HorizontalPieChartView(date: showingMonth, categoryFilter: $categoryFilter, categoryFilterMode: $categoryFilterMode, selectedDate: $selectedDate, chosenAmount: $chosenCategoryAmount, chosenName: $chosenCategoryName, type: .month, income: income)
                                 .padding(.horizontal, 30)
-                                .padding(.bottom, 70)
+                                .tabBarBottomPadding(70)
                                 .id(refreshID1)
 
                             if categoryFilterMode {
                                 FilteredCategoryInsightsView(category: categoryFilter, date: showingMonth, type: .month)
-                                    .padding(.bottom, 70)
+                                    .tabBarBottomPadding(70)
                                     .padding(.horizontal, 20)
                             }
                         } else {
                             FilteredDateInsightsView(date: selectedDate ?? Date.now, income: income)
-                                .padding(.bottom, 70)
+                                .tabBarBottomPadding(70)
                                 .padding(.horizontal, 20)
                         }
                     }
@@ -1928,23 +1928,23 @@ struct YearGraphView: View {
                 Group {
                     if !incomeFiltering {
                         FilteredInsightsView(startDate: showingYear, type: 3)
-                            .padding(.bottom, 70)
+                            .tabBarBottomPadding(70)
                             .padding(.horizontal, 20)
                     } else {
                         if selectedDate == nil {
                             HorizontalPieChartView(date: showingYear, categoryFilter: $categoryFilter, categoryFilterMode: $categoryFilterMode, selectedDate: $selectedDate, chosenAmount: $chosenCategoryAmount, chosenName: $chosenCategoryName, type: .year, income: income)
                                 .padding(.horizontal, 30)
-                                .padding(.bottom, 70)
+                                .tabBarBottomPadding(70)
                                 .id(refreshID1)
 
                             if categoryFilterMode {
                                 FilteredCategoryInsightsView(category: categoryFilter, date: showingYear, type: .year)
-                                    .padding(.bottom, 70)
+                                    .tabBarBottomPadding(70)
                                     .padding(.horizontal, 20)
                             }
                         } else {
                             FilteredInsightsView(startDate: selectedDate ?? Date.now, income: income, type: 2)
-                                .padding(.bottom, 70)
+                                .tabBarBottomPadding(70)
                                 .padding(.horizontal, 20)
                         }
                     }

@@ -120,17 +120,7 @@ struct SettingsGoofyView: View {
 
       Spacer()
 
-      ZStack(alignment: bool.wrappedValue ? .trailing : .leading) {
-        Capsule()
-          .frame(width: 42, height: 28)
-          .foregroundColor(bool.wrappedValue ? .green : .gray.opacity(0.8))
-
-        Circle()
-          .foregroundColor(Color.white)
-          .padding(2)
-          .frame(width: 28, height: 28)
-          .matchedGeometryEffect(id: "toggle\(id)", in: animation)
-      }
+      DimeSwitch(isOn: bool.wrappedValue, id: "toggle\(id)", namespace: animation)
       .onTapGesture {
         withAnimation {
           bool.wrappedValue.toggle()
