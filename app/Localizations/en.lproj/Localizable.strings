@@ -307,3 +307,20 @@
 "left" = "left";
 "SELECT BUDGET" = "SELECT BUDGET";
 "SELECT BUDGET IN WIDGET OPTIONS" = "SELECT BUDGET IN WIDGET OPTIONS";
+
+// iCloud sync status
+"Up to date" = "Up to date";
+"Syncing…" = "Syncing…";
+"Not Syncing" = "Not Syncing";
+"Waiting to sync" = "Waiting to sync";
+"Checking iCloud…" = "Checking iCloud…";
+"Last synced %@" = "Last synced %@";
+"Sign in to iCloud in the Settings app to back up and sync your data." = "Sign in to iCloud in the Settings app to back up and sync your data.";
+"iCloud is restricted on this device, so your data isn't being backed up." = "iCloud is restricted on this device, so your data isn't being backed up.";
+"iCloud is temporarily unavailable. Check your Apple Account in the Settings app." = "iCloud is temporarily unavailable. Check your Apple Account in the Settings app.";
+"Couldn't check your iCloud account." = "Couldn't check your iCloud account.";
+"Your iCloud storage is full, so new changes aren't being backed up or synced. Free up space in the Settings app." = "Your iCloud storage is full, so new changes aren't being backed up or synced. Free up space in the Settings app.";
+"You're offline. Changes will sync when you're back online." = "You're offline. Changes will sync when you're back online.";
+"Dime's data was deleted from iCloud in the Settings app." = "Dime's data was deleted from iCloud in the Settings app.";
+"iCloud is busy right now. Dime will try again automatically." = "iCloud is busy right now. Dime will try again automatically.";
+"Sync ran into a problem and will try again." = "Sync ran into a problem and will try again.";

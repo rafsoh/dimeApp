@@ -306,3 +306,20 @@
 "left" = "restant";
 "SELECT BUDGET" = "Sélectionner le budget";
 "SELECT BUDGET IN WIDGET OPTIONS" = "Sélectionner un budget dans les options du widget";
+
+// iCloud sync status
+"Up to date" = "À jour";
+"Syncing…" = "Synchronisation…";
+"Not Syncing" = "Non synchronisé";
+"Waiting to sync" = "En attente de synchronisation";
+"Checking iCloud…" = "Vérification d'iCloud…";
+"Last synced %@" = "Dernière synchronisation : %@";
+"Sign in to iCloud in the Settings app to back up and sync your data." = "Connectez-vous à iCloud dans l'app Réglages pour sauvegarder et synchroniser vos données.";
+"iCloud is restricted on this device, so your data isn't being backed up." = "iCloud est restreint sur cet appareil : vos données ne sont pas sauvegardées.";
+"iCloud is temporarily unavailable. Check your Apple Account in the Settings app." = "iCloud est temporairement indisponible. Vérifiez votre compte Apple dans l'app Réglages.";
+"Couldn't check your iCloud account." = "Impossible de vérifier votre compte iCloud.";
+"Your iCloud storage is full, so new changes aren't being backed up or synced. Free up space in the Settings app." = "Votre stockage iCloud est plein : les nouvelles modifications ne sont ni sauvegardées ni synchronisées. Libérez de l'espace dans l'app Réglages.";
+"You're offline. Changes will sync when you're back online." = "Vous êtes hors ligne. Les modifications seront synchronisées dès que vous serez de nouveau en ligne.";
+"Dime's data was deleted from iCloud in the Settings app." = "Les données de Dime ont été supprimées d'iCloud dans l'app Réglages.";
+"iCloud is busy right now. Dime will try again automatically." = "iCloud est occupé pour le moment. Dime réessaiera automatiquement.";
+"Sync ran into a problem and will try again." = "La synchronisation a rencontré un problème et va réessayer.";

@@ -75,12 +75,15 @@ struct SettingsView: View {
 
   @AppStorage(DataController.iCloudSyncEnabledKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
   var iCloudSync: Bool = true
+  @ObservedObject private var syncStatus = DataController.shared.syncStatus
 
   var iCloudString: String {
-    if iCloudSync {
-      return String(localized: "On")
-    } else {
+    if !iCloudSync {
       return String(localized: "Off")
+    } else if case .problem = syncStatus.summary {
+      return String(localized: "Not Syncing")
+    } else {
+      return String(localized: "On")
     }
   }
 

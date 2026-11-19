@@ -306,3 +306,20 @@
 "SELECT BUDGET IN WIDGET OPTIONS" = "Выберите бюджет в настройках виджета";
 
 "Time Period" = "Time Period";
+
+// iCloud sync status
+"Up to date" = "Актуально";
+"Syncing…" = "Синхронизация…";
+"Not Syncing" = "Не синхронизируется";
+"Waiting to sync" = "Ожидание синхронизации";
+"Checking iCloud…" = "Проверка iCloud…";
+"Last synced %@" = "Последняя синхронизация: %@";
+"Sign in to iCloud in the Settings app to back up and sync your data." = "Войдите в iCloud в приложении «Настройки», чтобы сохранять и синхронизировать данные.";
+"iCloud is restricted on this device, so your data isn't being backed up." = "Доступ к iCloud на этом устройстве ограничен, поэтому данные не сохраняются в iCloud.";
+"iCloud is temporarily unavailable. Check your Apple Account in the Settings app." = "iCloud временно недоступен. Проверьте Аккаунт Apple в приложении «Настройки».";
+"Couldn't check your iCloud account." = "Не удалось проверить аккаунт iCloud.";
+"Your iCloud storage is full, so new changes aren't being backed up or synced. Free up space in the Settings app." = "Хранилище iCloud заполнено, поэтому новые изменения не сохраняются в iCloud и не синхронизируются. Освободите место в приложении «Настройки».";
+"You're offline. Changes will sync when you're back online." = "Нет подключения к интернету. Изменения синхронизируются, когда связь восстановится.";
+"Dime's data was deleted from iCloud in the Settings app." = "Данные Dime были удалены из iCloud в приложении «Настройки».";
+"iCloud is busy right now. Dime will try again automatically." = "iCloud сейчас занят. Dime повторит попытку автоматически.";
+"Sync ran into a problem and will try again." = "При синхронизации возникла проблема. Dime повторит попытку.";

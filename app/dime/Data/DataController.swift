@@ -57,6 +57,177 @@ struct DeletedTransaction {
     }
 }
 
+final class CloudSyncStatus: ObservableObject {
+    struct Problem: Equatable {
+        let message: String
+        let detail: String?
+    }
+
+    enum Summary: Equatable {
+        case off
+        case waiting
+        case syncing
+        case upToDate
+        case problem(Problem)
+    }
+
+    let isEnabled: Bool
+
+    @Published private(set) var lastSynced: Date?
+    @Published private var accountStatus: CKAccountStatus?
+    @Published private var problems: [NSPersistentCloudKitContainer.EventType: Problem] = [:]
+    @Published private var eventsInProgress: [UUID: NSPersistentCloudKitContainer.EventType] = [:]
+
+    private static let lastSyncedKey = "lastICloudSync"
+    private let containerIdentifier: String
+    private var observers: [NSObjectProtocol] = []
+
+    init(isEnabled: Bool, containerIdentifier: String) {
+        self.isEnabled = isEnabled
+        self.containerIdentifier = containerIdentifier
+        lastSynced = UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.object(forKey: Self.lastSyncedKey) as? Date
+
+        guard isEnabled else {
+            return
+        }
+
+        observers.append(NotificationCenter.default.addObserver(forName: NSPersistentCloudKitContainer.eventChangedNotification, object: nil, queue: .main) { [weak self] notification in
+            guard let event = notification.userInfo?[NSPersistentCloudKitContainer.eventNotificationUserInfoKey] as? NSPersistentCloudKitContainer.Event else {
+                return
+            }
+
+            self?.handle(event)
+        })
+
+        observers.append(NotificationCenter.default.addObserver(forName: .CKAccountChanged, object: nil, queue: .main) { [weak self] _ in
+            self?.refreshAccountStatus()
+        })
+
+        refreshAccountStatus()
+    }
+
+    var summary: Summary {
+        guard isEnabled else {
+            return .off
+        }
+
+        if let accountProblem {
+            return .problem(accountProblem)
+        }
+
+        // Export failures come first: they mean changes made on this device exist nowhere else.
+        if let problem = problems[.export] ?? problems[.import] ?? problems[.setup] {
+            return .problem(problem)
+        }
+
+        if eventsInProgress.values.contains(where: { $0 != .setup }) {
+            return .syncing
+        }
+
+        // Setup can stall indefinitely, for example while the iCloud account is being checked.
+        if eventsInProgress.values.contains(.setup) || lastSynced == nil {
+            return .waiting
+        }
+
+        return .upToDate
+    }
+
+    private var accountProblem: Problem? {
+        guard let accountStatus else {
+            return nil
+        }
+
+        switch accountStatus {
+        case .available:
+            return nil
+        case .noAccount:
+            return Problem(message: String(localized: "Sign in to iCloud in the Settings app to back up and sync your data."), detail: nil)
+        case .restricted:
+            return Problem(message: String(localized: "iCloud is restricted on this device, so your data isn't being backed up."), detail: nil)
+        case .temporarilyUnavailable:
+            return Problem(message: String(localized: "iCloud is temporarily unavailable. Check your Apple Account in the Settings app."), detail: nil)
+        case .couldNotDetermine:
+            return Problem(message: String(localized: "Couldn't check your iCloud account."), detail: nil)
+        @unknown default:
+            return Problem(message: String(localized: "Couldn't check your iCloud account."), detail: nil)
+        }
+    }
+
+    private func handle(_ event: NSPersistentCloudKitContainer.Event) {
+        guard let endDate = event.endDate else {
+            eventsInProgress[event.identifier] = event.type
+            return
+        }
+
+        eventsInProgress[event.identifier] = nil
+
+        if event.succeeded {
+            problems[event.type] = nil
+
+            if event.type != .setup {
+                lastSynced = endDate
+                UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.set(endDate, forKey: Self.lastSyncedKey)
+            }
+        } else if let error = event.error {
+            problems[event.type] = Self.problem(for: error)
+        }
+    }
+
+    private func refreshAccountStatus() {
+        CKContainer(identifier: containerIdentifier).accountStatus { [weak self] status, _ in
+            DispatchQueue.main.async {
+                self?.accountStatus = status
+            }
+        }
+    }
+
+    static func problem(for error: Error) -> Problem {
+        for code in cloudKitErrorCodes(in: error) {
+            switch code {
+            case .quotaExceeded:
+                return Problem(message: String(localized: "Your iCloud storage is full, so new changes aren't being backed up or synced. Free up space in the Settings app."), detail: nil)
+            case .notAuthenticated:
+                return Problem(message: String(localized: "Sign in to iCloud in the Settings app to back up and sync your data."), detail: nil)
+            case .accountTemporarilyUnavailable:
+                return Problem(message: String(localized: "iCloud is temporarily unavailable. Check your Apple Account in the Settings app."), detail: nil)
+            case .networkUnavailable, .networkFailure:
+                return Problem(message: String(localized: "You're offline. Changes will sync when you're back online."), detail: nil)
+            case .userDeletedZone:
+                return Problem(message: String(localized: "Dime's data was deleted from iCloud in the Settings app."), detail: nil)
+            case .serviceUnavailable, .requestRateLimited, .zoneBusy:
+                return Problem(message: String(localized: "iCloud is busy right now. Dime will try again automatically."), detail: nil)
+            default:
+                continue
+            }
+        }
+
+        let nsError = error as NSError
+        return Problem(message: String(localized: "Sync ran into a problem and will try again."), detail: "\(nsError.domain) \(nsError.code)")
+    }
+
+    // NSPersistentCloudKitContainer wraps CloudKit errors in its own errors and in per-record partial failures.
+    private static func cloudKitErrorCodes(in error: Error) -> [CKError.Code] {
+        var codes: [CKError.Code] = []
+        var pending: [Error] = [error]
+
+        while let next = pending.popLast() {
+            if let cloudKitError = next as? CKError {
+                codes.append(cloudKitError.code)
+
+                if let partialErrors = cloudKitError.partialErrorsByItemID {
+                    pending.append(contentsOf: partialErrors.values)
+                }
+            }
+
+            if let underlying = (next as NSError).userInfo[NSUnderlyingErrorKey] as? Error {
+                pending.append(underlying)
+            }
+        }
+
+        return codes
+    }
+}
+
 class DataController: ObservableObject {
     static let shared = DataController()
 
@@ -70,6 +241,7 @@ class DataController: ObservableObject {
     var container = NSPersistentCloudKitContainer(name: "MainModel")
 
     let isCloudKitSyncEnabled: Bool
+    let syncStatus: CloudSyncStatus
 
     private let logger = Logger(subsystem: "com.rafaelsoh.dime", category: "DataController")
 
@@ -90,6 +262,7 @@ class DataController: ObservableObject {
         // whatever the extensions write from persistent history.
         let isAppExtension = Bundle.main.bundleURL.pathExtension == "appex"
         isCloudKitSyncEnabled = !isAppExtension && Self.isICloudSyncPreferred
+        syncStatus = CloudSyncStatus(isEnabled: isCloudKitSyncEnabled, containerIdentifier: Self.cloudKitContainerIdentifier)
 
         if isCloudKitSyncEnabled {
             description.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: Self.cloudKitContainerIdentifier)
