@@ -152,6 +152,7 @@ struct IncomeCategoryEntity: AppEntity, Identifiable {
 
 @available(iOS 16, *)
 struct IncomeCategoryQuery: EntityStringQuery {
+    @MainActor
     func entities(matching query: String) async throws -> [IncomeCategoryEntity] {
         let dataController = DataController.shared
 
@@ -168,6 +169,7 @@ struct IncomeCategoryQuery: EntityStringQuery {
         }
     }
 
+    @MainActor
     func entities(for identifiers: [IncomeCategoryEntity.ID]) async throws -> [IncomeCategoryEntity] {
         return identifiers.compactMap { identifier in
             let dataController = DataController.shared
@@ -184,6 +186,7 @@ struct IncomeCategoryQuery: EntityStringQuery {
         }
     }
 
+    @MainActor
     func suggestedEntities() async throws -> [IncomeCategoryEntity] {
         let dataController = DataController.shared
 
@@ -228,6 +231,7 @@ struct ExpenseCategoryEntity: AppEntity, Identifiable {
 
 @available(iOS 16, *)
 struct ExpenseCategoryQuery: EntityStringQuery {
+    @MainActor
     func entities(matching query: String) async throws -> [ExpenseCategoryEntity] {
         let dataController = DataController.shared
 
@@ -244,6 +248,7 @@ struct ExpenseCategoryQuery: EntityStringQuery {
         }
     }
 
+    @MainActor
     func entities(for identifiers: [ExpenseCategoryEntity.ID]) async throws -> [ExpenseCategoryEntity] {
         return identifiers.compactMap { identifier in
             let dataController = DataController.shared
@@ -259,6 +264,7 @@ struct ExpenseCategoryQuery: EntityStringQuery {
         }
     }
 
+    @MainActor
     func suggestedEntities() async throws -> [ExpenseCategoryEntity] {
         let dataController = DataController.shared
 
@@ -299,6 +305,7 @@ struct BudgetEntity: AppEntity, Identifiable {
 
 @available(iOS 16, *)
 struct BudgetQuery: EntityStringQuery {
+    @MainActor
     func entities(matching query: String) async throws -> [BudgetEntity] {
         let dataController = DataController.shared
 
@@ -315,6 +322,7 @@ struct BudgetQuery: EntityStringQuery {
         }
     }
 
+    @MainActor
     func entities(for identifiers: [BudgetEntity.ID]) async throws -> [BudgetEntity] {
         return identifiers.compactMap { identifier in
             let dataController = DataController.shared
@@ -331,6 +339,7 @@ struct BudgetQuery: EntityStringQuery {
         }
     }
 
+    @MainActor
     func suggestedEntities() async throws -> [BudgetEntity] {
         let dataController = DataController.shared
 

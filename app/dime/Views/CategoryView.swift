@@ -1547,7 +1547,7 @@ struct DeleteCategoryAlert: View {
 //                    .font(.system(size: 20, weight: .medium, design: .rounded))
                     .foregroundColor(.PrimaryText)
 
-                Text("This action cannot be undone.")
+                Text("This action cannot be undone, and all \(toDelete.wrappedName) transactions would be deleted.")
                     .font(.system(.title3, design: .rounded).weight(.medium))
                     .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
 //                    .font(.system(size: 16, weight: .medium, design: .rounded))

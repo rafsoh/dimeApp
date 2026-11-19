@@ -21,6 +21,7 @@ enum DeletionType {
 class OverallTransactionManager: ObservableObject {
     @Published var toEdit: Transaction?
     @Published var toDelete: Transaction?
+    @Published var recentlyDeleted: DeletedTransaction?
     @Published var showToast: Bool = false
     @Published var showPopup: Bool = false
     @Published var future: Bool = false
@@ -31,7 +32,6 @@ struct HomeView: View {
 
     @StateObject var toastPresenter = OverallToastPresenter()
     @StateObject var transactionManager = OverallTransactionManager()
-    @Environment(\.managedObjectContext) var moc
     @EnvironmentObject var dataController: DataController
 
     @State var currentTab = "Log"
@@ -124,12 +124,15 @@ struct HomeView: View {
         .toast(isPresenting: $transactionManager.showToast, duration: 4, tapToDismiss: true, offsetY: 12, alert: {
             AlertToast(displayMode: .hud, type: .systemImage("arrow.uturn.backward.circle.fill", Color.AlertRed), title: "Log Deleted", subTitle: "Tap to Undo")
         }, onTap: {
-            withAnimation(.easeInOut(duration: 0.5)) {
-                moc.rollback()
+            if let deleted = transactionManager.recentlyDeleted {
+                withAnimation(.easeInOut(duration: 0.5)) {
+                    dataController.restoreTransaction(deleted)
+                }
             }
+            transactionManager.recentlyDeleted = nil
             transactionManager.toDelete = nil
         }, completion: {
-            dataController.save()
+            transactionManager.recentlyDeleted = nil
             transactionManager.toDelete = nil
         })
         .onChange(of: transactionManager.showPopup) { newValue in

@@ -80,6 +80,11 @@ struct ContentView: View {
                 firstLaunch = false
                 showUpdateSheet = false
 
+                // Fresh installs have no legacy data, and running these on categories that are still
+                // arriving from iCloud would overwrite the user's order and colours on every device.
+                dataMigration1 = false
+                dataMigration2 = false
+
                 defaults.set(1, forKey: "firstWeekday")
                 defaults.set(1, forKey: "haptics")
                 defaults.set(1, forKey: "firstDayOfMonth")
@@ -161,6 +166,10 @@ struct ContentView: View {
         }
         .onChange(of: scenePhase) { newPhase in
             if newPhase == .background || newPhase == .inactive {
+                if newPhase == .background {
+                    dataController.save()
+                }
+
                 if appLockVM.isAppLockEnabled {
                     appLockVM.isAppUnLocked = false
                 }

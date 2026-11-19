@@ -10,7 +10,8 @@ import SwiftUI
 
 struct SettingsCloudView: View {
   @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
-  @State private var iCloudStorage: Bool = false
+  @AppStorage(DataController.iCloudSyncEnabledKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+  private var iCloudStorage: Bool = true
   @Namespace var animation
 
   var body: some View {
@@ -52,9 +53,6 @@ struct SettingsCloudView: View {
           .onTapGesture {
             iCloudStorage.toggle()
           }
-          .onChange(of: iCloudStorage) { newValue in
-            NSUbiquitousKeyValueStore.default.set(newValue, forKey: "icloud_sync")
-          }
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 9)
@@ -68,9 +66,6 @@ struct SettingsCloudView: View {
         .foregroundColor(Color.SubtitleText)
         .padding(.horizontal, 15)
         .frame(maxWidth: .infinity, alignment: .leading)
-    }
-    .onAppear {
-      iCloudStorage = NSUbiquitousKeyValueStore.default.bool(forKey: "icloud_sync")
     }
     .modifier(SettingsSubviewModifier())
 
