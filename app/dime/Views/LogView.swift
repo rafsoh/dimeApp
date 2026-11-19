@@ -5,7 +5,6 @@
 //  Created by Rafael Soh on 19/5/22.
 //
 
-import CloudKitSyncMonitor
 import CoreData
 import Foundation
 import SwiftUIIntrospect
@@ -13,10 +12,6 @@ import Popovers
 import SwiftUI
 
 struct LogView: View {
-    @ObservedObject var syncMonitor = SyncMonitor.shared
-
-    @State var updatedRecurring = false
-
     @FetchRequest(sortDescriptors: []) private var transactions: FetchedResults<Transaction>
 
     @EnvironmentObject var dataController: DataController
@@ -266,35 +261,14 @@ struct LogView: View {
             .fullScreenCover(isPresented: $searchMode) {
                 SearchView()
             }
-            .onChange(of: syncMonitor.syncStateSummary) { newState in
-                if newState == .succeeded && !updatedRecurring {
-                    dataController.updateRecurringTransactions()
-                    updatedRecurring = true
-
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 60) {
-                        updatedRecurring = false
-                    }
-                }
-            }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
-                if syncMonitor.syncStateSummary == .succeeded && !updatedRecurring {
-                    dataController.updateRecurringTransactions()
-                    updatedRecurring = true
-
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 60) {
-                        updatedRecurring = false
-                    }
-                } else if !NSUbiquitousKeyValueStore.default.bool(forKey: "icloud_sync") {
-                    dataController.updateRecurringTransactions()
-                }
+                dataController.updateRecurringTransactionsIfReady()
             }
             .onChange(of: launchSearch) { _ in
                 searchMode = true
             }
             .onAppear {
-                if !NSUbiquitousKeyValueStore.default.bool(forKey: "icloud_sync") {
-                    dataController.updateRecurringTransactions()
-                }
+                dataController.updateRecurringTransactionsIfReady()
             }
 //            .animation(.spring(duration: 0.5), value: released)
 //            .animation(.spring(response: 0.4, dampingFraction: 0.6), value: pullStatus)
@@ -1190,7 +1164,6 @@ struct SingleTransactionView: View {
 
     @State var refreshID = UUID()
 
-    @Environment(\.managedObjectContext) var moc
     @EnvironmentObject var dataController: DataController
     @EnvironmentObject var transactionManager: OverallTransactionManager
 
@@ -1382,7 +1355,7 @@ struct SingleTransactionView: View {
                         } else {
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
                                 withAnimation {
-                                    moc.delete(transaction)
+                                    transactionManager.recentlyDeleted = dataController.deleteTransaction(transaction)
                                     transactionManager.showToast = true
                                     transactionManager.toDelete = transaction
 //                                    transactionManager.future = future
@@ -1496,7 +1469,6 @@ struct EmojiLogView: View {
 }
 
 struct DeleteTransactionAlert: View {
-    @Environment(\.managedObjectContext) var moc
     @EnvironmentObject var dataController: DataController
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var transactionManager: OverallTransactionManager
@@ -1516,7 +1488,8 @@ struct DeleteTransactionAlert: View {
     @State private var offset: CGFloat = 0
 
     var body: some View {
-        if let unwrappedToDelete = transactionManager.toDelete {
+        // A deleted transaction stays in toDelete until the undo toast ends, but no longer belongs to a context.
+        if let unwrappedToDelete = transactionManager.toDelete, unwrappedToDelete.managedObjectContext != nil {
             VStack(alignment: .leading, spacing: 1.5) {
                 Text(stopRecurring ? "Stop Recurring?" : "Delete '\(unwrappedToDelete.wrappedNote)'?")
                     .font(.system(.title2, design: .rounded).weight(.medium))
@@ -1542,10 +1515,11 @@ struct DeleteTransactionAlert: View {
                             dataController.save()
                         }
                     } else {
-                        withAnimation(.easeInOut(duration: 0.5)) {
-                            //                            moc.delete(toDelete)
-                            moc.delete(unwrappedToDelete)
-                            transactionManager.showToast = true
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            withAnimation(.easeInOut(duration: 0.5)) {
+                                transactionManager.recentlyDeleted = dataController.deleteTransaction(unwrappedToDelete)
+                                transactionManager.showToast = true
+                            }
                         }
                     }
                 } label: {

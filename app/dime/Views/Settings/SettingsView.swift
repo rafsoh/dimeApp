@@ -73,8 +73,11 @@ struct SettingsView: View {
   @EnvironmentObject var appLockVM: AppLockViewModel
   @Namespace var animation
 
+  @AppStorage(DataController.iCloudSyncEnabledKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+  var iCloudSync: Bool = true
+
   var iCloudString: String {
-    if NSUbiquitousKeyValueStore.default.bool(forKey: "icloud_sync") {
+    if iCloudSync {
       return String(localized: "On")
     } else {
       return String(localized: "Off")

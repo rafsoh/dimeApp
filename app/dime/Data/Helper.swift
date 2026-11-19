@@ -29,15 +29,22 @@ extension Transaction {
     }
 
     var nextTransactionDate: Date {
+        recurrenceDate(after: day ?? Date.now) ?? date ?? Date.now
+    }
+
+    func recurrenceDate(after date: Date) -> Date? {
+        // Records from older app versions can have a coefficient of 0, which would never advance.
+        let interval = max(1, Int(recurringCoefficient))
+
         if recurringType == 1 {
-            return Calendar.current.date(byAdding: .day, value: Int(recurringCoefficient), to: day ?? Date.now)!
+            return Calendar.current.date(byAdding: .day, value: interval, to: date)
         } else if recurringType == 2 {
-            return Calendar.current.date(byAdding: .day, value: Int(recurringCoefficient * 7), to: day ?? Date.now)!
+            return Calendar.current.date(byAdding: .day, value: interval * 7, to: date)
         } else if recurringType == 3 {
-            return Calendar.current.date(byAdding: .month, value: Int(recurringCoefficient), to: day ?? Date.now)!
+            return Calendar.current.date(byAdding: .month, value: interval, to: date)
         }
 
-        return date ?? Date.now
+        return nil
     }
 }
 

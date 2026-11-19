@@ -5,8 +5,10 @@
 //  Created by Rafael Soh on 3/6/22.
 //
 
+import CloudKit
 import CoreData
 import Foundation
+import os
 import SwiftUI
 import WidgetKit
 
@@ -27,10 +29,53 @@ enum CustomError: Swift.Error, CustomLocalizedStringResourceConvertible {
     }
 }
 
+struct DeletedTransaction {
+    let id: UUID?
+    let note: String?
+    let amount: Double
+    let date: Date?
+    let day: Date?
+    let month: Date?
+    let income: Bool
+    let onceRecurring: Bool
+    let recurringType: Int16
+    let recurringCoefficient: Int16
+    let categoryID: NSManagedObjectID?
+
+    init(_ transaction: Transaction) {
+        id = transaction.id
+        note = transaction.note
+        amount = transaction.amount
+        date = transaction.date
+        day = transaction.day
+        month = transaction.month
+        income = transaction.income
+        onceRecurring = transaction.onceRecurring
+        recurringType = transaction.recurringType
+        recurringCoefficient = transaction.recurringCoefficient
+        categoryID = transaction.category?.objectID
+    }
+}
+
 class DataController: ObservableObject {
     static let shared = DataController()
 
+    static let iCloudSyncEnabledKey = "iCloudSyncEnabled"
+    private static let cloudKitContainerIdentifier = "iCloud.com.rafaelsoh.dime"
+
+    static var isICloudSyncPreferred: Bool {
+        UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.object(forKey: iCloudSyncEnabledKey) as? Bool ?? true
+    }
+
     var container = NSPersistentCloudKitContainer(name: "MainModel")
+
+    let isCloudKitSyncEnabled: Bool
+
+    private let logger = Logger(subsystem: "com.rafaelsoh.dime", category: "DataController")
+
+    // Recurring transactions must only be generated once this device has imported what other devices
+    // already generated; otherwise every device logs the same occurrence. Main thread only.
+    private var isReadyForRecurringTransactions = false
 
     init() {
         let description = NSPersistentStoreDescription()
@@ -40,19 +85,17 @@ class DataController: ObservableObject {
         description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
         description.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
 
-//        let keyValueStore = NSUbiquitousKeyValueStore.default
-//
-//        if keyValueStore.object(forKey: "icloud_sync") == nil {
-//            keyValueStore.set(true, forKey: "icloud_sync")
-//        }
-//
-//        if !keyValueStore.bool(forKey: "icloud_sync") {
-//            description.cloudKitContainerOptions = nil
-//        } else {
-//            description.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: "iCloud.com.rafaelsoh.dime")
-//        }
+        // The widget and intents extensions open this same file through the app group. CloudKit mirroring
+        // does not support several processes syncing one store, so only the app mirrors it and exports
+        // whatever the extensions write from persistent history.
+        let isAppExtension = Bundle.main.bundleURL.pathExtension == "appex"
+        isCloudKitSyncEnabled = !isAppExtension && Self.isICloudSyncPreferred
 
-        description.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: "iCloud.com.rafaelsoh.dime")
+        if isCloudKitSyncEnabled {
+            description.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: Self.cloudKitContainerIdentifier)
+        } else {
+            description.cloudKitContainerOptions = nil
+        }
 
         let groupID = "group.com.rafaelsoh.dime"
 
@@ -67,23 +110,57 @@ class DataController: ObservableObject {
             if let error = error as NSError? {
                 fatalError("Unresolved error \(error), \(error.userInfo) for \(description)")
             }
-
-            self.container.viewContext.automaticallyMergesChangesFromParent = true
         }
 
-//        #if DEBUG
-//            do {
-//                // Use the container to initialize the development schema.
-//                try container.initializeCloudKitSchema(options: [])
-//            } catch {
-//                // Handle any errors.
-//            }
-//        #endif
-////        do {
-////            try container.initializeCloudKitSchema()
-////        } catch {
-////            print(error)
-////        }
+        container.viewContext.automaticallyMergesChangesFromParent = true
+        // CloudKit imports and other processes write to the same rows this context holds. With the default
+        // NSErrorMergePolicy the first overlapping change makes this and every later save fail.
+        container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+
+        if isCloudKitSyncEnabled {
+            observeCloudKitSync()
+        } else {
+            isReadyForRecurringTransactions = true
+        }
+    }
+
+    private func observeCloudKitSync() {
+        NotificationCenter.default.addObserver(forName: NSPersistentCloudKitContainer.eventChangedNotification, object: nil, queue: .main) { [weak self] notification in
+            guard let self,
+                  let event = notification.userInfo?[NSPersistentCloudKitContainer.eventNotificationUserInfoKey] as? NSPersistentCloudKitContainer.Event,
+                  event.endDate != nil
+            else {
+                return
+            }
+
+            if let error = event.error {
+                self.logger.error("CloudKit event \(event, privacy: .public) failed: \(String(describing: error), privacy: .public)")
+            }
+
+            if event.type == .import || (event.type == .setup && !event.succeeded) {
+                self.markReadyForRecurringTransactions()
+            }
+        }
+
+        CKContainer(identifier: Self.cloudKitContainerIdentifier).accountStatus { [weak self] status, _ in
+            guard status != .available else {
+                return
+            }
+
+            DispatchQueue.main.async {
+                self?.markReadyForRecurringTransactions()
+            }
+        }
+
+        // CloudKit sometimes reports a successful setup and then never imports.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 60) { [weak self] in
+            self?.markReadyForRecurringTransactions()
+        }
+    }
+
+    private func markReadyForRecurringTransactions() {
+        isReadyForRecurringTransactions = true
+        updateRecurringTransactionsIfReady()
     }
 
     // internal variables
@@ -111,99 +188,124 @@ class DataController: ObservableObject {
     // adding or deleting
 
     func deleteAll() {
-        let fetchRequest1: NSFetchRequest<NSFetchRequestResult> = Transaction.fetchRequest()
-        let batchDeleteRequest1 = NSBatchDeleteRequest(fetchRequest: fetchRequest1)
-        _ = try? container.viewContext.executeAndMergeChanges(using: batchDeleteRequest1)
+        let context = container.viewContext
+        let fetchRequests: [NSFetchRequest<NSFetchRequestResult>] = [
+            Transaction.fetchRequest(),
+            TemplateTransaction.fetchRequest(),
+            Budget.fetchRequest(),
+            MainBudget.fetchRequest(),
+            Category.fetchRequest()
+        ]
 
-        let fetchRequest2: NSFetchRequest<NSFetchRequestResult> = Category.fetchRequest()
-        let batchDeleteRequest2 = NSBatchDeleteRequest(fetchRequest: fetchRequest2)
-        _ = try? container.viewContext.executeAndMergeChanges(using: batchDeleteRequest2)
+        for fetchRequest in fetchRequests {
+            fetchRequest.includesPropertyValues = false
+            let objects = (try? context.fetch(fetchRequest)) as? [NSManagedObject] ?? []
+            objects.forEach(context.delete)
+        }
 
-        let fetchRequest3: NSFetchRequest<NSFetchRequestResult> = Budget.fetchRequest()
-        let batchDeleteRequest3 = NSBatchDeleteRequest(fetchRequest: fetchRequest3)
-        _ = try? container.viewContext.executeAndMergeChanges(using: batchDeleteRequest3)
-
-        let fetchRequest4: NSFetchRequest<NSFetchRequestResult> = MainBudget.fetchRequest()
-        let batchDeleteRequest4 = NSBatchDeleteRequest(fetchRequest: fetchRequest4)
-        _ = try? container.viewContext.executeAndMergeChanges(using: batchDeleteRequest4)
+        save()
     }
 
     func save() {
-        if container.viewContext.hasChanges {
-            try? container.viewContext.save()
+        let context = container.viewContext
+
+        guard context.hasChanges else {
+            return
+        }
+
+        do {
+            try context.save()
             WidgetCenter.shared.reloadAllTimelines()
+        } catch {
+            logger.error("Saving the view context failed: \(String(describing: error), privacy: .public)")
         }
     }
 
+    func deleteTransaction(_ transaction: Transaction) -> DeletedTransaction? {
+        guard transaction.managedObjectContext != nil else {
+            return nil
+        }
+
+        let deleted = DeletedTransaction(transaction)
+        container.viewContext.delete(transaction)
+        save()
+        return deleted
+    }
+
+    func restoreTransaction(_ deleted: DeletedTransaction) {
+        let transaction = Transaction(context: container.viewContext)
+        transaction.id = deleted.id
+        transaction.note = deleted.note
+        transaction.amount = deleted.amount
+        transaction.date = deleted.date
+        transaction.day = deleted.day
+        transaction.month = deleted.month
+        transaction.income = deleted.income
+        transaction.onceRecurring = deleted.onceRecurring
+        transaction.recurringType = deleted.recurringType
+        transaction.recurringCoefficient = deleted.recurringCoefficient
+
+        if let categoryID = deleted.categoryID {
+            transaction.category = try? container.viewContext.existingObject(with: categoryID) as? Category
+        }
+
+        save()
+    }
+
     func updateRecurringTransaction(transaction: Transaction) {
-        if transaction.nextTransactionDate < Calendar.current.startOfDay(for: Date.now) {
-            var holdingDate = transaction.nextTransactionDate
+        guard (1 ... 3).contains(transaction.recurringType) else {
+            return
+        }
 
-            while holdingDate <= Calendar.current.startOfDay(for: Date.now) {
-                let newTransaction = Transaction(context: container.viewContext)
-                newTransaction.note = transaction.wrappedNote
-                newTransaction.category = transaction.category
-                newTransaction.amount = transaction.wrappedAmount
-                newTransaction.date = holdingDate
-                newTransaction.id = UUID()
-                newTransaction.income = transaction.income
-                newTransaction.day = holdingDate
+        let calendar = Calendar.current
 
-                let calendar = Calendar(identifier: .gregorian)
+        guard let startOfTomorrow = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: Date.now)) else {
+            return
+        }
 
-                let dateComponents = calendar.dateComponents([.month, .year], from: holdingDate)
+        var occurrenceDate = transaction.nextTransactionDate
 
-                newTransaction.month = calendar.date(from: dateComponents)!
+        guard occurrenceDate < startOfTomorrow else {
+            return
+        }
 
-                newTransaction.onceRecurring = true
-
-                var newDate: Date?
-
-                if transaction.recurringType == 1 {
-                    newDate = Calendar.current.date(byAdding: .day, value: Int(transaction.recurringCoefficient), to: holdingDate)!
-                } else if transaction.recurringType == 2 {
-                    newDate = Calendar.current.date(byAdding: .day, value: Int(transaction.recurringCoefficient * 7), to: holdingDate)!
-                } else if transaction.recurringType == 3 {
-                    newDate = Calendar.current.date(byAdding: .month, value: Int(transaction.recurringCoefficient), to: holdingDate)!
-                }
-
-                if newDate! > Calendar.current.startOfDay(for: Date.now) {
-                    newTransaction.recurringType = transaction.recurringType
-                    newTransaction.recurringCoefficient = transaction.recurringCoefficient
-                } else {
-                    newTransaction.recurringType = 0
-                }
-
-                holdingDate = newDate!
+        while occurrenceDate < startOfTomorrow {
+            guard let followingDate = transaction.recurrenceDate(after: occurrenceDate) else {
+                break
             }
 
-            transaction.recurringType = 0
+            insertOccurrence(of: transaction, on: occurrenceDate, carriesRecurrence: followingDate >= startOfTomorrow)
+            occurrenceDate = followingDate
+        }
 
-            save()
+        transaction.recurringType = 0
 
-        } else if Calendar.current.isDateInToday(transaction.nextTransactionDate) {
-            let newTransaction = Transaction(context: container.viewContext)
-            newTransaction.note = transaction.wrappedNote
-            newTransaction.category = transaction.category
-            newTransaction.amount = transaction.wrappedAmount
-            newTransaction.date = transaction.nextTransactionDate
-            newTransaction.id = UUID()
-            newTransaction.income = transaction.income
-            newTransaction.day = transaction.nextTransactionDate
+        save()
+    }
 
-            let calendar = Calendar(identifier: .gregorian)
+    private func insertOccurrence(of transaction: Transaction, on date: Date, carriesRecurrence: Bool) {
+        let occurrence = Transaction(context: container.viewContext)
+        occurrence.note = transaction.wrappedNote
+        occurrence.category = transaction.category
+        occurrence.amount = transaction.wrappedAmount
+        occurrence.date = date
+        occurrence.id = UUID()
+        occurrence.income = transaction.income
+        occurrence.day = date
 
-            let dateComponents = calendar.dateComponents([.month, .year], from: transaction.nextTransactionDate)
+        let calendar = Calendar(identifier: .gregorian)
 
-            newTransaction.month = calendar.date(from: dateComponents)!
+        let dateComponents = calendar.dateComponents([.month, .year], from: date)
 
-            newTransaction.onceRecurring = true
-            newTransaction.recurringType = transaction.recurringType
-            newTransaction.recurringCoefficient = transaction.recurringCoefficient
+        occurrence.month = calendar.date(from: dateComponents)
 
-            transaction.recurringType = 0
+        occurrence.onceRecurring = true
 
-            save()
+        if carriesRecurrence {
+            occurrence.recurringType = transaction.recurringType
+            occurrence.recurringCoefficient = transaction.recurringCoefficient
+        } else {
+            occurrence.recurringType = 0
         }
     }
 
@@ -215,18 +317,26 @@ class DataController: ObservableObject {
         }
     }
 
+    func updateRecurringTransactionsIfReady() {
+        guard isReadyForRecurringTransactions else {
+            return
+        }
+
+        updateRecurringTransactions()
+    }
+
     func updateBudgetDates() {
         let budgets = results(for: fetchRequestForBudgets())
         let mainBudget = results(for: fetchRequestForMainBudget())
 
         budgets.forEach { budget in
-            while budget.endDate <= Date.now {
+            while budget.endDate <= Date.now, budget.endDate > budget.wrappedDate {
                 budget.startDate = budget.endDate
             }
         }
 
         mainBudget.forEach { budget in
-            while budget.endDate <= Date.now {
+            while budget.endDate <= Date.now, budget.endDate > budget.wrappedDate {
                 budget.startDate = budget.endDate
             }
         }
@@ -295,22 +405,9 @@ class DataController: ObservableObject {
         let itemRequest: NSFetchRequest<TemplateTransaction> = TemplateTransaction.fetchRequest()
 
         itemRequest.predicate = NSPredicate(format: "order == %d", order)
-
-        let results = results(for: itemRequest)
-
-        if results.count > 1 {
-            let output = results.first
-
-            for i in 1 ..< results.count {
-                container.viewContext.delete(results[i])
-            }
-
-            save()
-
-            return output
-        } else {
-            return results.first
-        }
+        // Several devices can sync a template with the same order. Resolve to the same template on every
+        // device and never delete the others here, or each device deletes a different copy.
+        return results(for: itemRequest).min { ($0.id?.uuidString ?? "") < ($1.id?.uuidString ?? "") }
     }
 
     func getAllTemplateTransactions() -> [TemplateTransaction] {
@@ -1667,15 +1764,6 @@ class DataController: ObservableObject {
 
     func results<T: NSManagedObject>(for fetchRequest: NSFetchRequest<T>) -> [T] {
         return (try? container.viewContext.fetch(fetchRequest)) ?? []
-    }
-}
-
-public extension NSManagedObjectContext {
-    func executeAndMergeChanges(using batchDeleteRequest: NSBatchDeleteRequest) throws {
-        batchDeleteRequest.resultType = .resultTypeObjectIDs
-        let result = try execute(batchDeleteRequest) as? NSBatchDeleteResult
-        let changes: [AnyHashable: Any] = [NSDeletedObjectsKey: result?.result as? [NSManagedObjectID] ?? []]
-        NSManagedObjectContext.mergeChanges(fromRemoteContextSave: changes, into: [self])
     }
 }
 
