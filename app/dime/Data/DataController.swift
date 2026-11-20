@@ -8,6 +8,7 @@
 import CloudKit
 import CoreData
 import Foundation
+import Network
 import os
 import SwiftUI
 import WidgetKit
@@ -205,6 +206,10 @@ final class CloudSyncStatus: ObservableObject {
         return Problem(message: String(localized: "Sync ran into a problem and will try again."), detail: "\(nsError.domain) \(nsError.code)")
     }
 
+    static func isNetworkError(_ error: Error) -> Bool {
+        cloudKitErrorCodes(in: error).contains { $0 == .networkUnavailable || $0 == .networkFailure }
+    }
+
     // NSPersistentCloudKitContainer wraps CloudKit errors in its own errors and in per-record partial failures.
     private static func cloudKitErrorCodes(in error: Error) -> [CKError.Code] {
         var codes: [CKError.Code] = []
@@ -228,6 +233,64 @@ final class CloudSyncStatus: ObservableObject {
     }
 }
 
+// Recurring transactions may only be generated from data that is current with iCloud. Otherwise a device
+// that was offline or in the background logs occurrences that another device has already logged.
+struct RecurringGenerationGate {
+    private(set) var isOpen: Bool
+    private let isSyncEnabled: Bool
+    private var isAccountUnavailable = false
+    private var isOnline = true
+
+    init(isSyncEnabled: Bool) {
+        self.isSyncEnabled = isSyncEnabled
+        isOpen = !isSyncEnabled
+    }
+
+    mutating func syncEventFinished(isImport: Bool, succeeded: Bool, isNetworkError: Bool) {
+        if succeeded {
+            if isImport {
+                isOpen = true
+            }
+        } else if isNetworkError {
+            needsFreshImport()
+        } else {
+            // Sync is failing for some other reason; waiting would stop recurring transactions indefinitely.
+            isOpen = true
+        }
+    }
+
+    mutating func accountBecameUnavailable() {
+        isAccountUnavailable = true
+        isOpen = true
+    }
+
+    mutating func needsFreshImport() {
+        guard isSyncEnabled, !isAccountUnavailable else {
+            return
+        }
+
+        isOpen = false
+    }
+
+    @discardableResult
+    mutating func connectivityChanged(isOnline: Bool) -> Bool {
+        guard isOnline != self.isOnline else {
+            return false
+        }
+
+        self.isOnline = isOnline
+        needsFreshImport()
+        return true
+    }
+
+    // Offline, local data can't be checked against what other devices logged, so keep waiting.
+    mutating func fallbackElapsed() {
+        if isOnline {
+            isOpen = true
+        }
+    }
+}
+
 class DataController: ObservableObject {
     static let shared = DataController()
 
@@ -238,6 +301,18 @@ class DataController: ObservableObject {
         UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.object(forKey: iCloudSyncEnabledKey) as? Bool ?? true
     }
 
+    // 2.1.3 kept this setting in iCloud key-value storage and honoured it. Carry the user's choice over once.
+    private static func migrateLegacyICloudSyncSetting() {
+        guard let defaults = UserDefaults(suiteName: "group.com.rafaelsoh.dime"),
+              defaults.object(forKey: iCloudSyncEnabledKey) == nil,
+              let legacyValue = NSUbiquitousKeyValueStore.default.object(forKey: "icloud_sync") as? Bool
+        else {
+            return
+        }
+
+        defaults.set(legacyValue, forKey: iCloudSyncEnabledKey)
+    }
+
     var container = NSPersistentCloudKitContainer(name: "MainModel")
 
     let isCloudKitSyncEnabled: Bool
@@ -245,9 +320,10 @@ class DataController: ObservableObject {
 
     private let logger = Logger(subsystem: "com.rafaelsoh.dime", category: "DataController")
 
-    // Recurring transactions must only be generated once this device has imported what other devices
-    // already generated; otherwise every device logs the same occurrence. Main thread only.
-    private var isReadyForRecurringTransactions = false
+    // Main thread only.
+    private var recurringGate: RecurringGenerationGate
+    private var recurringFallback: DispatchWorkItem?
+    private var pathMonitor: NWPathMonitor?
 
     init() {
         let description = NSPersistentStoreDescription()
@@ -261,8 +337,14 @@ class DataController: ObservableObject {
         // does not support several processes syncing one store, so only the app mirrors it and exports
         // whatever the extensions write from persistent history.
         let isAppExtension = Bundle.main.bundleURL.pathExtension == "appex"
+
+        if !isAppExtension {
+            Self.migrateLegacyICloudSyncSetting()
+        }
+
         isCloudKitSyncEnabled = !isAppExtension && Self.isICloudSyncPreferred
         syncStatus = CloudSyncStatus(isEnabled: isCloudKitSyncEnabled, containerIdentifier: Self.cloudKitContainerIdentifier)
+        recurringGate = RecurringGenerationGate(isSyncEnabled: isCloudKitSyncEnabled)
 
         if isCloudKitSyncEnabled {
             description.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: Self.cloudKitContainerIdentifier)
@@ -292,8 +374,6 @@ class DataController: ObservableObject {
 
         if isCloudKitSyncEnabled {
             observeCloudKitSync()
-        } else {
-            isReadyForRecurringTransactions = true
         }
     }
 
@@ -310,8 +390,15 @@ class DataController: ObservableObject {
                 self.logger.error("CloudKit event \(event, privacy: .public) failed: \(String(describing: error), privacy: .public)")
             }
 
-            if event.type == .import || (event.type == .setup && !event.succeeded) {
-                self.markReadyForRecurringTransactions()
+            if event.type == .import || event.type == .setup {
+                let isNetworkError = event.error.map(CloudSyncStatus.isNetworkError) ?? false
+                self.recurringGate.syncEventFinished(isImport: event.type == .import, succeeded: event.succeeded, isNetworkError: isNetworkError)
+
+                if isNetworkError {
+                    self.scheduleRecurringFallback()
+                }
+
+                self.updateRecurringTransactionsIfReady()
             }
         }
 
@@ -321,19 +408,47 @@ class DataController: ObservableObject {
             }
 
             DispatchQueue.main.async {
-                self?.markReadyForRecurringTransactions()
+                self?.recurringGate.accountBecameUnavailable()
+                self?.updateRecurringTransactionsIfReady()
             }
         }
 
-        // CloudKit sometimes reports a successful setup and then never imports.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 60) { [weak self] in
-            self?.markReadyForRecurringTransactions()
+        let pathMonitor = NWPathMonitor()
+        pathMonitor.pathUpdateHandler = { [weak self] path in
+            DispatchQueue.main.async {
+                guard let self, self.recurringGate.connectivityChanged(isOnline: path.status == .satisfied) else {
+                    return
+                }
+
+                self.scheduleRecurringFallback()
+            }
         }
+        pathMonitor.start(queue: DispatchQueue(label: "com.rafaelsoh.dime.network"))
+        self.pathMonitor = pathMonitor
+
+        scheduleRecurringFallback()
     }
 
-    private func markReadyForRecurringTransactions() {
-        isReadyForRecurringTransactions = true
+    func applicationWillEnterForeground() {
+        if isCloudKitSyncEnabled {
+            recurringGate.needsFreshImport()
+            scheduleRecurringFallback()
+        }
+
         updateRecurringTransactionsIfReady()
+    }
+
+    // CloudKit sometimes reports a successful setup and then never imports.
+    private func scheduleRecurringFallback() {
+        recurringFallback?.cancel()
+
+        let fallback = DispatchWorkItem { [weak self] in
+            self?.recurringGate.fallbackElapsed()
+            self?.updateRecurringTransactionsIfReady()
+        }
+
+        recurringFallback = fallback
+        DispatchQueue.main.asyncAfter(deadline: .now() + 60, execute: fallback)
     }
 
     // internal variables
@@ -425,21 +540,22 @@ class DataController: ObservableObject {
         save()
     }
 
-    func updateRecurringTransaction(transaction: Transaction) {
+    @discardableResult
+    func updateRecurringTransaction(transaction: Transaction) -> Bool {
         guard (1 ... 3).contains(transaction.recurringType) else {
-            return
+            return false
         }
 
         let calendar = Calendar.current
 
         guard let startOfTomorrow = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: Date.now)) else {
-            return
+            return false
         }
 
         var occurrenceDate = transaction.nextTransactionDate
 
         guard occurrenceDate < startOfTomorrow else {
-            return
+            return false
         }
 
         while occurrenceDate < startOfTomorrow {
@@ -454,6 +570,8 @@ class DataController: ObservableObject {
         transaction.recurringType = 0
 
         save()
+
+        return true
     }
 
     private func insertOccurrence(of transaction: Transaction, on date: Date, carriesRecurrence: Bool) {
@@ -483,15 +601,35 @@ class DataController: ObservableObject {
     }
 
     func updateRecurringTransactions() {
-        let recurringTransactions = results(for: fetchRequestForRecurringTransactions())
+        let calendar = Calendar.current
 
-        recurringTransactions.forEach { transaction in
-            updateRecurringTransaction(transaction: transaction)
+        guard let startOfTomorrow = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: Date.now)) else {
+            return
         }
+
+        var loggedIDs = Set<UUID>()
+
+        for transaction in results(for: fetchRequestForRecurringTransactions()) {
+            // Sync could duplicate a recurring transaction under the same id. Once one copy has logged an
+            // occurrence, retire the other copies instead of letting each of them log it again.
+            if let id = transaction.id, loggedIDs.contains(id) {
+                if transaction.nextTransactionDate < startOfTomorrow {
+                    transaction.recurringType = 0
+                }
+
+                continue
+            }
+
+            if updateRecurringTransaction(transaction: transaction), let id = transaction.id {
+                loggedIDs.insert(id)
+            }
+        }
+
+        save()
     }
 
     func updateRecurringTransactionsIfReady() {
-        guard isReadyForRecurringTransactions else {
+        guard recurringGate.isOpen else {
             return
         }
 
