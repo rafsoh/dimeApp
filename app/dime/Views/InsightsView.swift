@@ -21,11 +21,11 @@ struct InsightsView: View {
 
     var chartTypeString: String {
         if chartType == 1 {
-            return "week"
+            return String(localized: "week")
         } else if chartType == 2 {
-            return "month"
+            return String(localized: "month")
         } else if chartType == 3 {
-            return "year"
+            return String(localized: "year")
         } else {
             return ""
         }

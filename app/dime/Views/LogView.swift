@@ -467,11 +467,11 @@ struct LogInsightsView: View {
 
     var headingText: String {
         if insightsType == 1 {
-            return "Net total"
+            return String(localized: "Net total")
         } else if insightsType == 2 {
-            return "Earned"
+            return String(localized: "Earned")
         } else {
-            return "Spent"
+            return String(localized: "Spent")
         }
     }
 
@@ -479,7 +479,7 @@ struct LogInsightsView: View {
         VStack(spacing: -3) {
             VStack(spacing: 2) {
                 HStack(spacing: 4) {
-                    Text(LocalizedStringKey(headingText))
+                    Text(headingText)
                         .font(.system(.body, design: .rounded).weight(.medium))
                         .foregroundColor(Color.PrimaryText.opacity(0.9))
                     Button {
@@ -1313,7 +1313,7 @@ struct SingleTransactionView: View {
             }
             .offset(x: offset)
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("\(transaction.wrappedNote), \(currencySymbol)\(String(format: "%.2f", transaction.wrappedAmount)), Transaction Category: \(transaction.category?.wrappedName ?? "Unknown"), Transaction made at \(timeConverterAccessibilityLabel(date: transaction.wrappedDate))")
+            .accessibilityLabel("\(transaction.wrappedNote), \(currencySymbol)\(String(format: "%.2f", transaction.wrappedAmount)), Transaction Category: \(transaction.category?.wrappedName ?? String(localized: "Unknown")), Transaction made at \(timeConverterAccessibilityLabel(date: transaction.wrappedDate))")
         }
         .onChange(of: deletePopup) { _ in
             if deletePopup {
@@ -2063,7 +2063,7 @@ struct WeekStepperView: View {
         let endComponents = DateComponents(day: 7, second: -1)
         let endWeekDate = Calendar.current.date(byAdding: endComponents, to: showingDate) ?? Date.now
 
-        return "showing transactions from " + dateFormatter.string(from: showingDate) + " to " + dateFormatter.string(from: endWeekDate)
+        return String(localized: "showing transactions from \(dateFormatter.string(from: showingDate)) to \(dateFormatter.string(from: endWeekDate))")
     }
 
     var body: some View {
@@ -2214,15 +2214,15 @@ func dateConverterAccessibilityLabel(date: Date) -> String {
     let calendar = Calendar.current
 
     if calendar.isDateInToday(date) {
-        return "today"
+        return String(localized: "today")
     } else if calendar.isDateInYesterday(date) {
-        return "yesterday"
+        return String(localized: "yesterday")
     } else {
         let dateFormatter = DateFormatter()
 
         dateFormatter.dateFormat = "EEE, d MMM yyyy"
 
-        return "on " + dateFormatter.string(from: date)
+        return String(localized: "on \(dateFormatter.string(from: date))")
     }
 }
 

@@ -27,9 +27,9 @@ struct WelcomeSheetView: View {
     let timer = Timer.publish(every: 0.16, on: .main, in: .common).autoconnect()
 
     let welcomeFeatures = [
-        WelcomeSheetFeatureRow(icon: "list.bullet.rectangle.fill", header: "welcome_header_1", subtitle: "welcome_subtitle_1"),
-        WelcomeSheetFeatureRow(icon: "chart.bar.xaxis", header: "welcome_header_2", subtitle: "welcome_subtitle_2"),
-        WelcomeSheetFeatureRow(icon: "archivebox.fill", header: "welcome_header_3", subtitle: "welcome_subtitle_3")
+        WelcomeSheetFeatureRow(icon: "list.bullet.rectangle.fill", header: String(localized: "welcome_header_1"), subtitle: String(localized: "welcome_subtitle_1")),
+        WelcomeSheetFeatureRow(icon: "chart.bar.xaxis", header: String(localized: "welcome_header_2"), subtitle: String(localized: "welcome_subtitle_2")),
+        WelcomeSheetFeatureRow(icon: "archivebox.fill", header: String(localized: "welcome_header_3"), subtitle: String(localized: "welcome_subtitle_3"))
     ]
 
     var body: some View {
@@ -66,11 +66,11 @@ struct WelcomeSheetView: View {
                                         .offset(y: 2)
 
                                     VStack(alignment: .leading, spacing: 5) {
-                                        Text(LocalizedStringKey(welcomeFeatures[rowIndex].header))
+                                        Text(welcomeFeatures[rowIndex].header)
                                             .font(.system(size: 18, weight: .medium, design: .rounded))
                                             .foregroundColor(Color.PrimaryText)
 
-                                        Text(LocalizedStringKey(welcomeFeatures[rowIndex].subtitle))
+                                        Text(welcomeFeatures[rowIndex].subtitle)
                                             .font(.system(size: 16, weight: .regular, design: .rounded))
                                             .fixedSize(horizontal: false, vertical: true)
                                             .foregroundColor(Color.SubtitleText)

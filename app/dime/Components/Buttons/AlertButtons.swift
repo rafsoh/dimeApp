@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 struct DeleteButton: View {
-    let text: String
+    let text: LocalizedStringKey
     let red: Bool
 
     var body: some View {

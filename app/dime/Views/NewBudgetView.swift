@@ -42,7 +42,7 @@ struct BrandNewBudgetView: View {
     var initialProgress: Double
 
     @State var showToast: Bool = false
-    @State var toastMessage: String = "Missing Category"
+    @State var toastMessage: String = String(localized: "Missing Category")
 
     // stage one (ignore if editing), overall budget or category budget
     @State var categoryBudget: Bool = false
@@ -114,7 +114,8 @@ struct BrandNewBudgetView: View {
 
         numberFormatter.maximumFractionDigits = 0
 
-        return "~" + (numberFormatter.string(from: NSNumber(value: average)) ?? "$0") + " /day"
+        let formattedAverage = numberFormatter.string(from: NSNumber(value: average)) ?? "$0"
+        return String(localized: "~\(formattedAverage) /day")
     }
 
     // height of pickers
@@ -142,11 +143,26 @@ struct BrandNewBudgetView: View {
 
     var instructions: [InstructionHeadings] {
         [
-            InstructionHeadings(title: "Indicate budget type", subtitle: "The overall budget tracks expenses across the board, while categorical budgets are tied to expenses of a particular type only."),
-            InstructionHeadings(title: "Select a category", subtitle: "Begin by linking this budget to an existing category."),
-            InstructionHeadings(title: "Choose a time frame", subtitle: "The budget will periodically refresh according to your preference."),
-            InstructionHeadings(title: "Pick a start date", subtitle: "Which day of the \(timeFrameString) do you want your budget to start from?"),
-            InstructionHeadings(title: "Set budget amount", subtitle: "Try your best to stay under this limit! Also, feel free to change this in the future.")
+            InstructionHeadings(
+                title: String(localized: "Indicate budget type"),
+                subtitle: String(localized: "The overall budget tracks expenses across the board, while categorical budgets are tied to expenses of a particular type only.")
+            ),
+            InstructionHeadings(
+                title: String(localized: "Select a category"),
+                subtitle: String(localized: "Begin by linking this budget to an existing category.")
+            ),
+            InstructionHeadings(
+                title: String(localized: "Choose a time frame"),
+                subtitle: String(localized: "The budget will periodically refresh according to your preference.")
+            ),
+            InstructionHeadings(
+                title: String(localized: "Pick a start date"),
+                subtitle: String(localized: "Which day of the \(timeFrameString) do you want your budget to start from?")
+            ),
+            InstructionHeadings(
+                title: String(localized: "Set budget amount"),
+                subtitle: String(localized: "Try your best to stay under this limit! Also, feel free to change this in the future.")
+            )
         ]
     }
 
@@ -543,7 +559,7 @@ struct BrandNewBudgetView: View {
                 Button {
                     if progress == 2 && selectedCategory == nil {
                         showToast = true
-                        toastMessage = "Missing Category"
+                        toastMessage = String(localized: "Missing Category")
                         UINotificationFeedbackGenerator().notificationOccurred(.error)
                         return
                     }
@@ -709,7 +725,7 @@ struct BrandNewBudgetView: View {
         if price == 0 {
             UINotificationFeedbackGenerator().notificationOccurred(.error)
             showToast = true
-            toastMessage = "Missing Amount"
+            toastMessage = String(localized: "Missing Amount")
             return
         }
 

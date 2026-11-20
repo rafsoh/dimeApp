@@ -148,6 +148,21 @@ struct TabButton: View {
     var zoomed: Bool
     @Binding var currentTab: String
 
+    var localizedAccessibilityLabel: String {
+        switch image {
+        case "Log":
+            return String(localized: "Log tab")
+        case "Insights":
+            return String(localized: "Insights tab")
+        case "Budget":
+            return String(localized: "Budget tab")
+        case "Settings":
+            return String(localized: "Settings tab")
+        default:
+            return String(localized: "App tab")
+        }
+    }
+
     var body: some View {
         Button {
             DispatchQueue.main.async {
@@ -163,7 +178,7 @@ struct TabButton: View {
                 .foregroundColor(currentTab == image ? Color.DarkIcon : Color.GreyIcon)
         }
         .buttonStyle(BouncyButton(duration: 0.3, scale: 0.6))
-        .accessibilityLabel("\(image) tab")
+        .accessibilityLabel(localizedAccessibilityLabel)
         .accessibilityAddTraits(
             currentTab == image
                 ? [.isButton, .isSelected]

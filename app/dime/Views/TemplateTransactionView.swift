@@ -31,9 +31,9 @@ struct TemplateTransactionView: View {
 
     var transactionTypeString: String {
         if income {
-            return "Income"
+            return String(localized: "Income")
         } else {
-            return "Expense"
+            return String(localized: "Expense")
         }
     }
 
@@ -132,13 +132,13 @@ struct TemplateTransactionView: View {
 
     var repeatButtonAccessibility: String {
         if repeatType == 1 {
-            return "transaction recurs daily, button to edit recurring duration"
+            return String(localized: "transaction recurs daily, button to edit recurring duration")
         } else if repeatType == 2 {
-            return "transaction recurs weekly, button to edit recurring duration"
+            return String(localized: "transaction recurs weekly, button to edit recurring duration")
         } else if repeatType == 3 {
-            return "transaction recurs monthly, button to edit recurring duration"
+            return String(localized: "transaction recurs monthly, button to edit recurring duration")
         } else {
-            return "button to make transaction recurring"
+            return String(localized: "button to make transaction recurring")
         }
     }
 
@@ -649,20 +649,20 @@ struct TemplateTransactionView: View {
 
         if transactionValue == 0 && category == nil {
             toastImage = "questionmark.app"
-            toastTitle = "Incomplete Entry"
+            toastTitle = String(localized: "Incomplete Entry")
             showToast = true
             generator.notificationOccurred(.error)
 
             return
         } else if transactionValue == 0 {
             toastImage = "centsign.circle"
-            toastTitle = "Missing Amount"
+            toastTitle = String(localized: "Missing Amount")
             showToast = true
             generator.notificationOccurred(.error)
             return
         } else if category == nil {
             toastImage = "tray"
-            toastTitle = "Missing Category"
+            toastTitle = String(localized: "Missing Category")
             showToast = true
             generator.notificationOccurred(.error)
             return

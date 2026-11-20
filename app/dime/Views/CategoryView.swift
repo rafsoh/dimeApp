@@ -114,7 +114,7 @@ struct CategoryView: View {
                     if disabled {
                         showToast = true
                         toastImage = "exclamationmark.triangle.fill"
-                        toastTitle = "Limit Exceeded"
+                        toastTitle = String(localized: "Limit Exceeded")
                         positive = false
                     } else {
                         newCategory = true
@@ -492,7 +492,7 @@ struct CategoryListView: View {
                     .environment(\.editMode, .constant(self.isEditing ? EditMode.active : EditMode.inactive))
                 } else {
                     List {
-                        Section(header: Text("\(income ? "INCOME" : "EXPENSE") CATEGORIES").foregroundColor(Color.SubtitleText)) {
+                        Section(header: Text(income ? LocalizedStringKey("INCOME CATEGORIES") : LocalizedStringKey("EXPENSE CATEGORIES")).foregroundColor(Color.SubtitleText)) {
                             if categories.isEmpty {
                                 VStack(spacing: 10) {
                                     Image(systemName: "tray")
@@ -501,7 +501,7 @@ struct CategoryListView: View {
 //                                        .font(.system(size: 37, weight: .light))
                                         .foregroundColor(Color.SubtitleText)
 
-                                    Text("No \(income ? "income" : "expense") categories found,\nclick the 'New' button to add some.")
+                                    Text(income ? LocalizedStringKey("no_income_categories") : LocalizedStringKey("no_expense_categories"))
                                         .font(.system(.body, design: .rounded).weight(.medium))
                                         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
 //                                        .font(.system(size: 17, weight: .medium, design: .rounded))
@@ -688,7 +688,7 @@ struct CategoryListView: View {
         }
         .onChange(of: showSuggestions) { newValue in
             if !newValue {
-                toastTitle = "Suggestions Hidden"
+                toastTitle = String(localized: "Suggestions Hidden")
                 toastImage = "eye.slash"
                 showToast = true
                 positive = true
@@ -985,7 +985,7 @@ struct NewCategoryAlert: View {
 //                                }
 //                        }
 //                    }
-                    NormalTextField(text: $newName, placeholder: "Category Name", action: verification)
+                    NormalTextField(text: $newName, placeholder: String(localized: "Category Name"), action: verification)
                         .focused($focusedField, equals: .name)
                         .padding(.horizontal, 15)
                         .padding(.vertical, 5)
@@ -1065,28 +1065,28 @@ struct NewCategoryAlert: View {
 
             switch outcome {
             case .incomplete:
-                toastTitle = "Incomplete Entry"
+                toastTitle = String(localized: "Incomplete Entry")
                 toastImage = "questionmark.app"
             case .missingEmoji:
-                toastTitle = "Missing Emoji"
+                toastTitle = String(localized: "Missing Emoji")
                 toastImage = "person.fill"
 
                 focusedField = .emoji
             case .missingName:
-                toastTitle = "Missing Name"
+                toastTitle = String(localized: "Missing Name")
                 toastImage = "character.cursor.ibeam"
 
                 focusedField = .name
             case .duplicate:
-                toastTitle = "Duplicate Found"
+                toastTitle = String(localized: "Duplicate Found")
                 toastImage = "externaldrive"
             case .duplicateEmoji:
-                toastTitle = "Duplicate Emoji"
+                toastTitle = String(localized: "Duplicate Emoji")
                 toastImage = "person.fill"
 
                 focusedField = .emoji
             case .duplicateName:
-                toastTitle = "Duplicate Name"
+                toastTitle = String(localized: "Duplicate Name")
                 toastImage = "character.cursor.ibeam"
 
                 focusedField = .name
@@ -1098,7 +1098,7 @@ struct NewCategoryAlert: View {
             showToast = true
 
         } else {
-            toastTitle = "Added \(newName)"
+            toastTitle = String(localized: "Added \(newName)")
 
             let generator = UINotificationFeedbackGenerator()
             generator.notificationOccurred(.success)
@@ -1386,7 +1386,7 @@ struct EditCategoryAlert: View {
                         }
                     }
 
-                    NormalTextField(text: $newName, placeholder: "Category Name", action: verification)
+                    NormalTextField(text: $newName, placeholder: String(localized: "Category Name"), action: verification)
                         .focused($focusedField, equals: .name)
                         .padding(.horizontal, 15)
                         .padding(.vertical, 5)
@@ -1460,28 +1460,28 @@ struct EditCategoryAlert: View {
 
             switch outcome {
             case .incomplete:
-                toastTitle = "Incomplete Entry"
+                toastTitle = String(localized: "Incomplete Entry")
                 toastImage = "questionmark.app"
             case .missingEmoji:
-                toastTitle = "Missing Emoji"
+                toastTitle = String(localized: "Missing Emoji")
                 toastImage = "person.fill"
 
                 focusedField = .emoji
             case .missingName:
-                toastTitle = "Missing Name"
+                toastTitle = String(localized: "Missing Name")
                 toastImage = "character.cursor.ibeam"
 
                 focusedField = .name
             case .duplicate:
-                toastTitle = "Duplicate Found"
+                toastTitle = String(localized: "Duplicate Found")
                 toastImage = "externaldrive"
             case .duplicateEmoji:
-                toastTitle = "Duplicate Emoji"
+                toastTitle = String(localized: "Duplicate Emoji")
                 toastImage = "person.fill"
 
                 focusedField = .emoji
             case .duplicateName:
-                toastTitle = "Duplicate Name"
+                toastTitle = String(localized: "Duplicate Name")
                 toastImage = "character.cursor.ibeam"
 
                 focusedField = .name

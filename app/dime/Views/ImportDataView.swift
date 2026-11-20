@@ -13,7 +13,8 @@ import UniformTypeIdentifiers
 
 struct ColumnLabel {
     let image: String
-    let label: String
+    let color: String
+    let label: LocalizedStringKey
 }
 
 enum ProcessingState {
@@ -81,7 +82,7 @@ struct ImportDataView: View {
     @State var uniqueCategories: [MatchedCategory] = .init()
 
     @State var processingState = ProcessingState.loading
-    @State var errorMessage = "Invalid dates in date column."
+    @State var errorMessage = String(localized: "Invalid dates in date column.")
     @State var confettiNumber = 0
 
     var numberOfLinkedCategories: Int {
@@ -89,7 +90,7 @@ struct ImportDataView: View {
     }
 
     @State var showToast = false
-    @State var toastMessage: String = "Invalid File"
+    @State var toastMessage: String = String(localized: "Invalid File")
 
     @State var showingCategoryView = false
     @State var pageIndex = 0
@@ -108,24 +109,28 @@ struct ImportDataView: View {
     }
 
     let instructions: [InstructionHeadings] = [
-        InstructionHeadings(title: "Import transactions", subtitle: "Begin by adding a CSV file with 4 columns: amount, note, date, and category."),
-        InstructionHeadings(title: "Assign category column", subtitle: "Select a column from your import that corresponds to the categories of your transactions."),
-        InstructionHeadings(title: "Assign note column", subtitle: "Select a column from your import that corresponds to the notes/subtitles of your transactions."),
-        InstructionHeadings(title: "Assign date column", subtitle: "Select a column from your import that corresponds to the dates of your transactions."),
-        InstructionHeadings(title: "Assign amount column", subtitle: "Select a column from your import that corresponds to the values of your transactions."),
-        InstructionHeadings(title: "Indicate date format", subtitle: "Referencing this article, state the format of the dates in the assigned column."),
-        InstructionHeadings(title: "Link categories", subtitle: "Match values found in the 'Category' column to the corresponding categories in Dime."),
-        InstructionHeadings(title: "Processing import", subtitle: "Please wait while we process your new transactions.")
+        InstructionHeadings(title: String(localized: "Import transactions"), subtitle: String(localized: "Begin by adding a CSV file with 4 columns: amount, note, date, and category.")),
+        InstructionHeadings(title: String(localized: "Assign category column"), subtitle: String(localized: "Select a column from your import that corresponds to the categories of your transactions.")),
+        InstructionHeadings(title: String(localized: "Assign note column"), subtitle: String(localized: "Select a column from your import that corresponds to the notes/subtitles of your transactions.")),
+        InstructionHeadings(title: String(localized: "Assign date column"), subtitle: String(localized: "Select a column from your import that corresponds to the dates of your transactions.")),
+        InstructionHeadings(title: String(localized: "Assign amount column"), subtitle: String(localized: "Select a column from your import that corresponds to the values of your transactions.")),
+        InstructionHeadings(title: String(localized: "Indicate date format"), subtitle: String(localized: "Referencing this article, state the format of the dates in the assigned column.")),
+        InstructionHeadings(title: String(localized: "Link categories"), subtitle: String(localized: "Match values found in the 'Category' column to the corresponding categories in Dime.")),
+        InstructionHeadings(title: String(localized: "Processing import"), subtitle: String(localized: "Please wait while we process your new transactions."))
     ]
 
     let labels: [ColumnLabel] = [
-        ColumnLabel(image: "square.grid.2x2.fill", label: "Category"),
-        ColumnLabel(image: "doc.plaintext.fill", label: "Note"),
-        ColumnLabel(image: "calendar", label: "Date"),
-        ColumnLabel(image: "dollarsign.circle.fill", label: "Amount")
+        ColumnLabel(image: "square.grid.2x2.fill", color: "Category", label: "Category"),
+        ColumnLabel(image: "doc.plaintext.fill", color: "Note", label: "Note"),
+        ColumnLabel(image: "calendar", color: "Date", label: "Date"),
+        ColumnLabel(image: "dollarsign.circle.fill", color: "Amount", label: "Amount")
     ]
 
-    let pointers = ["Ensure that the values in the 'Amount' column do not contain any currency symbols.", "All dates should be of a consistent, recognizable format. If no timestamps are provided, the time of transaction will default to 12:00 am.", "Remove all commas in the 'Note' and 'Category' columns as they would disrupt the parsing of your file."]
+    let pointers = [
+        String(localized: "Ensure that the values in the 'Amount' column do not contain any currency symbols."),
+        String(localized: "All dates should be of a consistent, recognizable format. If no timestamps are provided, the time of transaction will default to 12:00 am."),
+        String(localized: "Remove all commas in the 'Note' and 'Category' columns as they would disrupt the parsing of your file.")
+    ]
 
     var incomeCategories: [Category] {
         dataController.getAllCategories(income: true)
@@ -401,8 +406,8 @@ struct ImportDataView: View {
                                                     }
                                                     .padding(.horizontal, 10)
                                                     .frame(width: columnWidth, height: 30, alignment: .leading)
-                                                    .foregroundColor(Color(labels[index].label))
-                                                    .background(Color(labels[index].label).opacity(0.23), in: RoundedCorner(radius: 10, corners: [.topLeft, .topRight]))
+                                                    .foregroundColor(Color(labels[index].color))
+                                                    .background(Color(labels[index].color).opacity(0.23), in: RoundedCorner(radius: 10, corners: [.topLeft, .topRight]))
                                                 }
                                             } else {
                                                 Rectangle()
@@ -675,7 +680,7 @@ struct ImportDataView: View {
                                 importData()
                             } else {
                                 showToast = true
-                                toastMessage = "Unlinked Categories"
+                                toastMessage = String(localized: "Unlinked Categories")
                             }
 
                         } else if progress > 5 {
@@ -691,7 +696,7 @@ struct ImportDataView: View {
 
                                     guard sample.containsDigits else {
                                         showToast = true
-                                        toastMessage = "Invalid Column"
+                                        toastMessage = String(localized: "Invalid Column")
                                         return
                                     }
                                 }
@@ -701,7 +706,7 @@ struct ImportDataView: View {
 
                                     guard validateDoubles(strings: stringColumn) else {
                                         showToast = true
-                                        toastMessage = "Invalid Column"
+                                        toastMessage = String(localized: "Invalid Column")
                                         return
                                     }
                                 }
@@ -716,7 +721,7 @@ struct ImportDataView: View {
                                 if progress < 5 {
                                     guard !remainingColumns.isEmpty else {
                                         showToast = true
-                                        toastMessage = "Insufficient Columns"
+                                        toastMessage = String(localized: "Insufficient Columns")
                                         return
                                     }
                                     selectedColumn = remainingColumns[0]
@@ -778,7 +783,7 @@ struct ImportDataView: View {
                     if file.startAccessingSecurityScopedResource() {
                         guard let message = try String(data: Data(contentsOf: file), encoding: .utf8) else {
                             showToast = true
-                            toastMessage = "Invalid File"
+                            toastMessage = String(localized: "Invalid File")
                             return
                         }
 
@@ -840,7 +845,7 @@ struct ImportDataView: View {
     func processCSV() {
         guard data.containsDigits else {
             showToast = true
-            toastMessage = "Invalid File"
+            toastMessage = String(localized: "Invalid File")
             return
         }
 
@@ -852,7 +857,7 @@ struct ImportDataView: View {
 
         guard !holdingRows.isEmpty else {
             showToast = true
-            toastMessage = "Invalid File"
+            toastMessage = String(localized: "Invalid File")
             return
         }
 
@@ -865,7 +870,7 @@ struct ImportDataView: View {
 //
         guard maxColumnCount > 3 else {
             showToast = true
-            toastMessage = "Invalid File"
+            toastMessage = String(localized: "Invalid File")
             return
         }
 
@@ -909,17 +914,17 @@ struct ImportDataView: View {
                         _ = dataController.newTransaction(note: row[noteColumnIndex], category: rowCategory, income: rowCategory.income, amount: abs(transactionAmount), date: transactionDate, repeatType: 0, repeatCoefficient: 1, delay: false)
                     } else {
                         processingState = .error
-                        errorMessage = "Invalid values in amount column."
+                        errorMessage = String(localized: "Invalid values in amount column.")
                         return
                     }
                 } else {
                     processingState = .error
-                    errorMessage = "Error occurred while matching categories."
+                    errorMessage = String(localized: "Error occurred while matching categories.")
                     return
                 }
             } else {
                 processingState = .error
-                errorMessage = "Invalid dates in date column."
+                errorMessage = String(localized: "Invalid dates in date column.")
                 return
             }
         }

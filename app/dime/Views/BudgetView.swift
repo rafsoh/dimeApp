@@ -281,7 +281,7 @@ struct MainBudgetView: View {
         case 4:
             return String(localized: "this year")
         default:
-            return "this week"
+            return String(localized: "this week")
         }
     }
 
@@ -421,7 +421,7 @@ struct MainBudgetView: View {
                     BudgetDollarView(amount: difference, red: totalSpent >= budgetAmount, scale: 3, size: internalWidth)
                         .frame(width: internalWidth)
 
-                    Text("\(budgetAmount >= totalSpent ? "left" : "over") \(budgetType)")
+                    Text("\(budgetAmount >= totalSpent ? String(localized: "left") : String(localized: "over")) \(budgetType)")
                         .font(.system(.subheadline, design: .rounded).weight(.medium))
 //                        .font(.system(size: 15, weight: .medium, design: .rounded))
                         .foregroundColor(Color.SubtitleText)
@@ -546,7 +546,7 @@ struct SingleBudgetView: View {
         case 4:
             return String(localized: "this year")
         default:
-            return "this week"
+            return String(localized: "this week")
         }
     }
 
@@ -710,7 +710,7 @@ struct SingleBudgetView: View {
                         VStack(alignment: .trailing, spacing: -4) {
                             BudgetDollarView(amount: difference, red: totalSpent >= budgetAmount, scale: 1, size: 80)
 
-                            Text("\(budgetAmount >= totalSpent ? "left" : "over") \(budgetType)")
+                            Text("\(budgetAmount >= totalSpent ? String(localized: "left") : String(localized: "over")) \(budgetType)")
                                 .font(.system(.caption2, design: .rounded).weight(.medium))
                                 .foregroundColor(Color.SubtitleText)
                         }
@@ -830,7 +830,7 @@ struct SingleBudgetView: View {
 
                             BudgetDollarView(amount: difference, red: totalSpent >= budgetAmount, scale: 2, size: width - 40)
 
-                            Text("\(budgetAmount >= totalSpent ? "left" : "over") \(budgetType)")
+                            Text("\(budgetAmount >= totalSpent ? String(localized: "left") : String(localized: "over")) \(budgetType)")
                                 .font(.system(.footnote, design: .rounded).weight(.medium))
                                 .foregroundColor(Color.SubtitleText)
                                 .minimumScaleFactor(0.7)

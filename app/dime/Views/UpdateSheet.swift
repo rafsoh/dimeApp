@@ -19,14 +19,14 @@ struct UpdateAlert: View {
     @State var opacity = 0.0
 
     let welcomeFeatures = [
-        WelcomeSheetFeatureRow(icon: "appclip", header: "Siri Shorcuts", subtitle: "3 new Siri shortcuts allow you to conveniently add new transactions or access insights."),
-        WelcomeSheetFeatureRow(icon: "arrow.down.doc.fill", header: "Data Import", subtitle: "Transfer pre-existing logs from other applications with a step-by-step guide."),
-        WelcomeSheetFeatureRow(icon: "sun.haze.fill", header: "Future Transactions", subtitle: "With date restrictions lifted, log and view upcoming expenses/incomes."),
-        WelcomeSheetFeatureRow(icon: "app.gift.fill", header: "App Icons", subtitle: "Choose from 3 new skeuomorphic icons beautifully crafted by the talented @rudra_dsigns."),
-        WelcomeSheetFeatureRow(icon: "circle.grid.2x2.fill", header: "Re-designed Screens", subtitle: "Budget and category creation screens have been completely reworked."),
-        WelcomeSheetFeatureRow(icon: "swatchpalette.fill", header: "Custom Category Colors", subtitle: "Using the stock iOS color picker, give your categories a long-awaited aesthetic refresh."),
-        WelcomeSheetFeatureRow(icon: "exclamationmark.octagon.fill", header: "New Toasts", subtitle: "Similarly, alert toasts across the app have been re-designed."),
-        WelcomeSheetFeatureRow(icon: "calendar", header: "Custom Time Frames", subtitle: "Change the start of a month's cycle to align with payday.")
+        WelcomeSheetFeatureRow(icon: "appclip", header: String(localized: "Siri Shortcuts"), subtitle: String(localized: "3 new Siri shortcuts allow you to conveniently add new transactions or access insights.")),
+        WelcomeSheetFeatureRow(icon: "arrow.down.doc.fill", header: String(localized: "Data Import"), subtitle: String(localized: "Transfer pre-existing logs from other applications with a step-by-step guide.")),
+        WelcomeSheetFeatureRow(icon: "sun.haze.fill", header: String(localized: "Future Transactions"), subtitle: String(localized: "With date restrictions lifted, log and view upcoming expenses/incomes.")),
+        WelcomeSheetFeatureRow(icon: "app.gift.fill", header: String(localized: "App Icons"), subtitle: String(localized: "Choose from 3 new skeuomorphic icons beautifully crafted by the talented @rudra_dsigns.")),
+        WelcomeSheetFeatureRow(icon: "circle.grid.2x2.fill", header: String(localized: "Re-designed Screens"), subtitle: String(localized: "Budget and category creation screens have been completely reworked.")),
+        WelcomeSheetFeatureRow(icon: "swatchpalette.fill", header: String(localized: "Custom Category Colors"), subtitle: String(localized: "Using the stock iOS color picker, give your categories a long-awaited aesthetic refresh.")),
+        WelcomeSheetFeatureRow(icon: "exclamationmark.octagon.fill", header: String(localized: "New Toasts"), subtitle: String(localized: "Similarly, alert toasts across the app have been re-designed.")),
+        WelcomeSheetFeatureRow(icon: "calendar", header: String(localized: "Custom Time Frames"), subtitle: String(localized: "Change the start of a month's cycle to align with payday."))
     ]
 
     var body: some View {
@@ -103,12 +103,12 @@ struct UpdateAlert: View {
                                     .offset(y: 2)
 
                                 VStack(alignment: .leading, spacing: 3.5) {
-                                    Text(LocalizedStringKey(row.header))
+                                    Text(row.header)
                                         .font(.system(.body, design: .rounded).weight(.medium))
 //                                        .font(.system(size: 18, weight: .medium, design: .rounded))
                                         .foregroundColor(Color.PrimaryText)
 
-                                    Text(LocalizedStringKey(row.subtitle))
+                                    Text(row.subtitle)
                                         .font(.system(.subheadline, design: .rounded).weight(.medium))
 //                                        .font(.system(size: 16, weight: .regular, design: .rounded))
 //                                            .lineSpacing(0.6)

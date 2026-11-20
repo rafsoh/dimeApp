@@ -136,7 +136,7 @@ struct LockBudgetWidgetEntryView: View {
         case 4:
             return String(localized: "this year")
         default:
-            return "this week"
+            return String(localized: "this week")
         }
     }
 

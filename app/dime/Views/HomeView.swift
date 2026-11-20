@@ -119,10 +119,10 @@ struct HomeView: View {
             }
         }
         .toast(isPresenting: $toastPresenter.showToast, duration: 4, tapToDismiss: true, offsetY: 12, alert: {
-            AlertToast(displayMode: .hud, type: .systemImage("checkmark.circle.fill", Color.IncomeGreen), title: "Image Saved", subTitle: "Check it out in Photos")
+            AlertToast(displayMode: .hud, type: .systemImage("checkmark.circle.fill", Color.IncomeGreen), title: String(localized: "Image Saved"), subTitle: String(localized: "Check it out in Photos"))
         })
         .toast(isPresenting: $transactionManager.showToast, duration: 4, tapToDismiss: true, offsetY: 12, alert: {
-            AlertToast(displayMode: .hud, type: .systemImage("arrow.uturn.backward.circle.fill", Color.AlertRed), title: "Log Deleted", subTitle: "Tap to Undo")
+            AlertToast(displayMode: .hud, type: .systemImage("arrow.uturn.backward.circle.fill", Color.AlertRed), title: String(localized: "Log Deleted"), subTitle: String(localized: "Tap to Undo"))
         }, onTap: {
             if let deleted = transactionManager.recentlyDeleted {
                 withAnimation(.easeInOut(duration: 0.5)) {

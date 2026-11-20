@@ -88,9 +88,9 @@ struct SettingsView: View {
   }
 
   @Environment(\.openURL) var openURL
-  let supportEmail = SupportEmail(toAddress: "rafasohhh@gmail.com", subject: "Support Email")
+  let supportEmail = SupportEmail(toAddress: "rafasohhh@gmail.com", subject: String(localized: "Support Email"))
   let featureRequestEmail = SupportEmail(
-    toAddress: "rafasohhh@gmail.com", subject: "Feature Request")
+    toAddress: "rafasohhh@gmail.com", subject: String(localized: "Feature Request"))
 
   @AppStorage("numberEntryType", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
   var numberEntryType: Int = 2
@@ -509,7 +509,7 @@ struct SettingsView: View {
   }
 
   @ViewBuilder
-    func ToggleRow(icon: String, color: String, text: String, bool: Bool, smaller: Bool = false, onTap: @escaping () -> Void)
+    func ToggleRow(icon: String, color: String, text: LocalizedStringKey, bool: Bool, smaller: Bool = false, onTap: @escaping () -> Void)
     -> some View {
     HStack(spacing: 12) {
       Image(systemName: icon)
@@ -628,11 +628,11 @@ struct TipJarAlert: View {
 
   var bottomCaption: String {
     if unlockManager.failedTransaction {
-      return "Tip failed to go through, please try again!"
+      return String(localized: "Tip failed to go through, please try again!")
     } else if unlockManager.purchaseCount > 0 {
-      return "Thanks a million, \(Image(systemName: "heart.fill")) Rafael"
+      return String(localized: "Thanks a million, ❤️ Rafael")
     } else {
-      return "Have a great day ahead!"
+      return String(localized: "Have a great day ahead!")
     }
   }
 
@@ -849,7 +849,7 @@ struct ProductView: View {
 
 struct SettingsRowView: View {
   var systemImage: String
-  var title: String
+  var title: LocalizedStringKey
   var colour: Int
   var optionalText: String?
 
@@ -869,7 +869,7 @@ struct SettingsRowView: View {
         )
         .background(Color("\(colour)"), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
 
-      Text(LocalizedStringKey(title))
+      Text(title)
         .font(.system(.body, design: .rounded).weight(.medium))
 
         //                .font(.system(size: 17, weight: .medium, design: .rounded))
