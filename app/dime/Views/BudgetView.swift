@@ -97,7 +97,7 @@ struct ActualBudgetView: View {
 //                            .font(.system(size: 14, weight: .semibold))
                             .foregroundColor(Color.SubtitleText)
                             .padding(4)
-                            .background(Color.SecondaryBackground, in: Circle())
+                            .dimeGlass(in: Circle(), interactive: true, fallback: Color.SecondaryBackground)
                             .contentShape(Circle())
                     }
 
@@ -184,7 +184,7 @@ struct ActualBudgetView: View {
                                 .padding(5)
                             }
                         }
-                        .padding(.bottom, 70)
+                        .tabBarBottomPadding(70)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .id(refreshID)

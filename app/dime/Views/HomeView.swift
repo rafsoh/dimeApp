@@ -60,6 +60,14 @@ struct HomeView: View {
         self.bottomEdge = bottomEdge
     }
 
+    // the floating bar on ios 26 is taller and sits higher, so the offset is its height plus its bottom margin
+    private var tabBarHiddenOffset: CGFloat {
+        if #available(iOS 26, *) {
+            return CustomTabBar.floatingBarHeight + CustomTabBar.floatingBottomMargin(bottomEdge) + bottomEdge
+        }
+        return 70 + bottomEdge
+    }
+
     var body: some View {
         ZStack(alignment: .bottom) {
             TabView(selection: $currentTab) {
@@ -85,7 +93,7 @@ struct HomeView: View {
             .environmentObject(transactionManager)
 
             CustomTabBar(currentTab: $currentTab, topEdge: topEdge, bottomEdge: bottomEdge, counter: $counter, launchAdd: launchAdd)
-                .offset(y: tabBarManager.hideTab ? (70 + bottomEdge) : 0)
+                .offset(y: tabBarManager.hideTab ? tabBarHiddenOffset : 0)
 
             if showPopup {
                 Rectangle()

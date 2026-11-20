@@ -88,7 +88,7 @@ struct CategoryView: View {
                 }
                 .padding(3)
                 .layoutPriority(1)
-                .overlay(Capsule().stroke(Color.Outline.opacity(0.4), lineWidth: 1.3))
+                .dimeGlassCapsule(strokeFallback: Color.Outline.opacity(0.4))
 
                 Spacer()
 
@@ -107,7 +107,7 @@ struct CategoryView: View {
                 .foregroundColor(Color.PrimaryText)
                 .padding(6)
                 .padding(.horizontal, 4.5)
-                .background(Color.SecondaryBackground, in: Capsule())
+                .dimeGlass(in: Capsule(), interactive: true, fallback: Color.SecondaryBackground)
                 .opacity(disabled ? 0.5 : 1)
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -157,6 +157,14 @@ struct CategoryListView: View {
     @FetchRequest private var categories: FetchedResults<Category>
 
     @State var isEditing = false
+
+    // greyed-out arrow while no category exists; a lighter grey on ios 26 so it stays readable on the glass circle
+    private var disabledArrowColor: Color {
+        if #available(iOS 26, *) {
+            return Color.SubtitleText
+        }
+        return Color.Outline.opacity(0.8)
+    }
 
     @FetchRequest(sortDescriptors: [SortDescriptor(\.order)]) private var allCategories: FetchedResults<Category>
 
@@ -218,10 +226,7 @@ struct CategoryListView: View {
                     HStack(spacing: 8) {
                         if categories.count > 1 {
                             if isEditing {
-                                Circle()
-                                    .fill(Color.IncomeGreen.opacity(0.23))
-                                    .frame(width: 33, height: 33)
-                                    .overlay {
+                                DimeCircleIcon(fill: Color.IncomeGreen.opacity(0.23), tint: Color.IncomeGreen.opacity(0.3)) {
                                         Image(systemName: "checkmark")
                                             .font(.system(.callout, design: .rounded).weight(.semibold))
                                             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
@@ -234,10 +239,7 @@ struct CategoryListView: View {
                                         }
                                     }
                             } else {
-                                Circle()
-                                    .fill(Color.SecondaryBackground)
-                                    .frame(width: 33, height: 33)
-                                    .overlay {
+                                DimeCircleIcon(fill: Color.SecondaryBackground) {
                                         Image(systemName: "arrow.up.arrow.down")
                                             .font(.system(.callout, design: .rounded).weight(.semibold))
                                             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
@@ -251,10 +253,7 @@ struct CategoryListView: View {
                             }
                         }
 
-                        Circle()
-                            .fill(Color.SecondaryBackground)
-                            .frame(width: 33, height: 33)
-                            .overlay {
+                        DimeCircleIcon(fill: Color.SecondaryBackground) {
                                 Image(systemName: showSuggestions ? "eye.slash" : "eye")
                                     .font(.system(.callout, design: .rounded).weight(.semibold))
                                     .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
@@ -269,15 +268,12 @@ struct CategoryListView: View {
 
                         Spacer()
 
-                        Circle()
-                            .fill(!allCategories.isEmpty ? Color.IncomeGreen.opacity(0.23) : Color.clear)
-                            .frame(width: 33, height: 33)
-                            .overlay {
+                        DimeCircleIcon(fill: !allCategories.isEmpty ? Color.IncomeGreen.opacity(0.23) : Color.clear, tint: !allCategories.isEmpty ? Color.IncomeGreen.opacity(0.3) : nil) {
                                 ZStack {
                                     Image(systemName: "arrow.right")
                                         .font(.system(.callout, design: .rounded).weight(.semibold))
                                         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                                        .foregroundColor(!allCategories.isEmpty ? Color.IncomeGreen : Color.Outline.opacity(0.8))
+                                        .foregroundColor(!allCategories.isEmpty ? Color.IncomeGreen : disabledArrowColor)
 
                                     if allCategories.count == 0 {
                                         Circle()
@@ -305,10 +301,7 @@ struct CategoryListView: View {
                 } else {
                     HStack(spacing: 8) {
                         if mode == .settings {
-                            Circle()
-                                .fill(Color.SecondaryBackground)
-                                .frame(width: 33, height: 33)
-                                .overlay {
+                            DimeCircleIcon(fill: Color.SecondaryBackground) {
                                     Image(systemName: "chevron.left")
                                         .font(.system(.body, design: .rounded).weight(.semibold))
                                         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
@@ -320,10 +313,7 @@ struct CategoryListView: View {
                                     self.presentationMode.wrappedValue.dismiss()
                                 }
                         } else {
-                            Circle()
-                                .fill(Color.SecondaryBackground)
-                                .frame(width: 33, height: 33)
-                                .overlay {
+                            DimeCircleIcon(fill: Color.SecondaryBackground) {
                                     Image(systemName: "chevron.down")
                                         .font(.system(.body, design: .rounded).weight(.semibold))
                                         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
@@ -337,10 +327,7 @@ struct CategoryListView: View {
 
                         Spacer()
 
-                        Circle()
-                            .fill(Color.SecondaryBackground)
-                            .frame(width: 33, height: 33)
-                            .overlay {
+                        DimeCircleIcon(fill: Color.SecondaryBackground) {
                                 Image(systemName: showSuggestions ? "eye.slash" : "eye")
                                     .font(.system(.callout, design: .rounded).weight(.semibold))
                                     .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
@@ -356,10 +343,7 @@ struct CategoryListView: View {
 
                         if categories.count > 1 {
                             if isEditing {
-                                Circle()
-                                    .fill(Color.IncomeGreen.opacity(0.23))
-                                    .frame(width: 33, height: 33)
-                                    .overlay {
+                                DimeCircleIcon(fill: Color.IncomeGreen.opacity(0.23), tint: Color.IncomeGreen.opacity(0.3)) {
                                         Image(systemName: "checkmark")
                                             .font(.system(.callout, design: .rounded).weight(.semibold))
                                             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
@@ -372,10 +356,7 @@ struct CategoryListView: View {
                                         }
                                     }
                             } else {
-                                Circle()
-                                    .fill(Color.SecondaryBackground)
-                                    .frame(width: 33, height: 33)
-                                    .overlay {
+                                DimeCircleIcon(fill: Color.SecondaryBackground) {
                                         Image(systemName: "arrow.up.arrow.down")
                                             .font(.system(.callout, design: .rounded).weight(.semibold))
                                             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
@@ -878,8 +859,10 @@ struct NewCategoryAlert: View {
                                     }
                             }
                             .padding(3)
-                            .background(Capsule().fill(Color.PrimaryBackground).shadow(color: systemColorScheme == .light ? Color.Outline : Color.clear, radius: 6))
-                            .overlay(Capsule().stroke(systemColorScheme == .light ? Color.clear : Color.Outline.opacity(0.4), lineWidth: 1.3))
+                            .backgroundBeforeIOS26 {
+                                Capsule().fill(Color.PrimaryBackground).shadow(color: systemColorScheme == .light ? Color.Outline : Color.clear, radius: 6)
+                            }
+                            .dimeGlassCapsule(strokeFallback: systemColorScheme == .light ? Color.clear : Color.Outline.opacity(0.4))
                         }
                     }
                 }
@@ -895,7 +878,7 @@ struct NewCategoryAlert: View {
 //                            .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(Color.SubtitleText)
                             .padding(7)
-                            .background(Color.SecondaryBackground, in: Circle())
+                            .dimeGlass(in: Circle(), interactive: true, fallback: Color.SecondaryBackground)
                             .contentShape(Circle())
                     }
                 }
@@ -1270,7 +1253,7 @@ struct EditCategoryAlert: View {
 //                            .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(Color.SubtitleText)
                             .padding(7)
-                            .background(Color.SecondaryBackground, in: Circle())
+                            .dimeGlass(in: Circle(), interactive: true, fallback: Color.SecondaryBackground)
                             .contentShape(Circle())
                     }
 
@@ -1313,7 +1296,7 @@ struct EditCategoryAlert: View {
 //                            .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(Color.AlertRed)
                             .padding(7)
-                            .background(Color.AlertRed.opacity(0.23), in: Circle())
+                            .dimeGlass(in: Circle(), interactive: true, tint: Color.AlertRed.opacity(0.3), fallback: Color.AlertRed.opacity(0.23))
                             .contentShape(Circle())
                     }
                 }
@@ -1704,7 +1687,7 @@ struct SuggestedCategoriesView: View {
 //                            .font(.system(size: 14, weight: .semibold))
                             .foregroundColor(Color.SubtitleText)
                             .padding(4)
-                            .background(Color.SecondaryBackground, in: Circle())
+                            .dimeGlass(in: Circle(), interactive: true, fallback: Color.SecondaryBackground)
                             .contentShape(Circle())
                     }
                     .padding(.vertical, 5)
