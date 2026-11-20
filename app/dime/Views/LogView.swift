@@ -262,7 +262,7 @@ struct LogView: View {
                 SearchView()
             }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
-                dataController.updateRecurringTransactionsIfReady()
+                dataController.applicationWillEnterForeground()
             }
             .onChange(of: launchSearch) { _ in
                 searchMode = true
