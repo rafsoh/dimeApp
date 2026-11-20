@@ -140,6 +140,8 @@
 		53D6BDD62AF73CE400F5728E /* SettingsUpcomingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53D6BDD52AF73CE400F5728E /* SettingsUpcomingView.swift */; };
 		53D6BDD82AF73CFC00F5728E /* SettingsEraseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53D6BDD72AF73CFC00F5728E /* SettingsEraseView.swift */; };
 		53D6BDDA2AF73DE900F5728E /* SettingsCloudView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53D6BDD92AF73DE900F5728E /* SettingsCloudView.swift */; };
+		E0F34B4E35F1114FE00D38C7 /* Backups.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1DCA5B1C44C8843357B82C4 /* Backups.swift */; };
+		FCD721AAB121BA80CFF1293F /* SettingsBackupsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86CFCBA6EAE7ED44DDE226DA /* SettingsBackupsView.swift */; };
 		53D6BDDD2AF73E4300F5728E /* SettingsBackButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53D6BDDC2AF73E4300F5728E /* SettingsBackButton.swift */; };
 		53D6BDDF2AF73EF100F5728E /* SettingsHapticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53D6BDDE2AF73EF100F5728E /* SettingsHapticsView.swift */; };
 		53D6BDE12AF73FAB00F5728E /* SettingsSubviewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53D6BDE02AF73FAB00F5728E /* SettingsSubviewModifier.swift */; };
@@ -319,6 +321,8 @@
 		53D6BDD52AF73CE400F5728E /* SettingsUpcomingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsUpcomingView.swift; sourceTree = "<group>"; };
 		53D6BDD72AF73CFC00F5728E /* SettingsEraseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsEraseView.swift; sourceTree = "<group>"; };
 		53D6BDD92AF73DE900F5728E /* SettingsCloudView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsCloudView.swift; sourceTree = "<group>"; };
+		C1DCA5B1C44C8843357B82C4 /* Backups.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Backups.swift; sourceTree = "<group>"; };
+		86CFCBA6EAE7ED44DDE226DA /* SettingsBackupsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsBackupsView.swift; sourceTree = "<group>"; };
 		53D6BDDC2AF73E4300F5728E /* SettingsBackButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsBackButton.swift; sourceTree = "<group>"; };
 		53D6BDDE2AF73EF100F5728E /* SettingsHapticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsHapticsView.swift; sourceTree = "<group>"; };
 		53D6BDE02AF73FAB00F5728E /* SettingsSubviewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSubviewModifier.swift; sourceTree = "<group>"; };
@@ -500,6 +504,7 @@
 				53BC2A3F2A8B21920019E4A8 /* MainModel.xcdatamodeld */,
 				53980E5B28A77B62009CC4E2 /* Helper.swift */,
 				5327D2AC287C6AD200F76ADF /* DataController.swift */,
+				C1DCA5B1C44C8843357B82C4 /* Backups.swift */,
 			);
 			path = Data;
 			sourceTree = "<group>";
@@ -622,6 +627,7 @@
 			isa = PBXGroup;
 			children = (
 				53D6BDD92AF73DE900F5728E /* SettingsCloudView.swift */,
+				86CFCBA6EAE7ED44DDE226DA /* SettingsBackupsView.swift */,
 				53D6BDD72AF73CFC00F5728E /* SettingsEraseView.swift */,
 				53D6BDCB2AF73BC800F5728E /* SettingsCurrencyView.swift */,
 				53D6BDC72AF73B4800F5728E /* SettingsAppearanceView.swift */,
@@ -951,6 +957,8 @@
 				5327D2DE287C6B5F00F76ADF /* CustomTabBar.swift in Sources */,
 				5327D2D7287C6B5F00F76ADF /* TransactionView.swift in Sources */,
 				53D6BDDA2AF73DE900F5728E /* SettingsCloudView.swift in Sources */,
+				E0F34B4E35F1114FE00D38C7 /* Backups.swift in Sources */,
+				FCD721AAB121BA80CFF1293F /* SettingsBackupsView.swift in Sources */,
 				53D250702AA6331600016013 /* TemplateTransactionView.swift in Sources */,
 				5327D2AD287C6AD200F76ADF /* DataController.swift in Sources */,
 				53D0298028C5BC0300443F2B /* Currency.swift in Sources */,

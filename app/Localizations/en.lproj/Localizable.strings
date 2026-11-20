@@ -324,3 +324,24 @@
 "Dime's data was deleted from iCloud in the Settings app." = "Dime's data was deleted from iCloud in the Settings app.";
 "iCloud is busy right now. Dime will try again automatically." = "iCloud is busy right now. Dime will try again automatically.";
 "Sync ran into a problem and will try again." = "Sync ran into a problem and will try again.";
+
+// Backups
+"Backups" = "Backups";
+"Back Up Now" = "Back Up Now";
+"Dime backs up your data on this device once a day and keeps the last 14 backups. Restoring adds back anything that's missing and never removes or changes what you have now. Backups are deleted if you delete Dime." = "Dime backs up your data on this device once a day and keeps the last 14 backups. Restoring adds back anything that's missing and never removes or changes what you have now. Backups are deleted if you delete Dime.";
+"No backups yet" = "No backups yet";
+"Restore" = "Restore";
+"Restore this backup?" = "Restore this backup?";
+"Anything missing from Dime will be added back from the backup made %@. Nothing you have now will be removed or changed." = "Anything missing from Dime will be added back from the backup made %@. Nothing you have now will be removed or changed.";
+"Nothing was missing" = "Nothing was missing";
+"Restore complete" = "Restore complete";
+"Everything in this backup is already in Dime." = "Everything in this backup is already in Dime.";
+"Items added back: %lld." = "Items added back: %lld.";
+"Waiting for iCloud" = "Waiting for iCloud";
+"You can restore once iCloud finishes syncing, so nothing gets added twice." = "You can restore once iCloud finishes syncing, so nothing gets added twice.";
+"Something went wrong" = "Something went wrong";
+"Dime couldn't finish. Please try again." = "Dime couldn't finish. Please try again.";
+"OK" = "OK";
+"Some of your data may be missing" = "Some of your data may be missing";
+"Backup from %@: %lld transactions. On this device now: %lld. Restore what's missing? Nothing you have now will be removed or changed." = "Backup from %@: %lld transactions. On this device now: %lld. Restore what's missing? Nothing you have now will be removed or changed.";
+"Not Now" = "Not Now";

@@ -323,3 +323,24 @@
 "Dime's data was deleted from iCloud in the Settings app." = "Les données de Dime ont été supprimées d'iCloud dans l'app Réglages.";
 "iCloud is busy right now. Dime will try again automatically." = "iCloud est occupé pour le moment. Dime réessaiera automatiquement.";
 "Sync ran into a problem and will try again." = "La synchronisation a rencontré un problème et va réessayer.";
+
+// Backups
+"Backups" = "Sauvegardes";
+"Back Up Now" = "Sauvegarder maintenant";
+"Dime backs up your data on this device once a day and keeps the last 14 backups. Restoring adds back anything that's missing and never removes or changes what you have now. Backups are deleted if you delete Dime." = "Dime sauvegarde vos données sur cet appareil une fois par jour et conserve les 14 dernières sauvegardes. La restauration rajoute ce qui manque, sans jamais supprimer ni modifier ce que vous avez déjà. Les sauvegardes sont supprimées si vous supprimez Dime.";
+"No backups yet" = "Aucune sauvegarde pour l'instant";
+"Restore" = "Restaurer";
+"Restore this backup?" = "Restaurer cette sauvegarde ?";
+"Anything missing from Dime will be added back from the backup made %@. Nothing you have now will be removed or changed." = "Tout ce qui manque dans Dime sera rajouté à partir de la sauvegarde du %@. Rien de ce que vous avez actuellement ne sera supprimé ni modifié.";
+"Nothing was missing" = "Rien ne manquait";
+"Restore complete" = "Restauration terminée";
+"Everything in this backup is already in Dime." = "Tout le contenu de cette sauvegarde est déjà dans Dime.";
+"Items added back: %lld." = "Éléments rajoutés : %lld.";
+"Waiting for iCloud" = "En attente d'iCloud";
+"You can restore once iCloud finishes syncing, so nothing gets added twice." = "Vous pourrez restaurer une fois la synchronisation iCloud terminée, pour que rien ne soit ajouté en double.";
+"Something went wrong" = "Une erreur s'est produite";
+"Dime couldn't finish. Please try again." = "Dime n'a pas pu terminer. Veuillez réessayer.";
+"OK" = "OK";
+"Some of your data may be missing" = "Certaines de vos données semblent manquer";
+"Backup from %@: %lld transactions. On this device now: %lld. Restore what's missing? Nothing you have now will be removed or changed." = "Sauvegarde du %@ : %lld transactions. Sur cet appareil actuellement : %lld. Restaurer ce qui manque ? Rien de ce que vous avez actuellement ne sera supprimé ni modifié.";
+"Not Now" = "Plus tard";
