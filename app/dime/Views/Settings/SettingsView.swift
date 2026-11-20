@@ -346,6 +346,11 @@ struct SettingsView: View {
                   optionalText: iCloudString)
               }
 
+              NavigationLink(destination: SettingsBackupsView()) {
+                SettingsRowView(
+                  systemImage: "clock.arrow.circlepath", title: "Backups", colour: 106)
+              }
+
               //
               //                            NavigationLink(destination: SettingsQuickAddWidgetView()) {
               //                                SettingsRowView(systemImage: "bolt.square.fill", title: "Quick-Add Widget", colour: 115)

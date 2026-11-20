@@ -323,3 +323,24 @@
 "Dime's data was deleted from iCloud in the Settings app." = "Данные Dime были удалены из iCloud в приложении «Настройки».";
 "iCloud is busy right now. Dime will try again automatically." = "iCloud сейчас занят. Dime повторит попытку автоматически.";
 "Sync ran into a problem and will try again." = "При синхронизации возникла проблема. Dime повторит попытку.";
+
+// Backups
+"Backups" = "Резервные копии";
+"Back Up Now" = "Создать копию сейчас";
+"Dime backs up your data on this device once a day and keeps the last 14 backups. Restoring adds back anything that's missing and never removes or changes what you have now. Backups are deleted if you delete Dime." = "Dime раз в день сохраняет резервную копию данных на этом устройстве и хранит 14 последних копий. При восстановлении возвращается только то, чего не хватает, — текущие данные не удаляются и не изменяются. Если удалить Dime, резервные копии тоже удалятся.";
+"No backups yet" = "Резервных копий пока нет";
+"Restore" = "Восстановить";
+"Restore this backup?" = "Восстановить эту копию?";
+"Anything missing from Dime will be added back from the backup made %@. Nothing you have now will be removed or changed." = "Всё, чего не хватает в Dime, будет восстановлено из копии от %@. Текущие данные не будут удалены или изменены.";
+"Nothing was missing" = "Ничего не потеряно";
+"Restore complete" = "Восстановление завершено";
+"Everything in this backup is already in Dime." = "Всё из этой копии уже есть в Dime.";
+"Items added back: %lld." = "Восстановлено элементов: %lld.";
+"Waiting for iCloud" = "Ожидание iCloud";
+"You can restore once iCloud finishes syncing, so nothing gets added twice." = "Восстановление станет доступно после синхронизации с iCloud, чтобы ничего не добавилось дважды.";
+"Something went wrong" = "Что-то пошло не так";
+"Dime couldn't finish. Please try again." = "Dime не удалось завершить действие. Попробуйте ещё раз.";
+"OK" = "ОК";
+"Some of your data may be missing" = "Похоже, часть данных пропала";
+"Backup from %@: %lld transactions. On this device now: %lld. Restore what's missing? Nothing you have now will be removed or changed." = "Резервная копия от %@: транзакций — %lld. Сейчас на устройстве: %lld. Восстановить недостающее? Текущие данные не будут удалены или изменены.";
+"Not Now" = "Не сейчас";

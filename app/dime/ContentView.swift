@@ -10,6 +10,7 @@ import WidgetKit
 struct ContentView: View {
     @EnvironmentObject var appLockVM: AppLockViewModel
     @EnvironmentObject var dataController: DataController
+    @ObservedObject private var backupManager = BackupManager.shared
 
     @AppStorage("colourScheme", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var colourScheme: Int = 0
     @Environment(\.scenePhase) var scenePhase
@@ -60,9 +61,23 @@ struct ContentView: View {
                 }
         }
         .ignoresSafeArea(.keyboard)
+        .alert(item: $backupManager.suggestedRestore) { suggestion in
+            Alert(
+                title: Text("Some of your data may be missing"),
+                message: Text("Backup from \(suggestion.backup.createdAt.formatted(date: .abbreviated, time: .shortened)): \(suggestion.backup.transactionCount) transactions. On this device now: \(suggestion.currentTransactionCount). Restore what's missing? Nothing you have now will be removed or changed."),
+                primaryButton: .default(Text("Restore")) {
+                    backupManager.restore(suggestion.backup) { _ in }
+                },
+                secondaryButton: .cancel(Text("Not Now")) {
+                    backupManager.dismissSuggestion(suggestion)
+                }
+            )
+        }
         .onAppear {
 //            UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.set(false, forKey: "newTransactionAdded")
 //            WidgetCenter.shared.reloadTimelines(ofKind: "TemplateTransactions")
+
+            backupManager.start()
 
             if appLockVM.isAppLockEnabled {
                 appLockVM.appLockValidation()
@@ -168,6 +183,7 @@ struct ContentView: View {
             if newPhase == .background || newPhase == .inactive {
                 if newPhase == .background {
                     dataController.save()
+                    backupManager.backUpIfNeeded()
                 }
 
                 if appLockVM.isAppLockEnabled {

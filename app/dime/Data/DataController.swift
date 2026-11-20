@@ -295,6 +295,8 @@ class DataController: ObservableObject {
     static let shared = DataController()
 
     static let iCloudSyncEnabledKey = "iCloudSyncEnabled"
+    static let lastBulkDeletionKey = "lastBulkDeletion"
+    static let dataIsCurrentNotification = Notification.Name("DimeDataIsCurrentWithICloud")
     private static let cloudKitContainerIdentifier = "iCloud.com.rafaelsoh.dime"
 
     static var isICloudSyncPreferred: Bool {
@@ -501,6 +503,13 @@ class DataController: ObservableObject {
             return
         }
 
+        // Lets the backup check tell a deliberate bulk delete apart from data going missing.
+        let deletedObjects = context.deletedObjects
+
+        if deletedObjects.contains(where: { $0 is Category }) || deletedObjects.filter({ $0 is Transaction }).count >= 10 {
+            UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.set(Date.now, forKey: Self.lastBulkDeletionKey)
+        }
+
         do {
             try context.save()
             WidgetCenter.shared.reloadAllTimelines()
@@ -628,12 +637,17 @@ class DataController: ObservableObject {
         save()
     }
 
+    var isDataCurrentWithICloud: Bool {
+        recurringGate.isOpen
+    }
+
     func updateRecurringTransactionsIfReady() {
         guard recurringGate.isOpen else {
             return
         }
 
         updateRecurringTransactions()
+        NotificationCenter.default.post(name: Self.dataIsCurrentNotification, object: self)
     }
 
     func updateBudgetDates() {
@@ -2071,6 +2085,11 @@ class DataController: ObservableObject {
         } else {
             return (false, 0, 0, 0, 0, Date.now)
         }
+    }
+
+    func transactionCount() -> Int {
+        let request: NSFetchRequest<Transaction> = Transaction.fetchRequest()
+        return (try? container.viewContext.count(for: request)) ?? 0
     }
 
     func results<T: NSManagedObject>(for fetchRequest: NSFetchRequest<T>) -> [T] {

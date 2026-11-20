@@ -162,5 +162,25 @@
             <string>%lld лет назад</string>
         </dict>
     </dict>
+    <key>%lld transactions</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@VARIABLE@</string>
+        <key>VARIABLE</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>lld</string>
+            <key>one</key>
+            <string>%lld транзакция</string>
+            <key>few</key>
+            <string>%lld транзакции</string>
+            <key>many</key>
+            <string>%lld транзакций</string>
+            <key>other</key>
+            <string>%lld транзакции</string>
+        </dict>
+    </dict>
 </dict>
 </plist>

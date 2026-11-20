@@ -146,5 +146,21 @@
             <string>il y a %lld ans</string>
         </dict>
     </dict>
+    <key>%lld transactions</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@VARIABLE@</string>
+        <key>VARIABLE</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>lld</string>
+            <key>one</key>
+            <string>%lld transaction</string>
+            <key>other</key>
+            <string>%lld transactions</string>
+        </dict>
+    </dict>
 </dict>
 </plist>
