@@ -156,29 +156,15 @@ struct SettingsView: View {
   var body: some View {
     NavigationView {
       VStack {
-        HStack {
-          Text("Settings")
-            .font(.system(.title, design: .rounded).weight(.semibold))
-
-            //                        .font(.system(size: 25, weight: .semibold, design: .rounded))
-            .accessibility(addTraits: .isHeader)
-          Spacer()
-        }
-        .padding(.horizontal, 30)
-        .padding(.top, 20)
-        .padding(.bottom, 10)
-
         ScrollView(showsIndicators: false) {
-          VStack(spacing: 5) {
+          VStack(spacing: 7) {
             Text("GENERAL")
-              .font(.system(.footnote, design: .rounded).weight(.semibold))
-
-              //                            .font(.system(size: 12, weight: .semibold, design: .rounded))
+              .font(.system(.subheadline, design: .rounded).weight(.semibold))
               .foregroundColor(Color.SubtitleText)
-              .padding(.horizontal, 10)
+              .padding(.horizontal, 14)
               .frame(maxWidth: .infinity, alignment: .leading)
 
-            VStack(spacing: 13) {
+            VStack(spacing: 0) {
 
               NavigationLink(destination: SettingsNotificationsView()) {
                 SettingsRowView(
@@ -235,10 +221,12 @@ struct SettingsView: View {
               }
                 
             }
-            .padding(10)
-            .background(Color.SettingsBackground, in: RoundedRectangle(cornerRadius: 9))
+            .padding(.horizontal, 14)
+            .padding(.vertical, 4)
+            .settingsSectionBackground()
           }
-          .padding(.horizontal, 20)
+          .padding(.horizontal, 16)
+          .padding(.top, 6)
           .padding(.bottom, 25)
           .onChange(of: currency) { _ in
             WidgetCenter.shared.reloadAllTimelines()
@@ -250,16 +238,14 @@ struct SettingsView: View {
             WidgetCenter.shared.reloadAllTimelines()
           }
 
-          VStack(spacing: 5) {
+          VStack(spacing: 7) {
             Text("APPEARANCE")
-              .font(.system(.footnote, design: .rounded).weight(.semibold))
-
-              //                            .font(.system(size: 12, weight: .semibold, design: .rounded))
+              .font(.system(.subheadline, design: .rounded).weight(.semibold))
               .foregroundColor(Color.SubtitleText)
-              .padding(.horizontal, 10)
+              .padding(.horizontal, 14)
               .frame(maxWidth: .infinity, alignment: .leading)
 
-            VStack(spacing: 13) {
+            VStack(spacing: 0) {
               NavigationLink(destination: SettingsAppearanceView()) {
                 SettingsRowView(
                   systemImage: "circle.righthalf.filled", title: "Theme", colour: 100,
@@ -297,10 +283,11 @@ struct SettingsView: View {
                 })
 
             }
-            .padding(10)
-            .background(Color.SettingsBackground, in: RoundedRectangle(cornerRadius: 9))
+            .padding(.horizontal, 14)
+            .padding(.vertical, 4)
+            .settingsSectionBackground()
           }
-          .padding(.horizontal, 20)
+          .padding(.horizontal, 16)
           .padding(.bottom, 25)
           .onChange(of: currency) { _ in
             WidgetCenter.shared.reloadAllTimelines()
@@ -312,16 +299,14 @@ struct SettingsView: View {
             WidgetCenter.shared.reloadAllTimelines()
           }
 
-          VStack(spacing: 5) {
+          VStack(spacing: 7) {
             Text("DATA")
-              .font(.system(.footnote, design: .rounded).weight(.semibold))
-
-              //                            .font(.system(size: 12, weight: .semibold, design: .rounded))
+              .font(.system(.subheadline, design: .rounded).weight(.semibold))
               .foregroundColor(Color.SubtitleText)
-              .padding(.horizontal, 10)
+              .padding(.horizontal, 14)
               .frame(maxWidth: .infinity, alignment: .leading)
 
-            VStack(spacing: 13) {
+            VStack(spacing: 0) {
               NavigationLink(
                 destination: SettingsCategoryView()
                   .onAppear {
@@ -374,22 +359,21 @@ struct SettingsView: View {
                 SettingsRowView(systemImage: "xmark.bin.fill", title: "Erase Data", colour: 114)
               }
             }
-            .padding(10)
-            .background(Color.SettingsBackground, in: RoundedRectangle(cornerRadius: 9))
+            .padding(.horizontal, 14)
+            .padding(.vertical, 4)
+            .settingsSectionBackground()
           }
-          .padding(.horizontal, 20)
+          .padding(.horizontal, 16)
           .padding(.bottom, 25)
 
-          VStack(spacing: 5) {
+          VStack(spacing: 7) {
             Text("OTHERS")
-              .font(.system(.footnote, design: .rounded).weight(.semibold))
-
-              //                            .font(.system(size: 12, weight: .semibold, design: .rounded))
+              .font(.system(.subheadline, design: .rounded).weight(.semibold))
               .foregroundColor(Color.SubtitleText)
-              .padding(.horizontal, 10)
+              .padding(.horizontal, 14)
               .frame(maxWidth: .infinity, alignment: .leading)
 
-            VStack(spacing: 13) {
+            VStack(spacing: 0) {
 
                 NavigationLink(destination: SettingsHapticsView()) {
                   SettingsRowView(
@@ -453,10 +437,11 @@ struct SettingsView: View {
                   systemImage: "camera.fill", title: "Follow Rafael on X", colour: 129)
               }
             }
-            .padding(10)
-            .background(Color.SettingsBackground, in: RoundedRectangle(cornerRadius: 9))
+            .padding(.horizontal, 14)
+            .padding(.vertical, 4)
+            .settingsSectionBackground()
           }
-          .padding(.horizontal, 20)
+          .padding(.horizontal, 16)
           .padding(.bottom, 15)
 
           VStack(spacing: 5) {
@@ -487,14 +472,16 @@ struct SettingsView: View {
               .foregroundColor(Color.SubtitleText)
               .multilineTextAlignment(.center)
           }
-          .padding(.horizontal, 25)
-          .padding(.bottom, 95)
+          .padding(.horizontal, 16)
         }
+        .tabBarClearance()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+        .tabHeader {
+          TabHeader("Settings")
+        }
       }
-      .navigationBarTitle("")
-      .navigationBarHidden(true)
+      .settingsNavigationBar(hidden: true)
       .background(Color.PrimaryBackground)
       .fullScreenCover(isPresented: $showTipJarMenu) {
         TipJarAlert()
@@ -519,33 +506,17 @@ struct SettingsView: View {
           width: dynamicTypeSize > .xLarge ? 40 : 30, height: dynamicTypeSize > .xLarge ? 40 : 30,
           alignment: .center
         )
-        .background(Color(color), in: RoundedRectangle(cornerRadius: 6))
+        .background(Color(color), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
 
-      Text(text)
-        .font(.system(.body, design: .rounded).weight(.medium))
-        .lineLimit(1)
-        .foregroundColor(Color.PrimaryText)
-
-      Spacer()
-
-      ZStack(alignment: bool ? .trailing : .leading) {
-        Capsule()
-          .frame(width: 42, height: 28)
-          .foregroundColor(bool ? .green : .gray.opacity(0.8))
-
-        Circle()
-          .foregroundColor(Color.white)
-          .padding(2)
-          .frame(width: 28, height: 28)
-          .matchedGeometryEffect(id: "toggle\(color)", in: animation)
+      Toggle(isOn: Binding(get: { bool }, set: { _ in withAnimation { onTap() } })) {
+        Text(LocalizedStringKey(text))
+          .font(.system(.body, design: .rounded).weight(.medium))
+          .lineLimit(1)
+          .foregroundColor(Color.PrimaryText)
       }
-      .onTapGesture {
-        withAnimation {
-          onTap()
-        }
-      }
+      .tint(.green)
     }
-    .frame(maxWidth: .infinity)
+    .frame(maxWidth: .infinity, minHeight: .settingsRowHeight)
   }
 
   func makeAttributedString() -> AttributedString {
@@ -867,7 +838,7 @@ struct SettingsRowView: View {
           width: dynamicTypeSize > .xLarge ? 40 : 30, height: dynamicTypeSize > .xLarge ? 40 : 30,
           alignment: .center
         )
-        .background(Color("\(colour)"), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+        .background(Color("\(colour)"), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
 
       Text(LocalizedStringKey(title))
         .font(.system(.body, design: .rounded).weight(.medium))
@@ -893,7 +864,8 @@ struct SettingsRowView: View {
         //                .font(.system(size: 15))
         .foregroundColor(.DarkIcon.opacity(0.6))
     }
-    .frame(maxWidth: .infinity)
+    .frame(maxWidth: .infinity, minHeight: .settingsRowHeight)
+    .contentShape(Rectangle())
     .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
   }
 }
@@ -903,9 +875,6 @@ struct SettingsCategoryView: View {
 
   var body: some View {
     CategoryView(mode: .settings, income: false)
-      .navigationBarBackButtonHidden(true)
-      .navigationBarTitle("")
-      .navigationBarHidden(true)
       .background(Color.PrimaryBackground)
   }
 }

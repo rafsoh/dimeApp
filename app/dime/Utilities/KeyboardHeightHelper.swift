@@ -76,31 +76,30 @@ extension UIApplication {
     }
 }
 
+final class KeyboardHeightCache {
+    static let shared = KeyboardHeightCache()
+
+    private var observer: NSObjectProtocol?
+
+    func start() {
+        guard observer == nil else { return }
+
+        observer = NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillShowNotification, object: nil, queue: .main) { notification in
+            let height = notification.keyboardHeight
+            if height > 200 {
+                UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.set(Double(height - 20), forKey: "keyboard")
+            }
+        }
+    }
+}
+
 struct KeyboardAwareModifier: ViewModifier {
     @AppStorage("keyboard", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var savedKeyboardHeight: Double = .init(UIScreen.main.bounds.height / 2.5)
     var showToolbar: Bool
-//    @State private var keyboardHeight: CGFloat = 250
-
-    private var keyboardHeightPublisher: AnyPublisher<CGFloat, Never> {
-        Publishers.Merge(
-            NotificationCenter.default
-                .publisher(for: UIResponder.keyboardWillShowNotification)
-                .compactMap { $0.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue }
-                .map { $0.cgRectValue.height },
-            NotificationCenter.default
-                .publisher(for: UIResponder.keyboardWillHideNotification)
-                .map { _ in CGFloat(0) }
-        ).eraseToAnyPublisher()
-    }
 
     func body(content: Content) -> some View {
         content
             .frame(height: savedKeyboardHeight)
-            .onReceive(keyboardHeightPublisher) { value in
-                if value > 200 {
-                    self.savedKeyboardHeight = value - 20
-                }
-            }
     }
 }
 

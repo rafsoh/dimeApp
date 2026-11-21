@@ -20,8 +20,8 @@
 // categories
 
 "Categories" = "Catégories";
-"no_income_categories" = "Aucune catégorie de revenus n'a été trouvée, cliquez sur le bouton 'Nouveau' pour en ajouter";
-"no_expense_categories" = "Aucune catégorie de dépenses n'a été trouvée, cliquez sur le bouton 'Nouveau' pour en ajouter";
+"no_income_categories" = "Aucune catégorie de revenus trouvée";
+"no_expense_categories" = "Aucune catégorie de dépenses trouvée";
 "Suggestions Hidden" = "Suggestions cachées";
 "Successfully Edited" = "Édité avec succès";
 "INCOME CATEGORIES" = "Catégories de revenus";
@@ -89,6 +89,7 @@
 "Your Log is Empty" = "Votre registre est vide";
 "Press the plus button to add your first entry" = "Appuyez sur le bouton + pour ajouter votre première entrée";
 "Search entry by note" = "Recherche d'une saisie par note";
+"Search by note, category, amount or date" = "Recherchez par note, catégorie, montant ou date";
 "all entries" = "toutes les entrées";
 "by type" = "par type";
 "by day" = "par jour";

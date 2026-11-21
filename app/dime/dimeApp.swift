@@ -36,5 +36,14 @@ struct dimeApp: App {
         _unlockManager = StateObject(wrappedValue: unlockManager)
 
         UITableView.appearance().backgroundColor = .clear
+
+        UINavigationBar.appearance().largeTitleTextAttributes = [
+            .font: UIFontMetrics(forTextStyle: .largeTitle).scaledFont(for: UIFont.rounded(ofSize: 34, weight: .bold))
+        ]
+        UINavigationBar.appearance().titleTextAttributes = [
+            .font: UIFontMetrics(forTextStyle: .headline).scaledFont(for: UIFont.rounded(ofSize: 17, weight: .semibold))
+        ]
+
+        KeyboardHeightCache.shared.start()
     }
 }

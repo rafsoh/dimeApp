@@ -27,8 +27,6 @@ struct CustomTabBar: View {
     @AppStorage("confetti", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var confetti: Bool = false
     @AppStorage("firstTransactionViewLaunch", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var firstLaunch: Bool = true
 
-    @State var animate = false
-
     private var isZoomed: Bool {
         UIScreen.main.scale != UIScreen.main.nativeScale
     }
@@ -39,36 +37,22 @@ struct CustomTabBar: View {
 
             TabButton(image: "Insights", zoomed: isZoomed, currentTab: $currentTab)
 
-            ZStack {
-                RoundedRectangle(cornerRadius: 28, style: .continuous).fill(Color.DarkBackground.opacity(0.6))
-                    .frame(width: 95, height: 68)
-                    .opacity(self.animate ? 0 : 1)
-                    .scaleEffect(self.animate ? 1 : 0.4)
+            Button {
+                let impactMed = UIImpactFeedbackGenerator(style: .light)
+                impactMed.impactOccurred()
 
-                RoundedRectangle(cornerRadius: 20.5, style: .continuous).fill(Color.DarkBackground.opacity(0.8))
-                    .frame(width: 80, height: 53)
-                    .opacity(self.animate ? 0 : 1)
-                    .scaleEffect(self.animate ? 1 : 0.6)
+                addTransaction = true
 
-                Button {
-                    let impactMed = UIImpactFeedbackGenerator(style: .light)
-                    impactMed.impactOccurred()
-
-                    addTransaction = true
-
-                } label: {
-                    Image(systemName: "plus")
-                }
-                .buttonStyle(MyButtonStyle())
-                .padding(15)
+            } label: {
+                Image(systemName: "plus")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundColor(Color.LightIcon)
+                    .frame(width: 65, height: 38)
+                    .contentShape(Capsule())
             }
-            .onAppear {
-                if transactions.isEmpty {
-                    withAnimation(.easeInOut(duration: 1.9).repeatForever(autoreverses: false)) {
-                        self.animate.toggle()
-                    }
-                }
-            }
+            .buttonStyle(.plain)
+            .glassBackground(in: Capsule(), tint: Color.DarkBackground, fallback: Color.DarkBackground)
+            .padding(15)
             .accessibilityLabel("Add New Transaction")
 
             TabButton(image: "Budget", zoomed: isZoomed, currentTab: $currentTab)
@@ -78,8 +62,19 @@ struct CustomTabBar: View {
         .padding(.horizontal, 15)
         .padding(.bottom, bottomEdge - 10)
         .frame(maxWidth: .infinity)
-        .background(Color.PrimaryBackground)
-        .fullScreenCover(isPresented: $addTransaction, onDismiss: {
+        .contentShape(Rectangle())
+        .onTapGesture {}
+        .background {
+            LinearGradient(stops: [
+                .init(color: Color.PrimaryBackground.opacity(0), location: 0),
+                .init(color: Color.PrimaryBackground.opacity(0.85), location: 0.45),
+                .init(color: Color.PrimaryBackground, location: 1)
+            ], startPoint: .top, endPoint: .bottom)
+                .padding(.top, -30)
+                .ignoresSafeArea(edges: .bottom)
+                .allowsHitTesting(false)
+        }
+        .sheet(isPresented: $addTransaction, onDismiss: {
             if confetti {
                 if count != transactions.count {
                     counter += 1
@@ -101,13 +96,6 @@ struct CustomTabBar: View {
                 count = transactions.count
             }
         }
-        .onChange(of: transactions.count) { _ in
-            if !transactions.isEmpty {
-                self.animate = false
-            } else {
-                self.animate = true
-            }
-        }
         .onOpenURL { url in
             guard
                 url.host == "newExpense"
@@ -118,16 +106,6 @@ struct CustomTabBar: View {
 
             addTransaction = true
         }
-    }
-}
-
-struct MyButtonStyle: ButtonStyle {
-    func makeBody(configuration: Self.Configuration) -> some View {
-        configuration.label
-            .font(.system(size: 20, weight: .bold))
-            .foregroundColor(Color.LightIcon)
-            .frame(width: 65, height: 38)
-            .background(configuration.isPressed ? Color.SubtitleText : Color.DarkBackground, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
     }
 }
 
@@ -143,6 +121,12 @@ struct BouncyButton: ButtonStyle {
     }
 }
 
+struct StaticButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+    }
+}
+
 struct TabButton: View {
     var image: String
     var zoomed: Bool
@@ -150,7 +134,9 @@ struct TabButton: View {
 
     var body: some View {
         Button {
-            DispatchQueue.main.async {
+            var transaction = SwiftUI.Transaction()
+            transaction.disablesAnimations = true
+            withTransaction(transaction) {
                 currentTab = image
             }
         } label: {
@@ -158,11 +144,10 @@ struct TabButton: View {
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(maxWidth: 28, maxHeight: 28)
-                .animation(.easeInOut(duration: 0.3), value: currentTab)
                 .frame(maxWidth: .infinity)
                 .foregroundColor(currentTab == image ? Color.DarkIcon : Color.GreyIcon)
         }
-        .buttonStyle(BouncyButton(duration: 0.3, scale: 0.6))
+        .buttonStyle(StaticButtonStyle())
         .accessibilityLabel("\(image) tab")
         .accessibilityAddTraits(
             currentTab == image

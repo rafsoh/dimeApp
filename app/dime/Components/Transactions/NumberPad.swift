@@ -32,13 +32,13 @@ struct NumberPad: View {
         GeometryReader { proxy in
             VStack(spacing: proxy.size.height * 0.04) {
                 ForEach(numPadNumbers, id: \.self) { array in
-                    HStack(spacing: proxy.size.width * 0.05) {
+                    HStack(spacing: proxy.size.width * 0.02) {
                         ForEach(array, id: \.self) { singleNumber in
                             NumberButton(number: singleNumber, size: proxy.size)
                         }
                     }
                 }
-                HStack(spacing: proxy.size.width * 0.05) {
+                HStack(spacing: proxy.size.width * 0.02) {
                     if numberEntryType == 1 {
                         Button {
                             deleteLastDigit()
@@ -46,24 +46,22 @@ struct NumberPad: View {
                             Image("tag-cross")
                                 .resizable()
                                 .frame(width: 32, height: 32)
-                                .frame(width: proxy.size.width * 0.3, height: proxy.size.height * 0.22)
-                                .background(Color.DarkBackground)
-                                .foregroundColor(Color.LightIcon)
-                                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                                .foregroundColor(Color.PrimaryText)
+                                .keyFrame(size: proxy.size)
+                                .glassBackground(in: keyShape(size: proxy.size), tint: Color.glassTint)
                         }
-                        .buttonStyle(NumPadButton())
+                        .buttonStyle(NumPadKeyStyle())
                     } else {
                         Button {
                             isEditingDecimal = true
                         } label: {
                             Text(".")
                                 .font(.system(size: 34, weight: .regular, design: .rounded))
-                                .frame(width: proxy.size.width * 0.3, height: proxy.size.height * 0.22)
-                                .background(Color.SecondaryBackground)
                                 .foregroundColor(Color.PrimaryText)
-                                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                                .keyFrame(size: proxy.size)
+                                .glassBackground(in: keyShape(size: proxy.size), tint: Color.glassTint)
                         }
-                        .buttonStyle(NumPadButton())
+                        .buttonStyle(NumPadKeyStyle())
                     }
 
                     NumberButton(number: 0, size: proxy.size)
@@ -73,19 +71,19 @@ struct NumberPad: View {
                     } label: {
                         Group {
                             if #available(iOS 17.0, *) {
-                                Image(systemName: "checkmark.square.fill")
-                                    .font(.system(size: 30, weight: .medium, design: .rounded))
+                                Image(systemName: "checkmark")
+                                    .font(.system(size: 28, weight: .semibold, design: .rounded))
                                     .symbolEffect(.bounce.up.byLayer, value: price != 0 && category != nil)
                             } else {
-                                Image(systemName: "checkmark.square.fill")
-                                    .font(.system(size: 30, weight: .medium, design: .rounded))
+                                Image(systemName: "checkmark")
+                                    .font(.system(size: 28, weight: .semibold, design: .rounded))
                             }
                         }
-                        .frame(width: proxy.size.width * 0.3, height: proxy.size.height * 0.22)
                         .foregroundColor(Color.LightIcon)
-                        .background(Color.DarkBackground, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        .keyFrame(size: proxy.size)
+                        .glassBackground(in: keyShape(size: proxy.size), tint: Color.DarkBackground, fallback: Color.DarkBackground)
                     }
-                    .buttonStyle(NumPadButton())
+                    .buttonStyle(NumPadKeyStyle())
                 }
             }
             .frame(width: proxy.size.width, height: proxy.size.height)
@@ -212,14 +210,40 @@ struct NumberPad: View {
         } label: {
             Text("\(number)")
                 .font(.system(size: 34, weight: .regular, design: .rounded))
-                .frame(width: size.width * 0.3, height: size.height * 0.22)
-                .background(Color.SecondaryBackground)
                 .foregroundColor(Color.PrimaryText)
-                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .keyFrame(size: size)
+                .glassBackground(in: keyShape(size: size), tint: Color.glassTint)
                 .opacity(disabled ? 0.6 : 1)
         }
         .disabled(disabled)
-        .buttonStyle(NumPadButton())
+        .buttonStyle(NumPadKeyStyle())
+    }
+
+    private func keyShape(size: CGSize) -> RoundedRectangle {
+        RoundedRectangle(cornerRadius: size.height * NumPadKeyStyle.heightRatio * 0.4, style: .continuous)
+    }
+}
+
+private struct NumPadKeyStyle: ButtonStyle {
+    static let widthRatio: CGFloat = 0.32
+    static let heightRatio: CGFloat = 0.22
+
+    @ViewBuilder func makeBody(configuration: Configuration) -> some View {
+        if #available(iOS 26.0, *) {
+            configuration.label
+        } else {
+            configuration.label
+                .scaleEffect(configuration.isPressed ? 0.8 : 1)
+                .animation(.easeOut(duration: 0.3), value: configuration.isPressed)
+                .opacity(configuration.isPressed ? 0.5 : 1)
+        }
+    }
+}
+
+private extension View {
+    func keyFrame(size: CGSize) -> some View {
+        frame(width: size.width * NumPadKeyStyle.widthRatio, height: size.height * NumPadKeyStyle.heightRatio)
+            .contentShape(Rectangle())
     }
 }
 
@@ -296,7 +320,7 @@ struct NumberPadTextView: View {
         HStack(alignment: .lastTextBaseline, spacing: 0) {
             Group {
                 Text(currencySymbol)
-                    .font(.system(.largeTitle, design: .rounded))
+                    .font(.system(size: largerFontSize, weight: .regular, design: .rounded))
                     .foregroundColor(Color.SubtitleText)
 
 //                ForEach(displayNumbers, id: \.self) { number in
@@ -314,7 +338,7 @@ struct NumberPadTextView: View {
         }
         .minimumScaleFactor(0.5)
         .lineLimit(1)
-        .padding(.horizontal, numberEntryType == 2 ? 40 : 0)
+        .padding(.horizontal, numberEntryType == 2 ? 52 : 0)
         .frame(maxWidth: .infinity)
         .overlay(alignment: .trailing) {
             if numberEntryType == 2 {
@@ -325,19 +349,13 @@ struct NumberPadTextView: View {
     }
 
     @ViewBuilder
-   func DeleteButton() -> some View {
-       Button {
-         deleteLastDigit()
-       } label: {
-         Image(systemName: "delete.left.fill")
-           .font(.system(size: 16, weight: .semibold))
-           .foregroundColor(Color.SubtitleText)
-           .padding(7)
-           .background(Color.SecondaryBackground, in: Circle())
-           .contentShape(Circle())
-       }
-       .disabled(price == 0 && !isEditingDecimal)
-   }
+    func DeleteButton() -> some View {
+        GlassIconButton(systemName: "delete.left.fill", accessibilityLabel: "Delete last digit", foreground: Color.PrimaryText) {
+            deleteLastDigit()
+        }
+        .disabled(price == 0 && !isEditingDecimal)
+        .opacity(price == 0 && !isEditingDecimal ? 0.4 : 1)
+    }
 
     public func deleteLastDigit() {
         if numberEntryType == 1 {

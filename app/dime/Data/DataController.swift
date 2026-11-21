@@ -30,34 +30,6 @@ enum CustomError: Swift.Error, CustomLocalizedStringResourceConvertible {
     }
 }
 
-struct DeletedTransaction {
-    let id: UUID?
-    let note: String?
-    let amount: Double
-    let date: Date?
-    let day: Date?
-    let month: Date?
-    let income: Bool
-    let onceRecurring: Bool
-    let recurringType: Int16
-    let recurringCoefficient: Int16
-    let categoryID: NSManagedObjectID?
-
-    init(_ transaction: Transaction) {
-        id = transaction.id
-        note = transaction.note
-        amount = transaction.amount
-        date = transaction.date
-        day = transaction.day
-        month = transaction.month
-        income = transaction.income
-        onceRecurring = transaction.onceRecurring
-        recurringType = transaction.recurringType
-        recurringCoefficient = transaction.recurringCoefficient
-        categoryID = transaction.category?.objectID
-    }
-}
-
 final class CloudSyncStatus: ObservableObject {
     struct Problem: Equatable {
         let message: String
@@ -328,6 +300,13 @@ class DataController: ObservableObject {
     private var pathMonitor: NWPathMonitor?
 
     init() {
+        #if DEBUG
+        let demoDataset = DemoDataset(arguments: ProcessInfo.processInfo.arguments)
+        let usesDemoData = demoDataset != nil
+        #else
+        let usesDemoData = false
+        #endif
+
         let description = NSPersistentStoreDescription()
 
         description.shouldMigrateStoreAutomatically = true
@@ -344,7 +323,7 @@ class DataController: ObservableObject {
             Self.migrateLegacyICloudSyncSetting()
         }
 
-        isCloudKitSyncEnabled = !isAppExtension && Self.isICloudSyncPreferred
+        isCloudKitSyncEnabled = !isAppExtension && !usesDemoData && Self.isICloudSyncPreferred
         syncStatus = CloudSyncStatus(isEnabled: isCloudKitSyncEnabled, containerIdentifier: Self.cloudKitContainerIdentifier)
         recurringGate = RecurringGenerationGate(isSyncEnabled: isCloudKitSyncEnabled)
 
@@ -356,7 +335,10 @@ class DataController: ObservableObject {
 
         let groupID = "group.com.rafaelsoh.dime"
 
-        if let url = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: groupID) {
+        if usesDemoData {
+            // An in-memory SQLite store, so demo data never touches the user's real store.
+            description.url = URL(fileURLWithPath: "/dev/null")
+        } else if let url = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: groupID) {
             description.url = url.appendingPathComponent("Main.sqlite")
         }
 
@@ -377,6 +359,12 @@ class DataController: ObservableObject {
         if isCloudKitSyncEnabled {
             observeCloudKitSync()
         }
+
+        #if DEBUG
+        if let demoDataset {
+            seedDemoData(demoDataset)
+        }
+        #endif
     }
 
     private func observeCloudKitSync() {
@@ -518,34 +506,12 @@ class DataController: ObservableObject {
         }
     }
 
-    func deleteTransaction(_ transaction: Transaction) -> DeletedTransaction? {
+    func deleteTransaction(_ transaction: Transaction) {
         guard transaction.managedObjectContext != nil else {
-            return nil
+            return
         }
 
-        let deleted = DeletedTransaction(transaction)
         container.viewContext.delete(transaction)
-        save()
-        return deleted
-    }
-
-    func restoreTransaction(_ deleted: DeletedTransaction) {
-        let transaction = Transaction(context: container.viewContext)
-        transaction.id = deleted.id
-        transaction.note = deleted.note
-        transaction.amount = deleted.amount
-        transaction.date = deleted.date
-        transaction.day = deleted.day
-        transaction.month = deleted.month
-        transaction.income = deleted.income
-        transaction.onceRecurring = deleted.onceRecurring
-        transaction.recurringType = deleted.recurringType
-        transaction.recurringCoefficient = deleted.recurringCoefficient
-
-        if let categoryID = deleted.categoryID {
-            transaction.category = try? container.viewContext.existingObject(with: categoryID) as? Category
-        }
-
         save()
     }
 
@@ -2152,3 +2118,229 @@ func calculateStartOfMonthPeriod(earliestDate: Date, startOfMonthDay: Int) -> Da
     let startOfMonth = Calendar.current.date(from: components) ?? Date.now
     return (earliestDate < startOfMonth) ? (Calendar.current.date(byAdding: .month, value: -1, to: startOfMonth) ?? Date.now) : startOfMonth
 }
+
+#if DEBUG
+// Launch with `-demoData minimal` or `-demoData varied` to run against a seeded in-memory store.
+enum DemoDataset: String {
+    case minimal
+    case varied
+
+    init?(arguments: [String]) {
+        guard let index = arguments.firstIndex(of: "-demoData"), index + 1 < arguments.count else {
+            return nil
+        }
+
+        self.init(rawValue: arguments[index + 1])
+    }
+}
+
+private struct DemoRandom {
+    var state: UInt64
+
+    mutating func next() -> Double {
+        state = state &* 6_364_136_223_846_793_005 &+ 1_442_695_040_888_963_407
+        return Double(state >> 11) / Double(1 << 53)
+    }
+
+    mutating func chance(_ probability: Double) -> Bool {
+        next() < probability
+    }
+
+    mutating func amount(_ range: ClosedRange<Double>) -> Double {
+        ((range.lowerBound + (range.upperBound - range.lowerBound) * next()) * 20).rounded() / 20
+    }
+
+    mutating func pick<T>(_ items: [T]) -> T {
+        items[min(items.count - 1, Int(next() * Double(items.count)))]
+    }
+}
+
+extension DataController {
+    func seedDemoData(_ dataset: DemoDataset) {
+        let context = container.viewContext
+        let calendar = Calendar.current
+        let now = Date.now
+        var order: Int64 = 0
+
+        func category(_ name: String, _ emoji: String, _ colour: String, income: Bool = false) -> Category {
+            let category = Category(context: context)
+            category.id = UUID()
+            category.name = name
+            category.emoji = emoji
+            category.colour = colour
+            category.income = income
+            category.order = order
+            category.dateCreated = now
+            order += 1
+            return category
+        }
+
+        func add(_ note: String, _ category: Category, _ amount: Double, daysAgo: Int, hour: Int, minute: Int = 0) {
+            let day = calendar.date(byAdding: .day, value: -daysAgo, to: calendar.startOfDay(for: now)) ?? now
+            var date = calendar.date(bySettingHour: hour, minute: minute, second: 0, of: day) ?? day
+            if date > now {
+                date = now.addingTimeInterval(-600)
+            }
+
+            let transaction = Transaction(context: context)
+            transaction.id = UUID()
+            transaction.note = note
+            transaction.category = category
+            transaction.income = category.income
+            transaction.amount = amount
+            transaction.date = date
+            transaction.day = calendar.startOfDay(for: date)
+            transaction.month = calendar.date(from: calendar.dateComponents([.year, .month], from: date))
+        }
+
+        switch dataset {
+        case .minimal:
+            let food = category("Food", "🍜", "#EC7A58")
+            _ = category("Transport", "🚇", "#279AF4")
+            _ = category("Salary", "💼", "#5FAF9F", income: true)
+            add("Lunch with Sam", food, 14.5, daysAgo: 0, hour: 12, minute: 30)
+            add("Ramen", food, 18.2, daysAgo: 1, hour: 19, minute: 45)
+            add("Bakery", food, 6.8, daysAgo: 2, hour: 8, minute: 15)
+
+        case .varied:
+            let food = category("Food", "🍜", "#EC7A58")
+            let groceries = category("Groceries", "🛒", "#5FAF9F")
+            let transport = category("Transport", "🚇", "#279AF4")
+            let coffee = category("Coffee", "☕", "#C38D5D")
+            let shopping = category("Shopping", "🛍️", "#C56AF7")
+            let fun = category("Entertainment", "🎬", "#ED80A2")
+            let bills = category("Bills", "💡", "#F3BF56")
+            let health = category("Health", "💊", "#E34D63")
+            let salary = category("Salary", "💼", "#5FAF9F", income: true)
+            let freelance = category("Freelance", "🎨", "#61C7FA", income: true)
+
+            var random = DemoRandom(state: 42)
+
+            for daysAgo in (0 ... 110).reversed() {
+                let day = calendar.date(byAdding: .day, value: -daysAgo, to: now) ?? now
+                let weekday = calendar.component(.weekday, from: day)
+                let weekend = weekday == 1 || weekday == 7
+                let dayOfMonth = calendar.component(.day, from: day)
+                // Some weeks are busier than others so the charts have shape.
+                let busy = (daysAgo / 7) % 3 == 0 ? 1.5 : 1.0
+
+                if !weekend && random.chance(0.32) {
+                    add(random.pick(["Blue Bottle", "Flat white", "Oat latte", "Cold brew"]), coffee, random.amount(4.5 ... 6.8), daysAgo: daysAgo, hour: 8, minute: 20)
+                }
+                if random.chance(0.34 * busy) {
+                    let dinner = weekend || random.chance(0.4)
+                    add(random.pick(dinner ? ["Dinner – Ramen", "Thai with Mia", "Pizza night", "Sushi"] : ["Lunch", "Lunch with Sam", "Poke bowl", "Sandwich"]), food, random.amount(dinner ? 22 ... 64 : 9 ... 19), daysAgo: daysAgo, hour: dinner ? 19 : 12, minute: 40)
+                }
+                if (weekday == 1 || weekday == 4) && random.chance(0.7) {
+                    add(random.pick(["Whole Foods", "Trader Joe's", "Costco", "Farmers market"]), groceries, random.amount(28 ... 135), daysAgo: daysAgo, hour: 17, minute: 10)
+                }
+                if random.chance(0.22 * busy) {
+                    add(random.pick(["Uber", "Metro card", "Lyft", "Parking"]), transport, random.amount(3 ... 26), daysAgo: daysAgo, hour: 9, minute: 5)
+                }
+                if random.chance(0.05 * busy) {
+                    add(random.pick(["New sneakers", "Uniqlo", "Amazon", "Desk lamp"]), shopping, random.amount(24 ... 160), daysAgo: daysAgo, hour: 15)
+                }
+                if weekend && random.chance(0.25) {
+                    add(random.pick(["Cinema", "Concert tickets", "Bowling", "Museum"]), fun, random.amount(14 ... 72), daysAgo: daysAgo, hour: 20)
+                }
+                if random.chance(0.025) {
+                    add(random.pick(["Pharmacy", "Dentist", "Vitamins"]), health, random.amount(12 ... 95), daysAgo: daysAgo, hour: 11)
+                }
+                if dayOfMonth == 3 {
+                    add("Electricity", bills, random.amount(68 ... 128), daysAgo: daysAgo, hour: 10)
+                }
+                if dayOfMonth == 12 {
+                    add("Phone plan", bills, 45, daysAgo: daysAgo, hour: 10)
+                }
+                if dayOfMonth == 1 {
+                    add("Salary", salary, 4200, daysAgo: daysAgo, hour: 9)
+                }
+                if daysAgo == 40 || daysAgo == 9 {
+                    add("Logo design", freelance, daysAgo == 40 ? 650 : 380, daysAgo: daysAgo, hour: 16)
+                }
+            }
+
+            let firstOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? now
+            let streaming = Transaction(context: context)
+            streaming.id = UUID()
+            streaming.note = "Netflix"
+            streaming.category = fun
+            streaming.amount = 15.49
+            streaming.date = calendar.date(byAdding: .month, value: -3, to: calendar.date(byAdding: .day, value: 6, to: firstOfMonth) ?? now)
+            streaming.day = calendar.startOfDay(for: streaming.wrappedDate)
+            streaming.month = calendar.date(from: calendar.dateComponents([.year, .month], from: streaming.wrappedDate))
+            streaming.onceRecurring = true
+            streaming.recurringType = 3
+            streaming.recurringCoefficient = 1
+            updateRecurringTransaction(transaction: streaming)
+
+            seedDemoBudgets(food: food, groceries: groceries, coffee: coffee, shopping: shopping, health: health)
+        }
+
+        save()
+    }
+
+    /// Budgets sized from the seeded spending so each lands in a known state: overall and Food on track,
+    /// Groceries close to its limit, a weekly Coffee budget over, a yearly Shopping budget and an untouched Health budget.
+    /// `-demoBudgets none` seeds no budgets; `-demoBudgets over` puts the overall budget over.
+    private func seedDemoBudgets(food: Category, groceries: Category, coffee: Category, shopping: Category, health: Category) {
+        let arguments = ProcessInfo.processInfo.arguments
+        let mode = arguments.firstIndex(of: "-demoBudgets").flatMap { $0 + 1 < arguments.count ? arguments[$0 + 1] : nil }
+        guard mode != "none" else { return }
+
+        let context = container.viewContext
+        let calendar = Calendar.current
+        let now = Date.now
+        let today = calendar.startOfDay(for: now)
+        let month = calendar.date(from: calendar.dateComponents([.year, .month], from: today)) ?? today
+        let year = calendar.date(from: calendar.dateComponents([.year], from: today)) ?? today
+        var sundayCalendar = Calendar(identifier: .gregorian)
+        sundayCalendar.firstWeekday = 1
+        let week = sundayCalendar.dateInterval(of: .weekOfYear, for: today)?.start ?? today
+
+        func spent(_ category: Category?, since start: Date) -> Double {
+            let request: NSFetchRequest<Transaction> = Transaction.fetchRequest()
+            var predicates = [NSPredicate(format: "date >= %@ AND date <= %@ AND income = NO", start as CVarArg, now as CVarArg)]
+            if let category {
+                predicates.append(NSPredicate(format: "category == %@", category))
+            }
+            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
+            return ((try? context.fetch(request)) ?? []).reduce(0) { $0 + $1.amount }
+        }
+
+        func elapsed(since start: Date, component: Calendar.Component, value: Int) -> Double {
+            let end = calendar.date(byAdding: component, value: value, to: start) ?? now
+            return max(0.1, now.timeIntervalSince(start) / end.timeIntervalSince(start))
+        }
+
+        func rounded(_ value: Double) -> Double {
+            max(10, (value / 10).rounded(.up) * 10)
+        }
+
+        let monthElapsed = elapsed(since: month, component: .month, value: 1)
+
+        let overall = MainBudget(context: context)
+        overall.startDate = month
+        overall.type = 3
+        overall.amount = mode == "over" ? rounded(spent(nil, since: month) * 0.85) : rounded(spent(nil, since: month) / monthElapsed * 1.12)
+
+        func budget(_ category: Category, type: Int16, start: Date, amount: Double, order: Int) {
+            let budget = Budget(context: context)
+            budget.id = UUID()
+            budget.category = category
+            budget.type = type
+            budget.startDate = start
+            budget.amount = amount
+            budget.dateCreated = now.addingTimeInterval(Double(order))
+        }
+
+        budget(food, type: 3, start: month, amount: rounded(spent(food, since: month) / monthElapsed * 1.2), order: 0)
+        budget(groceries, type: 3, start: month, amount: rounded(spent(groceries, since: month) / 0.92), order: 1)
+        budget(coffee, type: 2, start: week, amount: max(5, (spent(coffee, since: week) * 0.75).rounded()), order: 2)
+        budget(shopping, type: 4, start: year, amount: rounded(spent(shopping, since: year) / elapsed(since: year, component: .year, value: 1) * 1.3), order: 3)
+        if spent(health, since: month) == 0 {
+            budget(health, type: 3, start: month, amount: 60, order: 4)
+        }
+    }
+}
+#endif

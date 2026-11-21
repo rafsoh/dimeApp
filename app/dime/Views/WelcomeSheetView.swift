@@ -35,43 +35,44 @@ struct WelcomeSheetView: View {
     var body: some View {
         VStack {
             if firstPage {
-                VStack(spacing: 50) {
-                    VStack(spacing: 2) {
+                VStack(spacing: 44) {
+                    Spacer(minLength: 0)
+
+                    VStack(spacing: 4) {
                         Image("AppIcon1_EG")
                             .resizable()
-                            .frame(width: 70, height: 70)
-                            .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
-                            .padding(.bottom, 20)
+                            .frame(width: 92, height: 92)
+                            .clipShape(RoundedRectangle(cornerRadius: 21, style: .continuous))
+                            .shadow(color: Color.black.opacity(0.25), radius: 16, y: 8)
+                            .padding(.bottom, 18)
 
                         Text("dime_name")
-                            .font(.system(size: 30, weight: .medium, design: .rounded))
+                            .font(.system(.largeTitle, design: .rounded).weight(.bold))
                             .foregroundColor(Color.PrimaryText)
 
                         Text("Version \(UIApplication.appVersion ?? "") (\(UIApplication.buildNumber ?? ""))")
-                            .font(.system(size: 14, weight: .medium, design: .rounded))
+                            .font(.system(.callout, design: .rounded).weight(.medium))
                             .foregroundColor(Color.SubtitleText)
-                            .padding(.bottom, 15)
                     }
-                    .frame(height: UIScreen.main.bounds.height / 3.4, alignment: .bottom)
                     .frame(maxWidth: .infinity, alignment: .center)
 
-                    VStack(alignment: .leading, spacing: 22) {
+                    VStack(alignment: .leading, spacing: 26) {
                         ForEach(welcomeFeatures.indices, id: \.self) { rowIndex in
                             if rowIndex < visibleLines {
                                 HStack(alignment: .top, spacing: 15) {
                                     Image(systemName: welcomeFeatures[rowIndex].icon)
-                                        .font(.system(size: 25, weight: .regular))
-                                        .foregroundColor(Color.SubtitleText)
-                                        .frame(width: 40, alignment: .leading)
-                                        .offset(y: 2)
+                                        .font(.system(size: 22, weight: .medium))
+                                        .foregroundColor(Color.PrimaryText)
+                                        .frame(width: 48, height: 48)
+                                        .glassBackground(in: RoundedRectangle(cornerRadius: 14, style: .continuous), interactive: false)
 
-                                    VStack(alignment: .leading, spacing: 5) {
+                                    VStack(alignment: .leading, spacing: 4) {
                                         Text(LocalizedStringKey(welcomeFeatures[rowIndex].header))
-                                            .font(.system(size: 18, weight: .medium, design: .rounded))
+                                            .font(.system(.title3, design: .rounded).weight(.semibold))
                                             .foregroundColor(Color.PrimaryText)
 
                                         Text(LocalizedStringKey(welcomeFeatures[rowIndex].subtitle))
-                                            .font(.system(size: 16, weight: .regular, design: .rounded))
+                                            .font(.system(.body, design: .rounded))
                                             .fixedSize(horizontal: false, vertical: true)
                                             .foregroundColor(Color.SubtitleText)
                                     }
@@ -81,7 +82,8 @@ struct WelcomeSheetView: View {
                         }
                     }
                     .padding(.horizontal, 5)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(minHeight: 230, alignment: .top)
                     .onReceive(timer) { _ in
                         withAnimation(.easeInOut(duration: 0.4)) {
                             if visibleLines < 3 {
@@ -92,20 +94,25 @@ struct WelcomeSheetView: View {
                         }
                     }
 
+                    Spacer(minLength: 0)
+
                     Button {
                         withAnimation {
                             firstPage = false
                         }
                     } label: {
                         Text("Get Started")
-                            .font(.system(size: 20, weight: .semibold, design: .rounded))
-                            .foregroundColor(Color.LightIcon)
-                            .padding(.vertical, 12)
+                            .font(.system(.headline, design: .rounded))
+                            .foregroundColor(.black)
                             .frame(maxWidth: .infinity)
-                            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.DarkBackground))
+                            .frame(height: 50)
+                            .contentShape(Capsule())
                     }
+                    .whiteGlassButtonStyle()
                 }
-                .padding(30)
+                .padding(.horizontal, 28)
+                .padding(.top, 30)
+                .padding(.bottom, 16)
             } else {
                 CategoryView(mode: .welcome)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)

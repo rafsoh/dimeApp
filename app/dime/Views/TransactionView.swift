@@ -11,29 +11,17 @@ import Popovers
 import SwiftUI
 
 struct TransactionView: View {
-    @FetchRequest(sortDescriptors: [], predicate: NSPredicate(format: "income = %d", false)) private
-    var expenseCategories: FetchedResults<Category>
-    @FetchRequest(sortDescriptors: [], predicate: NSPredicate(format: "income = %d", true)) private
-    var incomeCategories: FetchedResults<Category>
-
     @Environment(\.managedObjectContext) var moc
     @EnvironmentObject var dataController: DataController
     @Environment(\.dismiss) var dismiss
 
     @Environment(\.colorScheme) var colorScheme
-    var boldText: Bool {
-        UIAccessibility.isBoldTextEnabled
-    }
-
-    @AppStorage("topEdge", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var topEdge:
-    Double = 20
 
     @State private var note = ""
     @State var category: Category?
     @State private var date = Date.now
     @State private var repeatType = 0
     @State private var repeatCoefficient = 1
-    @State private var showRecurring = false
     @State var income = false
 
     var transactionTypeString: String {
@@ -44,7 +32,6 @@ struct TransactionView: View {
         }
     }
 
-    @State var showCategoryPicker = false
     @State var showCategorySheet = false
 
     @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
@@ -53,7 +40,6 @@ struct TransactionView: View {
     }
 
     @State var showingDatePicker = false
-    @State var showingCategoryView = false
 
     // toasts
     @State var showToast = false
@@ -61,9 +47,7 @@ struct TransactionView: View {
     @State var toastImage = ""
 
     // shaking category error
-    @State var categoryButtonTextColor = Color.SubtitleText
-    @State var categoryButtonBackgroundColor = Color.clear
-    @State var categoryButtonOutlineColor = Color.Outline
+    @State var categoryError = false
     @State var shake: Bool = false
 
     @ObservedObject var keyboardHeightHelper = KeyboardHeightHelper()
@@ -75,17 +59,17 @@ struct TransactionView: View {
     // edit mode
     let toEdit: Transaction?
 
+    @AppStorage("incomeTracking", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var incomeTracking: Bool = true
+
+    var showsIncomeControls: Bool {
+        incomeTracking || toEdit?.income == true
+    }
+
     // delete mode
 
     @State var toDelete: Transaction?
     @State var deleteMode = false
 
-    @AppStorage("bottomEdge", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
-    var bottomEdge: Double = 15
-
-    @State private var offset: CGFloat = 0
-
-    let repeatOverlays = ["D", "W", "M"]
     let numberArray = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
 
     var repeatButtonAccessibility: String {
@@ -106,62 +90,12 @@ struct TransactionView: View {
         return dateFormatter.string(from: date)
     }
 
-    var showTime: Bool {
-        let roundedFont = UIFont.rounded(ofSize: fontSize, weight: .semibold)
-
-        let attributes = [NSAttributedString.Key.font: roundedFont]
-
-        let dateSize: CGSize
-
-        if isDateToday(date: date) {
-            dateSize = (("Today, " + getDateString(date: date)) as NSString).size(
-                withAttributes: attributes)
-        } else {
-            dateSize = (getDateString(date: date) as NSString).size(withAttributes: attributes)
-        }
-
-        let categorySize = (category?.fullName ?? "X Category").size(withAttributes: attributes)
-        let timeSize = (getTimeString(date: date) as NSString).size(withAttributes: attributes)
-
-        let screenWidth: CGFloat
-
-        if boldText {
-            screenWidth = (UIScreen.main.bounds.width - 200)
-        } else {
-            screenWidth = (UIScreen.main.bounds.width - 150)
-        }
-
-        if (dateSize.width + categorySize.width + timeSize.width) > screenWidth {
-            return false
-        } else {
-            return true
-        }
-    }
-
-    @AppStorage("colourScheme", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
-    var colourScheme: Int = 0
-
-    @Environment(\.colorScheme) var systemColorScheme
-
-    var darkMode: Bool {
-        (colourScheme == 0 && systemColorScheme == .dark) || colourScheme == 2
-    }
-
-    var backgroundColor: Color {
-        if darkMode {
-            return Color("AlwaysDarkBackground")
-        } else {
-            return Color("AlwaysLightBackground")
-        }
-    }
-
     @State var showPicker = false
     @State var animateIcon = false
 
-    @Namespace var animation
-
     @State var swipingOffset: CGFloat = 0
     @GestureState var isDragging = false
+    @State private var isDismissDragging = false
 
     // show recommendations
 
@@ -182,33 +116,6 @@ struct TransactionView: View {
 
     @Environment(\.dynamicTypeSize) var dynamicTypeSize
 
-    var fontSize: CGFloat {
-        switch dynamicTypeSize {
-        case .xSmall:
-            return 14
-        case .small:
-            return 15
-        case .medium:
-            return 16
-        case .large:
-            return 17
-        case .xLarge:
-            return 19
-        case .xxLarge:
-            return 21
-        case .xxxLarge:
-            return 23
-        default:
-            return 23
-        }
-    }
-
-    var widthOfCategoryButton: CGFloat {
-        let fontSize = UIFont.getBodyFontSize(dynamicTypeSize: dynamicTypeSize)
-
-        return "Category".widthOfRoundedString(size: fontSize, weight: .semibold) + 50
-    }
-
     var capsuleWidth: CGFloat {
         if dynamicTypeSize > .xLarge {
             return 120
@@ -228,164 +135,48 @@ struct TransactionView: View {
         GeometryReader { proxy in
             VStack(spacing: 8) {
                 // income/expense picker
-                VStack {
-                    if showToast {
-                        HStack(spacing: 6.5) {
-                            Image(systemName: toastImage)
-                                .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                                .foregroundColor(Color.AlertRed)
-
-                            Text(toastTitle)
-                                .font(.system(.body, design: .rounded).weight(.semibold))
-                                .lineLimit(1)
-                                .foregroundColor(Color.AlertRed)
-                        }
-                        .padding(8)
-                        .background(
-                            Color.AlertRed.opacity(0.23),
-                            in: RoundedRectangle(cornerRadius: 9, style: .continuous)
-                        )
-                        .transition(AnyTransition.opacity.combined(with: .move(edge: .top)))
-                        .frame(maxWidth: dynamicTypeSize > .xLarge ? 250 : 200)
-                    } else {
-                        ZStack(alignment: .leading) {
-                            Capsule()
-                                .fill(Color.SecondaryBackground)
-                                .frame(width: capsuleWidth)
-                                .offset(x: swipingOffset)
-
-                            HStack(spacing: 0) {
-                                Text("Expense")
-                                    .font(.system(.body, design: .rounded).weight(.semibold))
-
-                                    .lineLimit(1)
-                                    .foregroundColor(income == false ? Color.PrimaryText : Color.SubtitleText)
-                                    .padding(6)
-                                    .frame(width: capsuleWidth)
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        DispatchQueue.main.async {
-                                            withAnimation(.easeIn(duration: 0.15)) {
-                                                income = false
-                                                swipingOffset = 0
-                                            }
-                                        }
-                                    }
-
-                                Text("transaction-view-income-picker")
-                                    .font(.system(.body, design: .rounded).weight(.semibold))
-
-                                    .lineLimit(1)
-                                //                                    .font(.system(size: 18, weight: .semibold, design: .rounded))
-                                    .foregroundColor(income == true ? Color.PrimaryText : Color.SubtitleText)
-                                    .padding(6)
-                                    .frame(width: capsuleWidth)
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        DispatchQueue.main.async {
-                                            withAnimation(.easeIn(duration: 0.15)) {
-                                                income = true
-                                                swipingOffset = capsuleWidth
-                                            }
-                                        }
-                                    }
-                            }
-                        }
-                        .padding(3)
-                        .fixedSize(horizontal: true, vertical: true)
-                        .overlay(Capsule().stroke(Color.Outline.opacity(0.4), lineWidth: 1.3))
+                HStack(spacing: 10) {
+                    GlassIconButton(systemName: "xmark", accessibilityLabel: "Close") {
+                        dismiss()
                     }
+
+                    Spacer()
+
+                    RecurringMenu(
+                        repeatType: $repeatType, repeatCoefficient: $repeatCoefficient,
+                        showPicker: $showPicker, accessibilityLabel: repeatButtonAccessibility)
                 }
-                //                .frame(height: 50, alignment: .top)
+                .frame(height: 44)
                 .frame(maxWidth: .infinity)
                 .overlay {
-                    HStack {
-                        Button {
-                            dismiss()
-                        } label: {
-                            Image(systemName: "xmark")
-                            //                                .font(.system(size: 16, weight: .semibold))
-                                .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                                .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-                                .foregroundColor(Color.SubtitleText)
-                                .padding(7)
-                                .background(Color.SecondaryBackground, in: Circle())
-                                .contentShape(Circle())
-                        }
-
-                        Spacer()
-
-                        if toEdit != nil {
-                            Button {
-                                toDelete = toEdit
-                                deleteMode = true
-
-                            } label: {
-                                Image(systemName: "trash.fill")
-                                //                                    .font(.system(size: 16, weight: .semibold))
-                                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                                    .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-                                    .foregroundColor(Color.AlertRed)
-                                    .padding(7)
-                                    .background(Color.AlertRed.opacity(0.23), in: Circle())
-                                    .contentShape(Circle())
-                            }
-                            .accessibilityLabel("delete transaction")
-                        }
-
-                        Button {
-                            showRecurring = true
-                        } label: {
-                            if repeatType > 0 {
-                                Image(systemName: "repeat")
-                                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                                    .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-                                //                                    .font(.system(size: 16, weight: .semibold))
-                                    .overlay(alignment: .topTrailing) {
-                                        Text(repeatOverlays[repeatType - 1])
-                                            .font(.system(size: 6, weight: .black, design: .rounded))
-                                            .foregroundColor(Color.IncomeGreen)
-                                            .frame(width: 10, alignment: .leading)
-                                            .offset(x: 5.7, y: 1.5)
-                                    }
-                                    .foregroundColor(Color.IncomeGreen)
-                                    .padding(7)
-                                    .background(Color.IncomeGreen.opacity(0.23), in: Circle())
-                                    .contentShape(Circle())
-                            } else {
-                                Image(systemName: "repeat")
-                                    .font(.system(size: 16, weight: .semibold))
-                                    .foregroundColor(Color.SubtitleText)
-                                    .padding(7)
-                                    .background(Color.SecondaryBackground, in: Circle())
-                                    .contentShape(Circle())
-                            }
-                        }
-                        .accessibilityRemoveTraits(.isButton)
-                        .accessibilityLabel(repeatButtonAccessibility)
-                        .popover(
-                            present: $showRecurring,
-                            attributes: {
-                                $0.position = .absolute(
-                                    originAnchor: .bottom,
-                                    popoverAnchor: .top
-                                )
-                                $0.rubberBandingMode = .none
-                                $0.sourceFrameInset = UIEdgeInsets(top: 0, left: 0, bottom: -10, right: 0)
-                                $0.presentation.animation = .easeInOut(duration: 0.2)
-                                $0.dismissal.animation = .easeInOut(duration: 0.3)
-                            }
-                        ) {
-                            RecurringPickerView(
-                                repeatType: $repeatType, repeatCoefficient: $repeatCoefficient,
-                                showMenu: $showRecurring, showPicker: $showPicker)
-                        } background: {
-                            backgroundColor.opacity(0.6)
-                        }
+                    if showToast {
+                        GlassToast(title: toastTitle, systemImage: toastImage, color: Color.AlertRed)
+                    } else if showsIncomeControls {
+                        GlassSegmentedPicker(selection: $income, options: [
+                            (value: false, title: "Expense"),
+                            (value: true, title: "transaction-view-income-picker")
+                        ])
+                    } else {
+                        CategoryEditorTitle(title: "Expense")
                     }
-                    .frame(maxWidth: .infinity)
                 }
-                .padding(.top, topEdge)
+                .overlay(alignment: .topTrailing) {
+                    if toEdit != nil {
+                        GlassIconButton(
+                            systemName: "trash.fill",
+                            accessibilityLabel: "delete transaction",
+                            foreground: Color.AlertRed,
+                            tint: Color.AlertRed.opacity(0.2),
+                            fallback: Color.AlertRed.opacity(0.23)
+                        ) {
+                            toDelete = toEdit
+                            deleteMode = true
+                        }
+                        .offset(y: 44 + 10)
+                    }
+                }
+                .padding(.top, 3)
+                .zIndex(1)
 
                 ZStack {
                     // swipe to change between income and expense
@@ -401,6 +192,8 @@ struct TransactionView: View {
                                 )
                                 .onChanged { gesture in
                                     let swipe = gesture.translation.width
+
+                                    guard showsIncomeControls, abs(swipe) > abs(gesture.translation.height) else { return }
 
                                     if income {
                                         if swipe < 0 {
@@ -491,233 +284,21 @@ struct TransactionView: View {
                     }
                     .padding(.bottom, 5)
                 } else {
-                    HStack(spacing: 8) {
-                        HStack(spacing: 7) {
-                            Group {
-                                if date < Date.now {
-                                    Image(systemName: "calendar")
-                                } else {
-                                    if #available(iOS 17.0, *) {
-                                        Image(systemName: "rays")
-                                            .symbolEffect(
-                                                .variableColor.iterative.dimInactiveLayers.nonReversing,
-                                                options: .repeating, value: animateIcon)
-                                    } else {
-                                        Image(systemName: "slowmo")
-                                            .foregroundColor(Color.SubtitleText)
-                                    }
-                                }
-                            }
-                            .foregroundColor(Color.SubtitleText)
-                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
-
-                            Group {
-                                if isDateToday(date: date) {
-                                    Text("Today, \(getDateString(date: date))")
-                                        .lineLimit(1)
-                                } else {
-                                    Text(getDateString(date: date))
-                                        .lineLimit(1)
-                                }
-                            }
-                            .font(.system(.body, design: .rounded).weight(.semibold))
-
-                            if showTime {
-                                Spacer()
-
-                                Text(getTimeString(date: date))
-                                    .font(.system(.body, design: .rounded).weight(.semibold))
-                            }
-                        }
-                        .foregroundColor(Color.PrimaryText)
-                        .padding(.vertical, 8.5)
-                        .padding(.horizontal, 10)
-                        .animation(.default, value: isDateToday(date: date))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 11.5, style: .continuous)
-                                .strokeBorder(Color.Outline, lineWidth: 1.5)
-                        )
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            UIApplication.shared.endEditing()
-                            showingDatePicker = true
-                        }
-
-                        if (expenseCategories.count == 0 && !income) || (incomeCategories.count == 0 && income) {
-                            HStack(spacing: 4) {
-                                Image(systemName: "plus")
-                                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
-
-                                Text("Category")
-                                    .font(.system(.body, design: .rounded).weight(.semibold))
-                                    .lineLimit(1)
-                            }
-                            .padding(.vertical, 8.5)
-                            .padding(.horizontal, 10)
-                            .foregroundColor(categoryButtonTextColor)
-                            .background(
-                                categoryButtonBackgroundColor,
-                                in: RoundedRectangle(cornerRadius: 11.5, style: .continuous)
-                            )
-                            .contentShape(Rectangle())
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 11.5, style: .continuous)
-                                    .strokeBorder(categoryButtonOutlineColor, lineWidth: 1.5)
-                            )
-                            .drawingGroup()
-                            .offset(x: shake ? -5 : 0)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                showCategorySheet = true
-                            }
-                        } else {
-
-                            Group {
-                                if showCategoryPicker {
-                                    HStack(spacing: 10) {
-
-                                        Text("Close")
-                                            .font(.system(.body, design: .rounded).weight(.semibold))
-                                            .lineLimit(1)
-
-//                                        Image(systemName: "xmark.circle.fill")
-//                                            .font(.system(.footnote, design: .rounded).weight(.bold))
-                                    }
-                                    .padding(.vertical, 8.5)
-                                    .padding(.horizontal, 10)
-                                    .frame(width: widthOfCategoryButton)
-                                    .foregroundColor(Color.AlertRed)
-                                    .background(Color.AlertRed.opacity(0.23),
-                                        in: RoundedRectangle(cornerRadius: 11.5, style: .continuous)
-                                    )
-                                } else {
-                                    if let unwrappedCategory = category {
-                                        HStack(spacing: 5) {
-                                            Text(unwrappedCategory.wrappedEmoji)
-                                                .font(.system(.footnote, design: .rounded).weight(.semibold))
-
-                                            Text(unwrappedCategory.wrappedName)
-                                                .font(.system(.body, design: .rounded).weight(.semibold))
-                                                .lineLimit(1)
-                                        }
-                                        .padding(.vertical, 8.5)
-                                        .padding(.horizontal, 10)
-                                        .foregroundColor(Color(hex: unwrappedCategory.wrappedColour))
-                                        .background(
-                                            Color(hex: unwrappedCategory.wrappedColour).opacity(0.35),
-                                            in: RoundedRectangle(cornerRadius: 11.5, style: .continuous)
-                                        )
-    //                                    .popover(
-    //                                        present: $showCategoryPicker,
-    //                                        attributes: {
-    //                                            $0.position = .absolute(
-    //                                                originAnchor: .topRight,
-    //                                                popoverAnchor: .bottomRight
-    //                                            )
-    //                                            $0.rubberBandingMode = .none
-    //                                            $0.sourceFrameInset = UIEdgeInsets(top: -10, left: 0, bottom: 0, right: 0)
-    //                                            $0.presentation.animation = .easeInOut(duration: 0.2)
-    //                                            $0.dismissal.animation = .easeInOut(duration: 0.3)
-    //                                        }
-    //                                    ) {
-    //                                        CategoryPickerView(
-    //                                            category: $category, showPicker: $showCategoryPicker,
-    //                                            showSheet: $showCategorySheet, income: income, darkMode: darkMode
-    //                                        )
-    //                                        .environment(\.managedObjectContext, self.moc)
-    //                                    } background: {
-    //                                        backgroundColor.opacity(0.6)
-    //                                    }
-                                    } else {
-                                        HStack(spacing: 5.5) {
-                                            if #available(iOS 17.0, *) {
-                                                Image(systemName: "circle.grid.2x2")
-                                                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                                                    .symbolEffect(
-                                                        .bounce.up.byLayer, options: .repeating.speed(0.5),
-                                                        value: showCategoryPicker)
-                                            } else {
-                                                Image(systemName: "circle.grid.2x2")
-                                                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                                            }
-
-                                            Text("Category")
-                                                .font(.system(.body, design: .rounded).weight(.semibold))
-                                                .lineLimit(1)
-                                        }
-                                        .padding(.vertical, 8.5)
-                                        .padding(.horizontal, 10)
-                                        .frame(width: widthOfCategoryButton)
-                                        .foregroundColor(categoryButtonTextColor)
-                                        .background(
-                                            categoryButtonBackgroundColor,
-                                            in: RoundedRectangle(cornerRadius: 11.5, style: .continuous)
-                                        )
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 11.5, style: .continuous)
-                                                .strokeBorder(categoryButtonOutlineColor, lineWidth: 1.5)
-                                        )
-                                        .drawingGroup()
-                                        .offset(x: shake ? -5 : 0)
-    //                                    .popover(
-    //                                        present: $showCategoryPicker,
-    //                                        attributes: {
-    //                                            $0.position = .absolute(
-    //                                                originAnchor: .topRight,
-    //                                                popoverAnchor: .bottomRight
-    //                                            )
-    //                                            $0.rubberBandingMode = .none
-    //                                            $0.sourceFrameInset = UIEdgeInsets(top: -10, left: 0, bottom: 0, right: 0)
-    //                                            $0.presentation.animation = .easeInOut(duration: 0.2)
-    //                                            $0.dismissal.animation = .easeInOut(duration: 0.3)
-    //                                        }
-    //                                    ) {
-    //                                        CategoryPickerView(
-    //                                            category: $category, showPicker: $showCategoryPicker,
-    //                                            showSheet: $showCategorySheet, income: income, darkMode: darkMode
-    //                                        )
-    //                                        .environment(\.managedObjectContext, self.moc)
-    //                                    } background: {
-    //                                        backgroundColor.opacity(0.6)
-    //                                    }
-                                    }
-                                }
-
-                            }
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                withAnimation(.easeInOut) {
-                                    showCategoryPicker.toggle()
-                                }
-
-                            }
-                        }
-                    }
-                    .padding(.bottom, 5)
+                    dateCategoryLine
+                        .disabled(isDismissDragging)
+                        .padding(.bottom, 4)
                 }
 
-                // date and category picker
-
-                if showCategoryPicker {
-                    NewCategoryPickerView(
-                        category: $category, showPicker: $showCategoryPicker,
-                        showSheet: $showCategorySheet, income: income
-                    )
-                    .transition(AnyTransition.move(edge: .trailing).combined(with: .opacity))
-                } else {
-                    NumberPad(
-                        price: $price,
-                        category: $category,
-                        isEditingDecimal: $isEditingDecimal,
-                        decimalValuesAssigned: $decimalValuesAssigned,
-                        showingNotePicker: showingNotePicker
-                    ) {
-                        submit()
-                    }
-                    .transition(AnyTransition.move(edge: .leading).combined(with: .opacity))
+                NumberPad(
+                    price: $price,
+                    category: $category,
+                    isEditingDecimal: $isEditingDecimal,
+                    decimalValuesAssigned: $decimalValuesAssigned,
+                    showingNotePicker: showingNotePicker
+                ) {
+                    submit()
                 }
-
+                .disabled(isDismissDragging)
             }
             .padding(17)
             .frame(width: proxy.size.width, height: proxy.size.height)
@@ -725,137 +306,20 @@ struct TransactionView: View {
             .onTapGesture {
                 self.hideKeyboard()
             }
-            .fullScreenCover(isPresented: $deleteMode) {
-                ZStack(alignment: .bottom) {
-                    Color.clear
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            deleteMode = false
-                            toDelete = nil
-                        }
-
-                    VStack(alignment: .leading, spacing: 1.5) {
-                        Text("Delete Expense?")
-                            .font(.system(size: 20, weight: .medium, design: .rounded))
-                            .foregroundColor(.PrimaryText)
-
-                        Text("This action cannot be undone.")
-                            .font(.system(size: 16, weight: .medium, design: .rounded))
-                            .foregroundColor(.SubtitleText)
-                            .padding(.bottom, 15)
-
-                        Button {
-                            deleteMode = false
-
-                            withAnimation {
-                                if let itemToDelete = toDelete {
-                                    moc.delete(itemToDelete)
-                                }
-                                dataController.save()
-                            }
-
-                            dismiss()
-
-                        } label: {
-                            Text("Delete")
-                                .font(.system(size: 20, weight: .semibold, design: .rounded))
-                                .foregroundColor(.white)
-                                .frame(height: 45)
-                                .frame(maxWidth: .infinity)
-                                .background(
-                                    Color.AlertRed, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-                        }
-                        .padding(.bottom, 8)
-
-                        Button {
-                            withAnimation(.easeOut(duration: 0.7)) {
-                                deleteMode = false
-                                toDelete = nil
-                            }
-
-                        } label: {
-                            Text("Cancel")
-                                .font(.system(size: 20, weight: .semibold, design: .rounded))
-                                .foregroundColor(Color.PrimaryText.opacity(0.9))
-                                .frame(height: 45)
-                                .frame(maxWidth: .infinity)
-                                .background(
-                                    Color.SecondaryBackground,
-                                    in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-                        }
+            .confirmationSheet(
+                isPresented: $deleteMode,
+                title: "Delete Expense?",
+                message: "This action cannot be undone.",
+                onDismiss: { toDelete = nil }
+            ) {
+                withAnimation {
+                    if let itemToDelete = toDelete {
+                        moc.delete(itemToDelete)
                     }
-                    .padding(13)
-                    .background(
-                        RoundedRectangle(cornerRadius: 13).fill(Color.PrimaryBackground).shadow(
-                            color: systemColorScheme == .dark ? Color.clear : Color.gray.opacity(0.25), radius: 6)
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 13).stroke(
-                            systemColorScheme == .dark ? Color.gray.opacity(0.1) : Color.clear, lineWidth: 1.3)
-                    )
-                    .offset(y: offset)
-                    .gesture(
-                        DragGesture()
-                            .onChanged { gesture in
-                                if gesture.translation.height < 0 {
-                                    offset = gesture.translation.height / 3
-                                } else {
-                                    offset = gesture.translation.height
-                                }
-                            }
-                            .onEnded { value in
-                                if value.translation.height > 20 {
-                                    deleteMode = false
-                                    toDelete = nil
-                                } else {
-                                    withAnimation {
-                                        offset = 0
-                                    }
-                                }
-                            }
-                    )
-                    .padding(.horizontal, 17)
-                    .padding(.bottom, bottomEdge == 0 ? 12 : bottomEdge - 3)
+                    dataController.save()
                 }
-                .edgesIgnoringSafeArea(.all)
-                .background(BackgroundBlurView())
-            }
-            .overlay {
-                ZStack(alignment: .bottom) {
-                    GeometryReader { _ in
-                        EmptyView()
-                    }
-                    .background(Color.black)
-                    .opacity(showingDatePicker ? 0.3 : 0)
-                    .onTapGesture {
-                        showingDatePicker = false
-                    }
 
-                    DatePicker("Date", selection: $date)
-                        .datePickerStyle(.graphical)
-                        .padding(.horizontal, 15)
-                        .padding(.vertical, 8)
-                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 13))
-                        .padding(17)
-                        .onChange(of: dateString) { _ in
-
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                showingDatePicker = false
-                            }
-
-                            if date > Date.now {
-                                animateIcon = true
-                            } else {
-                                animateIcon = false
-                            }
-                        }
-                        .padding(.bottom, 10)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                .opacity(showingDatePicker ? 1 : 0)
-                .allowsHitTesting(showingDatePicker)
-                .animation(.easeOut(duration: 0.25), value: showingDatePicker)
+                dismiss()
             }
         }
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
@@ -864,6 +328,9 @@ struct TransactionView: View {
         .frame(maxHeight: .infinity)
         .background(Color.PrimaryBackground)
         .edgesIgnoringSafeArea(.all)
+        .modifier(SwipeDownToDismiss(isLocked: hasUnsavedInput, isDragging: $isDismissDragging))
+        .interactiveDismissDisabled(hasUnsavedInput)
+        .modifier(TransactionSheetPresentation())
         .onChange(of: showToast) { newValue in
             if newValue {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
@@ -871,9 +338,10 @@ struct TransactionView: View {
                 }
             }
         }
-        .onChange(of: income) { _ in
+        .onChange(of: income) { newValue in
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             category = nil
+            swipingOffset = newValue ? capsuleWidth : 0
         }
         .onChange(of: isDragging) { _ in
             if !isDragging {
@@ -907,23 +375,130 @@ struct TransactionView: View {
             }
         }
         .sheet(isPresented: $showCategorySheet) {
-            CategoryView(mode: .transaction, income: income)
+            CategoryPickerSheet(category: $category, income: income)
         }
         .sheet(isPresented: $showPicker) {
             if #available(iOS 16.0, *) {
                 CustomRecurringView(
                     repeatType: $repeatType, repeatCoefficient: $repeatCoefficient, showPicker: $showPicker
                 )
-                .presentationDetents([.height(230)])
+                .presentationDetents([.height(210)])
+                .presentationDragIndicator(.hidden)
             } else {
                 CustomRecurringView(
                     repeatType: $repeatType, repeatCoefficient: $repeatCoefficient, showPicker: $showPicker)
             }
         }
+        .sheet(isPresented: $showingDatePicker) {
+            DateTimePickerSheet(date: $date)
+        }
+        .onChange(of: dateString) { _ in
+            animateIcon = date > Date.now
+        }
         .onChange(of: dynamicTypeSize) { _ in
             if income {
                 swipingOffset = capsuleWidth
             }
+        }
+    }
+
+    var hasUnsavedInput: Bool {
+        if let transaction = toEdit {
+            return price != transaction.wrappedAmount
+                || note != transaction.wrappedNote
+                || category != transaction.category
+                || income != transaction.income
+                || date != (transaction.date ?? date)
+                || repeatType != Int(transaction.recurringType)
+                || repeatCoefficient != Int(transaction.recurringCoefficient)
+        } else {
+            return price > 0 || !note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+    }
+
+    var dateTokenText: String {
+        if isDateToday(date: date) {
+            return String(format: NSLocalizedString("Today, %@", comment: ""), getTimeString(date: date))
+        } else {
+            return getDateString(date: date) + ", " + getTimeString(date: date)
+        }
+    }
+
+    @ViewBuilder var dateCategoryLine: some View {
+        if #available(iOS 16.0, *) {
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 8) {
+                    dateToken
+                    lineSeparator
+                    categoryToken
+                }
+                .fixedSize(horizontal: true, vertical: false)
+
+                VStack(spacing: 0) {
+                    dateToken
+                    categoryToken
+                }
+            }
+        } else if dynamicTypeSize > .xLarge {
+            VStack(spacing: 0) {
+                dateToken
+                categoryToken
+            }
+        } else {
+            HStack(spacing: 8) {
+                dateToken
+                lineSeparator
+                categoryToken
+            }
+        }
+    }
+
+    var dateToken: some View {
+        Button {
+            UIApplication.shared.endEditing()
+            showingDatePicker = true
+        } label: {
+            HStack(spacing: 5) {
+                if date > Date.now {
+                    Group {
+                        if #available(iOS 17.0, *) {
+                            Image(systemName: "rays")
+                                .symbolEffect(
+                                    .variableColor.iterative.dimInactiveLayers.nonReversing,
+                                    options: .repeating, value: animateIcon)
+                        } else {
+                            Image(systemName: "slowmo")
+                        }
+                    }
+                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                }
+
+                Text(dateTokenText)
+                    .font(.system(.body, design: .rounded).weight(.semibold))
+                    .lineLimit(1)
+            }
+            .foregroundColor(Color.SubtitleText)
+            .padding(.vertical, 11)
+            .padding(.horizontal, 4)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text("Date") + Text(", ") + Text(dateTokenText))
+        .accessibilityAddTraits(.isButton)
+    }
+
+    var lineSeparator: some View {
+        Text("·")
+            .font(.system(.body, design: .rounded).weight(.semibold))
+            .foregroundColor(Color.SubtitleText.opacity(0.5))
+            .accessibilityHidden(true)
+    }
+
+    var categoryToken: some View {
+        CategoryToken(category: category, isError: categoryError, shake: shake) {
+            UIApplication.shared.endEditing()
+            showCategorySheet = true
         }
     }
 
@@ -948,26 +523,17 @@ struct TransactionView: View {
     }
 
     func getTimeString(date: Date) -> String {
-        let formatter = DateFormatter()
-
-        formatter.dateFormat = "HH:mm"
-
-        return formatter.string(from: date)
+        date.formatted(date: .omitted, time: .shortened)
     }
 
     func toggleFieldColors() {
-        if categoryButtonTextColor == Color.AlertRed
-            || categoryButtonBackgroundColor == Color.AlertRed.opacity(0.23) {
+        if categoryError {
             withAnimation(.linear) {
-                categoryButtonTextColor = Color.SubtitleText
-                categoryButtonBackgroundColor = Color.clear
-                categoryButtonOutlineColor = Color.Outline
+                categoryError = false
             }
         } else {
             withAnimation(.easeOut(duration: 1.0)) {
-                categoryButtonTextColor = Color.AlertRed
-                categoryButtonBackgroundColor = Color.AlertRed.opacity(0.23)
-                categoryButtonOutlineColor = Color.AlertRed
+                categoryError = true
             }
             withAnimation(.easeInOut(duration: 0.1).repeatCount(5)) {
                 shake = true
@@ -977,13 +543,10 @@ struct TransactionView: View {
                     shake = false
                 }
                 withAnimation(.easeOut(duration: 0.6)) {
-                    categoryButtonTextColor = Color.SubtitleText
-                    categoryButtonBackgroundColor = Color.clear
-                    categoryButtonOutlineColor = Color.Outline
+                    categoryError = false
                 }
             }
         }
-
     }
 
     func submit() {
@@ -1204,180 +767,6 @@ struct NumPadButton: ButtonStyle {
     }
 }
 
-func getDollarOffset(big: CGFloat, small: CGFloat) -> CGFloat {
-    let bigFont = UIFont.rounded(ofSize: big, weight: .regular)
-    let smallFont = UIFont.rounded(ofSize: small, weight: .light)
-
-    return bigFont.capHeight - smallFont.capHeight - 1
-}
-
-struct CategoryPickerView: View {
-    @Binding var category: Category?
-    @Binding var showPicker: Bool
-    @Binding var showingCategoryView: Bool
-    @FetchRequest private var categories: FetchedResults<Category>
-
-    let initialCategory: Category?
-
-    var darkMode: Bool
-
-    var backgroundColor: Color {
-        if darkMode {
-            return Color("AlwaysDarkBackground")
-        } else {
-            return Color("AlwaysLightBackground")
-        }
-    }
-
-    var secondaryBackgroundColor: Color {
-        if darkMode {
-            return Color("AlwaysDarkSecondaryBackground")
-        } else {
-            return Color("AlwaysLightSecondaryBackground")
-        }
-    }
-
-    @Environment(\.dynamicTypeSize) var dynamicTypeSize
-
-    var heightOfScrollView: Double {
-        let fontSize = UIFont.getBodyFontSize(dynamicTypeSize: dynamicTypeSize)
-
-        let font = UIFont.rounded(ofSize: fontSize, weight: .semibold)
-
-        if categories.count == 1 && initialCategory != nil {
-            return font.lineHeight + 14.1
-        }
-
-        if initialCategory != nil {
-            let height = Double(min(6, categories.count)) * (font.lineHeight + 14.1)
-            let gap = Double(min(5, categories.count - 1)) * 8.0
-            return height + gap
-        } else {
-            let height = Double(min(6, categories.count + 1)) * (font.lineHeight + 14.1)
-            let gap = Double(min(5, categories.count)) * 8.0
-            return height + gap
-        }
-    }
-
-    var body: some View {
-        //        VStack(alignment: .trailing, spacing: 8) {
-
-        //            if categories.count > 1 || category == nil {
-        HStack {
-            Color.clear
-                .frame(maxWidth: .infinity)
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    showPicker = false
-                }
-
-            VStack(
-                alignment: .trailing, spacing: (categories.count == 1 && initialCategory != nil) ? 0 : 8
-            ) {
-                HStack(spacing: 4) {
-                    Image(systemName: "pencil")
-                        .font(.system(size: 15, weight: .bold, design: .rounded))
-                    Text("Edit")
-                        .font(.system(.body, design: .rounded).weight(.semibold))
-                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                }
-                .padding(.horizontal, 11)
-                .padding(.vertical, 7)
-                .foregroundColor(darkMode ? Color("AlwaysLightBackground") : Color("AlwaysDarkBackground"))
-                .background(
-                    RoundedRectangle(cornerRadius: 11.5, style: .continuous)
-                        .fill(
-                            darkMode
-                            ? Color("AlwaysDarkSecondaryBackground") : Color("AlwaysLightSecondaryBackground"))
-                )
-                .contentShape(RoundedRectangle(cornerRadius: 13, style: .continuous))
-                .onTapGesture {
-                    let impactMed = UIImpactFeedbackGenerator(style: .light)
-                    impactMed.impactOccurred()
-                    showPicker = false
-                    showingCategoryView = true
-                }
-
-                ScrollView(showsIndicators: false) {
-                    ScrollViewReader { value in
-                        VStack(alignment: .trailing, spacing: 8) {
-                            ForEach(categories) { item in
-                                if item != initialCategory {
-                                    HStack(spacing: 7) {
-                                        Text(item.wrappedEmoji)
-                                            .font(.system(.footnote, design: .rounded))
-                                            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                                        //                                                    .font(.system(size: 14))
-                                        Text(item.wrappedName)
-                                            .font(.system(.body, design: .rounded).weight(.semibold))
-                                            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                                        //                                                    .font(.system(size: 17.5, weight: .semibold, design: .rounded))
-                                            .lineLimit(1)
-                                    }
-                                    .id(item.id)
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 7)
-                                    .foregroundColor(
-                                        darkMode ? Color("AlwaysLightBackground") : Color("AlwaysDarkBackground")
-                                    )
-                                    .background(
-                                        item == category ? secondaryBackgroundColor : backgroundColor,
-                                        in: RoundedRectangle(cornerRadius: 11.5, style: .continuous)
-                                    )
-                                    .contentShape(Rectangle())
-                                    .overlay {
-                                        RoundedRectangle(cornerRadius: 11.5, style: .continuous)
-                                            .strokeBorder(
-                                                darkMode ? Color("AlwaysDarkOutline") : Color("AlwaysLightOutline"),
-                                                style: StrokeStyle(lineWidth: 1.5))
-                                    }
-                                    .onTapGesture {
-                                        if category == item {
-                                            category = nil
-                                        } else {
-                                            category = item
-                                        }
-
-                                        showPicker = false
-                                        //
-                                    }
-                                }
-                            }
-                        }
-                        .onAppear {
-                            if let last = categories.last {
-                                if category == last && categories.count > 2 {
-                                    value.scrollTo(categories[categories.count - 2].id)
-                                } else {
-                                    value.scrollTo(last.id)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .trailing)
-        }
-        .frame(height: heightOfScrollView)
-        //            }
-    }
-
-    init(
-        category: Binding<Category?>?, showPicker: Binding<Bool>, showSheet: Binding<Bool>,
-        income: Bool, darkMode: Bool
-    ) {
-        _categories = FetchRequest<Category>(
-            sortDescriptors: [
-                SortDescriptor(\.order, order: .reverse)
-            ], predicate: NSPredicate(format: "income = %d", income))
-        self.darkMode = darkMode
-        initialCategory = category?.wrappedValue
-        _category = category ?? Binding.constant(nil)
-        _showPicker = showPicker
-        _showingCategoryView = showSheet
-    }
-}
-
 struct NoteView: View {
     @Binding var note: String
     @Binding var focused: Bool
@@ -1385,68 +774,41 @@ struct NoteView: View {
     @FocusState private var textFocused: Bool
     let characterLimit = 50
 
-    @Environment(\.dynamicTypeSize) var dynamicTypeSize
-
-    var noteWidth: CGFloat {
-        let fontSize: CGFloat = UIFont.getBodyFontSize(dynamicTypeSize: dynamicTypeSize)
-        //        let fontSize: CGFloat = fontSize
-        let systemFont = UIFont.systemFont(ofSize: fontSize, weight: .semibold)
-        let roundedFont: UIFont
-        if let descriptor = systemFont.fontDescriptor.withDesign(.rounded) {
-            roundedFont = UIFont(descriptor: descriptor, size: fontSize)
-        } else {
-            roundedFont = systemFont
-        }
-
-        let attributes = [NSAttributedString.Key.font: roundedFont]
-
-        let size = (note as NSString).size(withAttributes: attributes)
-
-        let placeholder = String(localized: "Add Note")
-        let placeholderSize = (placeholder as NSString).size(withAttributes: attributes)
-
-        if !note.isEmpty {
-            return size.width + 2
-        } else {
-            return placeholderSize.width
-        }
-
-        //        return max(size.width + 2, (placeholderSize.width + 1))
-    }
-
     var body: some View {
-        HStack(spacing: 7) {
+        HStack(spacing: 6) {
             Image(systemName: "text.alignleft")
-                .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-            //                .font(.system(size: 14, weight: .semibold))
-                .foregroundColor(Color.SubtitleText)
+                .font(.system(.subheadline, design: .rounded).weight(.medium))
+                .foregroundColor(Color.SubtitleText.opacity(0.6))
+                .accessibilityHidden(true)
 
-            ZStack(alignment: .leading) {
-                TextField("", text: $note)
-                    .onReceive(Just(note)) { _ in limitText(characterLimit) }
-                    .focused($textFocused)
-                    .foregroundColor(Color.PrimaryText)
-
-                if note.isEmpty {
-                    Text("Add Note")
-                        .foregroundColor(Color.SubtitleText)
+            // The invisible text sizes the field to its content so the icon and field stay centred as one group,
+            // and the caret starts exactly where the prompt begins.
+            Text(note.isEmpty ? String(localized: "Note") : note)
+                .lineLimit(1)
+                .padding(.trailing, 2)
+                .opacity(0)
+                .accessibilityHidden(true)
+                .overlay(alignment: .leading) {
+                    TextField("Note", text: $note, prompt: Text("Note").foregroundColor(Color.SubtitleText.opacity(0.6)))
+                        .onReceive(Just(note)) { _ in limitText(characterLimit) }
+                        .focused($textFocused)
+                        .submitLabel(.done)
+                        .onSubmit {
+                            textFocused = false
+                        }
+                        .foregroundColor(Color.PrimaryText)
+                        .accessibilityLabel(Text("Note"))
                 }
-            }
-            .font(.system(.body, design: .rounded).weight(.semibold))
-            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-            //            .font(.system(size: 16, weight: .semibold, design: .rounded))
-            .frame(width: min(noteWidth, UIScreen.main.bounds.width / 1.5), alignment: .center)
         }
+        .font(.system(.body, design: .rounded).weight(.medium))
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+        .frame(maxWidth: UIScreen.main.bounds.width / 1.5)
+        .padding(.horizontal, 44)
+        .frame(height: 44)
+        .contentShape(Rectangle())
         .onTapGesture {
             textFocused = true
         }
-        .padding(.vertical, 7)
-        .padding(.horizontal, 10)
-        .overlay(
-            RoundedRectangle(cornerRadius: 11.5, style: .continuous)
-                .stroke(Color.Outline, lineWidth: 1.5)
-        )
         .onChange(of: textFocused) { newValue in
             focused = newValue
         }
@@ -1459,153 +821,106 @@ struct NoteView: View {
     }
 }
 
-struct RecurringPickerView: View {
-    @Namespace var animation
+struct RecurringMenu: View {
     @Binding var repeatType: Int
     @Binding var repeatCoefficient: Int
-    @Binding var showMenu: Bool
-
     @Binding var showPicker: Bool
+    let accessibilityLabel: String
 
-    let stringArray = ["none", "daily", "weekly", "monthly"]
-    let stringArray2 = ["", "days", "weeks", "months"]
+    @State private var showRecurring = false
 
-    @AppStorage("bottomEdge", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
-    var bottomEdge: Double = 15
+    let presetKeys = ["none", "daily", "weekly", "monthly"]
 
-    @State private var offset: CGFloat = 0
+    var customDetail: LocalizedStringKey? {
+        guard repeatCoefficient > 1 else { return nil }
 
-    @State var holdingType = 0
-    @State var holdingCoefficient = 0
+        let unit: String
+        switch repeatType {
+        case 1:
+            unit = String(localized: "\(repeatCoefficient) days")
+        case 2:
+            unit = String(localized: "\(repeatCoefficient) weeks")
+        case 3:
+            unit = String(localized: "\(repeatCoefficient) months")
+        default:
+            unit = ""
+        }
 
-    @AppStorage("colourScheme", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
-    var colourScheme: Int = 0
+        let detail = "\(repeatCoefficient) \(unit)"
+        return LocalizedStringKey(detail)
+    }
 
-    @Environment(\.colorScheme) var systemColorScheme
-
-    var darkMode: Bool {
-        (colourScheme == 0 && systemColorScheme == .dark) || colourScheme == 2
+    func isPresetSelected(_ index: Int) -> Bool {
+        index == 0 ? repeatType == 0 : repeatType == index && repeatCoefficient == 1
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 1) {
-            ForEach(stringArray, id: \.self) { string in
-                HStack {
-                    Text(LocalizedStringKey(string))
-                        .font(.system(.body, design: .rounded).weight(.medium))
-                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                        .lineLimit(1)
-                    Spacer()
-
-                    if repeatType == (stringArray.firstIndex(of: string) ?? 0) && repeatCoefficient == 1 {
-                        Image(systemName: "checkmark")
-                            .font(.system(.footnote, design: .rounded).weight(.medium))
-                            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                        //                            .font(.system(size: 14, weight: .medium))
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                //                .font(.system(size: 18, weight: .medium, design: .rounded))
-                .padding(5)
-                .background {
-                    if repeatType == (stringArray.firstIndex(of: string) ?? 0) && repeatCoefficient == 1 {
-                        RoundedRectangle(cornerRadius: 6)
-                            .fill(
-                                darkMode
-                                ? Color("AlwaysDarkSecondaryBackground") : Color("AlwaysLightSecondaryBackground")
-                            )
-                            .matchedGeometryEffect(id: "TAB", in: animation)
-                    }
-                }
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    if repeatType == (stringArray.firstIndex(of: string) ?? 0) && repeatCoefficient == 1 {
-                        showMenu = false
-                    } else {
-                        withAnimation(.easeIn(duration: 0.15)) {
-                            repeatType = (stringArray.firstIndex(of: string) ?? 0)
-                            repeatCoefficient = 1
-                        }
-
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                            showMenu = false
-                        }
-                    }
-                }
-            }
-
-            HStack {
-                if repeatCoefficient == 1 {
-                    Text("custom")
-                } else {
-                    if repeatType == 1 {
-                        Text(String(repeatCoefficient) + " " + String(localized: "\(repeatCoefficient) days"))
-                    } else if repeatType == 2 {
-                        Text(String(repeatCoefficient) + " " + String(localized: "\(repeatCoefficient) weeks"))
-                    } else if repeatType == 3 {
-                        Text(String(repeatCoefficient) + " " + String(localized: "\(repeatCoefficient) months"))
+        Button {
+            showRecurring = true
+        } label: {
+            Image(systemName: "repeat")
+                .font(.system(.body, design: .rounded).weight(.semibold))
+                .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+                .foregroundColor(repeatType > 0 ? Color.IncomeGreen : Color.PrimaryText)
+                .frame(width: 44, height: 44)
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .glassBackground(
+            in: Circle(),
+            tint: repeatType > 0 ? Color.IncomeGreen.opacity(0.2) : Color.glassTint,
+            fallback: repeatType > 0 ? Color.IncomeGreen.opacity(0.23) : Color.SecondaryBackground
+        )
+        .accessibilityLabel(accessibilityLabel)
+        .popover(present: $showRecurring, attributes: {
+            $0.position = .absolute(
+                originAnchor: .bottomRight,
+                popoverAnchor: .topRight
+            )
+            $0.rubberBandingMode = .none
+            $0.sourceFrameInset = UIEdgeInsets(top: 0, left: 0, bottom: -10, right: 0)
+            $0.presentation.animation = .easeInOut(duration: 0.2)
+            $0.dismissal.animation = .easeInOut(duration: 0.3)
+        }) {
+            GlassPopoverMenu {
+                ForEach(presetKeys.indices, id: \.self) { index in
+                    GlassPopoverRow(
+                        LocalizedStringKey(NSLocalizedString(presetKeys[index], comment: "").localizedCapitalized),
+                        isSelected: isPresetSelected(index)
+                    ) {
+                        selectPreset(index)
                     }
                 }
 
-                Spacer()
+                GlassPopoverRow(
+                    LocalizedStringKey(NSLocalizedString("custom", comment: "").localizedCapitalized),
+                    detail: customDetail,
+                    isSelected: repeatType > 0 && repeatCoefficient > 1
+                ) {
+                    showRecurring = false
 
-                if repeatCoefficient > 1 {
-                    Image(systemName: "checkmark")
-                        .font(.system(.footnote, design: .rounded).weight(.medium))
-                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                    //                        .font(.system(size: 14, weight: .medium))
-                }
-            }
-            .lineLimit(1)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .font(.system(.body, design: .rounded).weight(.medium))
-            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-            //            .font(.system(size: 18, weight: .medium, design: .rounded))
-            .padding(5)
-            .background {
-                if repeatCoefficient > 1 {
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(
-                            darkMode
-                            ? Color("AlwaysDarkSecondaryBackground") : Color("AlwaysLightSecondaryBackground")
-                        )
-                        .matchedGeometryEffect(id: "TAB", in: animation)
-                }
-            }
-            .contentShape(Rectangle())
-            .onTapGesture {
-                if repeatCoefficient == 1 {
-                    repeatCoefficient = 2
-                    repeatType = 2
-
-                    holdingType = repeatType
-                    holdingCoefficient = repeatCoefficient
-                }
-
-                withAnimation {
-                    showPicker = true
-                }
-            }
-            .onChange(of: showPicker) { newValue in
-                // holdingType != repeatType || holdingCoefficient != repeatCoefficient
-                if !newValue {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                        showMenu = false
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        showPicker = true
                     }
                 }
             }
         }
-        .foregroundColor(darkMode ? Color("AlwaysLightBackground") : Color("AlwaysDarkBackground"))
-        .padding(4)
-        .frame(width: 150)
-        .background(
-            RoundedRectangle(cornerRadius: 9).fill(
-                darkMode ? Color("AlwaysDarkBackground") : Color("AlwaysLightBackground")
-            ).shadow(color: darkMode ? Color.clear : Color.gray.opacity(0.25), radius: 6)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 9).stroke(
-                darkMode ? Color.gray.opacity(0.1) : Color.clear, lineWidth: 1.3))
+    }
+
+    func selectPreset(_ index: Int) {
+        if isPresetSelected(index) {
+            showRecurring = false
+            return
+        }
+
+        withAnimation(.easeIn(duration: 0.15)) {
+            repeatType = index
+            repeatCoefficient = 1
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            showRecurring = false
+        }
     }
 }
 
@@ -1614,127 +929,74 @@ struct CustomRecurringView: View {
     @Binding var repeatCoefficient: Int
     @Binding var showPicker: Bool
 
-    @Environment(\.colorScheme) var systemColorScheme
-    var stringArray: [String] {
-        return [
-            "", "\(holdingCoefficient) days", "\(holdingCoefficient) weeks",
-            "\(holdingCoefficient) months"
-        ]
-    }
-
     @Environment(\.dismiss) var dismiss
 
     @State var holdingType = 0
     @State var holdingCoefficient = 0
 
     var body: some View {
-        VStack(spacing: 35) {
+        VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Button {
+                GlassIconButton(systemName: "xmark", accessibilityLabel: "Close") {
                     dismiss()
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                    //                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(Color.SubtitleText)
-                        .padding(7)
-                        .background(Color.SecondaryBackground, in: Circle())
-                        .contentShape(Circle())
                 }
 
                 Spacer()
 
-                Text("Custom Interval")
-                    .font(.system(.body, design: .rounded).weight(.semibold))
-                    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                //                    .font(.system(size: 18, weight: .semibold, design: .rounded))
-
-                Spacer()
-
-                Button {
+                GlassIconButton(
+                    systemName: "checkmark",
+                    accessibilityLabel: "Save",
+                    foreground: Color.LightIcon,
+                    tint: Color.DarkBackground,
+                    fallback: Color.DarkBackground
+                ) {
                     repeatType = holdingType
                     repeatCoefficient = holdingCoefficient
 
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
 
                     dismiss()
-
-                } label: {
-                    Image(systemName: "checkmark")
-                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                    //                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(Color.IncomeGreen)
-                        .padding(7)
-                        .background(Color.IncomeGreen.opacity(0.23), in: Circle())
-                        .contentShape(Circle())
                 }
             }
+            .frame(height: 44)
+            .overlay {
+                CategoryEditorTitle(title: "Custom Interval")
+            }
+
+            Text("Repeats every")
+                .font(.system(.body, design: .rounded).weight(.medium))
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                .foregroundColor(Color.SubtitleText)
+                .padding(.top, 20)
+                .padding(.bottom, 10)
+                .padding(.leading, 4)
 
             HStack(spacing: 10) {
-                Text("Repeats every")
-                    .font(.system(size: 23, weight: .medium, design: .rounded))
-                    .foregroundColor(Color.PrimaryText)
-                    .padding(.trailing, 3)
-
-                VStack {
-                    Button {
-                        holdingCoefficient += 1
-                    } label: {
-                        Image(systemName: "chevron.up")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(Color.SubtitleText)
-                            .padding(7)
-                            .background(
-                                Color.SecondaryBackground, in: RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            )
-                            .contentShape(Circle())
-                            .opacity(holdingCoefficient == 30 ? 0.25 : 1)
-                    }
-                    .disabled(holdingCoefficient == 30)
-
+                CustomRecurringStepper(
+                    decrementImage: "minus",
+                    decrementLabel: "Decrease interval",
+                    canDecrement: holdingCoefficient > 2,
+                    incrementImage: "plus",
+                    incrementLabel: "Increase interval",
+                    canIncrement: holdingCoefficient < 30,
+                    decrement: { holdingCoefficient -= 1 },
+                    increment: { holdingCoefficient += 1 }
+                ) {
                     Text("\(holdingCoefficient)")
-                        .font(.system(size: 23, weight: .medium, design: .rounded))
-                        .padding(7)
-                        .background {
-                            RoundedRectangle(cornerRadius: 9, style: .continuous)
-                                .fill(Color.SecondaryBackground)
-                                .frame(width: 40, height: 40)
-                        }
-
-                    Button {
-                        holdingCoefficient -= 1
-                    } label: {
-                        Image(systemName: "chevron.down")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(Color.SubtitleText)
-                            .padding(7)
-                            .background(
-                                Color.SecondaryBackground, in: RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            )
-                            .contentShape(Circle())
-                            .opacity(holdingCoefficient == 2 ? 0.25 : 1)
-                    }
-                    .disabled(holdingCoefficient == 2)
+                        .font(.system(.title2, design: .rounded).weight(.semibold))
+                        .monospacedDigit()
                 }
 
-                VStack {
-                    Button {
-                        holdingType -= 1
-                    } label: {
-                        Image(systemName: "chevron.up")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(Color.SubtitleText)
-                            .padding(7)
-                            .background(
-                                Color.SecondaryBackground, in: RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            )
-                            .contentShape(Circle())
-                            .opacity(holdingType == 1 ? 0.25 : 1)
-                    }
-                    .disabled(holdingType == 1)
-
+                CustomRecurringStepper(
+                    decrementImage: "chevron.left",
+                    decrementLabel: "Previous unit",
+                    canDecrement: holdingType > 1,
+                    incrementImage: "chevron.right",
+                    incrementLabel: "Next unit",
+                    canIncrement: holdingType < 3,
+                    decrement: { holdingType -= 1 },
+                    increment: { holdingType += 1 }
+                ) {
                     Group {
                         if holdingType == 1 {
                             Text("\(holdingCoefficient) days")
@@ -1744,38 +1006,210 @@ struct CustomRecurringView: View {
                             Text("\(holdingCoefficient) months")
                         }
                     }
-                    .font(.system(size: 23, weight: .medium, design: .rounded))
-                    .padding(7)
-                    .background {
-                        RoundedRectangle(cornerRadius: 9, style: .continuous)
-                            .fill(Color.SecondaryBackground)
-                            .frame(height: 40)
-                    }
-
-                    Button {
-                        holdingType += 1
-                    } label: {
-                        Image(systemName: "chevron.down")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(Color.SubtitleText)
-                            .padding(7)
-                            .background(
-                                Color.SecondaryBackground, in: RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            )
-                            .contentShape(Circle())
-                            .opacity(holdingType == 3 ? 0.25 : 1)
-                    }
-                    .disabled(holdingType == 3)
+                    .font(.system(.title3, design: .rounded).weight(.semibold))
                 }
             }
-            .padding(.bottom, 20)
         }
-        .padding(13)
+        .padding(.horizontal, 20)
+        .padding(.top, 20)
+        .padding(.bottom, 16)
         .frame(maxHeight: .infinity, alignment: .top)
+        .sheetBackground()
         .onAppear {
-            holdingType = repeatType
-            holdingCoefficient = repeatCoefficient
+            if repeatCoefficient > 1 {
+                holdingType = repeatType
+                holdingCoefficient = repeatCoefficient
+            } else {
+                holdingType = 2
+                holdingCoefficient = 2
+            }
         }
+    }
+}
+
+struct DateTimePickerSheet: View {
+    @Binding var date: Date
+
+    @Environment(\.dismiss) var dismiss
+    @State private var contentHeight: CGFloat = 0
+
+    var body: some View {
+        if #available(iOS 16.0, *) {
+            content
+                .presentationDetents(detents)
+                .presentationDragIndicator(.hidden)
+        } else {
+            content
+        }
+    }
+
+    @available(iOS 16.0, *)
+    var detents: Set<PresentationDetent> {
+        if contentHeight == 0 {
+            return [.height(480)]
+        } else if contentHeight > UIScreen.main.bounds.height * 0.9 {
+            return [.large]
+        } else {
+            return [.height(contentHeight)]
+        }
+    }
+
+    var content: some View {
+        VStack(spacing: 0) {
+            HStack {
+                GlassIconButton(systemName: "xmark", accessibilityLabel: "Close") {
+                    dismiss()
+                }
+
+                Spacer()
+
+                GlassIconButton(
+                    systemName: "checkmark",
+                    accessibilityLabel: "Done",
+                    foreground: Color.LightIcon,
+                    tint: Color.DarkBackground,
+                    fallback: Color.DarkBackground
+                ) {
+                    dismiss()
+                }
+            }
+            .frame(height: 44)
+            .overlay {
+                CategoryEditorTitle(title: "Date & Time")
+            }
+
+            GlassDatePicker(selection: $date, showsTime: true) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    dismiss()
+                }
+            }
+            .padding(.top, 8)
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 20)
+        .padding(.bottom, 16)
+        .fixedSize(horizontal: false, vertical: true)
+        .background {
+            GeometryReader { proxy in
+                Color.clear.preference(key: SheetContentHeightKey.self, value: proxy.size.height)
+            }
+        }
+        .onPreferenceChange(SheetContentHeightKey.self) { height in
+            contentHeight = height
+        }
+        .frame(maxHeight: .infinity, alignment: .top)
+        .sheetBackground()
+    }
+}
+
+struct TransactionSheetPresentation: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 16.4, *) {
+            content
+                .presentationDetents([.large])
+                .presentationDragIndicator(.hidden)
+                .presentationBackground(Color.PrimaryBackground)
+        } else if #available(iOS 16.0, *) {
+            content
+                .presentationDetents([.large])
+                .presentationDragIndicator(.hidden)
+        } else {
+            content
+        }
+    }
+}
+
+struct SwipeDownToDismiss: ViewModifier {
+    let isLocked: Bool
+    @Binding var isDragging: Bool
+
+    @Environment(\.dismiss) private var dismiss
+    @GestureState private var isSwipingDown = false
+
+    func body(content: Content) -> some View {
+        content
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 20, coordinateSpace: .global)
+                    .updating($isSwipingDown) { value, state, _ in
+                        if !state {
+                            state = isDownwardSwipe(value.translation)
+                        }
+                    }
+                    .onEnded { value in
+                        let passedThreshold = value.translation.height > 100 || value.predictedEndTranslation.height > 200
+
+                        if !isLocked && isDownwardSwipe(value.translation) && passedThreshold {
+                            dismiss()
+                        }
+                    }
+            )
+            .onChange(of: isSwipingDown) { swiping in
+                if swiping {
+                    isDragging = true
+                } else {
+                    DispatchQueue.main.async {
+                        isDragging = false
+                    }
+                }
+            }
+    }
+
+    private func isDownwardSwipe(_ translation: CGSize) -> Bool {
+        translation.height > 0 && translation.height > abs(translation.width) * 1.5
+    }
+}
+
+private struct SheetContentHeightKey: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
+    }
+}
+
+private struct CustomRecurringStepper<Value: View>: View {
+    let decrementImage: String
+    let decrementLabel: LocalizedStringKey
+    let canDecrement: Bool
+    let incrementImage: String
+    let incrementLabel: LocalizedStringKey
+    let canIncrement: Bool
+    let decrement: () -> Void
+    let increment: () -> Void
+    @ViewBuilder let value: () -> Value
+
+    var body: some View {
+        HStack(spacing: 0) {
+            stepButton(systemName: decrementImage, label: decrementLabel, enabled: canDecrement, action: decrement)
+
+            value()
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                .foregroundColor(Color.PrimaryText)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .frame(maxWidth: .infinity)
+
+            stepButton(systemName: incrementImage, label: incrementLabel, enabled: canIncrement, action: increment)
+        }
+        .padding(.horizontal, 3)
+        .frame(height: 50)
+        .frame(maxWidth: .infinity)
+        .glassField(in: Capsule(), isFocused: false)
+    }
+
+    func stepButton(systemName: String, label: LocalizedStringKey, enabled: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: systemName)
+                .font(.system(.body, design: .rounded).weight(.semibold))
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                .foregroundColor(Color.PrimaryText)
+                .frame(width: 44, height: 44)
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .disabled(!enabled)
+        .opacity(enabled ? 1 : 0.3)
+        .accessibilityLabel(label)
     }
 }
 

@@ -5,19 +5,32 @@
 //  Created by Rafael Soh on 20/5/22.
 //
 
+import CoreData
 import Foundation
-import SwiftUIIntrospect
 import Popovers
 import SwiftUI
 
 struct InsightsView: View {
-    @FetchRequest(sortDescriptors: []) private var transactions: FetchedResults<Transaction>
+    @EnvironmentObject var dataController: DataController
+    @EnvironmentObject var toastPresenter: OverallToastPresenter
+    @EnvironmentObject var transactionManager: OverallTransactionManager
+
+    @FetchRequest(sortDescriptors: [
+        SortDescriptor(\.day)
+    ]) private var transactions: FetchedResults<Transaction>
 
     @State private var showTimeMenu = false
     @AppStorage("chartTimeFrame", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var chartType = 1
+    @AppStorage("firstDayOfMonth", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var firstDayOfMonth: Int = 1
+    @AppStorage("incomeTracking", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var incomeTracking: Bool = true
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
+
+    @State private var periodStart: Date?
+    @State private var route: InsightsRoute?
+    @State private var refreshID = UUID()
 
     private var didSave = NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
-    @State private var refreshID = UUID()
 
     var chartTypeString: String {
         if chartType == 1 {
@@ -31,491 +44,1944 @@ struct InsightsView: View {
         }
     }
 
-//    @State private var holdingIncome = false
-//    @Namespace var animation
-
-    var body: some View {
-        if transactions.isEmpty {
-            VStack(spacing: 5) {
-                Image("chart")
-                    .resizable()
-                    .frame(width: 75, height: 75)
-                    .padding(.bottom, 20)
-
-                Text("Analyse Your Expenditure")
-                    .font(.system(.title2, design: .rounded).weight(.medium))
-//                    .font(.system(size: 23.5, weight: .medium, design: .rounded))
-                    .foregroundColor(Color.PrimaryText.opacity(0.8))
-                    .multilineTextAlignment(.center)
-
-                Text("As transactions start piling up")
-                    .font(.system(.body, design: .rounded).weight(.medium))
-//                    .font(.system(size: 18, weight: .medium, design: .rounded))
-                    .foregroundColor(Color.SubtitleText.opacity(0.7))
-                    .multilineTextAlignment(.center)
-            }
-            .padding(.horizontal, 30)
-            .frame(height: 250, alignment: .top)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .ignoresSafeArea(.all)
-            .background(Color.PrimaryBackground)
-            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-
-        } else {
-            VStack(spacing: 5) {
-                HStack {
-                    Text("Insights")
-                        .font(.system(.title, design: .rounded).weight(.semibold))
-                        .accessibility(addTraits: .isHeader)
-                    Spacer()
-
-                    Button {
-                        showTimeMenu = true
-                    } label: {
-                        HStack(spacing: 4.5) {
-                            Text(chartTypeString)
-                                .font(.system(.body, design: .rounded).weight(.medium))
-
-                            Image(systemName: "chevron.up.chevron.down")
-                                .font(.system(.caption, design: .rounded).weight(.medium))
-                        }
-                        .padding(3)
-                        .padding(.horizontal, 6)
-                        .foregroundColor(Color.PrimaryText.opacity(0.9))
-                        .background(Color.Outline, in: RoundedRectangle(cornerRadius: 6))
-                    }
-                    .popover(present: $showTimeMenu, attributes: {
-                        $0.position = .absolute(
-                            originAnchor: .bottomRight,
-                            popoverAnchor: .topRight
-                        )
-                        $0.rubberBandingMode = .none
-                        $0.sourceFrameInset = UIEdgeInsets(top: 0, left: 0, bottom: -10, right: 0)
-                        $0.presentation.animation = .easeInOut(duration: 0.2)
-                        $0.dismissal.animation = .easeInOut(duration: 0.3)
-                    }) {
-                        ChartTimePickerView(showMenu: $showTimeMenu)
-                    }
-                }
-                .padding(.horizontal, 30)
-                .padding(.top, 20)
-                .padding(.bottom, 20)
-
-                if chartType == 1 {
-                    WeekGraphView()
-                        .id(refreshID)
-                } else if chartType == 2 {
-                    MonthGraphView()
-                        .id(refreshID)
-                } else if chartType == 3 {
-                    YearGraphView()
-                        .id(refreshID)
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color.PrimaryBackground)
-            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-            .onReceive(self.didSave) { _ in
-                self.refreshID = UUID()
-            }
-        }
-    }
-}
-
-struct HorizontalPieChartView: View {
-    @FetchRequest private var allCategories: FetchedResults<Category>
-    @FetchRequest private var transactions: FetchedResults<Transaction>
-
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
-    var currencySymbol: String {
-        return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
+    var formatter: InsightsFormatter {
+        InsightsFormatter(currencySymbol: Locale.current.localizedCurrencySymbol(forCurrencyCode: currency) ?? "$", showCents: showCents)
     }
 
-    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
-
-    var income: Bool
-    var date: Date
-    var total: Double {
-        var holdingTotal = 0.0
-
-        transactions.forEach { transaction in
-            holdingTotal += transaction.amount
-        }
-
-        return holdingTotal
+    var currentStart: Date {
+        InsightsPeriod.currentStart(type: chartType, firstDayOfMonth: firstDayOfMonth)
     }
 
-    @Binding var chosenAmount: Double
-    @Binding var chosenName: String
-
-    @Binding var categoryFilterMode: Bool
-    @Binding var categoryFilter: Category?
-    @Binding var selectedDate: Date?
-
-    @Environment(\.dynamicTypeSize) var dynamicTypeSize
-
-    var fontSize: CGFloat {
-        switch dynamicTypeSize {
-        case .xSmall:
-            return 12
-        case .small:
-            return 13
-        case .medium:
-            return 14
-        case .large:
-            return 15
-        case .xLarge:
-            return 17
-        case .xxLarge:
-            return 19
-        case .xxxLarge:
-            return 21
-        default:
-            return 15
-        }
+    var earliestStart: Date {
+        guard let first = transactions.first?.day else { return currentStart }
+        return min(currentStart, InsightsPeriod.start(containing: first, type: chartType, firstDayOfMonth: firstDayOfMonth))
     }
 
-    var percentWidth: CGFloat {
-        return "100%".widthOfRoundedString(size: fontSize, weight: .medium) + 4
+    var period: InsightsPeriod {
+        InsightsPeriod(type: chartType, start: periodStart ?? currentStart)
     }
 
-    var categories: [PowerCategory] {
-        var holding = [PowerCategory]()
-
-        for category in allCategories {
-            var holdingTotal = 0.0
-
-            transactions.forEach { transaction in
-                if transaction.category == category {
-                    holdingTotal += transaction.wrappedAmount
-                }
-            }
-
-            if holdingTotal == 0 {
-                continue
-            }
-
-            let newCategory = PowerCategory(id: category.id ?? UUID(), category: category, percent: holdingTotal / total, amount: holdingTotal)
-
-            holding.append(newCategory)
-        }
-
-        holding.sort(by: { lhs, rhs in
-            lhs.percent > rhs.percent
-        })
-
-        return holding
+    var firstDay: Date? {
+        transactions.first?.day
     }
 
     var body: some View {
-        if !categories.isEmpty {
-            VStack(alignment: .leading, spacing: 10) {
-                if !categoryFilterMode {
-                    Text("Categories")
-                        .font(.system(.callout, design: .rounded).weight(.semibold))
-                        .foregroundColor(Color.SubtitleText)
-
-                    GeometryReader { proxy in
-                        HStack(spacing: proxy.size.width * 0.015) {
-                            ForEach(categories) { category in
-                                if category.percent < 0.005 {
-                                    EmptyView()
-                                } else {
-                                    AnimatedHorizontalBarGraph(category: category, index: categories.firstIndex(of: category) ?? 0)
-                                        .frame(width: (proxy.size.width * (1.0 - (0.015 * Double(categories.count - 1)))) * category.percent)
-                                        .onTapGesture {
-                                            withAnimation(.easeInOut) {
-                                                if categoryFilter == category.category {
-                                                    selectedDate = nil
-                                                    categoryFilterMode = false
-                                                    categoryFilter = nil
-                                                } else {
-                                                    selectedDate = nil
-                                                    categoryFilterMode = true
-                                                    categoryFilter = category.category
-                                                    chosenAmount = category.percent * total
-                                                    chosenName = category.category.wrappedName
-                                                }
-                                            }
-                                        }
-                                        .opacity(categoryFilterMode ? (categoryFilter == category.category ? 1 : 0.5) : 1)
-                                        .overlay {
-                                            if categoryFilterMode && categoryFilter == category.category {
-                                                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                                    .stroke(Color.DarkBackground, lineWidth: 1.5)
-                                            }
-                                        }
-                                }
-                            }
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .frame(height: 17)
-                    .padding(.bottom, 10)
-                }
-
+        Group {
+            if transactions.isEmpty {
+                EmptyStateView(systemImage: "chart.bar", title: "No insights yet")
+                    .tabBarClearance()
+            } else {
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: 10) {
-                        ForEach(categories, id: \.self) { category in
-                            if !categoryFilterMode || categoryFilter == category.category {
-                                let boxColor = category.category.income ? Color(hex: Color.colorArray[categories.firstIndex(of: category) ?? 0]) : Color(hex: category.category.wrappedColour)
-
-                                HStack(spacing: 10) {
-
-                                    Text(category.category.fullName)
-                                        .font(.system(.title3, design: .rounded).weight(.semibold))
-                                        .foregroundColor(Color.PrimaryText)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-
-                                    Text("\(currencySymbol)\(category.amount, specifier: (showCents && category.amount < 100) ? "%.2f" : "%.0f")")
-                                        .font(.system(categoryFilterMode && categoryFilter == category.category ? .title3 : .body, design: .rounded).weight(.medium))
-                                        .foregroundColor(Color.SubtitleText)
-                                        .lineLimit(1)
-                                        .layoutPriority(1)
-
-                                    if categoryFilterMode && categoryFilter == category.category {
-                                        Button {
-                                            withAnimation(.easeInOut) {
-                                                selectedDate = nil
-                                                categoryFilterMode = false
-                                                categoryFilter = nil
-                                            }
-                                        } label: {
-                                            Image(systemName: "xmark")
-                                                .font(.system(.footnote, design: .rounded).weight(.bold))
-                                                .foregroundColor(Color.SubtitleText)
-                                                .padding(5)
-                                                .background(Color.SecondaryBackground, in: Circle())
-                                        }
-
-                                    } else {
-
-                                        Text("\(category.percent * 100, specifier: "%.0f")%")
-                                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                                            .foregroundColor(boxColor)
-                                            .padding(.vertical, 3)
-                                            .frame(width: percentWidth)
-                                            .background(boxColor.opacity(0.23), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-                                    }
-                                }
-                                .padding(.vertical, categoryFilterMode && categoryFilter == category.category ? 10 : 5)
-                                .padding(.horizontal, categoryFilterMode && categoryFilter == category.category ? 10 : 0)
-                                .background(RoundedRectangle(cornerRadius: 12).fill(categoryFilterMode && categoryFilter == category.category ? Color.TertiaryBackground : Color.PrimaryBackground))
-                                .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(categoryFilterMode && categoryFilter == category.category ? Color.Outline : Color.clear, lineWidth: 1.3))
-                                .fixedSize(horizontal: false, vertical: true)
-                                .contentShape(Rectangle())
-                                .drawingGroup()
-                                .onTapGesture {
-                                    withAnimation(.easeInOut) {
-                                        if !categoryFilterMode {
-                                            selectedDate = nil
-                                            categoryFilterMode = true
-                                            categoryFilter = category.category
-                                            chosenAmount = category.percent * total
-                                            chosenName = category.category.wrappedName
-                                        }
-                                    }
-                                }
-
-                            }
-
-                        }
+                    InsightsDashboard(period: period, dataController: dataController, incomeTracking: incomeTracking, firstDay: firstDay, formatter: formatter) { selection in
+                        route = selection
+                    }
+                    .id(refreshID)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 4)
+                }
+                .tabBarClearance()
+                .floatingAboveTabBar {
+                    GlassStepperCapsule(
+                        title: period.title,
+                        previousLabel: period.previousLabel,
+                        nextLabel: period.nextLabel,
+                        canGoPrevious: period.start > earliestStart,
+                        canGoNext: period.start < currentStart
+                    ) {
+                        step(by: -1)
+                    } onNext: {
+                        step(by: 1)
                     }
                 }
             }
-            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .tabHeader {
+            TabHeader("Insights") {
+                GlassCapsuleButton(LocalizedStringKey(chartTypeString), trailingSystemImage: "chevron.up.chevron.down") {
+                    showTimeMenu = true
+                }
+                .popover(present: $showTimeMenu, attributes: {
+                    $0.position = .absolute(
+                        originAnchor: .bottomRight,
+                        popoverAnchor: .topRight
+                    )
+                    $0.rubberBandingMode = .none
+                    $0.sourceFrameInset = UIEdgeInsets(top: 0, left: 0, bottom: -10, right: 0)
+                    $0.presentation.animation = .easeInOut(duration: 0.2)
+                    $0.dismissal.animation = .easeInOut(duration: 0.3)
+                }) {
+                    ChartTimePickerView(showMenu: $showTimeMenu)
+                }
+                .disabled(transactions.isEmpty)
+                .opacity(transactions.isEmpty ? 0.4 : 1)
+            }
+        }
+        .background(Color.PrimaryBackground)
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+        .onReceive(didSave) { _ in
+            refreshID = UUID()
+        }
+        .onChange(of: chartType) { _ in
+            periodStart = nil
+        }
+        .onChange(of: firstDayOfMonth) { _ in
+            periodStart = nil
+        }
+        #if DEBUG
+        .onAppear {
+            // `-insightsSheet category|categories|cashFlow|recurring` opens that sheet, for screenshots.
+            let arguments = ProcessInfo.processInfo.arguments
+            guard let index = arguments.firstIndex(of: "-insightsSheet") else { return }
+            let value = index + 1 < arguments.count ? arguments[index + 1] : "category"
+
+            if value == "categories" {
+                route = .allCategories
+            } else if value == "cashFlow" {
+                route = .cashFlow
+            } else if value == "recurring" {
+                route = .recurring
+            } else {
+                let expenses = insightsTransactions(dataController, from: period.start, to: period.queryEnd, income: false)
+                if let top = InsightsCategoryTotal.make(from: expenses).first {
+                    route = .category(top.category)
+                }
+            }
+        }
+        #endif
+        .sheet(item: $route) { selection in
+            InsightsDetailSheet(route: selection, period: period, firstDay: firstDay, formatter: formatter)
+                .environmentObject(dataController)
+                .environmentObject(toastPresenter)
         }
     }
 
-    init(date: Date, categoryFilter: Binding<Category?>?, categoryFilterMode: Binding<Bool>, selectedDate: Binding<Date?>?, chosenAmount: Binding<Double>, chosenName: Binding<String>, type: ChartTimeFrame, income: Bool) {
-        self.date = date
-        self.income = income
-        _categoryFilter = categoryFilter ?? Binding.constant(nil)
-        _categoryFilterMode = categoryFilterMode
-        _selectedDate = selectedDate ?? Binding.constant(nil)
-        _chosenName = chosenName
-        _chosenAmount = chosenAmount
+    func step(by value: Int) {
+        let next = period.shifted(by: value).start
+        guard next >= earliestStart && next <= currentStart else { return }
 
-        // fetching categories
+        withAnimation(.easeInOut(duration: 0.2)) {
+            periodStart = next
+        }
+    }
+}
 
-        _allCategories = FetchRequest<Category>(sortDescriptors: [], predicate: NSPredicate(format: "income = %d", income))
+// MARK: - Period
 
-        // fetching transactions
+struct InsightsPeriod: Equatable {
+    let type: Int
+    let start: Date
 
-        let startPredicate = NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), date as CVarArg)
-        let incomePredicate = NSPredicate(format: "income = %d", income)
-
-        let endPredicate: NSPredicate
-
+    static var weekCalendar: Calendar {
         var calendar = Calendar(identifier: .gregorian)
-
-        calendar.firstWeekday = UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.integer(forKey: "firstWeekday")
+        calendar.firstWeekday = UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.integer(forKey: "firstWeekday") ?? 0
         calendar.minimumDaysInFirstWeek = 4
-
-        switch type {
-        case .week:
-            if calendar.isDate(date, equalTo: Date.now, toGranularity: .weekOfYear) {
-                endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), Date.now as CVarArg)
-            } else {
-                let next = calendar.date(byAdding: .day, value: 7, to: date) ?? Date.now
-                endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), next as CVarArg)
-            }
-        case .month:
-            let next = calendar.date(byAdding: .month, value: 1, to: date) ?? Date.now
-
-            if next > Date.now {
-                endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), Date.now as CVarArg)
-            } else {
-                endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), next as CVarArg)
-            }
-        case .year:
-            if calendar.isDate(date, equalTo: Date.now, toGranularity: .year) {
-                endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), Date.now as CVarArg)
-            } else {
-                let next = calendar.date(byAdding: .year, value: 1, to: date) ?? Date.now
-                endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), next as CVarArg)
-            }
-        }
-
-        let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate, incomePredicate])
-
-        _transactions = FetchRequest<Transaction>(sortDescriptors: [], predicate: andPredicate)
-    }
-}
-
-struct FilteredCategoryInsightsView: View {
-    @SectionedFetchRequest<Date?, Transaction> private var transactions: SectionedFetchResults<Date?, Transaction>
-
-    var body: some View {
-        VStack(spacing: 30) {
-            if transactions.count == 0 {
-                NoResultsView(fullscreen: false)
-            }
-
-            ListView(transactions: _transactions)
-        }
-        .frame(maxHeight: .infinity)
+        return calendar
     }
 
-    init(category: Category?, date: Date, type: ChartTimeFrame) {
-        if let unwrappedCategory = category {
-            let startPredicate = NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), date as CVarArg)
-            let categoryPredicate = NSPredicate(format: "%K == %@", #keyPath(Transaction.category), unwrappedCategory)
-            let incomePredicate = NSPredicate(format: "income = %d", unwrappedCategory.income)
-
-            let endPredicate: NSPredicate
-
-            var calendar = Calendar(identifier: .gregorian)
-
-            calendar.firstWeekday = UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.integer(forKey: "firstWeekday")
-            calendar.minimumDaysInFirstWeek = 4
-
-            switch type {
-            case .week:
-                if calendar.isDate(date, equalTo: Date.now, toGranularity: .weekOfYear) {
-                    endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), Date.now as CVarArg)
-                } else {
-                    let next = calendar.date(byAdding: .day, value: 7, to: date) ?? Date.now
-                    endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), next as CVarArg)
-                }
-            case .month:
-                if calendar.isDate(date, equalTo: Date.now, toGranularity: .month) {
-                    endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), Date.now as CVarArg)
-                } else {
-                    let next = calendar.date(byAdding: .month, value: 1, to: date) ?? Date.now
-                    endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), next as CVarArg)
-                }
-            case .year:
-                if calendar.isDate(date, equalTo: Date.now, toGranularity: .year) {
-                    endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), Date.now as CVarArg)
-                } else {
-                    let next = calendar.date(byAdding: .year, value: 1, to: date) ?? Date.now
-                    endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), next as CVarArg)
-                }
-            }
-
-            let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate, categoryPredicate, incomePredicate])
-
-            _transactions = SectionedFetchRequest<Date?, Transaction>(sectionIdentifier: \.day, sortDescriptors: [
-                SortDescriptor(\.day, order: .reverse),
-                SortDescriptor(\.date, order: .reverse)
-            ], predicate: andPredicate)
-
+    static func start(containing date: Date, type: Int, firstDayOfMonth: Int) -> Date {
+        if type == 1 {
+            let calendar = weekCalendar
+            return calendar.date(from: calendar.dateComponents([.weekOfYear, .yearForWeekOfYear], from: date)) ?? date
+        } else if type == 2 {
+            return calculateStartOfMonthPeriod(earliestDate: date, startOfMonthDay: firstDayOfMonth)
         } else {
-            _transactions = SectionedFetchRequest<Date?, Transaction>(sectionIdentifier: \.day, sortDescriptors: [
-                SortDescriptor(\.day, order: .reverse),
-                SortDescriptor(\.date, order: .reverse)
-            ])
+            let calendar = Calendar(identifier: .gregorian)
+            return calendar.date(from: calendar.dateComponents([.year], from: date)) ?? date
+        }
+    }
+
+    static func currentStart(type: Int, firstDayOfMonth: Int) -> Date {
+        if type == 2 {
+            return getStartOfMonth(startDay: firstDayOfMonth)
+        } else {
+            return start(containing: Date.now, type: type, firstDayOfMonth: firstDayOfMonth)
+        }
+    }
+
+    var component: Calendar.Component {
+        if type == 1 {
+            return .weekOfYear
+        } else if type == 2 {
+            return .month
+        } else {
+            return .year
+        }
+    }
+
+    var end: Date {
+        Calendar.current.date(byAdding: component, value: 1, to: start) ?? start
+    }
+
+    var queryEnd: Date {
+        min(end, Date.now)
+    }
+
+    var isCurrent: Bool {
+        start <= Date.now && Date.now < end
+    }
+
+    func shifted(by value: Int) -> InsightsPeriod {
+        InsightsPeriod(type: type, start: Calendar.current.date(byAdding: component, value: value, to: start) ?? start)
+    }
+
+    var title: String {
+        let calendar = Calendar.current
+        let formatter = DateFormatter()
+
+        if type == 1 {
+            let last = calendar.date(byAdding: .day, value: 6, to: start) ?? start
+            formatter.dateFormat = "d MMM"
+
+            if calendar.isDate(start, equalTo: last, toGranularity: .month) {
+                let dayFormatter = DateFormatter()
+                dayFormatter.dateFormat = "d"
+                return dayFormatter.string(from: start) + " – " + formatter.string(from: last)
+            } else {
+                return formatter.string(from: start) + " – " + formatter.string(from: last)
+            }
+        } else if type == 2 {
+            if calendar.component(.day, from: start) == 1 {
+                formatter.dateFormat = "MMMM yyyy"
+                return formatter.string(from: start)
+            } else {
+                let last = calendar.date(byAdding: .day, value: -1, to: end) ?? start
+                formatter.dateFormat = "d MMM"
+                return formatter.string(from: start) + " – " + formatter.string(from: last)
+            }
+        } else {
+            formatter.dateFormat = "yyyy"
+            return formatter.string(from: start)
+        }
+    }
+
+    var previousLabel: LocalizedStringKey {
+        if type == 1 {
+            return "Previous week"
+        } else if type == 2 {
+            return "Previous month"
+        } else {
+            return "Previous year"
+        }
+    }
+
+    var nextLabel: LocalizedStringKey {
+        if type == 1 {
+            return "Next week"
+        } else if type == 2 {
+            return "Next month"
+        } else {
+            return "Next year"
+        }
+    }
+
+    var comparisonLabel: LocalizedStringKey {
+        if type == 1 {
+            return "vs last week"
+        } else if type == 2 {
+            return "vs last month"
+        } else {
+            return "vs last year"
+        }
+    }
+
+    // A month that starts late in the calendar month is named after the month most of it falls in.
+    var shortLabel: String {
+        let formatter = DateFormatter()
+
+        if type == 1 {
+            formatter.dateFormat = "d MMM"
+            return formatter.string(from: start)
+        } else if type == 2 {
+            formatter.dateFormat = "MMM"
+            return formatter.string(from: Calendar.current.date(byAdding: .day, value: 15, to: start) ?? start)
+        } else {
+            formatter.dateFormat = "yyyy"
+            return formatter.string(from: start)
+        }
+    }
+
+    var bucketDateFormat: String {
+        type == 3 ? "MMMM yyyy" : "EEE d MMM"
+    }
+
+    func bucketEnd(for date: Date) -> Date {
+        let next = Calendar.current.date(byAdding: type == 3 ? .month : .day, value: 1, to: date) ?? date
+        return min(next, Date.now)
+    }
+}
+
+// MARK: - Data
+
+struct InsightsFormatter {
+    let currencySymbol: String
+    let showCents: Bool
+
+    func number(_ amount: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        let digits = showCents && amount < 10000 ? 2 : 0
+        formatter.minimumFractionDigits = digits
+        formatter.maximumFractionDigits = digits
+        return formatter.string(from: NSNumber(value: amount)) ?? "0"
+    }
+
+    func string(_ amount: Double) -> String {
+        currencySymbol + number(amount)
+    }
+
+    func rounded(_ amount: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.maximumFractionDigits = 0
+        return currencySymbol + (formatter.string(from: NSNumber(value: amount.rounded())) ?? "0")
+    }
+}
+
+struct InsightsBucket: Identifiable {
+    let date: Date
+    let value: Double
+    let label: String
+    let accessibilityDate: String
+
+    let isCurrent: Bool
+
+    var id: Date { date }
+
+    var isFuture: Bool { date > Date.now }
+
+    static func make(dates: [Date], values: [Date: Double], type: Int) -> [InsightsBucket] {
+        let labelFormatter = DateFormatter()
+        labelFormatter.dateFormat = type == 1 ? "EEEEE" : (type == 2 ? "d" : "MMMMM")
+
+        let accessibilityFormatter = DateFormatter()
+        accessibilityFormatter.dateFormat = type == 3 ? "MMMM" : "EEEE d MMMM"
+
+        return dates.enumerated().map { index, date in
+            let showsLabel = type != 2 || index % 7 == 0
+            return InsightsBucket(
+                date: date,
+                value: values[date] ?? 0,
+                label: showsLabel ? labelFormatter.string(from: date) : "",
+                accessibilityDate: accessibilityFormatter.string(from: date),
+                isCurrent: Calendar.current.isDate(date, equalTo: Date.now, toGranularity: type == 3 ? .month : .day)
+            )
         }
     }
 }
 
-struct FilteredDateInsightsView: View {
-    @FetchRequest private var transactions: FetchedResults<Transaction>
+struct InsightsCategoryTotal: Identifiable {
+    let category: Category
+    let amount: Double
+    let share: Double
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
-    var currencySymbol: String {
-        return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
-    }
+    var id: NSManagedObjectID { category.objectID }
 
-    @AppStorage("swapTimeLabel", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var swapTimeLabel: Bool = false
-    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
-    
-    @AppStorage("showExpenseOrIncomeSign", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
-    var showExpenseOrIncomeSign: Bool = true
+    static func make(from transactions: [Transaction]) -> [InsightsCategoryTotal] {
+        var totals = [Category: Double]()
 
-
-    var body: some View {
-        VStack(spacing: 0) {
-            if transactions.count == 0 {
-                NoResultsView(fullscreen: false)
-            }
-            ForEach(transactions) { transaction in
-                SingleTransactionView(transaction: transaction, showCents: showCents, currencySymbol: currencySymbol, currency: currency, swapTimeLabel: swapTimeLabel, future: false, showExpenseOrIncomeSign: showExpenseOrIncomeSign)
-            }
+        for transaction in transactions {
+            guard let category = transaction.category else { continue }
+            totals[category, default: 0] += transaction.amount
         }
-        .frame(maxHeight: .infinity)
+
+        let total = totals.values.reduce(0, +)
+
+        return totals
+            .map { InsightsCategoryTotal(category: $0.key, amount: $0.value, share: total > 0 ? $0.value / total : 0) }
+            .sorted { $0.amount > $1.amount }
     }
+}
 
-    init(date: Date, income: Bool) {
-        let startPredicate = NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), date as CVarArg)
+// A period still in progress is measured against the same stretch of the previous one, not all of it.
+func insightsCategoryChange(_ dataController: DataController, period: InsightsPeriod, category: Category, amount: Double) -> Int? {
+    let previous = period.shifted(by: -1)
+    let cutoff = period.isCurrent ? previous.start.addingTimeInterval(Date.now.timeIntervalSince(period.start)) : period.start
+    let base = insightsTransactions(dataController, from: previous.start, to: cutoff, income: category.income, category: category).reduce(0) { $0 + $1.amount }
 
-        let endPredicate: NSPredicate
+    guard base > 0, amount > 0 else { return nil }
+
+    let percent = Int(((amount - base) / base * 100).rounded())
+    return percent == 0 ? nil : percent
+}
+
+struct InsightsProjection {
+    let amount: Double
+    let change: Double?
+
+    // Recurring charges are added as scheduled rather than extrapolated, so rent paid on the 1st doesn't inflate the pace.
+    static func make(period: InsightsPeriod, expenses: [Transaction], previous: Double, firstDay: Date?, recurring: [InsightsRecurringCharge]) -> InsightsProjection? {
+        guard period.isCurrent, expenses.count >= 3 else { return nil }
 
         let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date.now)
+        let trackedStart = calendar.startOfDay(for: max(period.start, firstDay ?? period.start))
+        let elapsed = (calendar.dateComponents([.day], from: trackedStart, to: today).day ?? 0) + 1
 
-        if calendar.isDate(date, equalTo: Date.now, toGranularity: .day) {
-            endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), Date.now as CVarArg)
-        } else {
-            let next = calendar.date(byAdding: .day, value: 1, to: date) ?? Date.now
-            endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), next as CVarArg)
-        }
+        guard elapsed > 2, let tomorrow = calendar.date(byAdding: .day, value: 1, to: today) else { return nil }
 
-        let incomePredicate = NSPredicate(format: "income = %d", income)
+        let remaining = max(0, calendar.dateComponents([.day], from: tomorrow, to: period.end).day ?? 0)
+        let spent = expenses.reduce(0) { $0 + $1.amount }
+        let discretionary = expenses.filter { !$0.onceRecurring }.reduce(0) { $0 + $1.amount }
+        let scheduled = recurring.reduce(0) { $0 + $1.total(from: period.start, to: period.end) }
+        let amount = spent + discretionary / Double(elapsed) * Double(remaining) + scheduled
 
-        let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, incomePredicate, endPredicate])
-
-        _transactions = FetchRequest<Transaction>(sortDescriptors: [
-            SortDescriptor(\.date, order: .reverse)
-        ], predicate: andPredicate)
+        return InsightsProjection(amount: amount, change: previous > 0 ? (amount - previous) / previous : nil)
     }
 }
+
+struct InsightsCashFlowPoint: Identifiable {
+    let start: Date
+    let end: Date
+    let label: String
+    let title: String
+    let inPeriod: Bool
+    var income = 0.0
+    var spent = 0.0
+
+    var id: Date { start }
+
+    var net: Double { income - spent }
+
+    var hasData: Bool { income > 0 || spent > 0 }
+
+    var isFuture: Bool { start > Date.now }
+
+    var isCurrent: Bool { start <= Date.now && Date.now < end }
+}
+
+struct InsightsCashFlow {
+    let period: InsightsPeriod
+    let points: [InsightsCashFlowPoint]
+    let usesPeriods: Bool
+    let income: Double
+    let spent: Double
+
+    // The chart always has `count` slots. Whole periods are compared once tracking covers nearly all of them;
+    // before that it steps down to days, weeks or months, and slots without data show as empty tracks.
+    static func make(_ dataController: DataController, period: InsightsPeriod, count: Int, firstDay: Date?) -> InsightsCashFlow {
+        let tracked = Calendar.current.startOfDay(for: firstDay ?? period.start)
+        let primary = periods(endingAt: period, count: count)
+        let usesPeriods = primary.filter { $0.end > tracked }.count >= count - 1
+        var points = usesPeriods ? primary : finer(than: period, count: count)
+
+        let from = min(points.first?.start ?? period.start, period.start)
+        let transactions = insightsTransactions(dataController, from: from, to: period.queryEnd, income: nil)
+        var income = 0.0
+        var spent = 0.0
+
+        for transaction in transactions {
+            let date = transaction.wrappedDate
+
+            if let index = points.firstIndex(where: { date >= $0.start && date < $0.end }) {
+                if transaction.income {
+                    points[index].income += transaction.amount
+                } else {
+                    points[index].spent += transaction.amount
+                }
+            }
+
+            if date >= period.start {
+                if transaction.income {
+                    income += transaction.amount
+                } else {
+                    spent += transaction.amount
+                }
+            }
+        }
+
+        return InsightsCashFlow(period: period, points: points, usesPeriods: usesPeriods, income: income, spent: spent)
+    }
+
+    static func periods(endingAt period: InsightsPeriod, count: Int) -> [InsightsCashFlowPoint] {
+        (0 ..< count).reversed().map { offset in
+            let item = period.shifted(by: -offset)
+            return InsightsCashFlowPoint(start: item.start, end: offset == 0 ? period.queryEnd : item.end, label: item.shortLabel, title: item.title, inPeriod: offset == 0)
+        }
+    }
+
+    // Weeks step down to their days, so the rest of the week stays visible; months and years end at today.
+    static func finer(than period: InsightsPeriod, count: Int) -> [InsightsCashFlowPoint] {
+        let calendar = period.type == 2 ? InsightsPeriod.weekCalendar : Calendar.current
+        let component: Calendar.Component = period.type == 1 ? .day : (period.type == 2 ? .weekOfYear : .month)
+        let slots = period.type == 1 ? count / 6 * 7 : count
+        let reference = period.type == 1 || !period.isCurrent ? period.end.addingTimeInterval(-1) : Date.now
+
+        guard let last = calendar.dateInterval(of: component, for: reference)?.start else { return [] }
+
+        return (0 ..< slots).reversed().compactMap { offset in
+            guard let start = calendar.date(byAdding: component, value: -offset, to: last),
+                  let end = calendar.date(byAdding: component, value: 1, to: start) else { return nil }
+
+            let (label, title) = names(start: start, end: end, component: component)
+            return InsightsCashFlowPoint(start: start, end: min(end, max(start, period.queryEnd)), label: label, title: title, inPeriod: end > period.start && start < period.end)
+        }
+    }
+
+    static func names(start: Date, end: Date, component: Calendar.Component) -> (String, String) {
+        let formatter = DateFormatter()
+
+        if component == .day {
+            formatter.dateFormat = "EEE"
+            let label = formatter.string(from: start)
+            formatter.dateFormat = "EEE d MMM"
+            return (label, formatter.string(from: start))
+        } else if component == .weekOfYear {
+            let last = Calendar.current.date(byAdding: .day, value: -1, to: end) ?? start
+            formatter.dateFormat = "d MMM"
+            return (formatter.string(from: start), formatter.string(from: start) + " – " + formatter.string(from: last))
+        } else {
+            formatter.dateFormat = "MMM"
+            let label = formatter.string(from: start)
+            formatter.dateFormat = "MMMM yyyy"
+            return (label, formatter.string(from: start))
+        }
+    }
+}
+
+struct InsightsRecurringCharge: Identifiable {
+    let transaction: Transaction
+    let next: Date
+
+    var id: NSManagedObjectID { transaction.objectID }
+
+    // A month averages 365.25 / 12 days.
+    var monthly: Double {
+        let interval = Double(max(1, Int(transaction.recurringCoefficient)))
+
+        if transaction.recurringType == 1 {
+            return transaction.amount * 30.4375 / interval
+        } else if transaction.recurringType == 2 {
+            return transaction.amount * 30.4375 / 7 / interval
+        } else if transaction.recurringType == 3 {
+            return transaction.amount / interval
+        } else {
+            return 0
+        }
+    }
+
+    var cadence: String {
+        let interval = max(1, Int(transaction.recurringCoefficient))
+
+        if transaction.recurringType == 1 {
+            return interval == 1 ? String(localized: "Daily") : String(localized: "Every \(interval) days")
+        } else if transaction.recurringType == 2 {
+            return interval == 1 ? String(localized: "Weekly") : String(localized: "Every \(interval) weeks")
+        } else if interval == 12 {
+            return String(localized: "Yearly")
+        } else {
+            return interval == 1 ? String(localized: "Monthly") : String(localized: "Every \(interval) months")
+        }
+    }
+
+    var due: String {
+        let calendar = Calendar.current
+        let days = calendar.dateComponents([.day], from: calendar.startOfDay(for: Date.now), to: calendar.startOfDay(for: next)).day ?? 0
+
+        if days > 30 {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "d MMM"
+            return formatter.string(from: next)
+        }
+
+        let formatter = RelativeDateTimeFormatter()
+        formatter.dateTimeStyle = .named
+        formatter.formattingContext = .beginningOfSentence
+        return formatter.localizedString(from: DateComponents(day: max(0, days)))
+    }
+
+    var subtitle: String {
+        due + " · " + cadence
+    }
+
+    // Charges not logged yet; logged ones are already in the period's transactions.
+    func total(from start: Date, to end: Date) -> Double {
+        var total = 0.0
+        var date: Date? = next
+
+        while let current = date, current < end {
+            if current >= start {
+                total += transaction.amount
+            }
+            date = transaction.recurrenceDate(after: current)
+        }
+
+        return total
+    }
+
+    // Sync can leave duplicate copies of a recurring transaction under the same id, so only the first counts.
+    static func make(_ dataController: DataController) -> [InsightsRecurringCharge] {
+        let now = Date.now
+        var seen = Set<UUID>()
+
+        return dataController.results(for: dataController.fetchRequestForRecurringTransactions())
+            .filter { transaction in
+                guard !transaction.income, (1 ... 3).contains(transaction.recurringType) else { return false }
+                guard let id = transaction.id else { return true }
+                return seen.insert(id).inserted
+            }
+            .map { InsightsRecurringCharge(transaction: $0, next: $0.wrappedDate > now ? $0.wrappedDate : $0.nextTransactionDate) }
+            .sorted { $0.next == $1.next ? $0.transaction.amount > $1.transaction.amount : $0.next < $1.next }
+    }
+}
+
+func insightsTransactions(_ dataController: DataController, from start: Date, to end: Date, income: Bool?, category: Category? = nil) -> [Transaction] {
+    let request: NSFetchRequest<Transaction> = Transaction.fetchRequest()
+
+    var predicates = [
+        NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), start as CVarArg),
+        NSPredicate(format: "%K < %@", #keyPath(Transaction.date), end as CVarArg)
+    ]
+
+    if let income {
+        predicates.append(NSPredicate(format: "income = %d", income))
+    }
+
+    if let category {
+        predicates.append(NSPredicate(format: "%K == %@", #keyPath(Transaction.category), category))
+    }
+
+    request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
+    request.sortDescriptors = [NSSortDescriptor(key: "date", ascending: false)]
+
+    return dataController.results(for: request)
+}
+
+func insightsFirstTransactionDate(_ dataController: DataController, from start: Date, to end: Date) -> Date? {
+    let request: NSFetchRequest<Transaction> = Transaction.fetchRequest()
+    request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+        NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), start as CVarArg),
+        NSPredicate(format: "%K < %@", #keyPath(Transaction.date), end as CVarArg)
+    ])
+    request.sortDescriptors = [NSSortDescriptor(key: "date", ascending: true)]
+    request.fetchLimit = 1
+
+    return dataController.results(for: request).first?.date
+}
+
+// An average's divisor: days for weeks and months, months for years, skipping time before the first transaction.
+func insightsAverageSpan(_ dataController: DataController, period: InsightsPeriod, firstDay: Date?) -> Int {
+    let calendar = Calendar.current
+    let last = calendar.startOfDay(for: min(period.end.addingTimeInterval(-1), Date.now))
+
+    if period.type == 3 {
+        let first = insightsFirstTransactionDate(dataController, from: period.start, to: period.queryEnd) ?? period.start
+        let monthStart = { (date: Date) in calendar.date(from: calendar.dateComponents([.year, .month], from: date)) ?? date }
+        let months = calendar.dateComponents([.month], from: monthStart(first), to: monthStart(last)).month ?? 0
+        return max(1, months + 1)
+    }
+
+    let start = calendar.startOfDay(for: max(period.start, firstDay ?? period.start))
+    return max(1, (calendar.dateComponents([.day], from: start, to: last).day ?? 0) + 1)
+}
+
+// MARK: - Dashboard
+
+struct InsightsDashboard: View {
+    let period: InsightsPeriod
+    let incomeTracking: Bool
+    let formatter: InsightsFormatter
+    let onSelect: (InsightsRoute) -> Void
+    let buckets: [InsightsBucket]
+    let spent: Double
+    let average: Double
+    let income: Double
+    let net: Double
+    let change: Double?
+    let projection: InsightsProjection?
+    let categories: [InsightsCategoryTotal]
+    let largest: [Transaction]
+    let cashFlow: InsightsCashFlow?
+    let recurring: [InsightsRecurringCharge]
+
+    // Without income anywhere in the chart's window, income and net would only restate spending.
+    var showsCashFlow: Bool {
+        guard let cashFlow else { return false }
+        return incomeTracking && (income > 0 || spent > 0) && cashFlow.points.contains { $0.income > 0 }
+    }
+
+    // A period in progress compares its projected total; one still too young to project compares as is.
+    var changePercent: Int? {
+        guard let comparison = projection.map(\.change) ?? change else { return nil }
+
+        let percent = Int((comparison * 100).rounded())
+        return percent == 0 ? nil : percent
+    }
+
+    var body: some View {
+        VStack(spacing: 12) {
+            spentCard
+
+            if showsCashFlow {
+                cashFlowCard
+                    .transition(.opacity)
+            }
+
+            if !categories.isEmpty {
+                categoriesCard
+                    .transition(.opacity)
+            }
+
+            if !largest.isEmpty {
+                largestCard
+                    .transition(.opacity)
+            }
+
+            if !recurring.isEmpty {
+                recurringCard
+                    .transition(.opacity)
+            }
+        }
+    }
+
+    var spentSummary: LocalizedStringKey? {
+        projection.map { "~\(formatter.rounded($0.amount)) forecasted" } ?? (spent == 0 ? "No spending in this period" : nil)
+    }
+
+    // Pace and comparison share a footer row; either one alone sits beside the title instead.
+    var spentCard: some View {
+        let summary = spentSummary
+        let hasFooter = summary != nil && changePercent != nil
+
+        return InsightsCard {
+            VStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        InsightsCardTitle("Spent")
+                            .layoutPriority(1)
+
+                        Spacer(minLength: 0)
+
+                        if !hasFooter {
+                            spentLabels(summary: summary)
+                        }
+                    }
+
+                    InsightsAmountText(amount: spent, formatter: formatter, font: .system(.largeTitle, design: .rounded).weight(.semibold))
+                }
+
+                InsightsBarChart(buckets: buckets, average: average, formatter: formatter) { bucket in
+                    onSelect(.bucket(bucket.date))
+                }
+                .id(period.start)
+                .padding(.top, 12)
+
+                if hasFooter {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        spentLabels(summary: summary)
+                    }
+                    .padding(.top, 14)
+                }
+            }
+            .padding(16)
+        }
+    }
+
+    @ViewBuilder
+    func spentLabels(summary: LocalizedStringKey?) -> some View {
+        if let summary {
+            Text(summary)
+                .font(.system(.subheadline, design: .rounded).weight(.medium))
+                .foregroundColor(Color.SubtitleText)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+
+        if summary != nil && changePercent != nil {
+            Spacer(minLength: 0)
+        }
+
+        if let changePercent {
+            InsightsChangeLabel(percent: changePercent, comparison: period.comparisonLabel)
+                .minimumScaleFactor(0.8)
+                .layoutPriority(1)
+        }
+    }
+
+    var cashFlowCard: some View {
+        Button {
+            onSelect(.cashFlow)
+        } label: {
+            InsightsCard {
+                VStack(alignment: .leading, spacing: 0) {
+                    HStack(alignment: .firstTextBaseline, spacing: 12) {
+                        cashFlowFigure(title: "Income", amount: income, sign: "")
+
+                        cashFlowFigure(title: "Net", amount: abs(net), sign: net < 0 ? "−" : "+")
+                    }
+
+                    if let cashFlow {
+                        InsightsCashFlowChart(points: cashFlow.points, selected: cashFlow.usesPeriods ? cashFlow.points.count - 1 : nil, formatter: formatter)
+                            .padding(.top, 12)
+                    }
+                }
+                .padding(16)
+            }
+        }
+        .buttonStyle(InsightsCardButtonStyle())
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text("Income") + Text(" \(formatter.string(income)), ") + Text("Net") + Text(" \(net < 0 ? "−" : "+")\(formatter.string(abs(net)))"))
+        .accessibilityAddTraits(.isButton)
+    }
+
+    func cashFlowFigure(title: LocalizedStringKey, amount: Double, sign: String) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            InsightsCardTitle(title)
+
+            InsightsAmountText(amount: amount, sign: sign, formatter: formatter, font: .system(.title2, design: .rounded).weight(.semibold))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    var categoriesCard: some View {
+        InsightsTappableCard {
+            onSelect(.allCategories)
+        } content: {
+            VStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: .leading, spacing: 12) {
+                    InsightsCardTitle("Top categories")
+
+                    InsightsShareBar(categories: categories)
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 16)
+                .padding(.bottom, 13)
+
+                ForEach(categories.prefix(3)) { total in
+                    InsightsCategoryRow(total: total, formatter: formatter) {
+                        onSelect(.category(total.category))
+                    }
+                }
+            }
+            .padding(.bottom, 10)
+        }
+    }
+
+    var largestCard: some View {
+        InsightsTappableCard {
+            onSelect(.largest)
+        } content: {
+            VStack(alignment: .leading, spacing: 0) {
+                InsightsCardTitle("Largest expenses")
+                    .padding(.horizontal, 16)
+                    .padding(.top, 16)
+                    .padding(.bottom, 10)
+
+                ForEach(largest, id: \.objectID) { transaction in
+                    InsightsLogRow(transaction: transaction, dateFormat: "d MMM")
+                }
+                .padding(.horizontal, 6)
+            }
+            .padding(.bottom, 10)
+        }
+    }
+
+    var recurringCard: some View {
+        let monthly = recurring.reduce(0) { $0 + $1.monthly }
+
+        return InsightsTappableCard {
+            onSelect(.recurring)
+        } content: {
+            VStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(alignment: .firstTextBaseline) {
+                        InsightsCardTitle("Recurring")
+
+                        Spacer(minLength: 8)
+
+                        Text("\(formatter.rounded(monthly * 12))/year")
+                            .font(.system(.subheadline, design: .rounded).weight(.medium))
+                            .foregroundColor(Color.SubtitleText)
+                            .lineLimit(1)
+                    }
+
+                    HStack(alignment: .firstTextBaseline, spacing: 2) {
+                        InsightsAmountText(amount: monthly, formatter: formatter, font: .system(.title2, design: .rounded).weight(.semibold))
+
+                        Text("/month")
+                            .font(.system(.body, design: .rounded).weight(.medium))
+                            .foregroundColor(Color.SubtitleText)
+                            .lineLimit(1)
+                    }
+                    .accessibilityElement(children: .combine)
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 16)
+                .padding(.bottom, 10)
+
+                ForEach(recurring.prefix(3)) { charge in
+                    InsightsLogRow(transaction: charge.transaction, subtitle: charge.due)
+                }
+                .padding(.horizontal, 6)
+            }
+            .padding(.bottom, 10)
+        }
+    }
+
+    init(period: InsightsPeriod, dataController: DataController, incomeTracking: Bool, firstDay: Date?, formatter: InsightsFormatter, onSelect: @escaping (InsightsRoute) -> Void) {
+        self.period = period
+        self.incomeTracking = incomeTracking
+        self.formatter = formatter
+        self.onSelect = onSelect
+        let spentInsights = dataController.getInsights(type: period.type, date: period.start, income: false)
+        buckets = InsightsBucket.make(dates: spentInsights.dates, values: spentInsights.dateDictionary, type: period.type)
+        spent = spentInsights.amount
+        average = spentInsights.amount / Double(insightsAverageSpan(dataController, period: period, firstDay: firstDay))
+
+        let previous = dataController.getInsights(type: period.type, date: period.shifted(by: -1).start, income: false).amount
+        change = previous > 0 && spentInsights.amount > 0 ? (spentInsights.amount - previous) / previous : nil
+
+        let expenses = insightsTransactions(dataController, from: period.start, to: period.queryEnd, income: false)
+        categories = InsightsCategoryTotal.make(from: expenses)
+        largest = Array(expenses.sorted { $0.amount > $1.amount }.prefix(3))
+
+        cashFlow = incomeTracking ? InsightsCashFlow.make(dataController, period: period, count: 6, firstDay: firstDay) : nil
+        income = cashFlow?.income ?? 0
+        net = income - spentInsights.amount
+
+        recurring = period.isCurrent ? InsightsRecurringCharge.make(dataController) : []
+        projection = InsightsProjection.make(period: period, expenses: expenses, previous: previous, firstDay: firstDay, recurring: recurring)
+    }
+}
+
+// MARK: - Building blocks
+
+struct InsightsCard<Content: View>: View {
+    let content: Content
+
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+
+    var body: some View {
+        content
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.SettingsBackground, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+    }
+}
+
+struct InsightsCardTitle: View {
+    let title: LocalizedStringKey
+
+    init(_ title: LocalizedStringKey) {
+        self.title = title
+    }
+
+    var body: some View {
+        Text(title)
+            .font(.system(.subheadline, design: .rounded).weight(.semibold))
+            .foregroundColor(Color.SubtitleText)
+            .lineLimit(1)
+            .accessibilityAddTraits(.isHeader)
+    }
+}
+
+struct InsightsCardButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .overlay {
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .fill(Color.PrimaryText.opacity(configuration.isPressed ? 0.05 : 0))
+                    .allowsHitTesting(false)
+            }
+            .scaleEffect(configuration.isPressed ? 0.98 : 1)
+            .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
+    }
+}
+
+// Rows inside keep their own buttons; tapping anywhere else on the card opens its sheet.
+struct InsightsTappableCard<Content: View>: View {
+    let action: () -> Void
+    let content: Content
+
+    init(action: @escaping () -> Void, @ViewBuilder content: () -> Content) {
+        self.action = action
+        self.content = content()
+    }
+
+    var body: some View {
+        Button(action: action) {
+            InsightsCard {
+                content
+            }
+        }
+        .buttonStyle(InsightsCardButtonStyle())
+    }
+}
+
+struct InsightsAmountText: View {
+    let amount: Double
+    var sign: String = ""
+    let formatter: InsightsFormatter
+    let font: Font
+
+    var body: some View {
+        (Text(sign + formatter.currencySymbol).foregroundColor(Color.SubtitleText) + Text(formatter.number(amount)).foregroundColor(Color.PrimaryText))
+            .font(font)
+            .lineLimit(1)
+            .minimumScaleFactor(0.6)
+            .accessibilityLabel(sign + formatter.string(amount))
+    }
+}
+
+struct InsightsCategoryTile: View {
+    let category: Category?
+    var large = false
+
+    var body: some View {
+        EmojiLogView(emoji: category?.wrappedEmoji ?? "", colour: category?.wrappedColour ?? "#FFFFFF", future: false, huge: large)
+            .fixedSize(horizontal: true, vertical: true)
+            .accessibilityHidden(true)
+    }
+}
+
+enum InsightsSavingsText {
+    static func text(income: Double, spent: Double) -> Text {
+        guard income > 0 else { return Text("No income this period") }
+
+        let kept = (income - spent) / income
+        let percent = Int((abs(kept) * 100).rounded())
+
+        if kept >= 0 {
+            return Text("You kept \(Text("\(percent)%").foregroundColor(Color.IncomeGreen).fontWeight(.semibold)) of income")
+        } else {
+            return Text("You spent \(Text("\(percent)% more").foregroundColor(Color.AlertRed).fontWeight(.semibold)) than you earned")
+        }
+    }
+}
+
+struct InsightsChangeLabel: View {
+    let percent: Int
+    let comparison: LocalizedStringKey
+    var increaseIsGood = false
+
+    var tint: Color {
+        (percent > 0) == increaseIsGood ? Color.IncomeGreen : Color.AlertRed
+    }
+
+    var body: some View {
+        (Text(Image(systemName: percent > 0 ? "arrow.up" : "arrow.down")).fontWeight(.semibold) + Text(" \(abs(percent))%"))
+            .font(.system(.subheadline, design: .rounded).weight(.medium))
+            .foregroundColor(tint)
+            .lineLimit(1)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text(percent > 0 ? "up \(abs(percent)) percent" : "down \(abs(percent)) percent") + Text(" ") + Text(comparison))
+    }
+}
+
+struct InsightsCategoryRing: View {
+    let categories: [InsightsCategoryTotal]
+    let formatter: InsightsFormatter
+    let caption: Text
+    let onSelect: (Category) -> Void
+
+    var body: some View {
+        let shown = categories.filter { $0.share >= 0.01 }
+        let shownTotal = shown.reduce(0) { $0 + $1.share }
+        var cursor = 0.0
+        let segments: [ArcRingSegment] = shownTotal > 0 ? shown.map { total in
+            let start = cursor
+            cursor += total.share / shownTotal
+            return ArcRingSegment(id: total.category.objectID.uriRepresentation().absoluteString, start: start, end: cursor, colour: total.category.tokenColour, label: "\(total.category.wrappedName), \(formatter.string(total.amount))")
+        } : []
+
+        ArcRing(segments: segments, onSelect: { id in
+            if let total = shown.first(where: { $0.category.objectID.uriRepresentation().absoluteString == id }) {
+                onSelect(total.category)
+            }
+        }) {
+            InsightsAmountText(amount: categories.reduce(0) { $0 + $1.amount }, formatter: formatter, font: .system(.title, design: .rounded).weight(.semibold))
+
+            caption
+                .font(.system(.subheadline, design: .rounded).weight(.medium))
+                .foregroundColor(Color.SubtitleText)
+        }
+    }
+}
+
+struct ArcRingSegment: Identifiable {
+    let id: String
+    /// Where the segment starts and ends, as fractions of the whole arc.
+    let start: Double
+    let end: Double
+    let colour: Color
+    let label: String
+}
+
+/// A 70% ring open at the bottom: flat-ended segments with hairline gaps and rounded outer ends,
+/// filling one after another, with an optional pace triangle on the outer edge.
+struct ArcRing<Center: View>: View {
+    let segments: [ArcRingSegment]
+    var showsTrack = false
+    var tick: Double?
+    var onSelect: ((String) -> Void)?
+    @ViewBuilder let center: Center
+
+    @ScaledMetric(relativeTo: .title) private var diameter: CGFloat = 220
+    @AppStorage("animated", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var animated: Bool = true
+    @State private var revealed = false
+
+    private let arc: Double = 0.7
+    private let gap: CGFloat = 2
+    private let lineWidth: CGFloat = 16
+    private let sweep: Double = 0.8
+
+    private var rotation: Angle {
+        .degrees(90 + (1 - arc) * 180)
+    }
+
+    var body: some View {
+        let size = min(diameter, 260)
+        let circumference = 2 * .pi * Double(size - lineWidth) / 2
+        let cap = Double(lineWidth / 2) / circumference
+        let halfGap = Double(gap / 2) / circumference
+        let ring = Circle().inset(by: lineWidth / 2)
+        let filled = segments.last?.end ?? 0
+
+        ZStack {
+            ZStack {
+                if showsTrack {
+                    ring
+                        .trim(from: 0, to: arc)
+                        .stroke(Color.PrimaryText.opacity(0.12), style: StrokeStyle(lineWidth: lineWidth, lineCap: .butt))
+                        .rotationEffect(rotation)
+                }
+
+                ForEach(Array(segments.enumerated()), id: \.element.id) { index, segment in
+                    let joinsNext = index < segments.count - 1 || (showsTrack && filled < 0.999)
+                    let from = segment.start * arc + (index == 0 ? 0 : halfGap)
+                    let to = max(from + 0.0001, segment.end * arc - (joinsNext ? halfGap : 0))
+
+                    ring
+                        .trim(from: from, to: revealed || !animated ? to : from)
+                        .stroke(segment.colour, style: StrokeStyle(lineWidth: lineWidth, lineCap: .butt))
+                        .rotationEffect(rotation)
+                        .animation(animated ? .easeOut(duration: max(0.18, (segment.end - segment.start) * sweep)).delay(segment.start * sweep) : nil, value: revealed)
+                        .contentShape(ring.trim(from: from, to: to).rotation(rotation).stroke(style: StrokeStyle(lineWidth: lineWidth + 12)))
+                        .onTapGesture {
+                            onSelect?(segment.id)
+                        }
+                        .allowsHitTesting(onSelect != nil)
+                        .accessibilityElement()
+                        .accessibilityLabel(segment.label)
+                        .accessibilityAddTraits(onSelect != nil ? .isButton : [])
+                }
+            }
+            .mask(
+                ring
+                    .trim(from: cap, to: arc - cap)
+                    .stroke(style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                    .rotationEffect(rotation)
+            )
+
+            if let tick {
+                let angle = rotation.degrees + min(max(tick, 0), 1) * arc * 360
+                let radius = size / 2 + 1
+                let radians = angle * .pi / 180
+
+                RoundedTriangle(cornerRadius: 1.3)
+                    .fill(Color.PrimaryText)
+                    .frame(width: 14, height: 6.5)
+                    .rotationEffect(.degrees(angle + 90))
+                    .offset(x: radius * cos(radians), y: radius * sin(radians))
+                    .accessibilityHidden(true)
+            }
+
+            VStack(spacing: 4) {
+                center
+            }
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, lineWidth + 12)
+            .minimumScaleFactor(0.6)
+            .lineLimit(1)
+        }
+        .frame(width: size, height: size)
+        .padding(.bottom, -size * 0.16)
+        .frame(maxWidth: .infinity)
+        .onAppear {
+            revealed = true
+        }
+    }
+}
+
+struct InsightsShareBar: View {
+    let categories: [InsightsCategoryTotal]
+
+    private let spacing: CGFloat = 2
+    private let height: CGFloat = 14
+
+    var body: some View {
+        let shown = categories.filter { $0.share >= 0.01 }
+        let shownTotal = shown.reduce(0) { $0 + $1.share }
+
+        GeometryReader { proxy in
+            let available = proxy.size.width - spacing * CGFloat(max(0, shown.count - 1))
+
+            HStack(spacing: spacing) {
+                ForEach(shown) { total in
+                    Rectangle()
+                        .fill(total.category.tokenColour)
+                        .frame(width: max(6, available * total.share / max(shownTotal, 0.0001)))
+                }
+            }
+        }
+        .frame(height: height)
+        .clipShape(RoundedRectangle(cornerRadius: height / 2, style: .continuous))
+        .accessibilityHidden(true)
+    }
+}
+
+struct InsightsCategoryRow: View {
+    let total: InsightsCategoryTotal
+    let formatter: InsightsFormatter
+    var action: (() -> Void)?
+
+    var share: Int {
+        Int((total.share * 100).rounded())
+    }
+
+    var body: some View {
+        Group {
+            if let action {
+                Button(action: action) {
+                    content
+                }
+                .buttonStyle(.plain)
+            } else {
+                content
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(total.category.wrappedName), \(formatter.string(total.amount)), \(share) percent of spending")
+        .accessibilityAddTraits(action != nil ? .isButton : [])
+    }
+
+    var content: some View {
+        HStack(spacing: 12) {
+            InsightsCategoryTile(category: total.category)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(total.category.wrappedName)
+                    .font(.system(.body, design: .rounded).weight(.medium))
+                    .foregroundColor(Color.PrimaryText)
+                    .lineLimit(1)
+
+                Text("\(share)% of spending")
+                    .font(.system(.subheadline, design: .rounded))
+                    .foregroundColor(Color.SubtitleText)
+                    .lineLimit(1)
+            }
+
+            Spacer(minLength: 8)
+
+            InsightsAmountText(amount: total.amount, formatter: formatter, font: .system(.body, design: .rounded).weight(.medium))
+                .layoutPriority(1)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 4)
+        .frame(minHeight: 52)
+        .contentShape(Rectangle())
+    }
+}
+
+struct InsightsLogRow: View {
+    let transaction: Transaction
+    let subtitle: String
+
+    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("showExpenseOrIncomeSign", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showExpenseOrIncomeSign: Bool = true
+
+    var body: some View {
+        SingleTransactionView(transaction: transaction, showCents: showCents, currencySymbol: Locale.current.localizedCurrencySymbol(forCurrencyCode: currency) ?? "$", currency: currency, swapTimeLabel: false, future: false, showExpenseOrIncomeSign: showExpenseOrIncomeSign, subtitle: subtitle)
+    }
+}
+
+extension InsightsLogRow {
+    init(transaction: Transaction, dateFormat: String) {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = dateFormat
+        self.init(transaction: transaction, subtitle: dateFormatter.string(from: transaction.wrappedDate).uppercased())
+    }
+}
+
+struct InsightsTallyList: View {
+    let title: String
+    let items: [Transaction]
+    let formatter: InsightsFormatter
+    var sign = ""
+    var dateFormat = "d MMM"
+    var emptyTitle: LocalizedStringKey = "No transactions"
+
+    var body: some View {
+        if items.isEmpty {
+            EmptyStateView(systemImage: "tray", title: emptyTitle)
+                .fillsScrollViewport()
+        } else {
+            VStack(spacing: 0) {
+                VStack(spacing: 4) {
+                    HStack {
+                        Text(title.uppercased())
+                            .lineLimit(1)
+
+                        Spacer()
+
+                        Text(sign + formatter.string(items.reduce(0) { $0 + $1.amount }))
+                            .layoutPriority(1)
+                    }
+                    .font(.system(.callout, design: .rounded).weight(.semibold))
+                    .foregroundColor(Color.SubtitleText)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityAddTraits(.isHeader)
+
+                    Line()
+                        .stroke(Color.Outline, style: StrokeStyle(lineWidth: 1.3, lineCap: .round))
+                }
+                .padding(.horizontal, 10)
+                .padding(.bottom, 4)
+
+                ForEach(items, id: \.objectID) { transaction in
+                    InsightsLogRow(transaction: transaction, dateFormat: dateFormat)
+                }
+            }
+            .padding(.horizontal, 10)
+        }
+    }
+}
+
+struct InsightsBarChart: View {
+    let buckets: [InsightsBucket]
+    var average: Double = 0
+    var colour: Color = .PrimaryText
+    let formatter: InsightsFormatter
+    var onSelect: ((InsightsBucket) -> Void)?
+
+    @AppStorage("animated", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var animated: Bool = true
+    @State private var revealed = false
+    @ScaledMetric(relativeTo: .footnote) private var averageLabelHeight: CGFloat = 22
+
+    private let height: CGFloat = 150
+    private let labelBackground = Color.SettingsBackground
+
+    // Headroom keeps the tallest bar off the top of its track.
+    private var maxValue: Double {
+        let maximum = max(buckets.map(\.value).max() ?? 0, average)
+        return maximum > 0 ? maximum * 1.1 : 1
+    }
+
+    private var spacing: CGFloat {
+        buckets.count > 20 ? 3 : (buckets.count > 8 ? 6 : 10)
+    }
+
+    private var radius: CGFloat {
+        buckets.count > 20 ? 3 : (buckets.count > 8 ? 6 : 8)
+    }
+
+    // Dim the other bars only while the period is still running, so today stands out.
+    private var emphasisesCurrent: Bool {
+        buckets.contains(where: \.isCurrent)
+    }
+
+    // An average of one or two scattered days is noise, so it needs a quarter of the elapsed buckets.
+    private var showsAverage: Bool {
+        let withData = buckets.filter { $0.value > 0 }.count
+        let elapsed = buckets.filter { !$0.isFuture }.count
+        return average > 0 && withData > 1 && Double(withData) >= Double(elapsed) * 0.25
+    }
+
+    private var trackOpacity: Double {
+        buckets.count > 20 ? 0.055 : 0.07
+    }
+
+    private var averageY: CGFloat {
+        height - height * average / maxValue
+    }
+
+    var body: some View {
+        VStack(spacing: 8) {
+            HStack(alignment: .bottom, spacing: spacing) {
+                ForEach(Array(buckets.enumerated()), id: \.element.id) { index, bucket in
+                    bar(bucket, index: index)
+                }
+            }
+            .frame(height: height)
+            .overlay(alignment: .topTrailing) {
+                if showsAverage {
+                    averageOverlay
+                }
+            }
+
+            HStack(spacing: spacing) {
+                ForEach(buckets) { bucket in
+                    Text(bucket.label)
+                        .font(.system(.footnote, design: .rounded).weight(.medium))
+                        .foregroundColor(bucket.isCurrent ? Color.PrimaryText : Color.SubtitleText)
+                        .fixedSize()
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .accessibilityHidden(true)
+        }
+        .onAppear {
+            revealed = true
+        }
+    }
+
+    // The label sits just above the line, or just below it when the line is too close to the top.
+    // Its card-coloured capsule masks the bars it crosses.
+    var averageOverlay: some View {
+        let gap: CGFloat = 3
+        let above = averageY - gap - averageLabelHeight
+        let labelY = above >= 0 ? above : min(averageY + gap, height - averageLabelHeight)
+
+        return ZStack(alignment: .topTrailing) {
+            Line()
+                .stroke(Color.SubtitleText, style: StrokeStyle(lineWidth: 1, lineCap: .round, dash: [3, 3]))
+                .frame(height: 1)
+                .offset(y: averageY)
+
+            (Text("avg ") + Text(compactAmount(average)).fontWeight(.semibold))
+                .font(.system(.footnote, design: .rounded).weight(.medium))
+                .foregroundColor(Color.SubtitleText)
+                .lineLimit(1)
+                .fixedSize()
+                .padding(.horizontal, 6)
+                .frame(height: averageLabelHeight)
+                .background(labelBackground.opacity(0.9), in: Capsule())
+                .offset(y: labelY)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+        .allowsHitTesting(false)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text("Average") + Text(" ") + Text(formatter.string(average)))
+    }
+
+    func compactAmount(_ amount: Double) -> String {
+        if amount >= 1000 {
+            let thousands = amount / 1000
+            return formatter.currencySymbol + String(format: thousands >= 10 ? "%.0fk" : "%.1fk", thousands)
+        }
+        return formatter.currencySymbol + String(Int(amount.rounded()))
+    }
+
+    func bar(_ bucket: InsightsBucket, index: Int) -> some View {
+        let valueHeight = bucket.value > 0 ? max(6, height * bucket.value / maxValue) : 0
+        let dimmed = emphasisesCurrent && !bucket.isCurrent
+
+        return Button {
+            onSelect?(bucket)
+        } label: {
+            ZStack(alignment: .bottom) {
+                RoundedRectangle(cornerRadius: radius, style: .continuous)
+                    .fill(Color.PrimaryText.opacity(bucket.isFuture ? trackOpacity / 2 : trackOpacity))
+
+                if valueHeight > 0 {
+                    RoundedRectangle(cornerRadius: min(radius, valueHeight / 2), style: .continuous)
+                        .fill(colour.opacity(dimmed ? 0.7 : 1))
+                        .frame(height: revealed || !animated ? valueHeight : 0)
+                        .animation(animated ? .spring(response: 0.55, dampingFraction: 0.85).delay(Double(index) * 0.02) : nil, value: revealed)
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(onSelect == nil || bucket.value == 0 || bucket.isFuture)
+        .accessibilityLabel("\(bucket.accessibilityDate), \(formatter.string(bucket.value))")
+    }
+}
+
+struct InsightsCashFlowChart: View {
+    let points: [InsightsCashFlowPoint]
+    let selected: Int?
+    let formatter: InsightsFormatter
+    var height: CGFloat = 64
+    var onSelect: ((Int) -> Void)?
+
+    @AppStorage("animated", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var animated: Bool = true
+    @State private var revealed = false
+
+    private var maxValue: Double {
+        let maximum = points.map { max($0.income, $0.spent) }.max() ?? 0
+        return maximum > 0 ? maximum * 1.1 : 1
+    }
+
+    private var barWidth: CGFloat {
+        points.count > 9 ? 8 : (points.count > 6 ? 10 : 12)
+    }
+
+    // Past seven points the labels would collide, so every other one is labelled, always including the latest.
+    func showsLabel(_ index: Int) -> Bool {
+        points.count <= 7 || (points.count - 1 - index) % 2 == 0
+    }
+
+    // With nothing selected the slots inside the period are in focus, and the one containing today is labelled.
+    func isEmphasised(_ index: Int) -> Bool {
+        selected.map { $0 == index } ?? points[index].isCurrent
+    }
+
+    var body: some View {
+        VStack(spacing: 8) {
+            HStack(alignment: .bottom, spacing: 0) {
+                ForEach(Array(points.enumerated()), id: \.element.id) { index, point in
+                    group(point, index: index)
+                }
+            }
+            .frame(height: height)
+
+            HStack(spacing: 0) {
+                ForEach(Array(points.enumerated()), id: \.element.id) { index, point in
+                    Text(showsLabel(index) ? point.label : "")
+                        .font(.system(.footnote, design: .rounded).weight(.medium))
+                        .foregroundColor(isEmphasised(index) ? Color.PrimaryText : Color.SubtitleText)
+                        .fixedSize()
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .accessibilityHidden(true)
+        }
+        .onAppear {
+            revealed = true
+        }
+    }
+
+    @ViewBuilder
+    func group(_ point: InsightsCashFlowPoint, index: Int) -> some View {
+        let bars = ZStack(alignment: .bottom) {
+            if point.hasData {
+                HStack(alignment: .bottom, spacing: 3) {
+                    bar(point.income, colour: Color.IncomeGreen, index: index)
+                    bar(point.spent, colour: Color.PrimaryText, index: index)
+                }
+                .opacity(selected.map { $0 == index } ?? point.inPeriod ? 1 : 0.45)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(point.title) + Text(", ") + Text("Income") + Text(" \(formatter.string(point.income)), ") + Text("Spent") + Text(" \(formatter.string(point.spent))"))
+
+        if let onSelect {
+            Button {
+                onSelect(index)
+            } label: {
+                bars
+            }
+            .buttonStyle(.plain)
+            .accessibilityAddTraits(index == selected ? .isSelected : [])
+        } else {
+            bars
+        }
+    }
+
+    func bar(_ value: Double, colour: Color, index: Int) -> some View {
+        let valueHeight = value > 0 ? max(4, height * value / maxValue) : 4
+
+        return RoundedRectangle(cornerRadius: min(4, barWidth / 2), style: .continuous)
+            .fill(value > 0 ? colour : colour.opacity(0.3))
+            .frame(width: barWidth, height: revealed || !animated ? valueHeight : 0)
+            .animation(animated ? .spring(response: 0.55, dampingFraction: 0.85).delay(Double(index) * 0.03) : nil, value: revealed)
+    }
+}
+
+// MARK: - Detail sheet
+
+enum InsightsRoute: Identifiable, Hashable {
+    case bucket(Date)
+    case categoryBucket(Category, Date)
+    case category(Category)
+    case allCategories
+    case largest
+    case cashFlow
+    case recurring
+
+    var id: String {
+        switch self {
+        case let .bucket(date):
+            return "bucket-\(date.timeIntervalSince1970)"
+        case let .categoryBucket(category, date):
+            return "categoryBucket-\(category.objectID.uriRepresentation().absoluteString)-\(date.timeIntervalSince1970)"
+        case let .category(category):
+            return "category-\(category.objectID.uriRepresentation().absoluteString)"
+        case .allCategories:
+            return "allCategories"
+        case .largest:
+            return "largest"
+        case .cashFlow:
+            return "cashFlow"
+        case .recurring:
+            return "recurring"
+        }
+    }
+}
+
+struct InsightsDetailSheet: View {
+    let period: InsightsPeriod
+    let firstDay: Date?
+    let formatter: InsightsFormatter
+
+    @State private var path: [InsightsRoute]
+    @State private var refreshID = UUID()
+    @StateObject private var sheetManager = OverallTransactionManager()
+
+    @EnvironmentObject var dataController: DataController
+    @Environment(\.dismiss) var dismiss
+
+    private var didSave = NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
+
+    var route: InsightsRoute {
+        path.last ?? .allCategories
+    }
+
+    var body: some View {
+        if #available(iOS 16.0, *) {
+            content
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.hidden)
+        } else {
+            content
+        }
+    }
+
+    var content: some View {
+        ScrollView(showsIndicators: false) {
+            routeContent
+                .id(refreshID)
+                .padding(.top, 16)
+                .padding(.bottom, 24)
+        }
+        .tabHeader {
+            GlassSheetHeader(title: title, showsBack: path.count > 1) {
+                if path.count > 1 {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        _ = path.removeLast()
+                    }
+                } else {
+                    dismiss()
+                }
+            }
+        }
+        .frame(maxHeight: .infinity, alignment: .top)
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+        .sheetBackground()
+        .background {
+            DeleteTransactionAlert()
+        }
+        .sheet(item: $sheetManager.toEdit, onDismiss: {
+            sheetManager.toEdit = nil
+        }) { transaction in
+            TransactionView(toEdit: transaction)
+        }
+        .environmentObject(sheetManager)
+        .onReceive(didSave) { _ in
+            refreshID = UUID()
+        }
+    }
+
+    var title: Text {
+        switch route {
+        case let .bucket(date), let .categoryBucket(_, date):
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = period.bucketDateFormat
+            return Text(dateFormatter.string(from: date))
+        case let .category(category):
+            return Text(category.wrappedName)
+        case .allCategories:
+            return Text("Categories")
+        case .largest:
+            return Text("Largest Expenses")
+        case .cashFlow:
+            return Text("Cash flow")
+        case .recurring:
+            return Text("Recurring")
+        }
+    }
+
+    @ViewBuilder
+    var routeContent: some View {
+        switch route {
+        case let .bucket(date):
+            bucketContent(date)
+        case let .categoryBucket(category, date):
+            bucketContent(date, category: category)
+        case let .category(category):
+            categoryContent(category)
+        case .allCategories:
+            allCategoriesContent
+        case .largest:
+            largestContent
+        case .cashFlow:
+            InsightsCashFlowDetail(cashFlow: InsightsCashFlow.make(dataController, period: period, count: 12, firstDay: firstDay), formatter: formatter)
+        case .recurring:
+            recurringContent
+        }
+    }
+
+    func bucketContent(_ date: Date, category: Category? = nil) -> some View {
+        let end = period.bucketEnd(for: date)
+        let income = category?.income ?? false
+        let items = insightsTransactions(dataController, from: date, to: end, income: income, category: category).sorted { $0.wrappedDate > $1.wrappedDate }
+        let total = items.reduce(0) { $0 + $1.amount }
+        let periodItems = insightsTransactions(dataController, from: period.start, to: period.queryEnd, income: income, category: category)
+        let spent = periodItems.reduce(0) { $0 + $1.amount }
+        let average = spent / Double(insightsAverageSpan(dataController, period: period, firstDay: firstDay))
+        let ratio = average > 0 ? total / average : 0
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = period.bucketDateFormat
+
+        return VStack(spacing: 20) {
+            InsightsSheetSummary(amount: total, formatter: formatter, caption: ratio > 0 ? Text(String(format: "%.1f×", ratio)) + Text(" ") + Text(period.type == 3 ? "your monthly average" : "your daily average") : nil)
+
+            InsightsTallyList(title: dateFormatter.string(from: date), items: items, formatter: formatter, dateFormat: period.type == 3 ? "d MMM" : "h:mm a")
+        }
+    }
+
+    func changeCaption(_ change: Int?, increaseIsGood: Bool) -> Text {
+        guard let change else { return Text("") }
+        let tint = (change > 0) == increaseIsGood ? Color.IncomeGreen : Color.AlertRed
+
+        return Text(" · ") + (Text(Image(systemName: change > 0 ? "arrow.up" : "arrow.down")).fontWeight(.semibold) + Text(" \(abs(change))%")).foregroundColor(tint)
+    }
+
+    func categoryContent(_ category: Category) -> some View {
+        let items = insightsTransactions(dataController, from: period.start, to: period.queryEnd, income: category.income, category: category)
+        let total = items.reduce(0) { $0 + $1.amount }
+        let allTotal = insightsTransactions(dataController, from: period.start, to: period.queryEnd, income: category.income).reduce(0) { $0 + $1.amount }
+        let share = allTotal > 0 ? Int((total / allTotal * 100).rounded()) : 0
+
+        let dates = dataController.getInsights(type: period.type, date: period.start, income: category.income).dates
+        var values = [Date: Double]()
+        for (index, bucketStart) in dates.enumerated() {
+            let bucketEnd = index + 1 < dates.count ? dates[index + 1] : period.end
+            values[bucketStart] = items.filter { $0.wrappedDate >= bucketStart && $0.wrappedDate < bucketEnd }.reduce(0) { $0 + $1.amount }
+        }
+        let buckets = InsightsBucket.make(dates: dates, values: values, type: period.type)
+        let average = total / Double(insightsAverageSpan(dataController, period: period, firstDay: firstDay))
+        let change = insightsCategoryChange(dataController, period: period, category: category, amount: total)
+
+        return VStack(spacing: 24) {
+            VStack(spacing: 12) {
+                InsightsCategoryTile(category: category, large: true)
+
+                InsightsSheetSummary(amount: total, formatter: formatter, caption: Text("\(share)%") + Text(" ") + Text(category.income ? "of income" : "of spending") + changeCaption(change, increaseIsGood: category.income))
+            }
+
+            InsightsBarChart(buckets: buckets, average: average, colour: category.tokenColour, formatter: formatter) { bucket in
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    path.append(.categoryBucket(category, bucket.date))
+                }
+            }
+            .padding(.horizontal, 20)
+
+            InsightsTallyList(title: period.title, items: items.sorted { $0.wrappedDate > $1.wrappedDate }, formatter: formatter, sign: category.income ? "+" : "")
+        }
+    }
+
+    @ViewBuilder
+    var allCategoriesContent: some View {
+        let categories = InsightsCategoryTotal.make(from: insightsTransactions(dataController, from: period.start, to: period.queryEnd, income: false))
+
+        if categories.isEmpty {
+            EmptyStateView(systemImage: "tray", title: "No transactions")
+                .fillsScrollViewport()
+        } else {
+            VStack(spacing: 20) {
+                InsightsCategoryRing(categories: categories, formatter: formatter, caption: Text("\(categories.count) ") + Text(categories.count == 1 ? "category" : "categories")) { category in
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        path.append(.category(category))
+                    }
+                }
+
+                categoryRows(categories)
+            }
+        }
+    }
+
+    func categoryRows(_ categories: [InsightsCategoryTotal]) -> some View {
+        VStack(spacing: 0) {
+                ForEach(categories) { total in
+                    InsightsCategoryRow(total: total, formatter: formatter) {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            path.append(.category(total.category))
+                        }
+                    }
+                }
+            }
+            .padding(.horizontal, 4)
+    }
+
+    @ViewBuilder
+    var largestContent: some View {
+        let items = Array(insightsTransactions(dataController, from: period.start, to: period.queryEnd, income: false).sorted { $0.amount > $1.amount }.prefix(25))
+
+        if items.isEmpty {
+            EmptyStateView(systemImage: "tray", title: "No transactions")
+                .fillsScrollViewport()
+        } else {
+            VStack(spacing: 0) {
+                ForEach(items, id: \.objectID) { transaction in
+                    InsightsLogRow(transaction: transaction, dateFormat: "d MMM")
+                }
+            }
+            .padding(.horizontal, 10)
+        }
+    }
+
+    @ViewBuilder
+    var recurringContent: some View {
+        let charges = InsightsRecurringCharge.make(dataController)
+        let monthly = charges.reduce(0) { $0 + $1.monthly }
+
+        if charges.isEmpty {
+            EmptyStateView(systemImage: "repeat", title: "No recurring transactions")
+                .fillsScrollViewport()
+        } else {
+            VStack(spacing: 20) {
+                InsightsSheetSummary(amount: monthly, formatter: formatter, caption: Text("/month"))
+
+                VStack(spacing: 0) {
+                    ForEach(charges) { charge in
+                        InsightsLogRow(transaction: charge.transaction, subtitle: charge.subtitle)
+                    }
+                }
+                .padding(.horizontal, 10)
+            }
+        }
+    }
+
+    init(route: InsightsRoute, period: InsightsPeriod, firstDay: Date?, formatter: InsightsFormatter) {
+        _path = State(initialValue: [route])
+        self.period = period
+        self.firstDay = firstDay
+        self.formatter = formatter
+    }
+}
+
+struct InsightsSheetSummary<Detail: View>: View {
+    let amount: Double
+    let sign: String
+    let formatter: InsightsFormatter
+    let caption: Text?
+    let detail: Detail
+
+    var body: some View {
+        VStack(spacing: 4) {
+            InsightsAmountText(amount: amount, sign: sign, formatter: formatter, font: .system(.title, design: .rounded).weight(.semibold))
+
+            detail
+
+            if let caption {
+                caption
+                    .font(.system(.subheadline, design: .rounded).weight(.medium))
+                    .foregroundColor(Color.SubtitleText)
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .padding(.horizontal, 20)
+        .frame(maxWidth: .infinity)
+    }
+
+    init(amount: Double, sign: String = "", formatter: InsightsFormatter, caption: Text?, @ViewBuilder detail: () -> Detail) {
+        self.amount = amount
+        self.sign = sign
+        self.formatter = formatter
+        self.caption = caption
+        self.detail = detail()
+    }
+}
+
+extension InsightsSheetSummary where Detail == EmptyView {
+    init(amount: Double, sign: String = "", formatter: InsightsFormatter, caption: Text?) {
+        self.init(amount: amount, sign: sign, formatter: formatter, caption: caption) {
+            EmptyView()
+        }
+    }
+}
+
+// Finer slots open on the whole period's total; tapping a slot focuses it, and tapping it again goes back.
+struct InsightsCashFlowDetail: View {
+    let cashFlow: InsightsCashFlow
+    let formatter: InsightsFormatter
+
+    @EnvironmentObject var dataController: DataController
+    @EnvironmentObject var sheetManager: OverallTransactionManager
+
+    @State private var selected: Int?
+
+    var body: some View {
+        let point = selected.flatMap { cashFlow.points.indices.contains($0) ? cashFlow.points[$0] : nil }
+        let income = point?.income ?? cashFlow.income
+        let spent = point?.spent ?? cashFlow.spent
+        let net = income - spent
+        let start = point?.start ?? cashFlow.period.start
+        let end = point?.end ?? cashFlow.period.queryEnd
+
+        VStack(spacing: 24) {
+            InsightsSheetSummary(amount: abs(net), sign: net < 0 ? "−" : "+", formatter: formatter, caption: InsightsSavingsText.text(income: income, spent: spent))
+
+            VStack(alignment: .leading, spacing: 16) {
+                InsightsCashFlowChart(points: cashFlow.points, selected: selected, formatter: formatter, height: 150) { index in
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        selected = !cashFlow.usesPeriods && selected == index ? nil : index
+                    }
+                }
+
+                HStack(spacing: 16) {
+                    legendItem("Income", amount: income, colour: Color.IncomeGreen)
+
+                    legendItem("Spent", amount: spent, colour: Color.PrimaryText)
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .padding(.horizontal, 20)
+
+            InsightsTallyList(title: point?.title ?? cashFlow.period.title, items: insightsTransactions(dataController, from: start, to: end, income: true).sorted { $0.wrappedDate > $1.wrappedDate }, formatter: formatter, sign: "+")
+                .id(start)
+                .padding(.top, 8)
+        }
+    }
+
+    func legendItem(_ title: LocalizedStringKey, amount: Double, colour: Color) -> some View {
+        HStack(spacing: 6) {
+            Circle()
+                .fill(colour)
+                .frame(width: 8, height: 8)
+
+            (Text(title) + Text(" ") + Text(formatter.string(amount)).foregroundColor(Color.PrimaryText))
+                .font(.system(.subheadline, design: .rounded).weight(.medium))
+                .foregroundColor(Color.SubtitleText)
+                .lineLimit(1)
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    init(cashFlow: InsightsCashFlow, formatter: InsightsFormatter) {
+        self.cashFlow = cashFlow
+        self.formatter = formatter
+        _selected = State(initialValue: cashFlow.usesPeriods && !cashFlow.points.isEmpty ? cashFlow.points.count - 1 : nil)
+    }
+}
+
+// MARK: - Shared
 
 struct FilteredInsightsView: View {
     @SectionedFetchRequest<Date?, Transaction> private var transactions: SectionedFetchResults<Date?, Transaction>
+    let type: Int
 
     var body: some View {
-        VStack(spacing: 30) {
-            if transactions.count == 0 {
-                NoResultsView(fullscreen: false)
-            }
-
+        if transactions.isEmpty {
+            EmptyStateView(systemImage: "calendar", title: type == 1 ? "No logs this week" : (type == 2 ? "No logs this month" : "No logs this year"))
+                .fillsScrollViewport()
+        } else {
             ListView(transactions: _transactions)
+                .frame(maxHeight: .infinity)
         }
-        .frame(maxHeight: .infinity)
     }
 
     init(startDate: Date, income: Bool? = nil, type: Int) {
+        self.type = type
+
         let startPredicate = NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), startDate as CVarArg)
 
         let endPredicate: NSPredicate
@@ -565,1588 +2031,16 @@ struct FilteredInsightsView: View {
     }
 }
 
-struct SingleGraphView: View {
-    @EnvironmentObject var dataController: DataController
-    var date: Date
-    let type: Int
-
-    @Binding var categoryFilterMode: Bool
-    @Binding var selectedDate: Date?
-
-    @AppStorage("incomeTracking", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var incomeTracking: Bool = true
-    let language = Locale.current.languageCode
-
-    var selectedDateString: String {
-        if let unwrappedDate = selectedDate {
-            let dateFormatter = DateFormatter()
-
-            if type == 3 {
-                dateFormatter.dateFormat = "MMM yyyy"
-            } else {
-                dateFormatter.dateFormat = "d MMM yyyy"
-            }
-
-            if language == "ru" {
-                return dateFormatter.string(from: unwrappedDate)
-            } else {
-                return dateFormatter.string(from: unwrappedDate)
-            }
-        } else {
-            return ""
-        }
-    }
-
-    @State var selectedDateAmount: Double = 0
-
-    var currencySymbol: String
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
-    var showCents: Bool
-
-    @AppStorage("firstDayOfMonth", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var firstDayOfMonth: Int = 1
-
-    var dateString: String {
-        let dateFormatter = DateFormatter()
-
-        if type == 1 {
-            let calendar = Calendar.current
-            dateFormatter.dateFormat = "d MMM"
-            let endComponents = DateComponents(day: 7, second: -1)
-            let endWeekDate = calendar.date(byAdding: endComponents, to: date) ?? Date.now
-
-            let startMonth = calendar.component(.month, from: date)
-            let endMonth = calendar.component(.month, from: endWeekDate)
-
-            if startMonth == endMonth {
-                let anotherDateFormatter = DateFormatter()
-                anotherDateFormatter.dateFormat = "d"
-
-                return anotherDateFormatter.string(from: date) + " - " + dateFormatter.string(from: endWeekDate)
-            } else {
-                return dateFormatter.string(from: date) + " - " + dateFormatter.string(from: endWeekDate)
-            }
-        } else if type == 2 {
-            if firstDayOfMonth == 1 {
-                dateFormatter.dateFormat = "MMM yyyy"
-            } else {
-                dateFormatter.dateFormat = "d MMM"
-                let endComponents = DateComponents(month: 1, second: -1)
-                let endMonthDate = Calendar.current.date(byAdding: endComponents, to: date) ?? Date.now
-                if language == "ru" {
-                    return dateFormatter.string(from: date) + " - " + dateFormatter.string(from: endMonthDate)
-                } else {
-                    return dateFormatter.string(from: date)  + " - " + dateFormatter.string(from: endMonthDate)
-                }
-            }
-        } else if type == 3 {
-            dateFormatter.dateFormat = "yyyy"
-        }
-
-        if language == "ru" {
-            return dateFormatter.string(from: date)
-        } else {
-            return dateFormatter.string(from: date)
-        }
-    }
-
-    var selectedCategoryName: String
-    var selectedCategoryAmount: Double
-
-    @Binding var income: Bool
-    @Binding var incomeFiltering: Bool
-
-    let totalIncome: Double
-    let totalSpent: Double
-    let totalNet: Double
-    let netPositive: Bool
-    let currentNet: Double
-    let lastNet: Double
-    let average: Double
-
-    var incomeAverage: Double {
-        let loaded = dataController.getInsights(type: type, date: date, income: income)
-        return loaded.average
-    }
-
-    var percentageDifference: String {
-        if lastNet == 0 {
-            return ""
-        }
-
-        let percentage: Double = ((currentNet - lastNet) / abs(lastNet)) * 100
-
-        let roundedPercentage = Int(ceil(percentage))
-
-        if currentNet > lastNet {
-            return "+\(roundedPercentage)%"
-        } else {
-            return "\(roundedPercentage)%"
-        }
-    }
-
-    @Environment(\.dynamicTypeSize) var dynamicTypeSize
-
-    var fontSize: CGFloat {
-        switch dynamicTypeSize {
-        case .xSmall:
-            return 14
-        case .small:
-            return 15
-        case .medium:
-            return 16
-        case .large:
-            return 17
-        case .xLarge:
-            return 19
-        case .xxLarge:
-            return 21
-        case .xxxLarge:
-            return 23
-        default:
-            return 23
-        }
-    }
-
-    var showPercentage: Bool {
-        let amountText = stringConverter(amount: totalNet)
-        let supplementalText: String
-
-        if categoryFilterMode {
-            supplementalText = stringConverter(amount: selectedCategoryAmount)
-        } else if selectedDate != nil {
-            supplementalText = stringConverter(amount: selectedDateAmount)
-        } else if incomeFiltering {
-            supplementalText = stringConverter(amount: incomeAverage)
-        } else {
-            supplementalText = stringConverter(amount: average)
-        }
-
-        let totalWidth = amountText.widthOfRoundedString(size: UIFont.textStyleSize(.title1), weight: .medium)
-        let averageWidth = supplementalText.widthOfRoundedString(size: UIFont.textStyleSize(.title1), weight: .medium)
-        let percentageWidth = percentageDifference.widthOfRoundedString(size: UIFont.textStyleSize(.footnote), weight: .medium) + 10
-
-        let screenWidth = UIScreen.main.bounds.width - 60
-
-        return totalWidth + averageWidth + percentageWidth + 40 < screenWidth
-    }
-
-    var body: some View {
-        VStack(spacing: 8) {
-            HStack {
-                VStack(alignment: .leading, spacing: 1.3) {
-                    Text(dateString)
-                        .lineLimit(1)
-                        .font(.system(.callout, design: .rounded).weight(.semibold))
-                        .foregroundColor(Color.SubtitleText)
-                        .layoutPriority(1)
-
-                    HStack(spacing: 10) {
-                        InsightsDollarView(amount: totalNet, currencySymbol: currencySymbol, showCents: showCents, net: netPositive)
-                            .layoutPriority(1)
-
-                        if showPercentage {
-                            Text(percentageDifference)
-                                .font(.system(.footnote, design: .rounded).weight(.medium))
-                                .foregroundColor(currentNet < lastNet ? Color.AlertRed : Color.IncomeGreen)
-                                .padding(3)
-                                .padding(.horizontal, 3)
-                                .background(currentNet < lastNet ? Color.AlertRed.opacity(0.23) : Color.IncomeGreen.opacity(0.23), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
-                                .opacity(currentNet == 0 || lastNet == 0 ? 0 : 1)
-                                .lineLimit(1)
-                        }
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-                if categoryFilterMode {
-                    VStack(alignment: .trailing, spacing: 1.3) {
-                        Text(selectedCategoryName)
-                            .lineLimit(1)
-                            .font(.system(.callout, design: .rounded).weight(.semibold))
-//                            .font(.system(size: 14, weight: .semibold, design: .rounded))
-                            .foregroundColor(Color.SubtitleText)
-
-                        InsightsDollarView(amount: selectedCategoryAmount, currencySymbol: currencySymbol, showCents: showCents)
-                            .layoutPriority(1)
-                    }
-                } else if selectedDate != nil {
-                    VStack(alignment: .trailing, spacing: 1.3) {
-                        Text(selectedDateString)
-                            .lineLimit(1)
-                            .font(.system(.callout, design: .rounded).weight(.semibold))
-                            .foregroundColor(Color.SubtitleText)
-                        InsightsDollarView(amount: selectedDateAmount, currencySymbol: currencySymbol, showCents: showCents)
-                            .layoutPriority(1)
-                    }
-                } else if incomeFiltering {
-                    VStack(alignment: .trailing, spacing: 1.3) {
-                        Text(type == 3 ? (income ? "Income/Mth" : "Spent/Mth") : (income ? "Income/Day" : "Spent/Day"))
-                            .lineLimit(1)
-                            .font(.system(.callout, design: .rounded).weight(.semibold))
-                            .foregroundColor(Color.SubtitleText)
-                        InsightsDollarView(amount: incomeAverage, currencySymbol: currencySymbol, showCents: showCents)
-                            .layoutPriority(1)
-                    }
-                } else {
-                    VStack(alignment: .trailing, spacing: 1.3) {
-                        Text(type == 3 ? "AVG/MTH" : "AVG/DAY")
-                            .lineLimit(1)
-                            .font(.system(.callout, design: .rounded).weight(.semibold))
-                            .foregroundColor(Color.SubtitleText)
-                        InsightsDollarView(amount: average, currencySymbol: currencySymbol, showCents: showCents, net: netPositive)
-                            .layoutPriority(1)
-                    }
-                }
-            }
-            .padding(.bottom, 5)
-            .onTapGesture {
-                withAnimation(.easeIn(duration: 0.2)) {
-                    selectedDate = nil
-                }
-            }
-
-            if incomeTracking {
-                HStack(spacing: 11) {
-                    InsightsSummaryBlockView(income: true, amountString: stringGenerator(amount: totalIncome), showOverlay: income && incomeFiltering) {
-                        withAnimation {
-                            if incomeFiltering && income {
-                                incomeFiltering = false
-                            } else {
-                                income = true
-                                incomeFiltering = true
-                            }
-                        }
-                    }
-
-                    InsightsSummaryBlockView(income: false, amountString: stringGenerator(amount: totalSpent), showOverlay: !income && incomeFiltering) {
-                        withAnimation {
-                            if incomeFiltering && !income {
-                                incomeFiltering = false
-                            } else {
-                                income = false
-                                incomeFiltering = true
-                            }
-                        }
-                    }
-                }
-                .padding(.horizontal, 2)
-                .padding(.bottom, 13)
-            }
-
-            if incomeFiltering {
-                if type == 1 {
-                    SingleWeekBarGraphView(week: date, date: $selectedDate, mode: $categoryFilterMode, amount: $selectedDateAmount, dataController: dataController, income: income)
-                } else if type == 2 {
-                    SingleMonthBarGraphView(month: date, date: $selectedDate, mode: $categoryFilterMode, amount: $selectedDateAmount, dataController: dataController, income: income)
-                } else if type == 3 {
-                    SingleYearBarGraphView(year: date, date: $selectedDate, mode: $categoryFilterMode, amount: $selectedDateAmount, dataController: dataController, income: income)
-                }
-            }
-        }
-    }
-
-    func stringGenerator(amount: Double) -> String {
-        let numberFormatter = NumberFormatter()
-        numberFormatter.numberStyle = .currency
-        numberFormatter.currencyCode = currency
-
-        if showCents && amount < 1000 {
-            numberFormatter.maximumFractionDigits = 2
-        } else {
-            numberFormatter.maximumFractionDigits = 0
-        }
-
-        return numberFormatter.string(from: NSNumber(value: amount)) ?? "$0"
-    }
-
-    func stringConverter(amount: Double) -> String {
-        if showCents && amount < 100 {
-            return currencySymbol + String(format: "%.2f", amount)
-        } else {
-            return currencySymbol + String(format: "%.0f", amount)
-        }
-    }
-
-    init(showingDate: Date, date: Binding<Date?>?, mode: Binding<Bool>, categoryName: String, categoryAmount: Double, currencySymbol: String, showCents: Bool, dataController: DataController, income: Binding<Bool>, incomeFiltering: Binding<Bool>, type: Int) {
-        _selectedDate = date ?? Binding.constant(nil)
-        _categoryFilterMode = mode
-        _income = income
-        _incomeFiltering = incomeFiltering
-        self.date = showingDate
-        selectedCategoryName = categoryName
-        selectedCategoryAmount = categoryAmount
-        self.currencySymbol = currencySymbol
-        self.showCents = showCents
-        self.type = type
-
-        let loaded = dataController.getInsightsSummary(type: type, date: showingDate)
-
-        totalIncome = loaded.income
-        totalSpent = loaded.spent
-        netPositive = loaded.positive
-        totalNet = loaded.net
-        average = loaded.average
-
-        if loaded.positive {
-            currentNet = loaded.net
-        } else {
-            currentNet = -loaded.net
-        }
-
-        let lastDate: Date
-
-        if type == 1 {
-            lastDate = Calendar.current.date(byAdding: .day, value: -7, to: showingDate) ?? Date.now
-        } else if type == 2 {
-            lastDate = Calendar.current.date(byAdding: .month, value: -1, to: showingDate) ?? Date.now
-        } else {
-            lastDate = Calendar.current.date(byAdding: .year, value: -1, to: showingDate) ?? Date.now
-        }
-
-        let lastDateData = dataController.getInsightsSummary(type: type, date: lastDate)
-
-        if lastDateData.positive {
-            lastNet = lastDateData.net
-        } else {
-            lastNet = -lastDateData.net
-        }
-    }
-}
-
-struct WeekGraphView: View {
-    @EnvironmentObject var dataController: DataController
-
-    private var didSave = NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
-    @State private var refreshID = UUID()
-
-    @FetchRequest(sortDescriptors: [
-        SortDescriptor(\.day)
-    ]) private var transactions: FetchedResults<Transaction>
-
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
-    var currencySymbol: String {
-        return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
-    }
-
-    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
-
-    @State var categoryFilterMode = false
-    @State var categoryFilter: Category?
-
-    @State var selectedDate: Date?
-
-    var startOfCurrentWeek: Date {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.firstWeekday = UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.integer(forKey: "firstWeekday") ?? 0
-        calendar.minimumDaysInFirstWeek = 4
-
-        let dateComponents = calendar.dateComponents([.weekOfYear, .yearForWeekOfYear], from: Date.now)
-
-        return calendar.date(from: dateComponents) ?? Date.now
-    }
-
-    // start of week of final transaction
-    var startOfLastWeek: Date {
-        if transactions.isEmpty {
-            return Date.now
-        } else {
-            var calendar = Calendar(identifier: .gregorian)
-            calendar.firstWeekday = UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.integer(forKey: "firstWeekday") ?? 0
-            calendar.minimumDaysInFirstWeek = 4
-
-            if let date = transactions[0].day {
-                let dateComponents = calendar.dateComponents([.weekOfYear, .yearForWeekOfYear], from: date)
-
-                return calendar.date(from: dateComponents) ?? Date.now
-            } else {
-                return Date.now
-            }
-        }
-    }
-
-    var swipeStrings: (backward: String, forward: String) {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "d MMM"
-
-        let calendar = Calendar.current
-
-        let startOfLastWeek = calendar.date(byAdding: .day, value: -7, to: showingWeek) ?? Date.now
-        let startOfNextWeek = calendar.date(byAdding: .day, value: 7, to: showingWeek) ?? Date.now
-
-        return (dateFormatter.string(from: startOfLastWeek), dateFormatter.string(from: startOfNextWeek))
-    }
-
-    @State private var offset: CGFloat = 0
-    @State private var changeDate: Bool = false
-    @GestureState var isDragging = false
-    var changeTime: Bool {
-        if offset < -(UIScreen.main.bounds.width * 0.25) && showingWeek != startOfCurrentWeek {
-            return true
-        } else if offset > (UIScreen.main.bounds.width * 0.25) && showingWeek != startOfLastWeek {
-            return true
-        } else {
-            return false
-        }
-//
-//        return abs(offset) > UIScreen.main.bounds.width * 0.3
-    }
-
-    @State var showingWeek = Date.now
-
-    @State private var refreshID1 = UUID()
-
-    @State var chosenCategoryName = ""
-    @State var chosenCategoryAmount = 0.0
-
-    @AppStorage("insightsViewIncomeFiltering", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var income: Bool = true
-    @AppStorage("incomeTracking", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var incomeTracking: Bool = true
-
-//    @Environment(\.dynamicTypeMultiplier) var multiplier
-
-    @State var incomeFiltering: Bool = true
-
-    var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(spacing: 18) {
-                ZStack {
-                    SingleGraphView(showingDate: showingWeek, date: $selectedDate, mode: $categoryFilterMode, categoryName: chosenCategoryName, categoryAmount: chosenCategoryAmount, currencySymbol: currencySymbol, showCents: showCents, dataController: dataController, income: $income, incomeFiltering: $incomeFiltering, type: 1)
-                        .drawingGroup()
-                        .id(refreshID)
-                        .onAppear {
-                            showingWeek = startOfCurrentWeek
-                        }
-                        .offset(x: offset)
-
-                    if !changeDate {
-                        HStack {
-                            if showingWeek != startOfLastWeek {
-                                SwipeArrowView(left: true, swipeString: swipeStrings.backward.uppercased(), changeTime: changeTime)
-                                .offset(x: -100)
-                                .offset(x: min(100, offset))
-                            } else {
-                                SwipeEndView(left: true)
-                                .offset(x: -120)
-                                .offset(x: min(120, offset))
-                            }
-
-                            Spacer()
-                        }
-
-                        HStack {
-                            Spacer()
-
-                            if showingWeek != startOfCurrentWeek {
-                                SwipeArrowView(left: false, swipeString: swipeStrings.forward.uppercased(), changeTime: changeTime)
-                                .offset(x: 100)
-                                .offset(x: max(-100, offset))
-                            } else {
-                                SwipeEndView(left: false)
-                                .offset(x: 120)
-                                .offset(x: max(-120, offset))
-                            }
-                        }
-                    }
-                }
-                .contentShape(Rectangle())
-                .padding(.horizontal, 30)
-                .simultaneousGesture(
-                    DragGesture()
-                        .updating($isDragging, body: { _, state, _ in
-                            state = true
-                        })
-                        .onChanged { value in
-                            withAnimation {
-                                if value.translation.width < 0, showingWeek != startOfCurrentWeek {
-                                    offset = value.translation.width * 0.9
-                                } else if value.translation.width < 0, showingWeek == startOfCurrentWeek {
-                                    offset = value.translation.width * 0.5
-                                } else if value.translation.width > 0, showingWeek != startOfLastWeek {
-                                    offset = value.translation.width * 0.9
-                                } else if value.translation.width > 0, showingWeek == startOfLastWeek {
-                                    offset = value.translation.width * 0.5
-                                }
-                            }
-                        }.onEnded { _ in
-                            if changeTime {
-                                if offset < 0, showingWeek != startOfCurrentWeek {
-                                    changeDate = true
-
-                                    offset = UIScreen.main.bounds.width
-
-                                    showingWeek = Calendar.current.date(byAdding: .day, value: 7, to: showingWeek) ?? Date.now
-
-                                    withAnimation(.easeInOut(duration: 0.3)) {
-                                        offset = 0
-                                    }
-                                } else if offset > 0, showingWeek != startOfLastWeek {
-                                    changeDate = true
-
-                                    offset = -UIScreen.main.bounds.width
-
-                                    showingWeek = Calendar.current.date(byAdding: .day, value: -7, to: showingWeek) ?? Date.now
-
-                                    withAnimation(.easeInOut(duration: 0.3)) {
-                                        offset = 0
-                                    }
-                                }
-
-                                withAnimation(.easeInOut(duration: 0.3)) {
-                                    offset = 0
-                                }
-
-                                changeDate = false
-                            }
-                        }
-                )
-                .onChange(of: changeTime) { _ in
-                    if changeTime {
-                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                    }
-                }
-                .onChange(of: isDragging) { _ in
-                    if !isDragging && !changeDate {
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            offset = 0
-                        }
-                    }
-                }
-                .animation(.easeInOut, value: changeTime)
-                .onChange(of: showingWeek) { _ in
-                    selectedDate = nil
-                    categoryFilterMode = false
-                    refreshID1 = UUID()
-                }
-                .onChange(of: income) { _ in
-                    selectedDate = nil
-                    categoryFilterMode = false
-                }
-                .onChange(of: incomeFiltering) { _ in
-                    selectedDate = nil
-                    categoryFilterMode = false
-                }
-                .padding(.bottom, incomeFiltering ? 5 : 10)
-
-                Group {
-                    if !incomeFiltering {
-                        FilteredInsightsView(startDate: showingWeek, type: 1)
-                            .padding(.bottom, 70)
-                            .padding(.horizontal, 20)
-                    } else {
-                        if selectedDate == nil {
-                            HorizontalPieChartView(date: showingWeek, categoryFilter: $categoryFilter, categoryFilterMode: $categoryFilterMode, selectedDate: $selectedDate, chosenAmount: $chosenCategoryAmount, chosenName: $chosenCategoryName, type: .week, income: income)
-                                .padding(.horizontal, 30)
-                                .padding(.bottom, 70)
-                                .id(refreshID1)
-
-                            if categoryFilterMode {
-                                FilteredCategoryInsightsView(category: categoryFilter, date: showingWeek, type: .week)
-                                    .padding(.bottom, 70)
-                                    .padding(.horizontal, 20)
-                            }
-                        } else {
-                            FilteredDateInsightsView(date: selectedDate ?? Date.now, income: income)
-                                .padding(.bottom, 70)
-                                .padding(.horizontal, 20)
-                        }
-                    }
-                }
-                .onTapGesture {
-                    selectedDate = nil
-                    categoryFilterMode = false
-                }
-            }
-        }
-        .onReceive(self.didSave) { _ in
-            self.refreshID = UUID()
-            self.refreshID1 = UUID()
-        }
-    }
-}
-
-struct AverageLineView: View {
-    var getMax: Int
-    var average: Double
-
-//    @AppStorage("animated", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var animated: Bool = true
-//    @State var showLine: Bool = false
-//    @State var offset: CGFloat
-
-//    var calculatedOffset: CGFloat {
-//        return getOffset(maxi: getMax, average: average)
-//    }
-
-    var body: some View {
-        HStack(spacing: 2) {
-            PencilView(text: getAverageText(average: average))
-
-            Line()
-                .stroke(Color.SubtitleText, style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [5]))
-                .frame(height: 1)
-                .frame(maxWidth: .infinity)
-        }
-//        .opacity(showLine ? 1 : 0)
-        .offset(y: getOffset(maxi: getMax, average: average))
-        .opacity((average / Double(getMax)) < 0.1 || (average / Double(getMax)) > 0.9 ? 0 : 1)
-//        .onAppear {
-//            DispatchQueue.main.sync {
-//                withAnimation(.interactiveSpring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.8)) {
-//                    print(calculatedOffset)
-//                    offset = calculatedOffset
-//                }
-//            }
-//        }
-//        .onChange(of: showLine) { newValue in
-//            if newValue {
-//                DispatchQueue.main.asyncAfter(deadline: .now()) {
-//                    if !animated {
-//                        offset = calculatedOffset
-//                    } else {
-//                        
-//                    }
-//                }
-//            }
-//        }
-//        .onChange(of: calculatedOffset) { newValue in
-//            print(calculatedOffset)
-//            if newValue != 0 {
-//                if showLine {
-//                    if !animated {
-//                        offset = calculatedOffset
-//                    } else {
-//                        withAnimation(.interactiveSpring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.8)) {
-//                            offset = calculatedOffset
-//                        }
-//                    }
-//                }
-//            }
-//        }
-
-    }
-}
-
-struct SingleWeekBarGraphView: View {
-    @Binding var selectedDate: Date?
-    @Binding var categoryFilterMode: Bool
-    @Binding var selectedDateAmount: Double
-
-    @State private var refreshID = UUID()
-
-    var daysOfWeek = [Date]()
-
-    var dayDictionary = [Date: Double]()
-
-    var max: Double = 0
-    var weekTotal: Double = 0
-    var weekAverage: Double = 0
-    var actualDays: Int = 0
-
-    var getMax: Int {
-        let maximum = max * 1.1
-
-        return Int(ceil(maximum / 10) * 10)
-    }
-
-    var body: some View {
-        ZStack(alignment: .top) {
-            HStack(alignment: .top, spacing: 8) {
-                // axes
-                VStack(alignment: .leading) {
-                    Text(getMaxText(maxi: getMax))
-                        .font(.system(size: 12, weight: .regular, design: .rounded))
-                        .foregroundColor(Color.SubtitleText)
-
-                    Spacer()
-
-                    Text("0")
-                        .font(.system(size: 12, weight: .regular, design: .rounded))
-                        .foregroundColor(Color.SubtitleText)
-                }
-                .frame(height: barHeight)
-                .padding(.trailing, 3)
-
-                // bars
-                HStack(spacing: 7) {
-                    ForEach(daysOfWeek, id: \.self) { day in
-                        VStack(spacing: 5) {
-                            ZStack(alignment: .bottom) {
-                                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                    .fill(Color.SecondaryBackground)
-                                    .frame(height: barHeight)
-
-                                AnimatedBarGraph(index: daysOfWeek.firstIndex(of: day) ?? 0)
-                                    .frame(height: getBarHeight(point: dayDictionary[day] ?? 0, maxi: getMax))
-                                    .opacity(selectedDate == nil ? 1 : (selectedDate == day ? 1 : 0.4))
-                            }
-
-                            Text(getWeekday(day: day).prefix(1))
-                                .font(.system(size: 12, weight: .bold, design: .rounded))
-                                .foregroundColor(Color.SubtitleText)
-                        }
-                        .opacity(day > Date.now ? 0.3 : 1)
-                        .frame(maxWidth: .infinity)
-                        .allowsHitTesting(!(day > Date.now))
-                        .onTapGesture {
-                            withAnimation(.easeIn(duration: 0.2)) {
-                                if selectedDate == day {
-                                    selectedDate = nil
-                                    categoryFilterMode = false
-                                } else {
-                                    selectedDate = day
-                                    categoryFilterMode = false
-                                }
-                            }
-                        }
-                    }
-                }
-                .frame(maxWidth: .infinity)
-            }
-            .frame(maxWidth: .infinity)
-
-            // average line
-            AverageLineView(getMax: getMax, average: weekAverage)
-                .opacity(actualDays <= 1 ? 0 : 1)
-                .id(refreshID)
-
-        }
-        .onChange(of: selectedDate) { _ in
-            selectedDateAmount = dayDictionary[selectedDate ?? Date.now] ?? 0.0
-            refreshID = UUID()
-        }
-    }
-
-    func getWeekday(day: Date) -> String {
-        let dateFormatter = DateFormatter()
-
-        dateFormatter.dateFormat = "EEE"
-
-        return dateFormatter.string(from: day)
-    }
-
-    init(week: Date, date: Binding<Date?>?, mode: Binding<Bool>, amount: Binding<Double>, dataController: DataController, income: Bool) {
-        _selectedDate = date ?? Binding.constant(nil)
-        _categoryFilterMode = mode
-        _selectedDateAmount = amount
-
-        let loaded = dataController.getInsights(type: 1, date: week, income: income)
-
-        daysOfWeek = loaded.dates
-        dayDictionary = loaded.dateDictionary
-        self.max = loaded.maximum
-        weekTotal = loaded.amount
-        weekAverage = loaded.average
-        actualDays = loaded.numberOfDays
-    }
-}
-
-struct MonthGraphView: View {
-    @EnvironmentObject var dataController: DataController
-    private var didSave = NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
-    @State private var refreshID = UUID()
-
-    @FetchRequest(sortDescriptors: [
-        SortDescriptor(\.day)
-    ]) private var transactions: FetchedResults<Transaction>
-
-    @AppStorage("firstDayOfMonth", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var firstDayOfMonth: Int = 1
-
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
-    var currencySymbol: String {
-        return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
-    }
-
-    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
-
-    @State var categoryFilterMode = false
-    @State var categoryFilter: Category?
-
-    @State var selectedDate: Date?
-
-    var startOfCurrentMonth: Date {
-        return getStartOfMonth(startDay: firstDayOfMonth)
-//        let calendar = Calendar(identifier: .gregorian)
-//
-//        let dateComponents = calendar.dateComponents([.month, .year], from: Date.now)
-//
-//        return  calendar.date(from: dateComponents) ?? Date.now
-    }
-
-    // start of month of the earliest transaction
-    var startOfLastMonth: Date {
-        if transactions.isEmpty {
-            return Date.now
-        } else {
-            let date = transactions[0].day ?? Date.now
-
-            return calculateStartOfMonthPeriod(earliestDate: date, startOfMonthDay: firstDayOfMonth)
-//
-//            let dateComponents = calendar.dateComponents([.month, .year], from: date)
-//
-//            return  calendar.date(from: dateComponents) ?? Date.now
-        }
-    }
-
-    var swipeStrings: (backward: String, forward: String) {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "MMM yy"
-
-        let calendar = Calendar.current
-
-        let startOfLastMonth = calendar.date(byAdding: .month, value: -1, to: showingMonth) ?? Date.now
-        let startOfNextMonth = calendar.date(byAdding: .month, value: 1, to: showingMonth) ?? Date.now
-
-        return (dateFormatter.string(from: startOfLastMonth), dateFormatter.string(from: startOfNextMonth))
-    }
-
-    @State private var offset: CGFloat = 0
-    @State private var changeDate: Bool = false
-    @GestureState var isDragging = false
-    var changeTime: Bool {
-        if offset < -(UIScreen.main.bounds.width * 0.25) && showingMonth != startOfCurrentMonth {
-            return true
-        } else if offset > (UIScreen.main.bounds.width * 0.25) && showingMonth != startOfLastMonth {
-            return true
-        } else {
-            return false
-        }
-//
-//        return abs(offset) > UIScreen.main.bounds.width * 0.3
-    }
-
-    @State var showingMonth = Date.now
-
-    @State private var refreshID1 = UUID()
-
-    @State var chosenCategoryName = ""
-    @State var chosenCategoryAmount = 0.0
-
-    @AppStorage("insightsViewIncomeFiltering", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var income: Bool = true
-    @AppStorage("incomeTracking", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var incomeTracking: Bool = true
-
-//    @Environment(\.dynamicTypeMultiplier) var multiplier
-
-    @State var incomeFiltering: Bool = true
-
-    var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(spacing: 18) {
-                ZStack {
-                    SingleGraphView(showingDate: showingMonth, date: $selectedDate, mode: $categoryFilterMode, categoryName: chosenCategoryName, categoryAmount: chosenCategoryAmount, currencySymbol: currencySymbol, showCents: showCents, dataController: dataController, income: $income, incomeFiltering: $incomeFiltering, type: 2)
-                        .drawingGroup()
-                        .id(refreshID)
-                        .onAppear {
-                            showingMonth = startOfCurrentMonth
-                        }
-                        .offset(x: offset)
-
-                    if !changeDate {
-                        HStack {
-                            if showingMonth != startOfLastMonth {
-                                SwipeArrowView(left: true, swipeString: swipeStrings.backward.uppercased(), changeTime: changeTime)
-                                .offset(x: -100)
-                                .offset(x: min(100, offset))
-                            } else {
-                                SwipeEndView(left: true)
-                                .offset(x: -120)
-                                .offset(x: min(120, offset))
-                            }
-
-                            Spacer()
-                        }
-
-                        HStack {
-                            Spacer()
-
-                            if showingMonth != startOfCurrentMonth {
-                                SwipeArrowView(left: false, swipeString: swipeStrings.forward.uppercased(), changeTime: changeTime)
-                                .offset(x: 100)
-                                .offset(x: max(-100, offset))
-                            } else {
-                                SwipeEndView(left: false)
-                                .offset(x: 120)
-                                .offset(x: max(-120, offset))
-                            }
-                        }
-                    }
-                }
-                .contentShape(Rectangle())
-                .padding(.horizontal, 30)
-                .simultaneousGesture(
-                    DragGesture()
-                        .updating($isDragging, body: { _, state, _ in
-                            state = true
-                        })
-                        .onChanged { value in
-                            withAnimation {
-                                if value.translation.width < 0, showingMonth != startOfCurrentMonth {
-                                    offset = value.translation.width * 0.9
-                                } else if value.translation.width < 0, showingMonth == startOfCurrentMonth {
-                                    offset = value.translation.width * 0.5
-                                } else if value.translation.width > 0, showingMonth != startOfLastMonth {
-                                    offset = value.translation.width * 0.9
-                                } else if value.translation.width > 0, showingMonth == startOfLastMonth {
-                                    offset = value.translation.width * 0.5
-                                }
-                            }
-                        }.onEnded { _ in
-                            if changeTime {
-                                if offset < 0, showingMonth != startOfCurrentMonth {
-                                    changeDate = true
-
-                                    offset = UIScreen.main.bounds.width
-
-                                    showingMonth = Calendar.current.date(byAdding: .month, value: 1, to: showingMonth) ?? Date.now
-
-                                    withAnimation(.easeInOut(duration: 0.3)) {
-                                        offset = 0
-                                    }
-                                } else if offset > 0, showingMonth != startOfLastMonth {
-                                    changeDate = true
-
-                                    offset = -UIScreen.main.bounds.width
-
-                                    showingMonth = Calendar.current.date(byAdding: .month, value: -1, to: showingMonth) ?? Date.now
-
-                                    withAnimation(.easeInOut(duration: 0.3)) {
-                                        offset = 0
-                                    }
-                                }
-
-                                withAnimation(.easeInOut(duration: 0.3)) {
-                                    offset = 0
-                                }
-
-                                changeDate = false
-                            }
-                        }
-                )
-                .onChange(of: changeTime) { _ in
-                    if changeTime {
-                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                    }
-                }
-                .onChange(of: isDragging) { _ in
-                    if !isDragging && !changeDate {
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            offset = 0
-                        }
-                    }
-                }
-                .animation(.easeInOut, value: changeTime)
-                .onChange(of: showingMonth) { _ in
-                    selectedDate = nil
-                    categoryFilterMode = false
-                    refreshID1 = UUID()
-                }
-                .onChange(of: income) { _ in
-                    selectedDate = nil
-                    categoryFilterMode = false
-                }
-                .onChange(of: incomeFiltering) { _ in
-                    selectedDate = nil
-                    categoryFilterMode = false
-                }
-                .padding(.bottom, incomeFiltering ? 5 : 20)
-                
-                Group {
-                    if !incomeFiltering {
-                        FilteredInsightsView(startDate: showingMonth, type: 2)
-                            .padding(.bottom, 70)
-                            .padding(.horizontal, 20)
-                    } else {
-                        if selectedDate == nil {
-                            HorizontalPieChartView(date: showingMonth, categoryFilter: $categoryFilter, categoryFilterMode: $categoryFilterMode, selectedDate: $selectedDate, chosenAmount: $chosenCategoryAmount, chosenName: $chosenCategoryName, type: .month, income: income)
-                                .padding(.horizontal, 30)
-                                .padding(.bottom, 70)
-                                .id(refreshID1)
-
-                            if categoryFilterMode {
-                                FilteredCategoryInsightsView(category: categoryFilter, date: showingMonth, type: .month)
-                                    .padding(.bottom, 70)
-                                    .padding(.horizontal, 20)
-                            }
-                        } else {
-                            FilteredDateInsightsView(date: selectedDate ?? Date.now, income: income)
-                                .padding(.bottom, 70)
-                                .padding(.horizontal, 20)
-                        }
-                    }
-                }
-
-//                Group {
-//                    if !incomeFiltering {
-//                        FilteredInsightsView(startDate: showingMonth, type: 2)
-//                            .padding(.bottom, 70)
-//                    } else {
-//                        if selectedDate != nil {
-//                            FilteredDateInsightsView(date: selectedDate ?? Date.now, income: income)
-//                                .padding(.bottom, 70)
-//
-//                        } else if categoryFilterMode {
-//                            FilteredCategoryInsightsView(category: categoryFilter, date: showingMonth, type: .month)
-//                                .padding(.bottom, 70)
-//                        } else {
-//                            FilteredInsightsView(startDate: showingMonth, income: income, type: 2)
-//                                .padding(.bottom, 70)
-//                        }
-//                    }
-//                }
-//                .padding(.horizontal, 20)
-//                .onTapGesture {
-//                    selectedDate = nil
-//                    categoryFilterMode = false
-//                }
-            }
-        }
-        .onReceive(self.didSave) { _ in
-            self.refreshID = UUID()
-            self.refreshID1 = UUID()
-        }
-    }
-}
-
-struct SingleMonthBarGraphView: View {
-    @AppStorage("firstDayOfMonth", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var firstDayOfMonth: Int = 1
-
-    @Binding var selectedDate: Date?
-    @Binding var categoryFilterMode: Bool
-    @Binding var selectedDateAmount: Double
-
-    var daysOfMonth = [Date]()
-
-    var dayDictionary = [Date: Double]()
-
-    var max: Double = 0
-    var monthTotal: Double = 0
-    var monthAverage: Double = 0
-    var actualDays: Int = 0
-
-    var getMax: Int {
-        let maximum = max * 1.1
-
-        return Int(ceil(maximum / 10) * 10)
-    }
-
-    let numberArray = [1, 8, 15, 22, 29]
-
-    var body: some View {
-        ZStack(alignment: .top) {
-            HStack(alignment: .top, spacing: 3) {
-                // axes
-                VStack(alignment: .leading) {
-                    Text(getMaxText(maxi: getMax))
-                        .font(.system(size: 12, weight: .regular, design: .rounded))
-                        .foregroundColor(Color.SubtitleText)
-
-                    Spacer()
-
-                    Text("0")
-                        .font(.system(size: 12, weight: .regular, design: .rounded))
-                        .foregroundColor(Color.SubtitleText)
-
-                }
-                .frame(height: barHeight)
-                .padding(.trailing, 3)
-
-                // bars
-                HStack(alignment: .top, spacing: 2) {
-                    ForEach(daysOfMonth, id: \.self) { day in
-                        ZStack(alignment: .bottom) {
-                            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                .fill(Color.SecondaryBackground)
-                                .frame(height: barHeight)
-                                .zIndex(0)
-
-                            AnimatedBarGraph(index: daysOfMonth.firstIndex(of: day) ?? 0)
-                                .frame(height: getBarHeight(point: dayDictionary[day] ?? 0, maxi: getMax))
-                                .opacity(selectedDate == nil ? 1 : (selectedDate == day ? 1 : 0.4))
-                                .zIndex(0)
-                                .overlay(alignment: .bottom) {
-                                    if numberArray.contains(((daysOfMonth.firstIndex(of: day) ?? -1) + 1)) && firstDayOfMonth == 1 {
-                                        Text("\((daysOfMonth.firstIndex(of: day) ?? -1) + 1)")
-                                            .font(.system(size: 12, weight: .bold, design: .rounded))
-                                            .foregroundColor(Color.SubtitleText)
-                                            .frame(width: 20, alignment: .center)
-                                            .offset(y: 20)
-                                    }
-                                }
-                        }
-                        .padding(.bottom, firstDayOfMonth == 1 ? 22 : 0)
-                        .opacity(day > Date.now ? 0.3 : 1)
-                        .frame(maxWidth: .infinity)
-                        .allowsHitTesting(!(day > Date.now))
-                        .onTapGesture {
-                            withAnimation(.easeIn(duration: 0.2)) {
-                                if selectedDate == day {
-                                    selectedDate = nil
-                                    categoryFilterMode = false
-                                } else {
-                                    selectedDate = day
-                                    categoryFilterMode = false
-                                }
-                            }
-                        }
-                    }
-                }
-                .frame(maxWidth: .infinity)
-
-            }
-            .frame(maxWidth: .infinity)
-
-            //                .frame(maxHeight: .infinity)
-
-            // average line
-
-            AverageLineView(getMax: getMax, average: monthAverage)
-                .opacity(actualDays <= 1 ? 0 : 1)
-
-        }
-        .onChange(of: selectedDate) { _ in
-            selectedDateAmount = dayDictionary[selectedDate ?? Date.now] ?? 0.0
-        }
-    }
-
-    init(month: Date, date: Binding<Date?>?, mode: Binding<Bool>, amount: Binding<Double>, dataController: DataController, income: Bool) {
-        _selectedDate = date ?? Binding.constant(nil)
-        _categoryFilterMode = mode
-        _selectedDateAmount = amount
-
-        let loaded = dataController.getInsights(type: 2, date: month, income: income)
-
-        daysOfMonth = loaded.dates
-        dayDictionary = loaded.dateDictionary
-        self.max = loaded.maximum
-        monthTotal = loaded.amount
-        monthAverage = loaded.average
-        actualDays = loaded.numberOfDays
-    }
-}
-
-struct YearGraphView: View {
-    @EnvironmentObject var dataController: DataController
-    private var didSave = NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
-    @State private var refreshID = UUID()
-
-    @FetchRequest(sortDescriptors: [
-        SortDescriptor(\.day)
-    ]) private var transactions: FetchedResults<Transaction>
-
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
-    var currencySymbol: String {
-        return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
-    }
-
-    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
-
-    @State var categoryFilterMode = false
-    @State var categoryFilter: Category?
-
-    @State var selectedDate: Date?
-
-    var startOfCurrentYear: Date {
-        let calendar = Calendar(identifier: .gregorian)
-
-        let dateComponents = calendar.dateComponents([.year], from: Date.now)
-
-        return calendar.date(from: dateComponents) ?? Date.now
-    }
-
-    var startOfLastYear: Date {
-        if transactions.isEmpty {
-            return Date.now
-        } else {
-            let calendar = Calendar(identifier: .gregorian)
-
-            let date = transactions[0].day ?? Date.now
-
-            let dateComponents = calendar.dateComponents([.year], from: date)
-
-            return calendar.date(from: dateComponents) ?? Date.now
-        }
-    }
-
-    var swipeStrings: (backward: String, forward: String) {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy"
-
-        let calendar = Calendar.current
-
-        let startOfLastYear = calendar.date(byAdding: .year, value: -1, to: showingYear) ?? Date.now
-        let startOfNextYear = calendar.date(byAdding: .year, value: 1, to: showingYear) ?? Date.now
-
-        return (dateFormatter.string(from: startOfLastYear), dateFormatter.string(from: startOfNextYear))
-    }
-
-    @State private var offset: CGFloat = 0
-    @State private var changeDate: Bool = false
-    @GestureState var isDragging = false
-    var changeTime: Bool {
-        if offset < -(UIScreen.main.bounds.width * 0.25) && showingYear != startOfCurrentYear {
-            return true
-        } else if offset > (UIScreen.main.bounds.width * 0.25) && showingYear != startOfLastYear {
-            return true
-        } else {
-            return false
-        }
-//
-//        return abs(offset) > UIScreen.main.bounds.width * 0.3
-    }
-
-    @State var showingYear = Date.now
-
-    @State private var refreshID1 = UUID()
-
-    @State var chosenCategoryName = ""
-    @State var chosenCategoryAmount = 0.0
-
-    @AppStorage("insightsViewIncomeFiltering", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var income: Bool = true
-    @AppStorage("incomeTracking", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var incomeTracking: Bool = true
-//
-//    @Environment(\.dynamicTypeMultiplier) var multiplier
-
-    @State var incomeFiltering: Bool = true
-
-    var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(spacing: 18) {
-                ZStack {
-                    SingleGraphView(showingDate: showingYear, date: $selectedDate, mode: $categoryFilterMode, categoryName: chosenCategoryName, categoryAmount: chosenCategoryAmount, currencySymbol: currencySymbol, showCents: showCents, dataController: dataController, income: $income, incomeFiltering: $incomeFiltering, type: 3)
-                        .drawingGroup()
-                        .id(refreshID)
-                        .onAppear {
-                            showingYear = startOfCurrentYear
-                        }
-                        .offset(x: offset)
-
-                    if !changeDate {
-                        HStack {
-                            if showingYear != startOfLastYear {
-                                SwipeArrowView(left: true, swipeString: swipeStrings.backward.uppercased(), changeTime: changeTime)
-                                .offset(x: -100)
-                                .offset(x: min(100, offset))
-                            } else {
-                                SwipeEndView(left: true)
-                                .offset(x: -120)
-                                .offset(x: min(120, offset))
-                            }
-
-                            Spacer()
-                        }
-
-                        HStack {
-                            Spacer()
-
-                            if showingYear != startOfCurrentYear {
-                                SwipeArrowView(left: false, swipeString: swipeStrings.forward.uppercased(), changeTime: changeTime)
-                                .offset(x: 100)
-                                .offset(x: max(-100, offset))
-                            } else {
-                                SwipeEndView(left: false)
-                                .offset(x: 120)
-                                .offset(x: max(-120, offset))
-                            }
-                        }
-                    }
-                }
-                .contentShape(Rectangle())
-                .padding(.horizontal, 30)
-                .simultaneousGesture(
-                    DragGesture()
-                        .updating($isDragging, body: { _, state, _ in
-                            state = true
-                        })
-                        .onChanged { value in
-                            withAnimation {
-                                if value.translation.width < 0, showingYear != startOfCurrentYear {
-                                    offset = value.translation.width * 0.9
-                                } else if value.translation.width < 0, showingYear == startOfCurrentYear {
-                                    offset = value.translation.width * 0.5
-                                } else if value.translation.width > 0, showingYear != startOfLastYear {
-                                    offset = value.translation.width * 0.9
-                                } else if value.translation.width > 0, showingYear == startOfLastYear {
-                                    offset = value.translation.width * 0.5
-                                }
-                            }
-                        }.onEnded { _ in
-                            if changeTime {
-                                if offset < 0, showingYear != startOfCurrentYear {
-                                    changeDate = true
-
-                                    offset = UIScreen.main.bounds.width
-
-                                    showingYear = Calendar.current.date(byAdding: .year, value: 1, to: showingYear) ?? Date.now
-
-                                    withAnimation(.easeInOut(duration: 0.3)) {
-                                        offset = 0
-                                    }
-                                } else if offset > 0, showingYear != startOfLastYear {
-                                    changeDate = true
-
-                                    offset = -UIScreen.main.bounds.width
-
-                                    showingYear = Calendar.current.date(byAdding: .year, value: -1, to: showingYear) ?? Date.now
-
-                                    withAnimation(.easeInOut(duration: 0.3)) {
-                                        offset = 0
-                                    }
-                                }
-
-                                withAnimation(.easeInOut(duration: 0.3)) {
-                                    offset = 0
-                                }
-
-                                changeDate = false
-                            }
-                        }
-                )
-                .onChange(of: changeTime) { _ in
-                    if changeTime {
-                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                    }
-                }
-                .onChange(of: isDragging) { _ in
-                    if !isDragging && !changeDate {
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            offset = 0
-                        }
-                    }
-                }
-                .animation(.easeInOut, value: changeTime)
-                .onChange(of: showingYear) { _ in
-                    selectedDate = nil
-                    categoryFilterMode = false
-                    refreshID1 = UUID()
-                }
-                .onChange(of: income) { _ in
-                    selectedDate = nil
-                    categoryFilterMode = false
-                }
-                .onChange(of: incomeFiltering) { _ in
-                    selectedDate = nil
-                    categoryFilterMode = false
-                }
-                .padding(.bottom, incomeFiltering ? 5 : 20)
-
-                Group {
-                    if !incomeFiltering {
-                        FilteredInsightsView(startDate: showingYear, type: 3)
-                            .padding(.bottom, 70)
-                            .padding(.horizontal, 20)
-                    } else {
-                        if selectedDate == nil {
-                            HorizontalPieChartView(date: showingYear, categoryFilter: $categoryFilter, categoryFilterMode: $categoryFilterMode, selectedDate: $selectedDate, chosenAmount: $chosenCategoryAmount, chosenName: $chosenCategoryName, type: .year, income: income)
-                                .padding(.horizontal, 30)
-                                .padding(.bottom, 70)
-                                .id(refreshID1)
-
-                            if categoryFilterMode {
-                                FilteredCategoryInsightsView(category: categoryFilter, date: showingYear, type: .year)
-                                    .padding(.bottom, 70)
-                                    .padding(.horizontal, 20)
-                            }
-                        } else {
-                            FilteredInsightsView(startDate: selectedDate ?? Date.now, income: income, type: 2)
-                                .padding(.bottom, 70)
-                                .padding(.horizontal, 20)
-                        }
-                    }
-                }
-            }
-        }
-        .onReceive(self.didSave) { _ in
-            self.refreshID = UUID()
-            self.refreshID1 = UUID()
-        }
-    }
-}
-
-struct SingleYearBarGraphView: View {
-    @Binding var selectedDate: Date?
-    @Binding var categoryFilterMode: Bool
-    @Binding var selectedDateAmount: Double
-
-    var monthsOfYear = [Date]()
-
-    var monthDictionary = [Date: Double]()
-
-    var max: Double = 0
-
-    var getMax: Int {
-        let maximum = max * 1.1
-
-        return Int(ceil(maximum / 10) * 10)
-    }
-
-    var yearTotal: Double = 0
-    var yearAverage: Double = 0
-    var actualMonths: Int = 0
-    var pastYearTotal: Double = 0
-
-    let numberArray = [1, 4, 7, 10]
-    let monthNames: [Int: String] = [1: "Jan", 4: "Apr", 7: "Jul", 10: "Oct"]
-
-    var body: some View {
-        ZStack(alignment: .top) {
-            HStack(alignment: .top, spacing: 3) {
-                // axes
-                VStack(alignment: .leading) {
-                    Text(getMaxText(maxi: getMax))
-                        .font(.system(size: 12, weight: .regular, design: .rounded))
-                        .foregroundColor(Color.SubtitleText)
-
-                    Spacer()
-
-                    Text("0")
-                        .font(.system(size: 12, weight: .regular, design: .rounded))
-                        .foregroundColor(Color.SubtitleText)
-
-                }
-                .frame(height: barHeight)
-                .padding(.trailing, 3)
-
-                // bars
-                HStack(alignment: .top, spacing: 4) {
-                    ForEach(monthsOfYear, id: \.self) { month in
-                        ZStack(alignment: .bottom) {
-                            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                .fill(Color.SecondaryBackground)
-                                .frame(height: barHeight)
-                                .zIndex(0)
-
-                            AnimatedBarGraph(index: monthsOfYear.firstIndex(of: month) ?? 0)
-                                .frame(height: getBarHeight(point: monthDictionary[month] ?? 0, maxi: getMax))
-                                .opacity(selectedDate == nil ? 1 : (selectedDate == month ? 1 : 0.4))
-                                .zIndex(0)
-                                .overlay(alignment: .bottom) {
-                                    if numberArray.contains(((monthsOfYear.firstIndex(of: month) ?? 0) + 1)) {
-                                        Text(LocalizedStringKey(monthNames[((monthsOfYear.firstIndex(of: month) ?? 0) + 1)] ?? ""))
-                                            .font(.system(size: 12, weight: .bold, design: .rounded))
-                                            .foregroundColor(Color.SubtitleText)
-                                            .frame(width: 30)
-                                            .offset(y: 20)
-                                    }
-                                }
-                        }
-                        .padding(.bottom, 22)
-                        .opacity(month > Date.now ? 0.3 : 1)
-                        .frame(maxWidth: .infinity)
-                        .allowsHitTesting(!(month > Date.now))
-                        .onTapGesture {
-                            withAnimation(.easeIn(duration: 0.2)) {
-                                if selectedDate == month {
-                                    selectedDate = nil
-                                    categoryFilterMode = false
-                                } else {
-                                    selectedDate = month
-                                    categoryFilterMode = false
-                                }
-                            }
-                        }
-                    }
-                }
-                .frame(maxWidth: .infinity)
-
-            }
-            .frame(maxWidth: .infinity)
-
-            // average line
-
-            AverageLineView(getMax: getMax, average: yearAverage)
-                .opacity(actualMonths <= 1 ? 0 : 1)
-
-        }
-        .onChange(of: selectedDate) { _ in
-            selectedDateAmount = monthDictionary[selectedDate ?? Date.now] ?? 0.0
-        }
-    }
-
-    func getMonth(month: Date) -> String {
-        let dateFormatter = DateFormatter()
-
-        dateFormatter.dateFormat = "M"
-
-        return dateFormatter.string(from: month)
-    }
-
-    init(year: Date, date: Binding<Date?>?, mode: Binding<Bool>, amount: Binding<Double>, dataController: DataController, income: Bool) {
-        _selectedDate = date ?? Binding.constant(nil)
-        _categoryFilterMode = mode
-        _selectedDateAmount = amount
-
-        let loaded = dataController.getInsights(type: 3, date: year, income: income)
-
-        monthsOfYear = loaded.dates
-        monthDictionary = loaded.dateDictionary
-        self.max = loaded.maximum
-        yearTotal = loaded.amount
-        yearAverage = loaded.average
-        actualMonths = loaded.numberOfDays
-    }
-}
-
-func getMaxText(maxi: Int) -> String {
-    if maxi == 0 {
-        return "10"
-    }
-
-    let string = String(maxi)
-
-    let stringArray = string.compactMap { String($0) }
-
-    if maxi >= 1_000_000 {
-        return stringArray[0] + "M"
-    } else if maxi >= 100_000 {
-        return string.prefix(3) + "k"
-    } else if maxi >= 10000 {
-        return string.prefix(2) + "k"
-    } else if maxi >= 1000 {
-        let string = String(maxi)
-
-        let stringArray = string.compactMap { String($0) }
-
-        return stringArray[0] + "." + stringArray[1] + "k"
-    } else {
-        return String(maxi)
-    }
-}
-
 struct ChartTimePickerView: View {
-    @Namespace var animation
     @State var timeframe = ChartTimeFrame.week
     @Binding var showMenu: Bool
 
-    @AppStorage("colourScheme", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var colourScheme: Int = 0
-
     @AppStorage("chartTimeFrame", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var chartType = 1
 
-    @Environment(\.colorScheme) var systemColorScheme
-
-    var darkMode: Bool {
-        (colourScheme == 0 && systemColorScheme == .dark) || colourScheme == 2
-    }
-
     var body: some View {
-        VStack(alignment: .leading, spacing: 1) {
+        GlassPopoverMenu {
             ForEach(ChartTimeFrame.allCases, id: \.self) { time in
-                HStack {
-                    Text(LocalizedStringKey(time.rawValue))
-                    Spacer()
-
-                    if time == timeframe {
-                        Image(systemName: "checkmark")
-                            .font(.system(size: 14, weight: .medium))
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .font(.system(size: 18, weight: .medium, design: .rounded))
-                .padding(5)
-                .background {
-                    if time == timeframe {
-                        RoundedRectangle(cornerRadius: 6)
-                            .fill(darkMode ? Color("AlwaysDarkSecondaryBackground") : Color("AlwaysLightSecondaryBackground"))
-                            .matchedGeometryEffect(id: "TAB", in: animation)
-                    }
-                }
-                .contentShape(Rectangle())
-                .onTapGesture {
+                GlassPopoverRow(LocalizedStringKey(time.rawValue), isSelected: time == timeframe) {
                     if timeframe == time {
                         showMenu = false
                     } else {
@@ -2161,11 +2055,6 @@ struct ChartTimePickerView: View {
                 }
             }
         }
-        .foregroundColor(darkMode ? Color("AlwaysLightBackground") : Color("AlwaysDarkBackground"))
-        .padding(4)
-        .frame(width: 120)
-        .background(RoundedRectangle(cornerRadius: 9).fill(darkMode ? Color("AlwaysDarkBackground") : Color("AlwaysLightBackground")).shadow(color: darkMode ? Color.clear : Color.gray.opacity(0.25), radius: 6))
-        .overlay(RoundedRectangle(cornerRadius: 9).stroke(darkMode ? Color.gray.opacity(0.1) : Color.clear, lineWidth: 1.3))
         .onChange(of: timeframe) { _ in
             if timeframe == .week {
                 chartType = 1
@@ -2184,188 +2073,5 @@ struct ChartTimePickerView: View {
                 timeframe = ChartTimeFrame.year
             }
         }
-    }
-}
-
-struct AnimatedBarGraph: View {
-    var index: Int
-
-    @AppStorage("animated", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var animated: Bool = true
-    @State var showBar: Bool = false
-
-    var body: some View {
-        VStack(spacing: 0) {
-            Spacer(minLength: 0)
-
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(Color.DarkBackground)
-                .frame(height: showBar ? nil : 0, alignment: .bottom)
-        }
-        .onAppear {
-            DispatchQueue.main.asyncAfter(deadline: .now()) {
-                if !animated {
-                    showBar = true
-                } else {
-                    withAnimation(.interactiveSpring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.8).delay(Double(index) * 0.1)) {
-                        showBar = true
-                    }
-                }
-            }
-        }
-    }
-}
-
-struct AnimatedHorizontalBarGraph: View {
-    @AppStorage("animated", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var animated: Bool = true
-    var category: PowerCategory
-    var index: Int
-
-    @State var showBar: Bool = true
-
-    var body: some View {
-        HStack(spacing: 0) {
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(category.category.income ? Color(hex: Color.colorArray[index]) : Color(hex: category.category.wrappedColour))
-                .frame(width: showBar ? nil : 0, alignment: .leading)
-
-            Spacer(minLength: 0)
-        }
-//        .onAppear {
-//            DispatchQueue.main.asyncAfter(deadline: .now()) {
-//                if !animated {
-//                    showBar = true
-//                } else {
-//                    withAnimation(.easeInOut(duration: 0.7).delay(Double(index) * 0.5)) {
-//                        showBar = true
-//                    }
-//                }
-//            }
-//        }
-    }
-}
-
-struct InsightsDollarView: View {
-    let amount: Double
-    var currencySymbol: String
-    var showCents: Bool
-    var net: Bool?
-
-    var symbol: String {
-        if let netPositive = net {
-            if netPositive {
-                return "+\(currencySymbol)"
-            } else {
-                return "-\(currencySymbol)"
-            }
-        } else {
-            return currencySymbol
-        }
-    }
-
-    var body: some View {
-        HStack(alignment: .lastTextBaseline, spacing: 1.3) {
-            Group {
-                Text(symbol)
-                    .font(.system(.title3, design: .rounded).weight(.medium))
-                    .foregroundColor(Color.SubtitleText) +
-
-                Text("\(amount, specifier: showCents && amount < 100 ? "%.2f" : "%.0f")")
-                    .font(.system(.title, design: .rounded).weight(.medium))
-                    .foregroundColor(Color.PrimaryText)
-            }
-        }
-        .minimumScaleFactor(0.5)
-        .lineLimit(1)
-    }
-
-    init(amount: Double, currencySymbol: String, showCents: Bool, net: Bool? = nil) {
-        self.amount = amount
-        self.currencySymbol = currencySymbol
-        self.showCents = showCents
-        self.net = net
-    }
-}
-
-func getAverageText(average: Double) -> String {
-    let string = String(average)
-
-    let stringArray = string.compactMap { String($0) }
-
-    if average >= 1_000_000 {
-        return stringArray[0] + "M"
-    } else if average >= 100_000 {
-        return string.prefix(3) + "k"
-    } else if average >= 10000 {
-        return string.prefix(2) + "k"
-    } else if average >= 1000 {
-        return stringArray[0] + "." + stringArray[1] + "k"
-    } else {
-        return String(Int(round(average)))
-    }
-}
-
-let barHeight = 150.0
-
-func getOffset(maxi: Int, average: Double) -> Double {
-    if maxi == 0 {
-        return 0
-    } else {
-        let shiftedAmount = (average / Double(maxi)) * (barHeight)
-        let height = (barHeight) - (shiftedAmount)
-        return height - 10
-    }
-}
-
-func getBarHeight(point: CGFloat, maxi: Int) -> CGFloat {
-    if maxi == 0 {
-        return 0
-    } else {
-        let height = (point / CGFloat(maxi)) * barHeight
-        return height
-    }
-}
-
-struct SwipeArrowView: View {
-    let left: Bool
-    let swipeString: String
-    let changeTime: Bool
-
-    var body: some View {
-        VStack(spacing: 8) {
-            Image(systemName: left ? "arrow.backward.circle.fill" : "arrow.forward.circle.fill")
-                .font(.system(.body, design: .rounded).weight(.medium))
-//                                        .font(.system(size: 18, weight: .medium))
-                //                                .scaleEffect(changeTime ? 1.3 : 1)
-                .foregroundColor(changeTime ? Color.PrimaryText : Color.SecondaryBackground)
-
-            Text(swipeString)
-                .font(.system(.subheadline, design: .rounded).weight(.semibold))
-//                                        .font(.system(size: 14, weight: .semibold, design: .rounded))
-                .multilineTextAlignment(.center)
-                .foregroundColor(changeTime ? Color.PrimaryText : Color.SecondaryBackground)
-        }
-        .drawingGroup()
-    }
-}
-
-struct SwipeEndView: View {
-    let left: Bool
-
-    var body: some View {
-        VStack(spacing: 8) {
-            Image(systemName: left ? "eyeglasses" : "sun.haze.fill")
-                .font(.system(.title2, design: .rounded).weight(.medium))
-//                                        .font(.system(size: 22, weight: .medium))
-                .foregroundColor(Color.SubtitleText)
-
-            Text(left ? "That's all, buddy." : "Into the unknown.")
-                .font(.system(.subheadline, design: .rounded).weight(.semibold))
-//                                        .font(.system(size: 14, weight: .semibold, design: .rounded))
-                .frame(width: 90)
-                .multilineTextAlignment(.center)
-                .foregroundColor(Color.SubtitleText)
-        }
-        .opacity(0.8)
-        .drawingGroup()
     }
 }

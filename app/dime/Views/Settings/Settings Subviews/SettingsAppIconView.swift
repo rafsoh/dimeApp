@@ -41,19 +41,6 @@ struct SettingsAppIconView: View {
 
   var body: some View {
     VStack(spacing: 10) {
-      Text("App Icon")
-        .font(.system(.title3, design: .rounded).weight(.semibold))
-        .foregroundColor(Color.PrimaryText)
-        .frame(maxWidth: .infinity)
-        .overlay(alignment: .leading) {
-          Button {
-            self.presentationMode.wrappedValue.dismiss()
-          } label: {
-            SettingsBackButton()
-          }
-        }
-        .padding(.bottom, 20)
-
       VStack(spacing: 0) {
         ForEach(options.indices, id: \.self) { index in
           HStack(spacing: 13) {
@@ -70,7 +57,7 @@ struct SettingsAppIconView: View {
                 .foregroundColor(Color.PrimaryText)
 
               Text(options[index].displaySubtitle)
-                .font(.system(.caption, design: .rounded))
+                .font(.system(.footnote, design: .rounded))
                 .foregroundColor(Color.SubtitleText)
             }
 
@@ -102,12 +89,12 @@ struct SettingsAppIconView: View {
           }
         }
       }
-      .padding(.horizontal, 15)
-      .background(Color.SettingsBackground, in: RoundedRectangle(cornerRadius: 9))
+      .padding(.horizontal, 16)
+      .settingsSectionBackground()
       .onChange(of: activeIcon) { newValue in
         UIApplication.shared.setAlternateIconName(newValue)
       }
     }
-    .modifier(SettingsSubviewModifier())
+    .modifier(SettingsSubviewModifier(title: "App Icon"))
   }
 }
