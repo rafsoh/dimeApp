@@ -17,55 +17,23 @@ struct SettingsCloudView: View {
 
   var body: some View {
     VStack(spacing: 10) {
-      Text("iCloud Sync")
-        .font(.system(.title3, design: .rounded).weight(.semibold))
-        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-        //                .font(.system(size: 20, weight: .semibold, design: .rounded))
-        .foregroundColor(Color.PrimaryText)
-        .frame(maxWidth: .infinity)
-        .overlay(alignment: .leading) {
-          Button {
-            self.presentationMode.wrappedValue.dismiss()
-          } label: {
-            SettingsBackButton()
-          }
-        }
-        .padding(.bottom, 20)
-
       VStack(spacing: 0) {
-        HStack {
+        Toggle(isOn: $iCloudStorage) {
           Text("Enable Sync")
             .font(.system(.body, design: .rounded))
             .foregroundColor(Color.PrimaryText)
-
-          Spacer()
-
-          ZStack(alignment: iCloudStorage ? .trailing : .leading) {
-            Capsule()
-              .frame(width: 42, height: 28)
-              .foregroundColor(iCloudStorage ? .green : .gray.opacity(0.8))
-
-            Circle()
-              .foregroundColor(Color.white)
-              .padding(2)
-              .frame(width: 28, height: 28)
-              .matchedGeometryEffect(id: "toggle", in: animation)
-          }
-          .onTapGesture {
-            iCloudStorage.toggle()
-          }
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 9)
+        .tint(.green)
+        .frame(minHeight: .settingsRowHeight)
       }
-      .padding(.horizontal, 15)
-      .background(Color.SettingsBackground, in: RoundedRectangle(cornerRadius: 9))
+      .padding(.horizontal, 16)
+      .settingsSectionBackground()
 
       Text("Close and reload app for change to take effect.")
-        .font(.system(.caption, design: .rounded).weight(.medium))
+        .font(.system(.footnote, design: .rounded).weight(.medium))
         .multilineTextAlignment(.leading)
         .foregroundColor(Color.SubtitleText)
-        .padding(.horizontal, 15)
+        .padding(.horizontal, 14)
         .frame(maxWidth: .infinity, alignment: .leading)
 
       if iCloudStorage && dataController.isCloudKitSyncEnabled {
@@ -73,7 +41,7 @@ struct SettingsCloudView: View {
           .padding(.top, 10)
       }
     }
-    .modifier(SettingsSubviewModifier())
+    .modifier(SettingsSubviewModifier(title: "iCloud Sync"))
 
   }
 }
@@ -94,7 +62,7 @@ struct SyncStatusSection: View {
 
         if case let .problem(problem) = status.summary {
           Text(problem.message)
-            .font(.system(.caption, design: .rounded).weight(.medium))
+            .font(.system(.footnote, design: .rounded).weight(.medium))
             .foregroundColor(Color.SubtitleText)
 
           if let detail = problem.detail {
@@ -106,19 +74,20 @@ struct SyncStatusSection: View {
 
         if let lastSynced = status.lastSynced {
           Text("Last synced \(lastSynced.formatted(.relative(presentation: .named)))")
-            .font(.system(.caption, design: .rounded).weight(.medium))
+            .font(.system(.footnote, design: .rounded).weight(.medium))
             .foregroundColor(Color.SubtitleText)
         } else if status.summary == .waiting {
           Text("Checking iCloud…")
-            .font(.system(.caption, design: .rounded).weight(.medium))
+            .font(.system(.footnote, design: .rounded).weight(.medium))
             .foregroundColor(Color.SubtitleText)
         }
       }
       .frame(maxWidth: .infinity, alignment: .leading)
     }
-    .padding(.vertical, 9)
-    .padding(.horizontal, 15)
-    .background(Color.SettingsBackground, in: RoundedRectangle(cornerRadius: 9))
+    .padding(.vertical, 12)
+    .padding(.horizontal, 16)
+    .frame(minHeight: .settingsRowHeight)
+    .settingsSectionBackground()
     .accessibilityElement(children: .combine)
   }
 

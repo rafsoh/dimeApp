@@ -18,8 +18,8 @@
 // categories
 
 "Categories" = "Категории";
-"no_income_categories" = "Нет категорий трат. Чтобы добавить категорию, нажмите на 'Добавить'";
-"no_expense_categories" = "Нет категорий доходов. Чтобы добавить категорию, нажмите на 'Добавить'";
+"no_income_categories" = "Нет категорий доходов";
+"no_expense_categories" = "Нет категорий расходов";
 "Suggestions Hidden" = "Предложения скрыты";
 "Successfully Edited" = "Изменено";
 "INCOME CATEGORIES" = "Категории доходов";
@@ -87,6 +87,7 @@
 "Your Log is Empty" = "Ваш лог пуст";
 "Press the plus button to add your first entry" = "Нажмите на + чтобы добавить Вашу первую запись";
 "Search entry by note" = "Поиск записи по Примечанию";
+"Search by note, category, amount or date" = "Поиск по заметке, категории, сумме или дате";
 "all entries" = "все записи";
 "by type" = "по типу";
 "by day" = "по дням";

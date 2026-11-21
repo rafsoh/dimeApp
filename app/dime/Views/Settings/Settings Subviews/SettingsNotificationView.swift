@@ -24,84 +24,17 @@ struct SettingsNotificationsView: View {
 
   var body: some View {
     VStack {
-      Text("Notifications")
-        .font(.system(.title3, design: .rounded).weight(.semibold))
-        .foregroundColor(Color.PrimaryText)
-        .frame(maxWidth: .infinity)
-        .overlay(alignment: .leading) {
-          Button {
-            self.presentationMode.wrappedValue.dismiss()
-          } label: {
-            SettingsBackButton()
-          }
-        }
-        .padding(.bottom, 20)
-
       VStack(spacing: 0) {
-        HStack {
+        Toggle(isOn: Binding(get: { showNotifications }, set: { _ in toggleNotifications() })) {
           Text("Enable Notifications")
             .font(.system(.body, design: .rounded))
             .foregroundColor(Color.PrimaryText)
-
-          Spacer()
-
-          ZStack(alignment: showNotifications ? .trailing : .leading) {
-            Capsule()
-              .frame(width: 42, height: 28)
-              .foregroundColor(showNotifications ? .green : .gray.opacity(0.8))
-
-            Circle()
-              .foregroundColor(Color.white)
-              .padding(2)
-              .frame(width: 28, height: 28)
-              .matchedGeometryEffect(id: "toggle", in: animation)
-          }
-          .onTapGesture {
-            if showNotifications {
-              withAnimation(.easeInOut(duration: 0.2)) {
-                center.removeAllPendingNotificationRequests()
-                showNotifications.toggle()
-              }
-            } else {
-              center.getNotificationSettings { settings in
-                if settings.authorizationStatus == .notDetermined {
-                  center.requestAuthorization(options: [.alert, .badge, .sound]) { success, error in
-                    if success {
-                      withAnimation(.easeInOut(duration: 0.2)) {
-                        showNotifications.toggle()
-                        newNotification()
-                      }
-                    } else if let error = error {
-                      print(error.localizedDescription)
-                      notificationsEnabled = false
-                    }
-                  }
-                } else if settings.authorizationStatus == .denied {
-                  notificationsEnabled = false
-
-                  DispatchQueue.main.async {
-                    if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
-                      UIApplication.shared.open(settingsURL)
-                    }
-                  }
-
-                } else {
-                  withAnimation(.easeInOut(duration: 0.2)) {
-                    showNotifications.toggle()
-                    if showNotifications {
-                      newNotification()
-                    }
-                  }
-                }
-              }
-            }
-          }
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 9)
+        .tint(.green)
+        .frame(minHeight: .settingsRowHeight)
       }
-      .padding(.horizontal, 15)
-      .background(Color.SettingsBackground, in: RoundedRectangle(cornerRadius: 9))
+      .padding(.horizontal, 16)
+      .settingsSectionBackground()
       .padding(.bottom, 20)
 
       if showNotifications {
@@ -120,14 +53,13 @@ struct SettingsNotificationsView: View {
                 .matchedGeometryEffect(id: "tick", in: animation)
             }
           }
-          .frame(maxWidth: .infinity)
+          .frame(maxWidth: .infinity, minHeight: .settingsRowHeight)
           .contentShape(Rectangle())
           .onTapGesture {
             withAnimation(.easeIn(duration: 0.15)) {
               option = 1
             }
           }
-          .padding(.vertical, 9)
           .overlay(alignment: .bottom) {
             Divider()
           }
@@ -146,14 +78,13 @@ struct SettingsNotificationsView: View {
                 .matchedGeometryEffect(id: "tick", in: animation)
             }
           }
-          .frame(maxWidth: .infinity)
+          .frame(maxWidth: .infinity, minHeight: .settingsRowHeight)
           .contentShape(Rectangle())
           .onTapGesture {
             withAnimation(.easeIn(duration: 0.15)) {
               option = 2
             }
           }
-          .padding(.vertical, 9)
           .overlay(alignment: .bottom) {
             Divider()
           }
@@ -178,17 +109,16 @@ struct SettingsNotificationsView: View {
                 .matchedGeometryEffect(id: "tick", in: animation)
             }
           }
-          .frame(maxWidth: .infinity)
+          .frame(maxWidth: .infinity, minHeight: .settingsRowHeight)
           .contentShape(Rectangle())
           .onTapGesture {
             withAnimation(.easeIn(duration: 0.15)) {
               option = 3
             }
           }
-          .padding(.vertical, 9)
         }
-        .padding(.horizontal, 15)
-        .background(Color.SettingsBackground, in: RoundedRectangle(cornerRadius: 9))
+        .padding(.horizontal, 16)
+        .settingsSectionBackground()
         .onChange(of: option) { newValue in
           UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.set(
             option, forKey: "notificationOption")
@@ -235,7 +165,48 @@ struct SettingsNotificationsView: View {
         }
       }
     }
-    .modifier(SettingsSubviewModifier())
+    .modifier(SettingsSubviewModifier(title: "Notifications"))
+  }
+
+  func toggleNotifications() {
+    if showNotifications {
+      withAnimation(.easeInOut(duration: 0.2)) {
+        center.removeAllPendingNotificationRequests()
+        showNotifications.toggle()
+      }
+    } else {
+      center.getNotificationSettings { settings in
+        if settings.authorizationStatus == .notDetermined {
+          center.requestAuthorization(options: [.alert, .badge, .sound]) { success, error in
+            if success {
+              withAnimation(.easeInOut(duration: 0.2)) {
+                showNotifications.toggle()
+                newNotification()
+              }
+            } else if let error = error {
+              print(error.localizedDescription)
+              notificationsEnabled = false
+            }
+          }
+        } else if settings.authorizationStatus == .denied {
+          notificationsEnabled = false
+
+          DispatchQueue.main.async {
+            if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
+              UIApplication.shared.open(settingsURL)
+            }
+          }
+
+        } else {
+          withAnimation(.easeInOut(duration: 0.2)) {
+            showNotifications.toggle()
+            if showNotifications {
+              newNotification()
+            }
+          }
+        }
+      }
+    }
   }
 }
 

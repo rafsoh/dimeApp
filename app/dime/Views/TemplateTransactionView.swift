@@ -7,7 +7,6 @@
 
 import Combine
 import Foundation
-import Popovers
 import SwiftUI
 import WidgetKit
 
@@ -20,13 +19,10 @@ struct TemplateTransactionView: View {
 
     @Environment(\.colorScheme) var colorScheme
 
-    @AppStorage("topEdge", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var topEdge: Double = 30
-
     @State private var note = ""
     @State var category: Category?
     @State private var repeatType = 0
     @State private var repeatCoefficient = 1
-    @State private var showRecurring = false
     @State var income = false
 
     var transactionTypeString: String {
@@ -68,15 +64,25 @@ struct TemplateTransactionView: View {
         return (amount as NSString).doubleValue
     }
 
-    @State var showCategoryPicker = false
+    var hasUnsavedInput: Bool {
+        if let transaction = toEdit {
+            return transactionValue != transaction.wrappedAmount
+                || note != transaction.wrappedNote
+                || category != transaction.category
+                || income != transaction.income
+                || repeatType != Int(transaction.recurringType)
+                || repeatCoefficient != Int(transaction.recurringCoefficient)
+        } else {
+            return transactionValue > 0 || !note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+    }
+
     @State var showCategorySheet = false
 
     @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
-
-    @State var showingCategoryView = false
 
     // toasts
     @State var showToast = false
@@ -90,16 +96,17 @@ struct TemplateTransactionView: View {
     // edit mode
     let toEdit: TemplateTransaction?
 
+    @AppStorage("incomeTracking", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var incomeTracking: Bool = true
+
+    var showsIncomeControls: Bool {
+        incomeTracking || toEdit?.income == true
+    }
+
     // delete mode
 
     @State var toDelete: TemplateTransaction?
     @State var deleteMode = false
 
-    @AppStorage("bottomEdge", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var bottomEdge: Double = 15
-
-    @State private var offset: CGFloat = 0
-
-    let repeatOverlays = ["D", "W", "M"]
     let numberArray = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
     var numberArrayCount: Int {
         if numberEntryType == 1 {
@@ -109,7 +116,7 @@ struct TemplateTransactionView: View {
         }
     }
 
-    var downsize: (big: CGFloat, small: CGFloat) {
+    var amountFontSize: CGFloat {
         let amountText: String
         let size = UIScreen.main.bounds.width - 105
 
@@ -119,14 +126,14 @@ struct TemplateTransactionView: View {
             amountText = String(format: "%.2f", transactionValue)
         }
 
-        if (amountText.widthOfRoundedString(size: 32, weight: .regular) + currencySymbol.widthOfRoundedString(size: 20, weight: .light) + 4) > size {
-            return (24, 16)
-        } else if (amountText.widthOfRoundedString(size: 44, weight: .regular) + currencySymbol.widthOfRoundedString(size: 25, weight: .light) + 4) > size {
-            return (32, 20)
-        } else if (amountText.widthOfRoundedString(size: 56, weight: .regular) + currencySymbol.widthOfRoundedString(size: 32, weight: .light) + 4) > size {
-            return (44, 25)
+        if ((amountText + currencySymbol).widthOfRoundedString(size: 32, weight: .regular) + 4) > size {
+            return 24
+        } else if ((amountText + currencySymbol).widthOfRoundedString(size: 44, weight: .regular) + 4) > size {
+            return 32
+        } else if ((amountText + currencySymbol).widthOfRoundedString(size: 56, weight: .regular) + 4) > size {
+            return 44
         } else {
-            return (56, 32)
+            return 56
         }
     }
 
@@ -142,198 +149,75 @@ struct TemplateTransactionView: View {
         }
     }
 
-    @AppStorage("colourScheme", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var colourScheme: Int = 0
-
-    @Environment(\.colorScheme) var systemColorScheme
-
-    var darkMode: Bool {
-        (colourScheme == 0 && systemColorScheme == .dark) || colourScheme == 2
-    }
-
-    var backgroundColor: Color {
-        if darkMode {
-            return Color("AlwaysDarkBackground")
-        } else {
-            return Color("AlwaysLightBackground")
-        }
-    }
-
     @State var showPicker = false
+    @State private var isDismissDragging = false
     @State var animateIcon = false
 
     let order: Int
-
-    @Namespace var animation
 
     var body: some View {
 //        ScrollView {
         GeometryReader { proxy in
             VStack(spacing: 8) {
                 // income/expense picker
-                VStack {
-                    if showToast {
-                        HStack(spacing: 6.5) {
-                            Image(systemName: toastImage)
-                                .font(.system(size: 15, weight: .semibold))
-                                .foregroundColor(Color.AlertRed)
-
-                            Text(toastTitle)
-                                .font(.system(size: 16, weight: .semibold, design: .rounded))
-                                .foregroundColor(Color.AlertRed)
-                        }
-                        .padding(8)
-                        .background(Color.AlertRed.opacity(0.23), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-                        .transition(AnyTransition.opacity.combined(with: .move(edge: .top)))
-                        .frame(maxWidth: 200)
-                    } else {
-                        HStack(spacing: 0) {
-                            Text("Expense")
-                                .font(.system(size: 18, weight: .semibold, design: .rounded))
-                                .foregroundColor(income == false ? Color.PrimaryText : Color.SubtitleText)
-                                .padding(6)
-                                .padding(.horizontal, 8)
-                                .background {
-                                    if income == false {
-                                        Capsule()
-                                            .fill(Color.SecondaryBackground)
-                                            .matchedGeometryEffect(id: "TAB1", in: animation)
-                                    }
-                                }
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    DispatchQueue.main.async {
-                                        withAnimation(.easeIn(duration: 0.15)) {
-                                            income = false
-                                            category = nil
-                                        }
-                                    }
-                                }
-
-                            Text("transaction-view-income-picker")
-                                .font(.system(size: 18, weight: .semibold, design: .rounded))
-                                .foregroundColor(income == true ? Color.PrimaryText : Color.SubtitleText)
-                                .padding(6)
-                                .padding(.horizontal, 8)
-                                .background {
-                                    if income == true {
-                                        Capsule()
-                                            .fill(Color.SecondaryBackground)
-                                            .matchedGeometryEffect(id: "TAB1", in: animation)
-                                    }
-                                }
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    DispatchQueue.main.async {
-                                        withAnimation(.easeIn(duration: 0.15)) {
-                                            income = true
-                                            category = nil
-                                        }
-                                    }
-                                }
-                        }
-                        .padding(3)
-                        .overlay(Capsule().stroke(Color.Outline.opacity(0.4), lineWidth: 1.3))
+                HStack(spacing: 10) {
+                    GlassIconButton(systemName: "xmark", accessibilityLabel: "Close") {
+                        dismiss()
                     }
+
+                    Spacer()
+
+                    RecurringMenu(repeatType: $repeatType, repeatCoefficient: $repeatCoefficient, showPicker: $showPicker, accessibilityLabel: repeatButtonAccessibility)
                 }
-                .frame(height: 35)
+                .frame(height: 44)
                 .frame(maxWidth: .infinity)
                 .overlay {
-                    HStack {
-                        Button {
-                            dismiss()
-                        } label: {
-                            Image(systemName: "xmark")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(Color.SubtitleText)
-                                .padding(7)
-                                .background(Color.SecondaryBackground, in: Circle())
-                                .contentShape(Circle())
-                        }
-
-                        Spacer()
-
-                        if toEdit != nil {
-                            Button {
-                                toDelete = toEdit
-                                deleteMode = true
-
-                            } label: {
-                                Image(systemName: "trash.fill")
-                                    .font(.system(size: 16, weight: .semibold))
-                                    .foregroundColor(Color.AlertRed)
-                                    .padding(7)
-                                    .background(Color.AlertRed.opacity(0.23), in: Circle())
-                                    .contentShape(Circle())
-                            }
-                            .accessibilityLabel("delete transaction")
-                        }
-
-                        Button {
-                            showRecurring = true
-                        } label: {
-                            if repeatType > 0 {
-                                Image(systemName: "repeat")
-                                    .font(.system(size: 16, weight: .semibold))
-                                    .overlay(alignment: .topTrailing) {
-                                        Text(repeatOverlays[repeatType - 1])
-                                            .font(.system(size: 6, weight: .black, design: .rounded))
-                                            .foregroundColor(Color.IncomeGreen)
-                                            .frame(width: 10, alignment: .leading)
-                                            .offset(x: 5.7, y: 1.5)
-                                    }
-                                    .foregroundColor(Color.IncomeGreen)
-                                    .padding(7)
-                                    .background(Color.IncomeGreen.opacity(0.23), in: Circle())
-                                    .contentShape(Circle())
-                            } else {
-                                Image(systemName: "repeat")
-                                    .font(.system(size: 16, weight: .semibold))
-                                    .foregroundColor(Color.SubtitleText)
-                                    .padding(7)
-                                    .background(Color.SecondaryBackground, in: Circle())
-                                    .contentShape(Circle())
-                            }
-                        }
-                        .accessibilityRemoveTraits(.isButton)
-                        .accessibilityLabel(repeatButtonAccessibility)
-                        .popover(present: $showRecurring, attributes: {
-                            $0.position = .absolute(
-                                originAnchor: .bottom,
-                                popoverAnchor: .top
-                            )
-                            $0.rubberBandingMode = .none
-                            $0.sourceFrameInset = UIEdgeInsets(top: 0, left: 0, bottom: -10, right: 0)
-                            $0.presentation.animation = .easeInOut(duration: 0.2)
-                            $0.dismissal.animation = .easeInOut(duration: 0.3)
-                        }) {
-                            RecurringPickerView(repeatType: $repeatType, repeatCoefficient: $repeatCoefficient, showMenu: $showRecurring, showPicker: $showPicker)
-                        } background: {
-                            backgroundColor.opacity(0.6)
-                        }
+                    if showToast {
+                        GlassToast(title: toastTitle, systemImage: toastImage, color: Color.AlertRed)
+                    } else if showsIncomeControls {
+                        GlassSegmentedPicker(selection: $income, options: [
+                            (value: false, title: "Expense"),
+                            (value: true, title: "transaction-view-income-picker")
+                        ])
+                    } else {
+                        CategoryEditorTitle(title: "Expense")
                     }
-                    .frame(maxWidth: .infinity)
                 }
-                .padding(.top, topEdge)
+                .overlay(alignment: .topTrailing) {
+                    if toEdit != nil {
+                        GlassIconButton(
+                            systemName: "trash.fill",
+                            accessibilityLabel: "delete transaction",
+                            foreground: Color.AlertRed,
+                            tint: Color.AlertRed.opacity(0.2),
+                            fallback: Color.AlertRed.opacity(0.23)
+                        ) {
+                            toDelete = toEdit
+                            deleteMode = true
+                        }
+                        .offset(y: 44 + 10)
+                    }
+                }
+                .padding(.top, 3)
+                .zIndex(1)
 
                 // number display and note view
                 VStack(spacing: 8) {
                     if numberEntryType == 1 {
                         HStack(alignment: .lastTextBaseline, spacing: 4) {
                             Text(currencySymbol)
-                                .font(.system(size: downsize.small, weight: .light, design: .rounded))
+                                .font(.system(size: amountFontSize, weight: .regular, design: .rounded))
                                 .foregroundColor(Color.SubtitleText)
-                                .baselineOffset(getDollarOffset(big: downsize.big, small: downsize.small))
                             Text("\(transactionValue, specifier: "%.2f")")
-                                .font(.system(size: downsize.big, weight: .regular, design: .rounded))
+                                .font(.system(size: amountFontSize, weight: .regular, design: .rounded))
                                 .foregroundColor(Color.PrimaryText)
                         }
                     } else {
                         if numbers1.isEmpty {
                             HStack(alignment: .lastTextBaseline, spacing: 4) {
                                 Text(currencySymbol)
-                                    .font(.system(size: 32, weight: .light, design: .rounded))
+                                    .font(.system(size: 56, weight: .regular, design: .rounded))
                                     .foregroundColor(Color.SubtitleText)
-                                    .baselineOffset(getDollarOffset(big: 56, small: 32))
                                 Text("0")
                                     .font(.system(size: 56, weight: .regular, design: .rounded))
                                     .foregroundColor(Color.PrimaryText)
@@ -342,11 +226,10 @@ struct TemplateTransactionView: View {
                         } else {
                             HStack(alignment: .lastTextBaseline, spacing: 4) {
                                 Text(currencySymbol)
-                                    .font(.system(size: downsize.small, weight: .light, design: .rounded))
+                                    .font(.system(size: amountFontSize, weight: .regular, design: .rounded))
                                     .foregroundColor(Color.SubtitleText)
-                                    .baselineOffset(getDollarOffset(big: downsize.big, small: downsize.small))
                                 Text(amount)
-                                    .font(.system(size: downsize.big, weight: .regular, design: .rounded))
+                                    .font(.system(size: amountFontSize, weight: .regular, design: .rounded))
                                     .foregroundColor(Color.PrimaryText)
                             }
                             .frame(maxWidth: .infinity)
@@ -360,9 +243,12 @@ struct TemplateTransactionView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                // date and category picker
-                CategoryRowPickerView(category: $category, income: income)
-                    .padding(.bottom, 5)
+                CategoryToken(category: category, isError: false, shake: false) {
+                    UIApplication.shared.endEditing()
+                    showCategorySheet = true
+                }
+                .disabled(isDismissDragging)
+                .padding(.bottom, 4)
 
                 // num pad
                 GeometryReader { proxy in
@@ -442,6 +328,7 @@ struct TemplateTransactionView: View {
                     }
                     .frame(width: proxy.size.width, height: proxy.size.height)
                 }
+                .disabled(isDismissDragging)
                 .padding(.bottom, 15)
 //                .keyboardAwareHeight()
             }
@@ -451,92 +338,20 @@ struct TemplateTransactionView: View {
             .onTapGesture {
                 self.hideKeyboard()
             }
-            .fullScreenCover(isPresented: $deleteMode) {
-                ZStack(alignment: .bottom) {
-                    Color.clear
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            deleteMode = false
-                            toDelete = nil
-                        }
-
-                    VStack(alignment: .leading, spacing: 1.5) {
-                        Text("Delete Expense?")
-                            .font(.system(size: 20, weight: .medium, design: .rounded))
-                            .foregroundColor(.PrimaryText)
-
-                        Text("This action cannot be undone.")
-                            .font(.system(size: 16, weight: .medium, design: .rounded))
-                            .foregroundColor(.SubtitleText)
-                            .padding(.bottom, 15)
-
-                        Button {
-                            deleteMode = false
-
-                            withAnimation {
-                                if let itemToDelete = toDelete {
-                                    moc.delete(itemToDelete)
-                                }
-                                dataController.save()
-                            }
-
-                            dismiss()
-
-                        } label: {
-                            Text("Delete")
-                                .font(.system(size: 20, weight: .semibold, design: .rounded))
-                                .foregroundColor(.white)
-                                .frame(height: 45)
-                                .frame(maxWidth: .infinity)
-                                .background(Color.AlertRed, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-                        }
-                        .padding(.bottom, 8)
-
-                        Button {
-                            withAnimation(.easeOut(duration: 0.7)) {
-                                deleteMode = false
-                                toDelete = nil
-                            }
-
-                        } label: {
-                            Text("Cancel")
-                                .font(.system(size: 20, weight: .semibold, design: .rounded))
-                                .foregroundColor(Color.PrimaryText.opacity(0.9))
-                                .frame(height: 45)
-                                .frame(maxWidth: .infinity)
-                                .background(Color.SecondaryBackground, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-                        }
+            .confirmationSheet(
+                isPresented: $deleteMode,
+                title: "Delete Expense?",
+                message: "This action cannot be undone.",
+                onDismiss: { toDelete = nil }
+            ) {
+                withAnimation {
+                    if let itemToDelete = toDelete {
+                        moc.delete(itemToDelete)
                     }
-                    .padding(13)
-                    .background(RoundedRectangle(cornerRadius: 13).fill(Color.PrimaryBackground).shadow(color: systemColorScheme == .dark ? Color.clear : Color.gray.opacity(0.25), radius: 6))
-                    .overlay(RoundedRectangle(cornerRadius: 13).stroke(systemColorScheme == .dark ? Color.gray.opacity(0.1) : Color.clear, lineWidth: 1.3))
-                    .offset(y: offset)
-                    .gesture(
-                        DragGesture()
-                            .onChanged { gesture in
-                                if gesture.translation.height < 0 {
-                                    offset = gesture.translation.height / 3
-                                } else {
-                                    offset = gesture.translation.height
-                                }
-                            }
-                            .onEnded { value in
-                                if value.translation.height > 20 {
-                                    deleteMode = false
-                                    toDelete = nil
-                                } else {
-                                    withAnimation {
-                                        offset = 0
-                                    }
-                                }
-                            }
-                    )
-                    .padding(.horizontal, 17)
-                    .padding(.bottom, bottomEdge == 0 ? 12 : bottomEdge - 3)
+                    dataController.save()
                 }
-                .edgesIgnoringSafeArea(.all)
-                .background(BackgroundBlurView())
+
+                dismiss()
             }
         }
         .animation(.easeOut(duration: 0.2), value: showToast)
@@ -544,12 +359,19 @@ struct TemplateTransactionView: View {
         .frame(maxHeight: .infinity)
         .background(Color.PrimaryBackground)
         .edgesIgnoringSafeArea(.all)
+        .modifier(SwipeDownToDismiss(isLocked: hasUnsavedInput, isDragging: $isDismissDragging))
+        .interactiveDismissDisabled(hasUnsavedInput)
+        .modifier(TransactionSheetPresentation())
         .onChange(of: showToast) { newValue in
             if newValue {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                     showToast = false
                 }
             }
+        }
+        .onChange(of: income) { _ in
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            category = nil
         }
         .onAppear {
             DispatchQueue.main.async {
@@ -572,12 +394,13 @@ struct TemplateTransactionView: View {
             }
         }
         .sheet(isPresented: $showCategorySheet) {
-            CategoryView(mode: .transaction, income: income)
+            CategoryPickerSheet(category: $category, income: income)
         }
         .sheet(isPresented: $showPicker) {
             if #available(iOS 16.0, *) {
                 CustomRecurringView(repeatType: $repeatType, repeatCoefficient: $repeatCoefficient, showPicker: $showPicker)
-                    .presentationDetents([.height(230)])
+                    .presentationDetents([.height(210)])
+                    .presentationDragIndicator(.hidden)
             } else {
                 CustomRecurringView(repeatType: $repeatType, repeatCoefficient: $repeatCoefficient, showPicker: $showPicker)
             }
@@ -586,7 +409,7 @@ struct TemplateTransactionView: View {
 
     @ViewBuilder
     func DeleteButton() -> some View {
-        Button {
+        GlassIconButton(systemName: "delete.left.fill", accessibilityLabel: "Delete last digit", foreground: Color.PrimaryText) {
             if !numbers1.isEmpty {
                 if numbers1.count == 2 && numbers1[0] == "0" && numbers1[1] == "." {
                     numbers1.removeAll()
@@ -594,16 +417,9 @@ struct TemplateTransactionView: View {
                     numbers1.removeLast()
                 }
             }
-
-        } label: {
-            Image(systemName: "delete.left.fill")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundColor(Color.SubtitleText)
-                .padding(7)
-                .background(Color.SecondaryBackground, in: Circle())
-                .contentShape(Circle())
         }
         .disabled(numbers1.isEmpty)
+        .opacity(numbers1.isEmpty ? 0.4 : 1)
     }
 
     @ViewBuilder
@@ -750,167 +566,6 @@ struct TemplateTransactionView: View {
     }
 }
 
-struct CategoryRowPickerView: View {
-    @FetchRequest(sortDescriptors: [SortDescriptor(\.order)], predicate: NSPredicate(format: "income = %d", false)) private var expenseCategories: FetchedResults<Category>
-    @FetchRequest(sortDescriptors: [SortDescriptor(\.order)], predicate: NSPredicate(format: "income = %d", true)) private var incomeCategories: FetchedResults<Category>
-
-    @Binding var selectedCategory: Category?
-    @State var showCategorySheet = false
-    let income: Bool
-
-    var empty: Bool {
-        if income {
-            return incomeCategories.isEmpty
-        } else {
-            return expenseCategories.isEmpty
-        }
-    }
-
-    var body: some View {
-        HStack(spacing: 8) {
-            if empty {
-                Text("No categories found")
-                    .font(.system(size: 17.5, weight: .medium, design: .rounded))
-                    .padding(.horizontal, 13)
-                    .foregroundStyle(Color.SubtitleText)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .frame(height: 36)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 11.5, style: .continuous)
-                            .stroke(Color.Outline, lineWidth: 1.5)
-                    )
-
-            } else {
-                GeometryReader { gp in
-                    ZStack {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            ScrollViewReader { value in
-                                HStack(spacing: 8) {
-                                    ForEach(income ? incomeCategories : expenseCategories, id: \.self) { item in
-                                        HStack(spacing: 5) {
-                                            Text(item.wrappedEmoji)
-                                                .font(.system(size: 13))
-                                            Text(item.wrappedName)
-                                                .font(.system(size: 17.5, weight: .medium, design: .rounded))
-                                        }
-                                        .id(item.id)
-                                        .padding(.horizontal, 10)
-                                        .frame(height: 36)
-                                        .foregroundColor(selectedCategory == item ? (item.income ? Color.IncomeGreen : Color(hex: item.wrappedColour)) : Color.PrimaryText)
-                                        .background(getBackground(category: item), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                                        .overlay {
-                                            if selectedCategory != item {
-                                                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                                    .strokeBorder(Color.Outline,
-                                                                  style: StrokeStyle(lineWidth: 1.5))
-                                            }
-                                        }
-                                        .onTapGesture {
-                                            selectedCategory = item
-                                            withAnimation {
-                                                value.scrollTo(item.id, anchor: .leading)
-                                            }
-                                        }
-                                    }
-                                }
-                                .onChange(of: income) { newValue in
-                                    if newValue {
-                                        if let firstCategory = incomeCategories.first {
-                                            value.scrollTo(firstCategory.id, anchor: .leading)
-                                        }
-                                    } else {
-                                        if let firstCategory = expenseCategories.first {
-                                            value.scrollTo(firstCategory.id, anchor: .leading)
-                                        }
-                                    }
-                                }
-                                .onAppear {
-                                    if let unwrappedCategory = selectedCategory {
-                                        withAnimation {
-                                            value.scrollTo(unwrappedCategory.id, anchor: .leading)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        .clipped()
-
-                        // inject gradient at right side only
-                        Rectangle()
-                            .fill(
-                                LinearGradient(gradient: Gradient(stops: [
-                                    .init(color: Color.PrimaryBackground.opacity(0.01), location: 0),
-                                    .init(color: Color.PrimaryBackground, location: 1)
-                                ]), startPoint: .leading, endPoint: .trailing)
-                            ).frame(width: 0.1 * gp.size.width)
-                            .frame(maxWidth: .infinity, alignment: .trailing)
-
-                            .allowsHitTesting(false) // << now works !!
-
-                    }.fixedSize(horizontal: false, vertical: true)
-                }
-                .frame(height: 36)
-                .frame(maxWidth: .infinity)
-            }
-
-            Group {
-                if empty {
-                    Image(systemName: "plus")
-                        .font(.system(size: 16, weight: .semibold, design: .rounded))
-                        .foregroundColor(Color.SubtitleText)
-                } else {
-                    Image(systemName: "pencil")
-                        .font(.system(size: 16, weight: .semibold, design: .rounded))
-                        .foregroundColor(Color.SubtitleText)
-                }
-
-//                        Text("Edit")
-//                            .font(.system(size: 17.5, weight: .semibold, design: .rounded))
-//                            .lineLimit(1)
-            }
-            .padding(.horizontal, 9)
-            .frame(height: 36)
-            .background(Color.SecondaryBackground, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-//                    .overlay(
-//                        RoundedRectangle(cornerRadius: 11.5, style: .continuous)
-//                            .stroke(Color.Outline, lineWidth: 1.5)
-//                    )
-            .onTapGesture {
-                showCategorySheet = true
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .sheet(isPresented: $showCategorySheet) {
-            CategoryView(mode: .transaction, income: income)
-        }
-    }
-
-    func getBackground(category: Category) -> Color {
-        if category.income {
-            if category == selectedCategory {
-                return Color.IncomeGreen.opacity(0.3)
-            } else {
-                return Color.PrimaryBackground
-            }
-        } else {
-            if category == selectedCategory {
-                return Color(hex: category.wrappedColour).opacity(0.3)
-            } else {
-                return Color.PrimaryBackground
-            }
-        }
-    }
-
-    init(category: Binding<Category?>?, income: Bool) {
-        _selectedCategory = category ?? Binding.constant(nil)
-//        self.categories = categories
-//        let dataController = DataController.shared
-//        let fetchRequest = dataController.fetchRequestForCategories(income: income)
-//        self.categories = dataController.results(for: fetchRequest)
-        self.income = income
-    }
-}
-
 struct SettingsQuickAddWidgetView: View {
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
 
@@ -1038,7 +693,7 @@ struct SettingsQuickAddWidgetDraggingView: View {
         .padding(15)
         .frame(width: 245)
         .background(RoundedRectangle(cornerRadius: 25).fill(Color.PrimaryBackground).shadow(color: Color.gray.opacity(0.2), radius: 12))
-        .fullScreenCover(item: $selectedItem, onDismiss: {
+        .sheet(item: $selectedItem, onDismiss: {
             gridData.reset()
             refreshID = UUID()
         }) { grid in

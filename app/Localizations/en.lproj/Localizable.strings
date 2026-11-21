@@ -20,8 +20,8 @@
 // categories
 
 "Categories" = "Categories";
-"no_income_categories" = "No income categories found, click the 'New' button to add some";
-"no_expense_categories" = "No expense categories found, click the 'New' button to add some";
+"no_income_categories" = "No income categories found";
+"no_expense_categories" = "No expense categories found";
 "Suggestions Hidden" = "Suggestions Hidden";
 "Successfully Edited" = "Successfully Edited";
 "INCOME CATEGORIES" = "INCOME CATEGORIES";
@@ -89,6 +89,7 @@
 "Your Log is Empty" = "Your Log is Empty";
 "Press the plus button to add your first entry" = "Press the plus button to add your first entry";
 "Search entry by note" = "Search entry by note";
+"Search by note, category, amount or date" = "Search by note, category, amount or date";
 "all entries" = "all entries";
 "by type" = "by type";
 "by day" = "by day";

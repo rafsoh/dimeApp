@@ -803,7 +803,8 @@ struct ImportDataView: View {
         .sheet(isPresented: $showingCategoryView) {
             if #available(iOS 16.0, *) {
                 NewCategoryAlert(income: $income, bottomSpacers: false, budgetMode: false)
-                    .presentationDetents([.height(270)])
+                    .presentationDetents([.height(300)])
+                    .presentationDragIndicator(.hidden)
             } else {
                 NewCategoryAlert(income: $income, bottomSpacers: true, budgetMode: false)
             }
@@ -1031,24 +1032,7 @@ struct MatchCategoryStepperView: View {
     var body: some View {
         VStack {
             if categories.isEmpty {
-                VStack(spacing: 12) {
-                    Image(systemName: "tray.full.fill")
-                        .font(.system(.title, design: .rounded))
-
-//                        .font(.system(size: 28, weight: .regular, design: .rounded))
-                        .foregroundColor(Color.SubtitleText.opacity(0.7))
-                        .padding(.top, 20)
-
-                    Text("No remaining\ncategories.")
-                        .font(.system(.callout, design: .rounded).weight(.medium))
-
-//                        .font(.system(size: 16, weight: .medium, design: .rounded))
-                        .multilineTextAlignment(.center)
-                        .foregroundColor(Color.SubtitleText.opacity(0.7))
-                        .padding(.bottom, 20)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-
+                EmptyStateView(systemImage: "square.grid.2x2", title: "No remaining categories")
             } else {
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 8) {

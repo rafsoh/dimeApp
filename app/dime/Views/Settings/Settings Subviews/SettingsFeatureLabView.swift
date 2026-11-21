@@ -32,69 +32,57 @@ struct SettingsGoofyView: View {
   @Namespace var animation
 
   var body: some View {
-    VStack(spacing: 10) {
-      Text("Feature Lab")
-        .font(.system(.title3, design: .rounded).weight(.semibold))
-        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-        //                .font(.system(size: 20, weight: .semibold, design: .rounded))
-        .foregroundColor(Color.PrimaryText)
-        .frame(maxWidth: .infinity)
-        .overlay(alignment: .leading) {
-          Button {
-            self.presentationMode.wrappedValue.dismiss()
-          } label: {
-            SettingsBackButton()
-          }
-        }
-        .padding(.bottom, 20)
+    VStack {
+      VStack(spacing: 0) {
+        ToggleRow(text: "Celebrate Expenses", bool: $confetti)
 
-      ScrollView {
-        VStack(spacing: 0) {
-          ToggleRow(text: "Celebrate Expenses", bool: $confetti, id: 1)
+        Divider()
+          .padding(.horizontal, 16)
 
-          ToggleRow(text: "Show Line Graph", bool: $lineGraph, id: 2)
+        ToggleRow(text: "Show Line Graph", bool: $lineGraph)
 
-          ToggleRow(text: "Budget Rows", bool: $budgetRows, id: 3)
-        }
-        .background(Color.SettingsBackground, in: RoundedRectangle(cornerRadius: 9))
+        Divider()
+          .padding(.horizontal, 16)
 
-        Text("Experimental features - proceed with caution.")
-          .font(.system(.caption, design: .rounded).weight(.medium))
-          .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-          //                    .font(.system(size: 12, weight: .medium, design: .rounded))
-          .foregroundColor(Color.SubtitleText)
-          .padding(.horizontal, 15)
-          .frame(maxWidth: .infinity, alignment: .leading)
-          .padding(.bottom, 30)
-
-        ToggleRow(text: "Replace Time Label", bool: $swapTimeLabel, id: 4)
-          .background(Color.SettingsBackground, in: RoundedRectangle(cornerRadius: 9))
-
-        Text(
-          "Swaps the time label of each transaction with its category name. However, if you do not manually input a note for each transaction - in which case the note is the category name by default - duplicate text will appear."
-        )
-        .font(.system(.caption, design: .rounded).weight(.medium))
-        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-        //                    .font(.system(size: 12, weight: .medium, design: .rounded))
-        .foregroundColor(Color.SubtitleText)
-        .padding(.horizontal, 15)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.bottom, 30)
-
-        ToggleRow(text: "Show Note Suggestions", bool: $showRecommendations, id: 5)
-          .background(Color.SettingsBackground, in: RoundedRectangle(cornerRadius: 9))
-
-        Text(
-          "Displays transaction suggestions whilst you type in the 'Note' field of the new transaction page."
-        )
-        .font(.system(.caption, design: .rounded).weight(.medium))
-        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-        //                    .font(.system(size: 12, weight: .medium, design: .rounded))
-        .foregroundColor(Color.SubtitleText)
-        .padding(.horizontal, 15)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.bottom, 30)
+        ToggleRow(text: "Budget Rows", bool: $budgetRows)
       }
+      .settingsSectionBackground()
+
+      Text("Experimental features - proceed with caution.")
+        .font(.system(.footnote, design: .rounded).weight(.medium))
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+        //                    .font(.system(size: 12, weight: .medium, design: .rounded))
+        .foregroundColor(Color.SubtitleText)
+        .padding(.horizontal, 14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.bottom, 30)
+
+      ToggleRow(text: "Replace Time Label", bool: $swapTimeLabel)
+        .settingsSectionBackground()
+
+      Text(
+        "Swaps the time label of each transaction with its category name. However, if you do not manually input a note for each transaction - in which case the note is the category name by default - duplicate text will appear."
+      )
+      .font(.system(.footnote, design: .rounded).weight(.medium))
+      .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+      //                    .font(.system(size: 12, weight: .medium, design: .rounded))
+      .foregroundColor(Color.SubtitleText)
+      .padding(.horizontal, 14)
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .padding(.bottom, 30)
+
+      ToggleRow(text: "Show Note Suggestions", bool: $showRecommendations)
+        .settingsSectionBackground()
+
+      Text(
+        "Displays transaction suggestions whilst you type in the 'Note' field of the new transaction page."
+      )
+      .font(.system(.footnote, design: .rounded).weight(.medium))
+      .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+      //                    .font(.system(size: 12, weight: .medium, design: .rounded))
+      .foregroundColor(Color.SubtitleText)
+      .padding(.horizontal, 14)
+      .frame(maxWidth: .infinity, alignment: .leading)
 
       //            ToggleRow(text: "Miles-Morales Effect", bool: $chromatic, id: 5)
       //            .background(Color.SettingsBackground, in: RoundedRectangle(cornerRadius: 9))
@@ -106,39 +94,18 @@ struct SettingsGoofyView: View {
       //                .frame(maxWidth: .infinity, alignment: .leading)
       //                .padding(.bottom, 30)
     }
-    .modifier(SettingsSubviewModifier())
+    .modifier(SettingsSubviewModifier(title: "Feature Lab"))
   }
 
-  @ViewBuilder
-  func ToggleRow(text: String, bool: Binding<Bool>, id: Int) -> some View {
-    HStack {
-      Text(text)
+  func ToggleRow(text: String, bool: Binding<Bool>) -> some View {
+    Toggle(isOn: bool.animation()) {
+      Text(LocalizedStringKey(text))
         .font(.system(.body, design: .rounded))
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-        //                .font(.system(size: 17, weight: .regular, design: .rounded))
         .foregroundColor(Color.PrimaryText)
-
-      Spacer()
-
-      ZStack(alignment: bool.wrappedValue ? .trailing : .leading) {
-        Capsule()
-          .frame(width: 42, height: 28)
-          .foregroundColor(bool.wrappedValue ? .green : .gray.opacity(0.8))
-
-        Circle()
-          .foregroundColor(Color.white)
-          .padding(2)
-          .frame(width: 28, height: 28)
-          .matchedGeometryEffect(id: "toggle\(id)", in: animation)
-      }
-      .onTapGesture {
-        withAnimation {
-          bool.wrappedValue.toggle()
-        }
-      }
     }
-    .frame(maxWidth: .infinity)
-    .padding(.vertical, 9)
-    .padding(.horizontal, 15)
+    .tint(.green)
+    .frame(minHeight: .settingsRowHeight)
+    .padding(.horizontal, 16)
   }
 }

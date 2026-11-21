@@ -24,19 +24,6 @@ struct SettingsHapticsView: View {
 
     var body: some View {
         VStack(spacing: 10) {
-            Text("Haptic Feedback")
-                .font(.system(.title3, design: .rounded).weight(.semibold))
-                .foregroundColor(Color.PrimaryText)
-                .frame(maxWidth: .infinity)
-                .overlay(alignment: .leading) {
-                    Button {
-                        self.presentationMode.wrappedValue.dismiss()
-                    } label: {
-                        SettingsBackButton()
-                    }
-                }
-                .padding(.bottom, 20)
-
             VStack(spacing: 0) {
                 ForEach(options.indices, id: \.self) { option in
                     HStack {
@@ -53,7 +40,7 @@ struct SettingsHapticsView: View {
                                 .matchedGeometryEffect(id: "tick", in: animation)
                         }
                     }
-                    .frame(maxWidth: .infinity)
+                    .frame(maxWidth: .infinity, minHeight: .settingsRowHeight)
                     .contentShape(Rectangle())
                     .offset(x: wordShake && option == 1 ? -5 : 0)
                     .onTapGesture {
@@ -65,7 +52,6 @@ struct SettingsHapticsView: View {
 //                            self.presentationMode.wrappedValue.dismiss()
 //                        }
                     }
-                    .padding(.vertical, 9)
                     .overlay(alignment: .bottom) {
                         if option < (options.count - 1) {
                             Divider()
@@ -73,18 +59,18 @@ struct SettingsHapticsView: View {
                     }
                 }
             }
-            .padding(.horizontal, 15)
-            .background(Color.SettingsBackground, in: RoundedRectangle(cornerRadius: 9))
+            .padding(.horizontal, 16)
+            .settingsSectionBackground()
             .offset(x: shake ? -5 : 5)
             .offset(x: alternateShake ? 0 : -5)
 
             Text("The 'Excessive' mode makes the entire numpad haptic.")
-                .font(.system(.caption, design: .rounded).weight(.medium))
+                .font(.system(.footnote, design: .rounded).weight(.medium))
                 .foregroundColor(Color.SubtitleText)
-                .padding(.horizontal, 15)
+                .padding(.horizontal, 14)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .modifier(SettingsSubviewModifier())
+        .modifier(SettingsSubviewModifier(title: "Haptic Feedback"))
         .onChange(of: hapticType) { newValue in
             if newValue == 2 {
                 UIImpactFeedbackGenerator(style: .heavy).impactOccurred()

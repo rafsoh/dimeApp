@@ -35,54 +35,9 @@ struct SettingsNumberEntryView: View {
 
   var body: some View {
     VStack(spacing: 10) {
-      Text("Number Entry Method")
-        .font(.system(.title3, design: .rounded).weight(.semibold))
-        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-        .foregroundColor(Color.PrimaryText)
-        .frame(maxWidth: .infinity)
-        .overlay(alignment: .leading) {
-          Button {
-            self.presentationMode.wrappedValue.dismiss()
-          } label: {
-            SettingsBackButton()
-          }
-        }
-
-      HStack(spacing: 0) {
-        ForEach(options.indices, id: \.self) { option in
-          Text(LocalizedStringKey(options[option]))
-            .font(.system(.body, design: .rounded).weight(.semibold))
-            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-            .foregroundColor(
-              numberEntryType == (option + 1) ? Color.PrimaryText : Color.SubtitleText
-            )
-            .padding(6)
-            .padding(.horizontal, 8)
-            .background {
-              if numberEntryType == (option + 1) {
-                Capsule()
-                  .fill(Color.SecondaryBackground)
-                  .matchedGeometryEffect(id: "TAB1", in: animation)
-              }
-            }
-            .contentShape(Rectangle())
-            .onTapGesture {
-              DispatchQueue.main.async {
-                withAnimation(.easeIn(duration: 0.15)) {
-                  numberEntryType = (option + 1)
-                }
-              }
-            }
-        }
-      }
-      .padding(3)
-      .background(
-        Capsule().fill(Color.PrimaryBackground).shadow(
-          color: colorScheme == .light ? Color.Outline : Color.clear, radius: 6)
-      )
-      .overlay(
-        Capsule().stroke(
-          colorScheme == .light ? Color.clear : Color.Outline.opacity(0.4), lineWidth: 1.3)
+      GlassSegmentedPicker(
+        selection: $numberEntryType,
+        options: options.indices.map { (value: $0 + 1, title: LocalizedStringKey(options[$0])) }
       )
       .padding(25)
 
@@ -132,7 +87,7 @@ struct SettingsNumberEntryView: View {
         submit()
       }
     }
-    .modifier(SettingsSubviewModifier())
+    .modifier(SettingsSubviewModifier(title: "Number Entry Method", scrollable: false))
   }
 
   func submit() {

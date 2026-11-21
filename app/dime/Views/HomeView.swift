@@ -21,8 +21,6 @@ enum DeletionType {
 class OverallTransactionManager: ObservableObject {
     @Published var toEdit: Transaction?
     @Published var toDelete: Transaction?
-    @Published var recentlyDeleted: DeletedTransaction?
-    @Published var showToast: Bool = false
     @Published var showPopup: Bool = false
     @Published var future: Bool = false
 }
@@ -35,6 +33,14 @@ struct HomeView: View {
     @EnvironmentObject var dataController: DataController
 
     @State var currentTab = "Log"
+
+    @AppStorage("firstWeekday", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var firstWeekday: Int = 1
+    @AppStorage("firstDayOfMonth", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var firstDayOfMonth: Int = 1
+
+    // Tabs cache date ranges in @State, so rebuild them when the time frame settings change.
+    var timeFrameID: String {
+        "\(firstWeekday)-\(firstDayOfMonth)"
+    }
 
     var topEdge: CGFloat
     var bottomEdge: CGFloat
@@ -51,7 +57,7 @@ struct HomeView: View {
 
     @EnvironmentObject var tabBarManager: TabBarManager
 
-    @State var showPopup = false
+    @State private var tabBarTop: CGFloat?
 
     // Hiding Native TabBar...
     init(topEdge: CGFloat, bottomEdge: CGFloat) {
@@ -60,19 +66,28 @@ struct HomeView: View {
         self.bottomEdge = bottomEdge
     }
 
+    private func updateTabBarTop(_ top: CGFloat) {
+        if !tabBarManager.hideTab {
+            tabBarTop = top
+        }
+    }
+
     var body: some View {
         ZStack(alignment: .bottom) {
             TabView(selection: $currentTab) {
-                LogView(topEdge: topEdge, bottomEdge: bottomEdge, launchSearch: launchSearch)
+                LogView(topEdge: topEdge, launchSearch: launchSearch)
+                    .id(timeFrameID)
                     .ignoresSafeArea(.all)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .tag("Log")
 
                 InsightsView()
+                    .id(timeFrameID)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .tag("Insights")
 
                 BudgetView()
+                    .id(timeFrameID)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .tag("Budget")
 
@@ -80,26 +95,23 @@ struct HomeView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .tag("Settings")
             }
-            .allowsHitTesting(showPopup ? false : true)
+            .background {
+                DeleteTransactionAlert()
+            }
             .environmentObject(toastPresenter)
             .environmentObject(transactionManager)
+            .environment(\.tabBarTop, tabBarManager.hideTab ? nil : tabBarTop)
 
             CustomTabBar(currentTab: $currentTab, topEdge: topEdge, bottomEdge: bottomEdge, counter: $counter, launchAdd: launchAdd)
-                .offset(y: tabBarManager.hideTab ? (70 + bottomEdge) : 0)
-
-            if showPopup {
-                Rectangle()
-                    .fill(Color.clear)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        transactionManager.showPopup = false
+                .background {
+                    GeometryReader { proxy in
+                        let top = proxy.frame(in: .global).minY
+                        Color.clear
+                            .onAppear { updateTabBarTop(top) }
+                            .onChange(of: top) { updateTabBarTop($0) }
                     }
-            }
-
-            DeleteTransactionAlert()
-                .offset(y: showPopup ? 0 : 300)
-                .environmentObject(transactionManager)
+                }
+                .offset(y: tabBarManager.hideTab ? (70 + bottomEdge) : 0)
 
             if appLockVM.isAppLockEnabled && !appLockVM.isAppUnLocked {
                 AppLockView()
@@ -121,26 +133,7 @@ struct HomeView: View {
         .toast(isPresenting: $toastPresenter.showToast, duration: 4, tapToDismiss: true, offsetY: 12, alert: {
             AlertToast(displayMode: .hud, type: .systemImage("checkmark.circle.fill", Color.IncomeGreen), title: "Image Saved", subTitle: "Check it out in Photos")
         })
-        .toast(isPresenting: $transactionManager.showToast, duration: 4, tapToDismiss: true, offsetY: 12, alert: {
-            AlertToast(displayMode: .hud, type: .systemImage("arrow.uturn.backward.circle.fill", Color.AlertRed), title: "Log Deleted", subTitle: "Tap to Undo")
-        }, onTap: {
-            if let deleted = transactionManager.recentlyDeleted {
-                withAnimation(.easeInOut(duration: 0.5)) {
-                    dataController.restoreTransaction(deleted)
-                }
-            }
-            transactionManager.recentlyDeleted = nil
-            transactionManager.toDelete = nil
-        }, completion: {
-            transactionManager.recentlyDeleted = nil
-            transactionManager.toDelete = nil
-        })
-        .onChange(of: transactionManager.showPopup) { newValue in
-            withAnimation {
-                showPopup = newValue
-            }
-        }
-        .fullScreenCover(item: $transactionManager.toEdit, onDismiss: {
+        .sheet(item: $transactionManager.toEdit, onDismiss: {
             transactionManager.toEdit = nil
         }) { transaction in
             TransactionView(toEdit: transaction)
