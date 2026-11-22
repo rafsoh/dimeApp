@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D7A1B2C32E9F000200A1B2C3 /* BudgetModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7A1B2C32E9F000100A1B2C3 /* BudgetModel.swift */; };
+		D7A1B2C32E9F000300A1B2C3 /* BudgetModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7A1B2C32E9F000100A1B2C3 /* BudgetModel.swift */; };
+		D7A1B2C32E9F000400A1B2C3 /* RoundedTriangle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53B9079A2AE818710001F496 /* RoundedTriangle.swift */; };
+		D7A1B2C32E9F000500A1B2C3 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = D63B20462D8728C300CAFB20 /* Localizable.strings */; };
+		D7A1B2C32E9F000600A1B2C3 /* Localizable.stringsdict in Resources */ = {isa = PBXBuildFile; fileRef = D63B20482D8728C300CAFB20 /* Localizable.stringsdict */; };
 		530C89D62A793B6C00B5028D /* ShortcutsEntities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 530C89D52A793B6C00B5028D /* ShortcutsEntities.swift */; };
 		530C9DFD28ACE14A0038535F /* BudgetWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 530C9DFC28ACE14A0038535F /* BudgetWidget.swift */; };
 		530C9DFE28ACE14A0038535F /* BudgetWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 530C9DFC28ACE14A0038535F /* BudgetWidget.swift */; };
@@ -214,6 +219,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D7A1B2C32E9F000100A1B2C3 /* BudgetModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetModel.swift; sourceTree = "<group>"; };
 		530C89D52A793B6C00B5028D /* ShortcutsEntities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutsEntities.swift; sourceTree = "<group>"; };
 		530C9DFC28ACE14A0038535F /* BudgetWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetWidget.swift; sourceTree = "<group>"; };
 		5311A22E29F04EF300A5BE20 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.intentdefinition; name = Base; path = Base.lproj/WidgetConfiguration.intentdefinition; sourceTree = "<group>"; };
@@ -529,6 +535,7 @@
 				536CC385293106180081E401 /* LineGraph.swift */,
 				5327D2D4287C6B5E00F76ADF /* InsightsView.swift */,
 				5327D2D3287C6B5E00F76ADF /* BudgetView.swift */,
+				D7A1B2C32E9F000100A1B2C3 /* BudgetModel.swift */,
 				532C58BB2A629C3900DA2C81 /* NewBudgetView.swift */,
 				5327D2D5287C6B5E00F76ADF /* CustomTabBar.swift */,
 				5358E9162AC86DA1003E8CA9 /* SingleTransactionPhotoView.swift */,
@@ -851,6 +858,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D7A1B2C32E9F000500A1B2C3 /* Localizable.strings in Resources */,
+				D7A1B2C32E9F000600A1B2C3 /* Localizable.stringsdict in Resources */,
 				533182D328A0D61D00DEBFA3 /* Assets.xcassets in Resources */,
 				53B1D193288ED87000E28062 /* Assets.xcassets in Resources */,
 			);
@@ -912,6 +921,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D7A1B2C32E9F000200A1B2C3 /* BudgetModel.swift in Sources */,
 				536A2A152A59C47400D81E02 /* Wiggle.swift in Sources */,
 				AEADEF742AE94DC3006EB614 /* ToolbarButton.swift in Sources */,
 				53D6BDCE2AF73BDA00F5728E /* SettingsWeekStartView.swift in Sources */,
@@ -1010,6 +1020,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D7A1B2C32E9F000300A1B2C3 /* BudgetModel.swift in Sources */,
+				D7A1B2C32E9F000400A1B2C3 /* RoundedTriangle.swift in Sources */,
 				537152E628AD243E00E93EC4 /* TestView.swift in Sources */,
 				53B907A32AE81A080001F496 /* DonutSemicircle.swift in Sources */,
 				53D5F02428A8E0E4004573C8 /* InsightsWidget.swift in Sources */,

@@ -131,197 +131,208 @@ struct TransactionView: View {
     @State var decimalValuesAssigned: AssignedDecimal = .none
     @State private var priceString: String = "0"
 
+    @State private var usesVerticalBar = VerticalBar.isActiveInKeyWindow
+
     var body: some View {
-        GeometryReader { proxy in
-            VStack(spacing: 8) {
-                // income/expense picker
-                HStack(spacing: 10) {
-                    GlassIconButton(systemName: "xmark", accessibilityLabel: "Close") {
-                        dismiss()
-                    }
+        sideBarNavigation {
+            GeometryReader { proxy in
+                let sideOcclusion = proxy.sideOcclusionInsets
 
-                    Spacer()
+                VStack(spacing: 8) {
+                    // income/expense picker
+                    HStack(spacing: 10) {
+                        if !usesVerticalBar {
+                            GlassIconButton(systemName: "xmark", accessibilityLabel: "Close") {
+                                dismiss()
+                            }
 
-                    RecurringMenu(
-                        repeatType: $repeatType, repeatCoefficient: $repeatCoefficient,
-                        showPicker: $showPicker, accessibilityLabel: repeatButtonAccessibility)
-                }
-                .frame(height: 44)
-                .frame(maxWidth: .infinity)
-                .overlay {
-                    if showToast {
-                        GlassToast(title: toastTitle, systemImage: toastImage, color: Color.AlertRed)
-                    } else if showsIncomeControls {
-                        GlassSegmentedPicker(selection: $income, options: [
-                            (value: false, title: "Expense"),
-                            (value: true, title: "transaction-view-income-picker")
-                        ])
-                    } else {
-                        CategoryEditorTitle(title: "Expense")
-                    }
-                }
-                .overlay(alignment: .topTrailing) {
-                    if toEdit != nil {
-                        GlassIconButton(
-                            systemName: "trash.fill",
-                            accessibilityLabel: "delete transaction",
-                            foreground: Color.AlertRed,
-                            tint: Color.AlertRed.opacity(0.2),
-                            fallback: Color.AlertRed.opacity(0.23)
-                        ) {
-                            toDelete = toEdit
-                            deleteMode = true
+                            Spacer()
+
+                            RecurringMenu(
+                                repeatType: $repeatType, repeatCoefficient: $repeatCoefficient,
+                                showPicker: $showPicker, accessibilityLabel: repeatButtonAccessibility)
                         }
-                        .offset(y: 44 + 10)
                     }
-                }
-                .padding(.top, 3)
-                .zIndex(1)
+                    .frame(height: 44)
+                    .frame(maxWidth: .infinity)
+                    .overlay {
+                        if showToast {
+                            GlassToast(title: toastTitle, systemImage: toastImage, color: Color.AlertRed)
+                        } else if showsIncomeControls {
+                            GlassSegmentedPicker(selection: $income, options: [
+                                (value: false, title: "Expense"),
+                                (value: true, title: "transaction-view-income-picker")
+                            ])
+                        } else {
+                            CategoryEditorTitle(title: "Expense")
+                        }
+                    }
+                    .overlay(alignment: .topTrailing) {
+                        if toEdit != nil && !usesVerticalBar {
+                            GlassIconButton(
+                                systemName: "trash.fill",
+                                accessibilityLabel: "delete transaction",
+                                foreground: Color.AlertRed,
+                                tint: Color.AlertRed.opacity(0.2),
+                                fallback: Color.AlertRed.opacity(0.23)
+                            ) {
+                                toDelete = toEdit
+                                deleteMode = true
+                            }
+                            .offset(y: 44 + 10)
+                        }
+                    }
+                    .padding(.top, 3)
+                    .zIndex(1)
 
-                ZStack {
-                    // swipe to change between income and expense
-                    Color.PrimaryBackground
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .simultaneousGesture(
-                            DragGesture()
-                                .updating(
-                                    $isDragging,
-                                    body: { _, state, _ in
-                                        state = true
-                                    }
-                                )
-                                .onChanged { gesture in
-                                    let swipe = gesture.translation.width
-
-                                    guard showsIncomeControls, abs(swipe) > abs(gesture.translation.height) else { return }
-
-                                    if income {
-                                        if swipe < 0 {
-                                            swipingOffset = max(-capsuleWidth, -pow(abs(swipe), 0.8)) + capsuleWidth
+                    ZStack {
+                        // swipe to change between income and expense
+                        Color.PrimaryBackground
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .simultaneousGesture(
+                                DragGesture()
+                                    .updating(
+                                        $isDragging,
+                                        body: { _, state, _ in
+                                            state = true
                                         }
+                                    )
+                                    .onChanged { gesture in
+                                        let swipe = gesture.translation.width
 
-                                    } else {
-                                        if swipe > 0 {
-                                            swipingOffset = min(capsuleWidth, pow(swipe, 0.8))
+                                        guard showsIncomeControls, abs(swipe) > abs(gesture.translation.height) else { return }
+
+                                        if income {
+                                            if swipe < 0 {
+                                                swipingOffset = max(-capsuleWidth, -pow(abs(swipe), 0.8)) + capsuleWidth
+                                            }
+
+                                        } else {
+                                            if swipe > 0 {
+                                                swipingOffset = min(capsuleWidth, pow(swipe, 0.8))
+                                            }
                                         }
                                     }
-                                }
-                                .onEnded { _ in
-                                    if income {
-                                        if swipingOffset < (capsuleWidth / 2) {
-                                            withAnimation {
-                                                swipingOffset = 0
-                                                income = false
+                                    .onEnded { _ in
+                                        if income {
+                                            if swipingOffset < (capsuleWidth / 2) {
+                                                withAnimation {
+                                                    swipingOffset = 0
+                                                    income = false
+                                                }
+                                            } else {
+                                                withAnimation {
+                                                    swipingOffset = capsuleWidth
+                                                }
                                             }
                                         } else {
-                                            withAnimation {
-                                                swipingOffset = capsuleWidth
-                                            }
-                                        }
-                                    } else {
-                                        if swipingOffset > (capsuleWidth / 2) {
-                                            withAnimation {
-                                                swipingOffset = capsuleWidth
-                                                income = true
-                                            }
-                                        } else {
-                                            withAnimation {
-                                                swipingOffset = 0
+                                            if swipingOffset > (capsuleWidth / 2) {
+                                                withAnimation {
+                                                    swipingOffset = capsuleWidth
+                                                    income = true
+                                                }
+                                            } else {
+                                                withAnimation {
+                                                    swipingOffset = 0
+                                                }
                                             }
                                         }
                                     }
-                                }
-                        )
+                            )
 
-                    // number display and note view
-                    VStack(spacing: 8) {
-                        NumberPadTextView(price: $price, isEditingDecimal: $isEditingDecimal, decimalValuesAssigned: $decimalValuesAssigned)
-                        NoteView(note: $note, focused: $textFieldFocused)
+                        // number display and note view
+                        VStack(spacing: 8) {
+                            NumberPadTextView(price: $price, isEditingDecimal: $isEditingDecimal, decimalValuesAssigned: $decimalValuesAssigned)
+                            NoteView(note: $note, focused: $textFieldFocused)
+                        }
                     }
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                if showingNotePicker {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 8) {
-                            ForEach(suggestedTransactions, id: \.self) { transaction in
-                                Button {
-                                    note = transaction.wrappedNote
-                                    withAnimation {
-                                        if price == 0 {
-                                            price = transaction.wrappedAmount
+                    if showingNotePicker {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                ForEach(suggestedTransactions, id: \.self) { transaction in
+                                    Button {
+                                        note = transaction.wrappedNote
+                                        withAnimation {
+                                            if price == 0 {
+                                                price = transaction.wrappedAmount
+                                            }
+                                            if category == nil {
+                                                category = transaction.category
+                                            }
                                         }
-                                        if category == nil {
-                                            category = transaction.category
-                                        }
-                                    }
-                                    self.hideKeyboard()
-                                } label: {
-                                    HStack(spacing: 3) {
-                                        Text(transaction.wrappedNote)
-                                            .foregroundStyle(Color.PrimaryText)
-                                            .lineLimit(1)
-                                            .padding(.vertical, 3.5)
-                                            .padding(.horizontal, 7)
+                                        self.hideKeyboard()
+                                    } label: {
+                                        HStack(spacing: 3) {
+                                            Text(transaction.wrappedNote)
+                                                .foregroundStyle(Color.PrimaryText)
+                                                .lineLimit(1)
+                                                .padding(.vertical, 3.5)
+                                                .padding(.horizontal, 7)
 
-                                        Text("\(currencySymbol)\(Int(round(transaction.wrappedAmount)))")
-                                            .lineLimit(1)
-                                            .foregroundStyle(Color(hex: transaction.wrappedColour))
-                                            .padding(.vertical, 3.5)
-                                            .padding(.horizontal, 5)
-                                            .background(
-                                                Color(hex: transaction.wrappedColour).opacity(0.23),
-                                                in: RoundedRectangle(cornerRadius: 6.5, style: .continuous))
+                                            Text("\(currencySymbol)\(Int(round(transaction.wrappedAmount)))")
+                                                .lineLimit(1)
+                                                .foregroundStyle(Color(hex: transaction.wrappedColour))
+                                                .padding(.vertical, 3.5)
+                                                .padding(.horizontal, 5)
+                                                .background(
+                                                    Color(hex: transaction.wrappedColour).opacity(0.23),
+                                                    in: RoundedRectangle(cornerRadius: 6.5, style: .continuous))
+                                        }
+                                        .font(.system(.body, design: .rounded).weight(.semibold))
+                                        .padding(5)
+                                        .background(
+                                            Color.SecondaryBackground,
+                                            in: RoundedRectangle(cornerRadius: 11.5, style: .continuous))
                                     }
-                                    .font(.system(.body, design: .rounded).weight(.semibold))
-                                    .padding(5)
-                                    .background(
-                                        Color.SecondaryBackground,
-                                        in: RoundedRectangle(cornerRadius: 11.5, style: .continuous))
                                 }
                             }
                         }
+                        .padding(.bottom, 5)
+                    } else {
+                        dateCategoryLine
+                            .disabled(isDismissDragging)
+                            .padding(.bottom, 4)
                     }
-                    .padding(.bottom, 5)
-                } else {
-                    dateCategoryLine
-                        .disabled(isDismissDragging)
-                        .padding(.bottom, 4)
-                }
 
-                NumberPad(
-                    price: $price,
-                    category: $category,
-                    isEditingDecimal: $isEditingDecimal,
-                    decimalValuesAssigned: $decimalValuesAssigned,
-                    showingNotePicker: showingNotePicker
+                    NumberPad(
+                        price: $price,
+                        category: $category,
+                        isEditingDecimal: $isEditingDecimal,
+                        decimalValuesAssigned: $decimalValuesAssigned,
+                        showingNotePicker: showingNotePicker
+                    ) {
+                        submit()
+                    }
+                    .disabled(isDismissDragging)
+                }
+                .padding(.vertical, 17)
+                .padding(.leading, max(17, sideOcclusion.leading))
+                .padding(.trailing, max(17, sideOcclusion.trailing))
+                .frame(width: proxy.size.width, height: proxy.size.height)
+                .background(Color.PrimaryBackground)
+                .onTapGesture {
+                    self.hideKeyboard()
+                }
+                .confirmationSheet(
+                    isPresented: $deleteMode,
+                    title: "Delete Expense?",
+                    message: "This action cannot be undone.",
+                    onDismiss: { toDelete = nil }
                 ) {
-                    submit()
-                }
-                .disabled(isDismissDragging)
-            }
-            .padding(17)
-            .frame(width: proxy.size.width, height: proxy.size.height)
-            .background(Color.PrimaryBackground)
-            .onTapGesture {
-                self.hideKeyboard()
-            }
-            .confirmationSheet(
-                isPresented: $deleteMode,
-                title: "Delete Expense?",
-                message: "This action cannot be undone.",
-                onDismiss: { toDelete = nil }
-            ) {
-                withAnimation {
-                    if let itemToDelete = toDelete {
-                        moc.delete(itemToDelete)
+                    withAnimation {
+                        if let itemToDelete = toDelete {
+                            moc.delete(itemToDelete)
+                        }
+                        dataController.save()
                     }
-                    dataController.save()
-                }
 
-                dismiss()
+                    dismiss()
+                }
             }
         }
+        .readsVerticalBar($usesVerticalBar)
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .animation(.easeOut(duration: 0.2), value: showToast)
         .ignoresSafeArea(.keyboard, edges: .all)
@@ -692,6 +703,47 @@ struct TransactionView: View {
 
         toEdit = nil
     }
+
+    @ViewBuilder
+    private func sideBarNavigation<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        if #available(iOS 16.0, *), usesVerticalBar {
+            NavigationStack {
+                content()
+                    .ignoresSafeArea(.container, edges: .vertical)
+                    .toolbar { sideBarItems }
+            }
+        } else {
+            content()
+        }
+    }
+
+    @available(iOS 16.0, *)
+    @ToolbarContentBuilder
+    private var sideBarItems: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            Button {
+                dismiss()
+            } label: {
+                Label("Close", systemImage: "xmark")
+            }
+        }
+
+        ToolbarItemGroup(placement: .topBarTrailing) {
+            RecurringToolbarMenu(
+                repeatType: $repeatType, repeatCoefficient: $repeatCoefficient,
+                showPicker: $showPicker, accessibilityLabel: repeatButtonAccessibility)
+
+            if toEdit != nil {
+                Button(role: .destructive) {
+                    toDelete = toEdit
+                    deleteMode = true
+                } label: {
+                    Label("delete transaction", systemImage: "trash.fill")
+                }
+                .tint(Color.AlertRed)
+            }
+        }
+    }
 }
 
 struct FilteredSearchNewTransactionView: View {
@@ -818,6 +870,49 @@ struct NoteView: View {
         if note.count > upper {
             note = String(note.prefix(upper))
         }
+    }
+}
+
+private struct RecurringToolbarMenu: View {
+    @Binding var repeatType: Int
+    @Binding var repeatCoefficient: Int
+    @Binding var showPicker: Bool
+    let accessibilityLabel: String
+
+    private let presetKeys = ["none", "daily", "weekly", "monthly"]
+
+    private var preset: Binding<Int?> {
+        Binding {
+            repeatType == 0 || repeatCoefficient == 1 ? repeatType : nil
+        } set: { index in
+            guard let index else { return }
+            repeatType = index
+            repeatCoefficient = 1
+        }
+    }
+
+    var body: some View {
+        Menu {
+            Picker(selection: preset) {
+                ForEach(presetKeys.indices, id: \.self) { index in
+                    Text(NSLocalizedString(presetKeys[index], comment: "").localizedCapitalized)
+                        .tag(Optional(index))
+                }
+            } label: {
+                EmptyView()
+            }
+            .pickerStyle(.inline)
+
+            Button {
+                showPicker = true
+            } label: {
+                Text(NSLocalizedString("custom", comment: "").localizedCapitalized)
+            }
+        } label: {
+            Label("Repeat", systemImage: "repeat")
+        }
+        .tint(repeatType > 0 ? Color.IncomeGreen : Color.PrimaryText)
+        .accessibilityLabel(accessibilityLabel)
     }
 }
 
