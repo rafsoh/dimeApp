@@ -5,6 +5,7 @@
 //  Created by Rafael Soh on 17/8/22.
 //
 
+import CoreData
 import SwiftUI
 import WidgetKit
 
@@ -27,385 +28,275 @@ struct BudgetWidgetProvider: IntentTimelineProvider {
     public typealias Entry = BudgetWidgetEntry
 
     func placeholder(in _: Context) -> BudgetWidgetEntry {
-        let loaded = loadData(budgetId: "")
-
-        return BudgetWidgetEntry(date: Date(), totalSpent: loaded.total, percentageOfDays: loaded.percentage, budget: loaded.budget, configuration: BudgetWidgetConfigurationIntent())
+        BudgetWidgetEntry(date: Date(), budget: .sample, configuration: BudgetWidgetConfigurationIntent())
     }
 
-    func getSnapshot(for configuration: BudgetWidgetConfigurationIntent, in _: Context, completion: @escaping (BudgetWidgetEntry) -> Void) {
-        let loaded = loadData(budgetId: configuration.budget?.identifier ?? "")
-
-        let entry = BudgetWidgetEntry(date: Date(), totalSpent: loaded.total, percentageOfDays: loaded.percentage, budget: loaded.budget, configuration: configuration)
-        completion(entry)
+    func getSnapshot(for configuration: BudgetWidgetConfigurationIntent, in context: Context, completion: @escaping (BudgetWidgetEntry) -> Void) {
+        if context.isPreview && configuration.budget == nil {
+            completion(BudgetWidgetEntry(date: Date(), budget: .sample, configuration: configuration, isSample: true))
+        } else {
+            completion(entry(for: configuration))
+        }
     }
 
     func getTimeline(for configuration: BudgetWidgetConfigurationIntent, in _: Context, completion: @escaping (Timeline<Entry>) -> Void) {
-        let loaded = loadData(budgetId: configuration.budget?.identifier ?? "")
-
-        let entry = BudgetWidgetEntry(date: Date(), totalSpent: loaded.total, percentageOfDays: loaded.percentage, budget: loaded.budget, configuration: configuration)
-
-        let timeline = Timeline(entries: [entry], policy: .atEnd)
-
-        completion(timeline)
+        completion(Timeline(entries: [entry(for: configuration)], policy: .atEnd))
     }
 
-    func loadData(budgetId: String) -> (total: Double, percentage: Double, budget: HoldingBudget) {
-//        let dataController = DataController()
-        let dataController = DataController.shared
-
-        if let objectIDURL = URL(string: budgetId) {
-            let managedObjectID = dataController.container.persistentStoreCoordinator.managedObjectID(forURIRepresentation: objectIDURL)!
-
-            let budget = dataController.container.viewContext.object(with: managedObjectID) as! Budget
-
-            let fetchRequest = dataController.fetchRequestForBudgetTransactions(budget: budget)
-
-            let transactions = dataController.results(for: fetchRequest)
-
-            var holdingTotal = 0.0
-
-            transactions.forEach { transaction in
-                holdingTotal += transaction.wrappedAmount
-            }
-
-            let returnBudget = HoldingBudget(type: Int(budget.type), emoji: budget.wrappedEmoji, name: budget.wrappedName, colour: budget.wrappedColour, budgetAmount: budget.amount)
-
-            let percentageOfDays: Double
-
-            let calendar = Calendar.current
-
-            if budget.type == 1 {
-                let components = calendar.dateComponents([.minute], from: budget.startDate!, to: Date.now)
-                percentageOfDays = Double(components.minute!) / 1440
-            } else {
-                let components1 = calendar.dateComponents([.day], from: budget.startDate!, to: budget.endDate)
-                let numberOfDays = components1.day!
-
-                let components2 = calendar.dateComponents([.day], from: budget.startDate!, to: Date.now)
-                let numberOfDaysPast = components2.day!
-
-                percentageOfDays = Double(numberOfDaysPast) / Double(numberOfDays)
-            }
-
-            return (holdingTotal, percentageOfDays, returnBudget)
-        } else {
-            let budget = HoldingBudget(type: 1, emoji: "failed", name: "", colour: "", budgetAmount: 0)
-            return (0, 0, budget)
-        }
+    private func entry(for configuration: BudgetWidgetConfigurationIntent) -> BudgetWidgetEntry {
+        BudgetWidgetEntry(date: Date(), budget: BudgetWidgetData.category(identifier: configuration.budget?.identifier), configuration: configuration)
     }
 }
 
 struct BudgetWidgetEntry: TimelineEntry {
     let date: Date
-    let totalSpent: Double
-    let percentageOfDays: Double
-    let budget: HoldingBudget
+    let budget: BudgetWidgetData?
     let configuration: BudgetWidgetConfigurationIntent
+    var isSample = false
+
+    var isConfigured: Bool {
+        isSample || configuration.budget != nil
+    }
 }
 
-struct HoldingBudget {
-    let type: Int
-    let emoji: String
+/// A budget's current period, loaded the same way the Budgets tab loads it.
+struct BudgetWidgetData {
     let name: String
-    let colour: String
-    let budgetAmount: Double
+    /// Nil for the overall budget.
+    let emoji: String?
+    let snapshot: BudgetSnapshot
+    let segments: [BudgetMeterSegment]
+
+    var isOverall: Bool {
+        emoji == nil
+    }
+
+    var url: URL? {
+        isOverall ? URL(string: "dimeapp://budget") : URL(string: "dimeapp://budget?budget=\(name)")
+    }
+
+    var amountWord: String {
+        isOverall ? snapshot.overallAmountWord(BudgetFormatter.current) : snapshot.resultWord
+    }
+
+    var statusLine: Text {
+        isOverall ? Text(snapshot.overallTrailing) : snapshot.tileStatus()
+    }
+
+    static var sample: BudgetWidgetData {
+        let period = BudgetPeriod(type: 2, start: Calendar.current.date(byAdding: .day, value: -3, to: Date.now) ?? Date.now)
+        let snapshot = BudgetSnapshot(amount: 200, spent: 74, period: period)
+        return BudgetWidgetData(name: String(localized: "Food"), emoji: "🍔", snapshot: snapshot,
+                            segments: [BudgetMeterSegment(id: "fill", share: snapshot.share, colour: Color(hex: "#FFAF44"))])
+    }
+
+    static func category(identifier: String?) -> BudgetWidgetData? {
+        let dataController = DataController.shared
+        let context = dataController.container.viewContext
+
+        guard let identifier,
+              let url = URL(string: identifier),
+              let objectID = dataController.container.persistentStoreCoordinator.managedObjectID(forURIRepresentation: url),
+              let budget = try? context.existingObject(with: objectID) as? Budget
+        else { return nil }
+
+        let period = BudgetPeriod(type: Int(budget.type), start: budget.wrappedDate).current
+        let spent = transactions(in: period, category: budget.category).reduce(0) { $0 + $1.wrappedAmount }
+        let snapshot = BudgetSnapshot(amount: budget.amount, spent: spent, period: period)
+
+        return BudgetWidgetData(name: budget.wrappedName, emoji: budget.wrappedEmoji, snapshot: snapshot,
+                            segments: [BudgetMeterSegment(id: "fill", share: snapshot.share, colour: Color(hex: budget.wrappedColour))])
+    }
+
+    static func overall() -> BudgetWidgetData? {
+        let dataController = DataController.shared
+
+        guard let budget = dataController.results(for: dataController.fetchRequestForMainBudget()).first else { return nil }
+
+        let period = BudgetPeriod(type: Int(budget.type), start: budget.wrappedDate).current
+        let transactions = transactions(in: period, category: nil)
+        let spent = transactions.reduce(0) { $0 + $1.wrappedAmount }
+        let snapshot = BudgetSnapshot(amount: budget.amount, spent: spent, period: period)
+
+        return BudgetWidgetData(name: String(localized: "Overall"), emoji: nil, snapshot: snapshot,
+                            segments: budgetStripSegments(transactions, denominator: max(snapshot.amount, snapshot.spent)))
+    }
+
+    private static func transactions(in period: BudgetPeriod, category: Category?) -> [Transaction] {
+        let request: NSFetchRequest<Transaction> = Transaction.fetchRequest()
+        request.predicate = budgetPredicate(from: period.start, to: period.end, category: category)
+        return DataController.shared.results(for: request)
+    }
 }
 
 struct BudgetWidgetEntryView: View {
     let entry: BudgetWidgetProvider.Entry
 
-    var budgetType: String {
-        switch entry.budget.type {
-        case 1:
-            return String(localized: "today")
-        case 2:
-            return String(localized: "this week")
-        case 3:
-            return String(localized: "this month")
-        case 4:
-            return String(localized: "this year")
-        default:
-            return "this week"
-        }
-    }
-
-    var difference: Double {
-        return abs(entry.budget.budgetAmount - entry.totalSpent)
-    }
-
-    var percentString1: String {
-        return "\(Int(round((entry.totalSpent / entry.budget.budgetAmount) * 100)))%"
-    }
-
-    var systemSmallWidgetText: String {
-        if entry.budget.budgetAmount >= entry.totalSpent {
-            return String(localized: "left \(budgetType)")
-        } else {
-            return String(localized: "over \(budgetType)")
-        }
-    }
-
-    func showTimeFrame(size: CGFloat) -> Bool {
-        return size > systemSmallWidgetText.widthOfRoundedString(size: 10, weight: .semibold)
-    }
-
     var body: some View {
-        if entry.configuration.budget == nil {
-            if #available(iOS 17.0, *) {
-                Text("Select budget in widget options")
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(Color.SubtitleText)
-                    .padding(15)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .containerBackground(for: .widget) {
-                        Color.PrimaryBackground
-                    }
-            } else {
-                Text("Select budget in widget options")
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(Color.SubtitleText)
-                    .padding(15)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color.PrimaryBackground)
-            }
-
-        } else if entry.budget.emoji == "failed" {
-            if #available(iOS 17.0, *) {
-                Text("Budget no longer exists - please select new budget from widget options.")
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(Color.SubtitleText)
-                    .padding(15)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .containerBackground(for: .widget) {
-                        Color.PrimaryBackground
-                    }
-            } else {
-                Text("Budget no longer exists - please select new budget from widget options.")
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(Color.SubtitleText)
-                    .padding(15)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color.PrimaryBackground)
-            }
-
+        if !entry.isConfigured {
+            WidgetBudgetMessage("Select budget in widget options")
+        } else if let budget = entry.budget {
+            BudgetTileWidgetView(budget: budget)
         } else {
-            if #available(iOS 17.0, *) {
-                VStack(spacing: 12) {
-                    HStack(alignment: .top) {
-                        VStack(alignment: .leading, spacing: 2.4) {
-                            HStack(spacing: 5) {
-                                Text(entry.budget.emoji)
-                                    .font(.system(size: 9))
-                                Text(entry.budget.name.uppercased())
-                                    .font(.system(size: 12, weight: .semibold, design: .rounded))
-                                    .lineLimit(1)
-                            }
-                            .foregroundColor(Color.PrimaryText)
-
-                            Text("SPENT: \(percentString1)")
-                                .font(.system(size: 10, weight: .medium, design: .rounded))
-                                .foregroundColor(Color.SubtitleText)
-                        }
-
-                        Spacer()
-
-                        RingView(percent: entry.percentageOfDays, width: 2.4, topStroke: Color.DarkBackground, bottomStroke: Color.SecondaryBackground)
-                            .frame(width: 13, height: 13)
-                            .padding(3)
-                    }
-                    .frame(maxWidth: .infinity)
-
-                    GeometryReader { proxy in
-                        VStack(spacing: 6) {
-                            ZStack(alignment: .bottom) {
-                                ZStack {
-                                    DonutSemicircle(percent: 1, cornerRadius: 4, width: 15)
-                                        .fill(Color.SecondaryBackground)
-                                        .frame(width: proxy.size.width, height: proxy.size.width / 2)
-
-                                    if entry.totalSpent / entry.budget.budgetAmount < 0.97 {
-                                        DonutSemicircle(percent: 1 - (entry.totalSpent / entry.budget.budgetAmount), cornerRadius: 4, width: 15)
-                                            .fill(Color(hex: entry.budget.colour))
-                                            .frame(width: proxy.size.width, height: proxy.size.width / 2)
-                                    }
-                                }
-                                .frame(width: proxy.size.width)
-
-                                VStack(spacing: -4) {
-                                    WidgetBudgetDollarView(amount: difference, red: entry.totalSpent >= entry.budget.budgetAmount)
-                                        .frame(width: proxy.size.width - 50)
-
-                                    if showTimeFrame(size: proxy.size.width - 50) {
-                                        Text(systemSmallWidgetText)
-                                            .font(.system(size: 10, weight: .medium, design: .rounded))
-                                            .foregroundColor(Color.SubtitleText)
-                                    } else {
-                                        if entry.budget.budgetAmount >= entry.totalSpent {
-                                            Text("left")
-                                                .font(.system(size: 10, weight: .medium, design: .rounded))
-                                                .foregroundColor(Color.SubtitleText)
-                                        } else {
-                                            Text("over")
-                                                .font(.system(size: 10, weight: .medium, design: .rounded))
-                                                .foregroundColor(Color.SubtitleText)
-                                        }
-                                    }
-                                }
-                            }
-                            .frame(width: proxy.size.width)
-
-                            HStack {
-                                if entry.totalSpent > 999.99 || entry.budget.budgetAmount > 999.99 {
-                                    Text("\(Int(round(entry.totalSpent)))")
-                                        .frame(width: 50, alignment: .leading)
-                                    Spacer()
-                                    Text("\(Int(round(entry.budget.budgetAmount)))")
-                                        .frame(width: 50, alignment: .trailing)
-                                } else {
-                                    Text("\(entry.totalSpent, specifier: "%.2f")")
-                                        .frame(width: 50, alignment: .leading)
-                                    Spacer()
-                                    Text("\(entry.budget.budgetAmount, specifier: "%.2f")")
-                                        .frame(width: 50, alignment: .trailing)
-                                }
-                            }
-                            .font(.system(size: 10, weight: .medium, design: .rounded))
-                            .foregroundColor(Color.SubtitleText)
-                        }
-                        .frame(width: proxy.size.width, height: proxy.size.height, alignment: .bottom)
-                    }
-                    .frame(maxHeight: .infinity, alignment: .bottom)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .containerBackground(for: .widget) {
-                    Color.PrimaryBackground
-                }
-                .widgetURL(URL(string: "dimeapp://budget?budget=\(entry.budget.name)"))
-            } else {
-                VStack(spacing: 12) {
-                    HStack(alignment: .top) {
-                        VStack(alignment: .leading, spacing: 2.4) {
-                            HStack(spacing: 5) {
-                                Text(entry.budget.emoji)
-                                    .font(.system(size: 9))
-                                Text(entry.budget.name.uppercased())
-                                    .font(.system(size: 12, weight: .semibold, design: .rounded))
-                                    .lineLimit(1)
-                            }
-                            .foregroundColor(Color.PrimaryText)
-
-                            Text("SPENT: \(percentString1)")
-                                .font(.system(size: 10, weight: .medium, design: .rounded))
-                                .foregroundColor(Color.SubtitleText)
-                        }
-
-                        Spacer()
-
-                        RingView(percent: entry.percentageOfDays, width: 2.4, topStroke: Color.DarkBackground, bottomStroke: Color.SecondaryBackground)
-                            .frame(width: 13, height: 13)
-                            .padding(3)
-                    }
-                    .frame(maxWidth: .infinity)
-
-                    GeometryReader { proxy in
-                        VStack(spacing: 6) {
-                            ZStack(alignment: .bottom) {
-                                ZStack {
-                                    DonutSemicircle(percent: 1, cornerRadius: 4, width: 15)
-                                        .fill(Color.SecondaryBackground)
-                                        .frame(width: proxy.size.width, height: proxy.size.width / 2)
-
-                                    if entry.totalSpent / entry.budget.budgetAmount < 0.97 {
-                                        DonutSemicircle(percent: 1 - (entry.totalSpent / entry.budget.budgetAmount), cornerRadius: 4, width: 15)
-                                            .fill(Color(hex: entry.budget.colour))
-                                            .frame(width: proxy.size.width, height: proxy.size.width / 2)
-                                    }
-                                }
-                                .frame(width: proxy.size.width)
-
-                                VStack(spacing: -4) {
-                                    WidgetBudgetDollarView(amount: difference, red: entry.totalSpent >= entry.budget.budgetAmount)
-                                        .frame(width: proxy.size.width - 50)
-
-                                    if showTimeFrame(size: proxy.size.width - 50) {
-                                        Text(systemSmallWidgetText)
-                                            .font(.system(size: 10, weight: .medium, design: .rounded))
-                                            .foregroundColor(Color.SubtitleText)
-                                    } else {
-                                        if entry.budget.budgetAmount >= entry.totalSpent {
-                                            Text("left")
-                                                .font(.system(size: 10, weight: .medium, design: .rounded))
-                                                .foregroundColor(Color.SubtitleText)
-                                        } else {
-                                            Text("over")
-                                                .font(.system(size: 10, weight: .medium, design: .rounded))
-                                                .foregroundColor(Color.SubtitleText)
-                                        }
-                                    }
-                                }
-                            }
-                            .frame(width: proxy.size.width)
-
-                            HStack {
-                                if entry.totalSpent > 999.99 || entry.budget.budgetAmount > 999.99 {
-                                    Text("\(Int(round(entry.totalSpent)))")
-                                        .frame(width: 50, alignment: .leading)
-                                    Spacer()
-                                    Text("\(Int(round(entry.budget.budgetAmount)))")
-                                        .frame(width: 50, alignment: .trailing)
-                                } else {
-                                    Text("\(entry.totalSpent, specifier: "%.2f")")
-                                        .frame(width: 50, alignment: .leading)
-                                    Spacer()
-                                    Text("\(entry.budget.budgetAmount, specifier: "%.2f")")
-                                        .frame(width: 50, alignment: .trailing)
-                                }
-                            }
-                            .font(.system(size: 10, weight: .medium, design: .rounded))
-                            .foregroundColor(Color.SubtitleText)
-                        }
-                        .frame(width: proxy.size.width, height: proxy.size.height, alignment: .bottom)
-                    }
-                    .frame(maxHeight: .infinity, alignment: .bottom)
-                }
-                .padding(15)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.PrimaryBackground)
-                .widgetURL(URL(string: "dimeapp://budget?budget=\(entry.budget.name)"))
-            }
+            WidgetBudgetMessage("Budget no longer exists - please select new budget from widget options.")
         }
     }
 }
 
-struct WidgetBudgetDollarView: View {
-    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
+/// The small home screen widget, laid out like a tile on the Budgets tab.
+struct BudgetTileWidgetView: View {
+    let budget: BudgetWidgetData
+    let formatter = BudgetFormatter.current
 
-    var amount: Double
-    var red: Bool
+    var body: some View {
+        let snapshot = budget.snapshot
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
-    var currencySymbol: String {
-        return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 5) {
+                if let emoji = budget.emoji {
+                    Text(emoji)
+                        .font(.system(.subheadline, design: .rounded))
+                }
+                Text(budget.name)
+                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .foregroundColor(Color.PrimaryText)
+                    .lineLimit(1)
+
+                if snapshot.isOver {
+                    Spacer(minLength: 4)
+                    BudgetOverIcon()
+                }
+            }
+
+            Spacer(minLength: 0)
+
+            BudgetAmountText(amount: snapshot.difference, font: .system(.title, design: .rounded).weight(.semibold), formatter: formatter)
+
+            Text(budget.amountWord)
+                .font(.system(.subheadline, design: .rounded).weight(.medium))
+                .foregroundColor(Color.SubtitleText)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+
+            budget.statusLine
+                .font(.system(.caption, design: .rounded).weight(.medium))
+                .foregroundColor(Color.SubtitleText)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+                .padding(.top, 2)
+
+            BudgetMeter(segments: budget.segments, tick: snapshot.showsTick ? snapshot.period.elapsed : nil, height: 10)
+                .padding(.top, 10)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        .budgetWidgetBackground()
+        .widgetURL(budget.url)
+    }
+}
+
+struct WidgetBudgetMessage: View {
+    let message: LocalizedStringKey
+
+    init(_ message: LocalizedStringKey) {
+        self.message = message
     }
 
     var body: some View {
-        HStack(alignment: .lastTextBaseline, spacing: 1.3) {
-            Group {
-                Text(currencySymbol)
-                    .font(.system(.subheadline, design: .rounded).weight(.medium))
-                    .foregroundColor(red ? Color("BudgetRed") : Color.SubtitleText) +
+        Text(message)
+            .font(.system(size: 14, weight: .medium, design: .rounded))
+            .multilineTextAlignment(.center)
+            .foregroundColor(Color.SubtitleText)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .budgetWidgetBackground()
+    }
+}
 
-                Text("\(amount, specifier: showCents && amount < 100  ? "%.2f" : "%.0f")")
-                    .font(.system(.title3, design: .rounded).weight(.medium))
-                    .foregroundColor(red ? Color("BudgetRed") : Color.PrimaryText)
+/// The lock screen rectangle: name, what's left with the tile's status, and a linear gauge.
+struct BudgetAccessoryRectangleView: View {
+    let budget: BudgetWidgetData
+    let formatter = BudgetFormatter.current
+
+    var body: some View {
+        let snapshot = budget.snapshot
+
+        VStack(alignment: .leading, spacing: 2) {
+            Text([budget.emoji, budget.name].compactMap { $0 }.joined(separator: " "))
+                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                .lineLimit(1)
+
+            (Text("\(formatter.money(snapshot.difference)) \(snapshot.resultWord) · ") + budget.statusLine)
+                .font(.system(size: 14, weight: .regular, design: .rounded))
+                .foregroundColor(Color.SubtitleText)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+
+            if #available(iOS 16.0, *) {
+                Gauge(value: snapshot.share) {
+                    Text("Percent Spent")
+                }
+                .gaugeStyle(.accessoryLinear)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .accessoryWidgetBackground()
+        .widgetURL(budget.url)
+    }
+}
+
+struct BudgetAccessoryCircleView: View {
+    let budget: BudgetWidgetData
+
+    var body: some View {
+        if #available(iOS 16.0, *) {
+            Gauge(value: budget.snapshot.share) {
+                if let emoji = budget.emoji {
+                    Text(emoji)
+                } else {
+                    Image(systemName: "dollarsign.circle.fill")
+                }
+            } currentValueLabel: {
+                Text("\(Int((budget.snapshot.share * 100).rounded()))%")
+            }
+            .gaugeStyle(.accessoryCircular)
+            .accessoryWidgetBackground()
+            .widgetURL(budget.url)
+        }
+    }
+}
+
+struct BudgetAccessoryMessage: View {
+    let message: LocalizedStringKey
+    var circular = false
+
+    var body: some View {
+        ZStack {
+            if circular, #available(iOS 16.0, *) {
+                AccessoryWidgetBackground()
             }
 
+            Text(message)
+                .font(.system(size: circular ? 8 : 12, weight: .semibold, design: .rounded))
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
         }
-        .minimumScaleFactor(0.5)
-        .lineLimit(1)
+        .accessoryWidgetBackground()
+    }
+}
+
+extension View {
+    @ViewBuilder func budgetWidgetBackground() -> some View {
+        if #available(iOS 17.0, *) {
+            containerBackground(for: .widget) { Color.PrimaryBackground }
+        } else {
+            padding(15).background(Color.PrimaryBackground)
+        }
+    }
+
+    @ViewBuilder func accessoryWidgetBackground() -> some View {
+        if #available(iOS 17.0, *) {
+            containerBackground(for: .widget) { Color.clear }
+        } else {
+            self
+        }
     }
 }
