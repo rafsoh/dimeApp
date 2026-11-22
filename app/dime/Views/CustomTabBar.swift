@@ -13,19 +13,9 @@ struct CustomTabBar: View {
     @Binding var currentTab: String
     var topEdge: CGFloat
     var bottomEdge: CGFloat
-    @State var addTransaction: Bool = false
+    @Binding var addTransaction: Bool
 
     @State var checkingFace: Bool = false
-
-    @FetchRequest(sortDescriptors: []) private var transactions: FetchedResults<Transaction>
-
-    @State var count = 0
-    @Binding var counter: Int
-
-    var launchAdd: Bool
-
-    @AppStorage("confetti", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var confetti: Bool = false
-    @AppStorage("firstTransactionViewLaunch", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var firstLaunch: Bool = true
 
     private var isZoomed: Bool {
         UIScreen.main.scale != UIScreen.main.nativeScale
@@ -74,38 +64,61 @@ struct CustomTabBar: View {
                 .ignoresSafeArea(edges: .bottom)
                 .allowsHitTesting(false)
         }
-        .sheet(isPresented: $addTransaction, onDismiss: {
-            if confetti {
-                if count != transactions.count {
-                    counter += 1
+    }
+}
+
+private struct AddTransactionSheet: ViewModifier {
+    @Binding var isPresented: Bool
+    @Binding var counter: Int
+    var launchAdd: Bool
+
+    @FetchRequest(sortDescriptors: []) private var transactions: FetchedResults<Transaction>
+
+    @State private var count = 0
+
+    @AppStorage("confetti", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var confetti: Bool = false
+    @AppStorage("firstTransactionViewLaunch", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var firstLaunch: Bool = true
+
+    func body(content: Content) -> some View {
+        content
+            .sheet(isPresented: $isPresented, onDismiss: {
+                if confetti {
+                    if count != transactions.count {
+                        counter += 1
+                    }
+                }
+
+                if firstLaunch {
+                    firstLaunch = false
+                }
+
+            }, content: {
+                TransactionView(toEdit: nil)
+            })
+            .onChange(of: launchAdd) { _ in
+                isPresented = true
+            }
+            .onChange(of: isPresented) { _ in
+                if isPresented {
+                    count = transactions.count
                 }
             }
+            .onOpenURL { url in
+                guard
+                    url.host == "newExpense"
 
-            if firstLaunch {
-                firstLaunch = false
+                else {
+                    return
+                }
+
+                isPresented = true
             }
+    }
+}
 
-        }, content: {
-            TransactionView(toEdit: nil)
-        })
-        .onChange(of: launchAdd) { _ in
-            addTransaction = true
-        }
-        .onChange(of: addTransaction) { _ in
-            if addTransaction {
-                count = transactions.count
-            }
-        }
-        .onOpenURL { url in
-            guard
-                url.host == "newExpense"
-
-            else {
-                return
-            }
-
-            addTransaction = true
-        }
+extension View {
+    func addTransactionSheet(isPresented: Binding<Bool>, counter: Binding<Int>, launchAdd: Bool) -> some View {
+        modifier(AddTransactionSheet(isPresented: isPresented, counter: counter, launchAdd: launchAdd))
     }
 }
 

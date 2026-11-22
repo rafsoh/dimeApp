@@ -59,11 +59,38 @@ struct HomeView: View {
 
     @State private var tabBarTop: CGFloat?
 
+    @State private var addTransaction = false
+    @State private var usesVerticalBar = false
+
+    private static let addTab = "Add"
+
+    private var tabSelection: Binding<String> {
+        Binding {
+            currentTab
+        } set: { tab in
+            if tab == Self.addTab {
+                addTransaction = true
+            } else {
+                currentTab = tab
+            }
+        }
+    }
+
     // Hiding Native TabBar...
     init(topEdge: CGFloat, bottomEdge: CGFloat) {
         UITabBar.appearance().isHidden = true
         self.topEdge = topEdge
         self.bottomEdge = bottomEdge
+    }
+
+    private func tab<Content: View>(_ name: String, @ViewBuilder content: () -> Content) -> some View {
+        content()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .readsVerticalBar($usesVerticalBar)
+            .tabItem {
+                Label(LocalizedStringKey(name), image: name)
+            }
+            .tag(name)
     }
 
     private func updateTabBarTop(_ top: CGFloat) {
@@ -74,44 +101,55 @@ struct HomeView: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            TabView(selection: $currentTab) {
-                LogView(topEdge: topEdge, launchSearch: launchSearch)
-                    .id(timeFrameID)
-                    .ignoresSafeArea(.all)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .tag("Log")
+            TabView(selection: tabSelection) {
+                tab("Log") {
+                    LogView(topEdge: topEdge, launchSearch: launchSearch)
+                        .id(timeFrameID)
+                        .ignoresSafeArea(.all, edges: .vertical)
+                }
 
-                InsightsView()
-                    .id(timeFrameID)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .tag("Insights")
+                tab("Insights") {
+                    InsightsView()
+                        .id(timeFrameID)
+                }
 
-                BudgetView()
-                    .id(timeFrameID)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .tag("Budget")
+                if usesVerticalBar {
+                    Color.PrimaryBackground
+                        .tabItem {
+                            Label("Add New Transaction", systemImage: "plus")
+                        }
+                        .tag(Self.addTab)
+                }
 
-                SettingsView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .tag("Settings")
+                tab("Budget") {
+                    BudgetView()
+                        .id(timeFrameID)
+                }
+
+                tab("Settings") {
+                    SettingsView()
+                }
             }
             .background {
                 DeleteTransactionAlert()
             }
             .environmentObject(toastPresenter)
             .environmentObject(transactionManager)
-            .environment(\.tabBarTop, tabBarManager.hideTab ? nil : tabBarTop)
+            .environment(\.tabBarTop, usesVerticalBar || tabBarManager.hideTab ? nil : tabBarTop)
+            .addTransactionSheet(isPresented: $addTransaction, counter: $counter, launchAdd: launchAdd)
 
-            CustomTabBar(currentTab: $currentTab, topEdge: topEdge, bottomEdge: bottomEdge, counter: $counter, launchAdd: launchAdd)
-                .background {
-                    GeometryReader { proxy in
-                        let top = proxy.frame(in: .global).minY
-                        Color.clear
-                            .onAppear { updateTabBarTop(top) }
-                            .onChange(of: top) { updateTabBarTop($0) }
+            if !usesVerticalBar {
+                CustomTabBar(currentTab: $currentTab, topEdge: topEdge, bottomEdge: bottomEdge, addTransaction: $addTransaction)
+                    .background {
+                        GeometryReader { proxy in
+                            let top = proxy.frame(in: .global).minY
+                            Color.clear
+                                .onAppear { updateTabBarTop(top) }
+                                .onChange(of: top) { updateTabBarTop($0) }
+                        }
                     }
-                }
-                .offset(y: tabBarManager.hideTab ? (70 + bottomEdge) : 0)
+                    .offset(y: tabBarManager.hideTab ? (70 + bottomEdge) : 0)
+            }
 
             if appLockVM.isAppLockEnabled && !appLockVM.isAppUnLocked {
                 AppLockView()
