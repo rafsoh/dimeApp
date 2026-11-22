@@ -36,6 +36,30 @@ class TabBarManager: ObservableObject {
     }
 }
 
+enum VerticalBar {
+    /// Whether the system places bars vertically along a side edge, as on the iPhone Duo's cover screen.
+    static func isActive(in traitCollection: UITraitCollection) -> Bool {
+        guard #available(iOS 27.1, *) else { return false }
+
+        switch traitCollection.verticalBarEdge {
+        case .leading, .trailing:
+            return true
+        case .unspecified:
+            return false
+        @unknown default:
+            return false
+        }
+    }
+
+    static var isActiveInKeyWindow: Bool {
+        let keyWindow = UIApplication.shared.connectedScenes
+            .compactMap { ($0 as? UIWindowScene)?.keyWindow }
+            .first
+        guard let keyWindow else { return false }
+        return isActive(in: keyWindow.traitCollection)
+    }
+}
+
 private struct VerticalBarReader: UIViewRepresentable {
     @Binding var usesVerticalBar: Bool
 
@@ -74,19 +98,6 @@ private final class VerticalBarProbeView: UIView {
         update()
     }
 
-    private var usesVerticalBar: Bool {
-        guard #available(iOS 27.1, *) else { return false }
-
-        switch traitCollection.verticalBarEdge {
-        case .leading, .trailing:
-            return true
-        case .unspecified:
-            return false
-        @unknown default:
-            return false
-        }
-    }
-
     private var tabBarController: UITabBarController? {
         var responder: UIResponder? = self
         while let current = responder {
@@ -101,13 +112,32 @@ private final class VerticalBarProbeView: UIView {
     private func update() {
         guard #available(iOS 27.1, *), window != nil else { return }
 
-        let usesVerticalBar = usesVerticalBar
+        let usesVerticalBar = VerticalBar.isActive(in: traitCollection)
         // HomeView hides every UITabBar through the appearance proxy, so the system bar has to be revealed explicitly.
         tabBarController?.tabBar.isHidden = !usesVerticalBar
 
         DispatchQueue.main.async { [weak self] in
             self?.onChange?(usesVerticalBar)
         }
+    }
+}
+
+extension GeometryProxy {
+    /// Space covered by system elements along the side edges, such as the iPhone Duo's vertical status bar.
+    /// Sheets don't receive this as a safe area inset.
+    var sideOcclusionInsets: EdgeInsets {
+        guard #available(iOS 27.1, *) else { return EdgeInsets() }
+
+        var insets = EdgeInsets()
+        for region in reservedRegions(kind: .occlusion) where region.frame.width < size.width / 2 {
+            if region.frame.maxX >= size.width {
+                insets.trailing = max(insets.trailing, size.width - region.frame.minX)
+            }
+            if region.frame.minX <= 0 {
+                insets.leading = max(insets.leading, region.frame.maxX)
+            }
+        }
+        return insets
     }
 }
 
