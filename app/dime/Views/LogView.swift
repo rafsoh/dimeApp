@@ -29,7 +29,9 @@ struct LogView: View {
 
     // searching
     @State var searchMode = false
+    @State var searchFieldVisible = false
     @State var searchQuery = ""
+    @State private var searchResults: FilteredSearchView.Query?
     @FocusState private var searchFocused: Bool
 
     var trimmedQuery: String {
@@ -67,13 +69,8 @@ struct LogView: View {
 
     var launchSearch: Bool
 
-    // drag to open
-//    enum PullToReach {
-//        case none, search, filter
-//    }
-
-//    @State var pullStatus: PullToReach = .none
-//    @State var released: PullToReach = .none
+    // Held in @State rather than @StateObject so pull updates only redraw the search button.
+    @State private var pullToSearch = PullToSearchModel()
 
     var body: some View {
         if transactions.isEmpty {
@@ -92,25 +89,36 @@ struct LogView: View {
                     TransactionsList(filter: filter, category: categoryFilter, date: dateFilter, week: weekFilter, month: monthFilter, income: income)
                         .zIndex(0)
                         .padding(.horizontal, 20)
+                        .pullToSearch(pullToSearch, onTrigger: startSearch)
                 }
                 .tabBarClearance()
+                .ignoresSafeArea(.keyboard, edges: .bottom)
                 .opacity(searchMode ? 0 : 1)
                 .allowsHitTesting(!searchMode)
                 .accessibilityHidden(searchMode)
 
                 if searchMode {
                     ScrollView(showsIndicators: false) {
-                        if trimmedQuery.isEmpty {
+                        if let searchResults {
+                            FilteredSearchView(query: searchResults)
+                                .padding(.horizontal, 20)
+                        } else {
                             EmptyStateView(systemImage: "magnifyingglass", title: "Search by note, category, amount or date")
                                 .fillsScrollViewport()
-                        } else {
-                            FilteredSearchView(searchQuery: trimmedQuery)
-                                .padding(.horizontal, 20)
                         }
                     }
                     .scrollDismissesKeyboardInteractively()
                     .tabBarClearance()
                     .transition(.opacity)
+                    .task(id: trimmedQuery) {
+                        guard !trimmedQuery.isEmpty else {
+                            searchResults = nil
+                            return
+                        }
+                        try? await Task.sleep(nanoseconds: 150_000_000)
+                        guard !Task.isCancelled else { return }
+                        searchResults = FilteredSearchView.Query(trimmedQuery)
+                    }
                 }
             }
             .animation(.easeInOut(duration: 0.2), value: searchMode)
@@ -134,53 +142,7 @@ struct LogView: View {
                     .frame(height: 44, alignment: .top)
                     .padding(.top, topEdge + 20)
                 .padding(.bottom, 12)
-//
-//                CustomRefreshView {
-//                    VStack {
-//
-//                    }
-//
-//                } onRefresh: {
-//                    searchMode = true
-//                }
-//
-
-//                ScrollView(showsIndicators: false) {
-//                    if filter == .all {
-//                        LogInsightsView(navBarText: $navBarText, showCents: showCents, currencySymbol: currencySymbol)
-//
-//                    }
-//
-//
-//                    TransactionsList(filter: filter, category: categoryFilter, date: dateFilter, week: weekFilter, month: monthFilter, income: income)
-//                        .zIndex(0)
-//                        .padding(.horizontal, 20)
-//                        .padding(.bottom, 70 + bottomEdge)
-                ////                        .offsetExtractor(coordinateSpace: "Scroll") { rect in
-                ////                            DispatchQueue.main.async {
-                ////                                print(rect.minY)
-                ////                                pullStatus = rect.minY > 355 ? (rect.minY > 410 ? .filter : .search) : .none
-                ////                            }
-                ////                        }
-//                }
-//                .frame(maxWidth: .infinity, maxHeight: .infinity)
-//                .onReceive(scrollDelegate.gestureEnded) { _ in
-//                    if pullStatus == .filter {
-//                        showFilter = true
-//                        released = .filter
-//                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-//                    } else if pullStatus == .search {
-//                        released = .search
-//                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-//                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-//                            searchMode = true
-//                        }
-//
-//                    }
-//                }
             }
-//            .onAppear(perform: scrollDelegate.addGesture)
-//            .onDisappear(perform: scrollDelegate.removeGesture)
             .background(Color.PrimaryBackground)
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
                 dataController.applicationWillEnterForeground()
@@ -195,18 +157,6 @@ struct LogView: View {
             .onChange(of: incomeTracking) { _ in
                 resetIncomeFilterIfNeeded()
             }
-//            .animation(.spring(duration: 0.5), value: released)
-//            .animation(.spring(response: 0.4, dampingFraction: 0.6), value: pullStatus)
-//            .onChange(of: pullStatus) { newValue in
-//                if newValue != .none && released == .none {
-//                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-//                }
-//            }
-//            .onChange(of: released) { _ in
-//                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-//                    released = .none
-//                }
-//            }
             .onOpenURL { url in
                 guard url.host == "search" else {
                     return
@@ -303,8 +253,7 @@ struct LogView: View {
                     .accessibilityLabel("Search")
             }
             .disabled(!searchMode)
-            .opacity(searchMode ? 1 : 0)
-            .animation(.easeOut(duration: 0.2).delay(searchMode ? 0.12 : 0), value: searchMode)
+            .opacity(searchFieldVisible ? 1 : 0)
 
             if searchMode && !searchQuery.isEmpty {
                 Button {
@@ -324,7 +273,7 @@ struct LogView: View {
         .padding(.trailing, searchMode && searchQuery.isEmpty ? 16 : 0)
         .frame(minWidth: 44, maxWidth: searchMode ? .infinity : 44, alignment: .leading)
         .clipShape(Capsule())
-        .glassCapsule()
+        .glassCapsule(interactive: false)
         .overlay {
             if !searchMode {
                 Button(action: startSearch) {
@@ -335,6 +284,7 @@ struct LogView: View {
                 .accessibilityLabel("Search")
             }
         }
+        .pullToSearchScale(pullToSearch)
     }
 
     var filterButtonActive: Bool {
@@ -370,6 +320,9 @@ struct LogView: View {
         withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
             searchMode = true
         }
+        withAnimation(.easeOut(duration: 0.2).delay(0.12)) {
+            searchFieldVisible = true
+        }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
             searchFocused = true
@@ -382,6 +335,10 @@ struct LogView: View {
         withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
             searchMode = false
             searchQuery = ""
+            searchResults = nil
+        }
+        withAnimation(.easeOut(duration: 0.2)) {
+            searchFieldVisible = false
         }
     }
 
@@ -683,6 +640,16 @@ struct LogInsightsView: View {
 }
 
 struct FilteredSearchView: View {
+    struct Query {
+        let text: String
+        let predicate: NSPredicate
+
+        init(_ text: String) {
+            self.text = text
+            self.predicate = FilteredSearchView.predicate(for: text)
+        }
+    }
+
     @SectionedFetchRequest<Date?, Transaction> private var transactions: SectionedFetchResults<Date?, Transaction>
 
     var searchQuery: String
@@ -696,13 +663,13 @@ struct FilteredSearchView: View {
         }
     }
 
-    init(searchQuery: String) {
+    init(query: Query) {
         _transactions = SectionedFetchRequest<Date?, Transaction>(sectionIdentifier: \.day, sortDescriptors: [
             SortDescriptor(\.day, order: .reverse),
             SortDescriptor(\.date, order: .reverse)
-        ], predicate: Self.predicate(for: searchQuery))
+        ], predicate: query.predicate)
 
-        self.searchQuery = searchQuery
+        self.searchQuery = query.text
     }
 
     /// A date narrows the list. Words beside it have to match too, and the
