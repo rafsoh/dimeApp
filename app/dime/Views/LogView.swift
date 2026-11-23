@@ -50,8 +50,9 @@ struct LogView: View {
         }
     }
 
+    @State private var dataVersion = 0
+
     // top bar
-    @State var navBarText = ""
     @State var showMenu = false
     @AppStorage("logTimeFrame", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var logTimeFrame = 2
     let subtitleText = ["today", "this week", "this month", "this year"]
@@ -82,13 +83,8 @@ struct LogView: View {
         } else {
             ZStack {
                 ScrollView(showsIndicators: false) {
-                    if filter == .all {
-                        LogInsightsView(navBarText: $navBarText, showCents: showCents, currencySymbol: currencySymbol)
-                    }
-
-                    TransactionsList(filter: filter, category: categoryFilter, date: dateFilter, week: weekFilter, month: monthFilter, income: income)
-                        .zIndex(0)
-                        .padding(.horizontal, 20)
+                    LogListContent(filter: filter, category: categoryFilter, date: dateFilter, week: weekFilter, month: monthFilter, income: income, showCents: showCents, currencySymbol: currencySymbol, dataVersion: dataVersion)
+                        .equatable()
                         .pullToSearch(pullToSearch, onTrigger: startSearch)
                 }
                 .tabBarClearance()
@@ -146,6 +142,9 @@ struct LogView: View {
             .background(Color.PrimaryBackground)
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
                 dataController.applicationWillEnterForeground()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .NSManagedObjectContextObjectsDidChange, object: moc)) { _ in
+                dataVersion &+= 1
             }
             .onChange(of: launchSearch) { _ in
                 startSearch()
@@ -324,7 +323,10 @@ struct LogView: View {
             searchFieldVisible = true
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+        // Bringing up the keyboard blocks the main thread (about 300ms on the first
+        // launch), so wait for the expansion to settle rather than freeze it midway.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            guard searchMode else { return }
             searchFocused = true
         }
     }
@@ -407,11 +409,38 @@ struct NumberView: AnimatableModifier {
     }
 }
 
+/// The log's insights and transactions. Equatable so search and header state changes
+/// in `LogView` don't rebuild the list: `TransactionsList` holds a fetch request that
+/// SwiftUI never sees as unchanged, so recreating it redraws every visible row.
+struct LogListContent: View, Equatable {
+    let filter: FilterType
+    let category: Category?
+    let date: Date
+    let week: Date
+    let month: Date
+    let income: Bool
+    let showCents: Bool
+    let currencySymbol: String
+    /// Insights and upcoming rows fetch in their bodies, so bump this on every store
+    /// change to rebuild them.
+    let dataVersion: Int
+
+    var body: some View {
+        VStack {
+            if filter == .all {
+                LogInsightsView(showCents: showCents, currencySymbol: currencySymbol)
+            }
+
+            TransactionsList(filter: filter, category: category, date: date, week: week, month: month, income: income)
+                .zIndex(0)
+                .padding(.horizontal, 20)
+        }
+    }
+}
+
 struct LogInsightsView: View {
     @EnvironmentObject var dataController: DataController
     @Environment(\.dynamicTypeSize) var dynamicTypeSize
-
-    @Binding var navBarText: String
 
     let showCents: Bool
     let currencySymbol: String
