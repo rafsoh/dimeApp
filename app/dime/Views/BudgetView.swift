@@ -376,9 +376,13 @@ struct BudgetDetailSheet: View {
         route.currentPeriod.shifted(by: -offset)
     }
 
-    var canGoPrevious: Bool {
+    /// Whether the period `target` periods back can be shown; a past period counts once the one after it starts after the first transaction.
+    func canReach(_ target: Int) -> Bool {
+        guard target != offset else { return true }
+        guard target >= 0 else { return false }
+        guard target > 0 else { return true }
         let first = earliest.first?.day ?? Date.now
-        return period.start > first
+        return route.currentPeriod.shifted(by: 1 - target).start > first
     }
 
     var body: some View {
@@ -406,20 +410,14 @@ struct BudgetDetailSheet: View {
         .bottomBar {
             if !route.object.isGone {
                 GlassStepperCapsule(
-                    title: period.rangeTitle,
                     previousLabel: stepLabels.previous,
-                    nextLabel: stepLabels.next,
-                    canGoPrevious: canGoPrevious,
-                    canGoNext: offset > 0
-                ) {
-                    guard canGoPrevious else { return }
+                    nextLabel: stepLabels.next
+                ) { step in
+                    canReach(offset - step) ? route.currentPeriod.shifted(by: step - offset).rangeTitle : nil
+                } onStep: { step in
+                    guard canReach(offset - step) else { return }
                     withAnimation(.easeInOut(duration: 0.2)) {
-                        offset += 1
-                    }
-                } onNext: {
-                    guard offset > 0 else { return }
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        offset -= 1
+                        offset -= step
                     }
                 }
                 .padding(.top, 8)

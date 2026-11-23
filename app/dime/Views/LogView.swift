@@ -50,8 +50,9 @@ struct LogView: View {
         }
     }
 
+    @State private var dataVersion = 0
+
     // top bar
-    @State var navBarText = ""
     @State var showMenu = false
     @AppStorage("logTimeFrame", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var logTimeFrame = 2
     let subtitleText = ["today", "this week", "this month", "this year"]
@@ -82,13 +83,8 @@ struct LogView: View {
         } else {
             ZStack {
                 ScrollView(showsIndicators: false) {
-                    if filter == .all {
-                        LogInsightsView(navBarText: $navBarText, showCents: showCents, currencySymbol: currencySymbol)
-                    }
-
-                    TransactionsList(filter: filter, category: categoryFilter, date: dateFilter, week: weekFilter, month: monthFilter, income: income)
-                        .zIndex(0)
-                        .padding(.horizontal, 20)
+                    LogListContent(filter: filter, category: categoryFilter, date: dateFilter, week: weekFilter, month: monthFilter, income: income, showCents: showCents, currencySymbol: currencySymbol, dataVersion: dataVersion)
+                        .equatable()
                         .pullToSearch(pullToSearch, onTrigger: startSearch)
                 }
                 .tabBarClearance()
@@ -146,6 +142,9 @@ struct LogView: View {
             .background(Color.PrimaryBackground)
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
                 dataController.applicationWillEnterForeground()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .NSManagedObjectContextObjectsDidChange, object: moc)) { _ in
+                dataVersion &+= 1
             }
             .onChange(of: launchSearch) { _ in
                 startSearch()
@@ -324,7 +323,10 @@ struct LogView: View {
             searchFieldVisible = true
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+        // Bringing up the keyboard blocks the main thread (about 300ms on the first
+        // launch), so wait for the expansion to settle rather than freeze it midway.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            guard searchMode else { return }
             searchFocused = true
         }
     }
@@ -407,11 +409,38 @@ struct NumberView: AnimatableModifier {
     }
 }
 
+/// The log's insights and transactions. Equatable so search and header state changes
+/// in `LogView` don't rebuild the list: `TransactionsList` holds a fetch request that
+/// SwiftUI never sees as unchanged, so recreating it redraws every visible row.
+struct LogListContent: View, Equatable {
+    let filter: FilterType
+    let category: Category?
+    let date: Date
+    let week: Date
+    let month: Date
+    let income: Bool
+    let showCents: Bool
+    let currencySymbol: String
+    /// Insights and upcoming rows fetch in their bodies, so bump this on every store
+    /// change to rebuild them.
+    let dataVersion: Int
+
+    var body: some View {
+        VStack {
+            if filter == .all {
+                LogInsightsView(showCents: showCents, currencySymbol: currencySymbol)
+            }
+
+            TransactionsList(filter: filter, category: category, date: date, week: week, month: month, income: income)
+                .zIndex(0)
+                .padding(.horizontal, 20)
+        }
+    }
+}
+
 struct LogInsightsView: View {
     @EnvironmentObject var dataController: DataController
     @Environment(\.dynamicTypeSize) var dynamicTypeSize
-
-    @Binding var navBarText: String
 
     let showCents: Bool
     let currencySymbol: String
@@ -1695,7 +1724,7 @@ struct DateStepperView: View {
 
     let currentDate = Calendar.current.date(bySettingHour: 0, minute: 0, second: 0, of: Date.now) ?? Date.now
 
-    var dateString: String {
+    func dateString(_ date: Date) -> String {
         let dateFormatter = DateFormatter()
 
         dateFormatter.dateFormat = "d MMM yyyy"
@@ -1703,21 +1732,22 @@ struct DateStepperView: View {
         return dateFormatter.string(from: date)
     }
 
+    func shifted(by days: Int) -> Date? {
+        guard let shifted = Calendar.current.date(byAdding: .day, value: days, to: date) else { return nil }
+        guard days == 0 || (shifted >= endDate && shifted <= currentDate) else { return nil }
+        return shifted
+    }
+
     var body: some View {
         GlassStepperCapsule(
-            title: dateString,
-            accessibilityTitle: "showing transactions on \(dateString)",
+            accessibilityTitle: "showing transactions on \(dateString(date))",
             previousLabel: "Previous day",
-            nextLabel: "Next day",
-            canGoPrevious: date > endDate,
-            canGoNext: date < currentDate
-        ) {
-            if date > endDate {
-                date = Calendar.current.date(byAdding: .day, value: -1, to: date) ?? Date.now
-            }
-        } onNext: {
-            if date < currentDate {
-                date = Calendar.current.date(byAdding: .day, value: 1, to: date) ?? Date.now
+            nextLabel: "Next day"
+        ) { offset in
+            shifted(by: offset).map(dateString)
+        } onStep: { offset in
+            if let shifted = shifted(by: offset) {
+                date = shifted
             }
         }
         .onAppear {
@@ -1754,15 +1784,21 @@ struct WeekStepperView: View {
 
     @State var startDate = Date.now
 
-    var dateString: String {
+    func dateString(_ weekStart: Date) -> String {
         let dateFormatter = DateFormatter()
 
         dateFormatter.dateFormat = "d MMM"
 
         let endComponents = DateComponents(day: 7, second: -1)
-        let endWeekDate = Calendar.current.date(byAdding: endComponents, to: showingDate) ?? Date.now
+        let endWeekDate = Calendar.current.date(byAdding: endComponents, to: weekStart) ?? Date.now
 
-        return dateFormatter.string(from: showingDate) + " - " + dateFormatter.string(from: endWeekDate)
+        return dateFormatter.string(from: weekStart) + " - " + dateFormatter.string(from: endWeekDate)
+    }
+
+    func shifted(by weeks: Int) -> Date? {
+        guard let shifted = Calendar.current.date(byAdding: .day, value: 7 * weeks, to: showingDate) else { return nil }
+        guard weeks == 0 || (shifted >= endDate && shifted <= startDate) else { return nil }
+        return shifted
     }
 
     var accessibilityDateString: String {
@@ -1778,19 +1814,14 @@ struct WeekStepperView: View {
 
     var body: some View {
         GlassStepperCapsule(
-            title: dateString,
             accessibilityTitle: accessibilityDateString,
             previousLabel: "Previous week",
-            nextLabel: "Next week",
-            canGoPrevious: showingDate != endDate,
-            canGoNext: showingDate != startDate
-        ) {
-            if showingDate > endDate {
-                showingDate = Calendar.current.date(byAdding: .day, value: -7, to: showingDate) ?? Date.now
-            }
-        } onNext: {
-            if showingDate < startDate {
-                showingDate = Calendar.current.date(byAdding: .day, value: 7, to: showingDate) ?? Date.now
+            nextLabel: "Next week"
+        ) { offset in
+            shifted(by: offset).map(dateString)
+        } onStep: { offset in
+            if let shifted = shifted(by: offset) {
+                showingDate = shifted
             }
         }
         .onAppear {
@@ -1836,29 +1867,30 @@ struct MonthStepperView: View {
 
     @State var startDate = Date.now
 
-    var dateString: String {
+    func dateString(_ month: Date) -> String {
         let dateFormatter = DateFormatter()
 
         dateFormatter.dateFormat = "MMM yyyy"
 
-        return dateFormatter.string(from: showingDate)
+        return dateFormatter.string(from: month)
+    }
+
+    func shifted(by months: Int) -> Date? {
+        guard let shifted = Calendar.current.date(byAdding: .month, value: months, to: showingDate) else { return nil }
+        guard months == 0 || (shifted >= endDate && shifted <= startDate) else { return nil }
+        return shifted
     }
 
     var body: some View {
         GlassStepperCapsule(
-            title: dateString,
-            accessibilityTitle: "showing transactions in \(dateString)",
+            accessibilityTitle: "showing transactions in \(dateString(showingDate))",
             previousLabel: "Previous month",
-            nextLabel: "Next month",
-            canGoPrevious: showingDate != endDate,
-            canGoNext: showingDate != startDate
-        ) {
-            if showingDate > endDate {
-                showingDate = Calendar.current.date(byAdding: .month, value: -1, to: showingDate) ?? Date.now
-            }
-        } onNext: {
-            if showingDate < startDate {
-                showingDate = Calendar.current.date(byAdding: .month, value: 1, to: showingDate) ?? Date.now
+            nextLabel: "Next month"
+        ) { offset in
+            shifted(by: offset).map(dateString)
+        } onStep: { offset in
+            if let shifted = shifted(by: offset) {
+                showingDate = shifted
             }
         }
         .onAppear {
