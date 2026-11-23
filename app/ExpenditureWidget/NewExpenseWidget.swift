@@ -14,10 +14,11 @@ struct NewExpenseWidget: Widget {
     private var supportedFamilies: [WidgetFamily] {
         if #available(iOSApplicationExtension 16, *) {
             return [
+                .systemSmall,
                 .accessoryCircular
             ]
         } else {
-            return [WidgetFamily]()
+            return [.systemSmall]
         }
     }
 
@@ -25,7 +26,6 @@ struct NewExpenseWidget: Widget {
         StaticConfiguration(kind: kind, provider: NewExpenseProvider()) { entry in
             NewExpenseWidgetEntryView(entry: entry)
         }
-        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
         .configurationDisplayName("New Expense")
         .description("A convenient button to log new purchases.")
         .supportedFamilies(supportedFamilies)
@@ -58,45 +58,51 @@ struct NewExpenseWidgetEntry: TimelineEntry {
 }
 
 struct NewExpenseWidgetEntryView: View {
+    @Environment(\.widgetFamily) var widgetFamily
     let entry: NewExpenseProvider.Entry
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
-    var currencySymbol: String {
-        return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
-    }
-
     var body: some View {
-        if #available(iOS 17.0, *) {
-            ZStack {
-                AccessoryWidgetBackground()
+        switch widgetFamily {
+        case .systemSmall:
+            NewExpenseTileView()
+        default:
+            if #available(iOS 16.0, *) {
+                ZStack {
+                    AccessoryWidgetBackground()
 
-                Text("\(currencySymbol.count < 3 ? "+" : "")\(currencySymbol)")
-                    .font(.system(size: currencySymbol.count < 3 ? 13 : 11, weight: .bold, design: .rounded))
-                    .foregroundColor(Color.SecondaryBackground)
-                    .padding(.vertical, 2)
-                    .frame(maxWidth: .infinity)
-                    .background(Color.white, in: RoundedRectangle(cornerRadius: 4, style: .continuous))
-                    .padding(.horizontal, 9)
+                    Image(systemName: "plus")
+                        .font(.system(.title2, design: .rounded).weight(.bold))
+                        .accessibilityLabel("New Expense")
+                }
+                .widgetURL(URL(string: "dimeapp://newExpense"))
+                .accessoryWidgetBackground()
             }
-            .widgetURL(URL(string: "dimeapp://newExpense"))
-            .containerBackground(for: .widget) {
-                AccessoryWidgetBackground()
-            }
-        } else {
-            ZStack {
-                Circle()
-                    .fill(Color.SecondaryBackground.opacity(0.5))
-
-                Text("\(currencySymbol.count < 3 ? "+" : "")\(currencySymbol)")
-                    .font(.system(size: currencySymbol.count < 3 ? 13 : 11, weight: .bold, design: .rounded))
-                    .foregroundColor(Color.SecondaryBackground)
-                    .padding(.vertical, 2)
-                    .frame(maxWidth: .infinity)
-                    .background(Color.white, in: RoundedRectangle(cornerRadius: 4, style: .continuous))
-                    .padding(.horizontal, 9)
-            }
-            .padding(0.5)
-            .widgetURL(URL(string: "dimeapp://newExpense"))
         }
+    }
+}
+
+/// The small home screen widget: the app's dark add button, large enough to tap from anywhere on the tile.
+struct NewExpenseTileView: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Image(systemName: "plus")
+                .font(.system(.title2, design: .rounded).weight(.bold))
+                .foregroundColor(Color.LightIcon)
+                .frame(width: 52, height: 52)
+                .background(Color.DarkBackground, in: Circle())
+                .accessibilityHidden(true)
+
+            Spacer(minLength: 0)
+
+            Text("New Expense")
+                .font(.system(.title3, design: .rounded).weight(.semibold))
+                .foregroundColor(Color.PrimaryText)
+                .lineLimit(2)
+                .minimumScaleFactor(0.8)
+        }
+        .dynamicTypeSize(...DynamicTypeSize.large)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        .budgetWidgetBackground()
+        .widgetURL(URL(string: "dimeapp://newExpense"))
     }
 }

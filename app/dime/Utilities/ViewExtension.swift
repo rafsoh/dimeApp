@@ -274,18 +274,24 @@ private struct ScrollViewportProbe: UIViewRepresentable {
     func updateUIView(_ uiView: ScrollViewportProbeView, context _: Context) {
         uiView.onChange = { newHeight in
             if abs(height - newHeight) > 0.5 {
-                height = newHeight
+                // Resizes after the first measurement follow the keyboard, so they ease along with it.
+                withAnimation(height > 0 ? .easeOut(duration: 0.25) : nil) {
+                    height = newHeight
+                }
             }
         }
         uiView.setNeedsLayout()
     }
 }
 
+/// The visible height also excludes whatever the keyboard covers, since the app ignores the keyboard safe area.
 final class ScrollViewportProbeView: UIView {
     var onChange: ((CGFloat) -> Void)?
 
     private weak var scrollView: UIScrollView?
     private var observations: [NSKeyValueObservation] = []
+    private var keyboardObserver: NSObjectProtocol?
+    private var keyboardFrame: CGRect = .null
     private var reported: CGFloat?
 
     override func didMoveToWindow() {
@@ -293,7 +299,17 @@ final class ScrollViewportProbeView: UIView {
         observations = []
         scrollView = nil
         reported = nil
+        if let keyboardObserver {
+            NotificationCenter.default.removeObserver(keyboardObserver)
+            self.keyboardObserver = nil
+        }
         guard window != nil else { return }
+
+        keyboardFrame = KeyboardHeightCache.shared.screenFrame
+        keyboardObserver = NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillChangeFrameNotification, object: nil, queue: .main) { [weak self] notification in
+            self?.keyboardFrame = notification.keyboardEndFrame
+            self?.scheduleMeasure()
+        }
 
         var ancestor = superview
         while let view = ancestor, !(view is UIScrollView) {
@@ -324,12 +340,21 @@ final class ScrollViewportProbeView: UIView {
         guard let scrollView, window != nil else { return }
         let insets = scrollView.adjustedContentInset
         let top = convert(CGPoint.zero, to: scrollView).y
-        let visible = (scrollView.bounds.height - insets.top - insets.bottom - top).rounded()
+        let bottom = min(scrollView.bounds.height - insets.bottom, keyboardTop(in: scrollView))
+        let visible = (bottom - insets.top - top).rounded()
         let height = max(0, visible)
         guard height != reported else { return }
         reported = height
         let onChange = onChange
         DispatchQueue.main.async { onChange?(height) }
+    }
+
+    /// The keyboard's top edge measured from the scroll view's top edge. Empty frames come from
+    /// a hidden or floating keyboard, which doesn't cover the bottom of the screen.
+    private func keyboardTop(in scrollView: UIScrollView) -> CGFloat {
+        guard !keyboardFrame.isEmpty, let screen = window?.windowScene?.screen else { return .infinity }
+        let frame = scrollView.convert(keyboardFrame, from: screen.coordinateSpace)
+        return frame.minY - scrollView.bounds.minY
     }
 }
 

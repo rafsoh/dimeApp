@@ -109,7 +109,7 @@ struct Provider: IntentTimelineProvider {
         var sending = [HoldingTransaction]()
 
         holding.forEach { transaction in
-            let t = HoldingTransaction(colour: transaction.category?.wrappedColour ?? "", note: transaction.wrappedNote, amount: transaction.wrappedAmount, income: transaction.income)
+            let t = HoldingTransaction(colour: transaction.category?.wrappedColour ?? "", emoji: transaction.category?.wrappedEmoji ?? "", note: transaction.wrappedNote, amount: transaction.wrappedAmount, income: transaction.income)
 
             sending.append(t)
         }
@@ -128,6 +128,7 @@ struct RecentWidgetEntry: TimelineEntry {
 
 struct HoldingTransaction: Hashable {
     let colour: String
+    let emoji: String
     let note: String
     let amount: Double
     let income: Bool
@@ -136,18 +137,14 @@ struct HoldingTransaction: Hashable {
 struct ExpenditureWidgetEntryView: View {
     @Environment(\.widgetFamily) var widgetFamily
     let entry: Provider.Entry
+    let formatter = InsightsFormatter.current
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
-    var currencySymbol: String {
-        return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
-    }
+    @AppStorage("showExpenseOrIncomeSign", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showExpenseOrIncomeSign: Bool = true
 
-    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
-
-    var inlineSubtitleText: String {
+    var periodText: String {
         switch entry.duration {
         case .unknown:
-            return "NIL"
+            return ""
         case .day:
             return String(localized: "today")
         case .week:
@@ -176,410 +173,163 @@ struct ExpenditureWidgetEntryView: View {
         }
     }
 
-    var positivityText: String {
-        switch entry.type {
-        case .unknown:
-            return ""
-        case .net:
-            if entry.amount > 0 {
-                return "+"
-            } else {
-                return "-"
-            }
-        case .income:
-            return "+"
-        case .expense:
-            return "-"
-        }
+    /// "Spent this week", in the app's card title style.
+    var title: String {
+        let text = "\(typeText) \(periodText)"
+        return text.prefix(1).uppercased() + text.dropFirst()
+    }
+
+    /// Only net totals carry a sign, like the Net figure on the Insights tab.
+    var totalSign: String {
+        guard entry.type == .net, entry.amount != 0 else { return "" }
+        return entry.amount > 0 ? "+" : "−"
+    }
+
+    func amountText(_ transaction: HoldingTransaction) -> String {
+        let sign = showExpenseOrIncomeSign ? (transaction.income ? "+" : "-") : ""
+        return sign + formatter.string(transaction.amount)
     }
 
     var body: some View {
         switch widgetFamily {
         case .accessoryInline:
-            if entry.amount == 0 {
-                Text("\(currencySymbol)0 \(typeText) \(inlineSubtitleText)")
-            } else {
-                Text("\(positivityText)\(currencySymbol)\(abs(entry.amount), specifier: (showCents && entry.amount < 1000) ? "%.2f" : "%.0f") \(inlineSubtitleText)")
-            }
+            Text("\(totalSign)\(formatter.string(abs(entry.amount))) \(typeText) \(periodText)")
+
         case .accessoryRectangular:
-            if #available(iOS 17.0, *) {
-                if entry.transactions.count == 0 {
-                    Text("NO RECENT EXPENSES")
-                        .font(.system(size: 12, weight: .semibold, design: .rounded))
-                        .multilineTextAlignment(.center)
-                        .containerBackground(for: .widget) { Color.clear }
-                } else {
-                    GeometryReader { proxy in
-                        VStack(alignment: .leading, spacing: 2) {
-                            ForEach(entry.transactions.prefix(3), id: \.self) { transaction in
-                                HStack(spacing: 3) {
-                                    Text(transaction.note)
-                                        .fontWeight(.semibold)
-                                        .lineLimit(1)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
+            accessoryRectangle
 
-                                    Text("\(transaction.income ? "+" : "-")\(currencySymbol)\(transaction.amount, specifier: (showCents && transaction.amount < 100) ? "%.2f" : "%.0f")")
-                                        .fontWeight(.regular)
-                                        .layoutPriority(1)
-                                        .lineLimit(1)
-                                }
-                                .font(.system(size: getRectangularWidgetFont(width: proxy.size.width), design: .rounded))
-                            }
-                        }
-                        .frame(width: proxy.size.width, height: proxy.size.height)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .containerBackground(for: .widget) { Color.clear }
-                }
-            } else {
-                if entry.transactions.count == 0 {
-                    Text("NO RECENT EXPENSES")
-                        .font(.system(size: 12, weight: .semibold, design: .rounded))
-                        .multilineTextAlignment(.center)
-                } else {
-                    GeometryReader { proxy in
-                        VStack(alignment: .leading, spacing: 2) {
-                            ForEach(entry.transactions.prefix(3), id: \.self) { transaction in
-                                HStack(spacing: 3) {
-                                    Text(transaction.note)
-                                        .fontWeight(.semibold)
-                                        .lineLimit(1)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-
-                                    Text("\(transaction.income ? "+" : "-")\(currencySymbol)\(transaction.amount, specifier: (showCents && transaction.amount < 100) ? "%.2f" : "%.0f")")
-                                        .fontWeight(.regular)
-                                        .layoutPriority(1)
-                                        .lineLimit(1)
-                                }
-                                .font(.system(size: getRectangularWidgetFont(width: proxy.size.width), design: .rounded))
-                            }
-                        }
-                        .frame(width: proxy.size.width, height: proxy.size.height)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                }
-            }
         case .systemSmall:
-            if #available(iOS 17.0, *) {
-                GeometryReader { proxy in
-                    VStack(spacing: 0) {
-                        VStack(spacing: 0) {
-                            Text((typeText + " " + inlineSubtitleText).uppercased())
-                                .font(.system(size: 9, weight: .semibold, design: .rounded))
-                                .foregroundColor(Color.SubtitleText)
+            VStack(alignment: .leading, spacing: 0) {
+                header(amountFont: .system(.title2, design: .rounded).weight(.semibold))
 
-                            RecentTransactionsDollarView(amount: entry.amount, showCents: showCents, net: entry.type == .net, bigger: true)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: proxy.size.height * 0.27)
-                        }
-                        .frame(maxWidth: .infinity)
-
-                        if entry.transactions.isEmpty {
-                            VStack(spacing: 5) {
-                                Text("NO RECENT EXPENSES")
-                                    .font(.system(size: 9, weight: .medium, design: .rounded))
-                                    .foregroundColor(Color.SubtitleText)
-                                    .frame(maxHeight: .infinity)
-
-                                HStack(spacing: 5) {
-                                    Image(systemName: "plus")
-                                        .font(.system(size: 10, weight: .medium, design: .rounded))
-
-                                    Text("New Expense")
-                                        .font(.system(size: 12, weight: .medium, design: .rounded))
-                                        .foregroundColor(Color.PrimaryText)
-                                }
-                                .padding(.vertical, 5)
-                                .frame(maxWidth: .infinity)
-                                .background(RoundedRectangle(cornerRadius: 8).fill(Color.SecondaryBackground))
-                                .frame(maxHeight: .infinity, alignment: .bottom)
-                            }
-                            .padding(.top, 12)
-
-                        } else {
-                            VStack(alignment: .leading, spacing: 5) {
-                                Text("RECENT EXPENSES")
-                                    .font(.system(size: 9, weight: .medium, design: .rounded))
-                                    .foregroundColor(Color.SubtitleText)
-
-                                ForEach(entry.transactions.prefix(3), id: \.self) { transaction in
-                                    HStack(spacing: 5) {
-                                        Capsule()
-                                            .fill(Color(hex: transaction.colour))
-                                            .frame(width: 4, height: 12)
-
-                                        Text(transaction.note)
-                                            .lineLimit(1)
-                                            .font(.system(size: 13, weight: .regular, design: .rounded))
-                                            .foregroundColor(Color.PrimaryText)
-                                            .frame(maxWidth: .infinity, alignment: .leading)
-
-                                        if transaction.income {
-                                            Text("+\(currencySymbol)\(transaction.amount, specifier: (showCents && transaction.amount < 100) ? "%.2f" : "%.0f")")
-                                                .font(.system(size: 13, weight: .regular, design: .rounded))
-                                                .foregroundColor(Color.IncomeGreen)
-                                                .lineLimit(1)
-                                                .layoutPriority(1)
-                                        } else {
-                                            Text("-\(currencySymbol)\(transaction.amount, specifier: (showCents && transaction.amount < 100) ? "%.2f" : "%.0f")")
-                                                .font(.system(size: 13, weight: .regular, design: .rounded))
-                                                .foregroundColor(Color.SubtitleText)
-                                                .lineLimit(1)
-                                                .layoutPriority(1)
-                                        }
-                                    }
-                                }
-
-                                if entry.transactions.count < 2 {
-                                    HStack(spacing: 5) {
-                                        Image(systemName: "plus")
-                                            .font(.system(size: 10, weight: .medium, design: .rounded))
-
-                                        Text("New Expense")
-                                            .font(.system(size: 12, weight: .medium, design: .rounded))
-                                            .foregroundColor(Color.PrimaryText)
-                                    }
-                                    .padding(.vertical, 5)
-                                    .frame(maxWidth: .infinity)
-                                    .background(RoundedRectangle(cornerRadius: 8).fill(Color.SecondaryBackground))
-                                    .frame(maxHeight: .infinity, alignment: .bottom)
-                                }
-                            }
-                            .padding(.top, entry.transactions.count >= 3 ? 5 : 10)
-                            .frame(maxHeight: .infinity, alignment: .top)
+                if entry.transactions.isEmpty {
+                    emptyMessage
+                } else {
+                    VStack(alignment: .leading, spacing: 6) {
+                        ForEach(Array(entry.transactions.prefix(3).enumerated()), id: \.offset) { _, transaction in
+                            row(transaction, tileSize: 20, font: .system(.footnote, design: .rounded).weight(.medium))
                         }
                     }
+                    .padding(.top, 10)
+                    .frame(maxHeight: .infinity, alignment: .top)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .containerBackground(for: .widget) {
-                    Color.PrimaryBackground
+
+                if entry.transactions.count < 2 {
+                    WidgetNewExpenseButton()
                 }
-                .widgetURL(entry.transactions.count < 2 ? URL(string: "dimeapp://newExpense") : nil)
-                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-            } else {
-                GeometryReader { proxy in
-                    VStack(spacing: 0) {
-                        VStack(spacing: 0) {
-                            Text((typeText + " " + inlineSubtitleText).uppercased())
-                                .font(.system(size: 9, weight: .semibold, design: .rounded))
-                                .foregroundColor(Color.SubtitleText)
-
-                            RecentTransactionsDollarView(amount: entry.amount, showCents: showCents, net: entry.type == .net)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: proxy.size.height * 0.2)
-                        }
-                        .frame(maxWidth: .infinity)
-
-                        if entry.transactions.isEmpty {
-                            VStack(spacing: 5) {
-                                Text("NO RECENT EXPENSES")
-                                    .font(.system(size: 9, weight: .medium, design: .rounded))
-                                    .foregroundColor(Color.SubtitleText)
-                                    .frame(maxHeight: .infinity)
-
-                                HStack(spacing: 5) {
-                                    Image(systemName: "plus")
-                                        .font(.system(size: 10, weight: .medium, design: .rounded))
-
-                                    Text("New Expense")
-                                        .font(.system(size: 12, weight: .medium, design: .rounded))
-                                        .foregroundColor(Color.PrimaryText)
-                                }
-                                .padding(.vertical, 5)
-                                .frame(maxWidth: .infinity)
-                                .background(RoundedRectangle(cornerRadius: 8).fill(Color.SecondaryBackground))
-                                .frame(maxHeight: .infinity, alignment: .bottom)
-                            }
-                            .padding(.top, 12)
-
-                        } else {
-                            VStack(alignment: .leading, spacing: 5) {
-                                Text("RECENT EXPENSES")
-                                    .font(.system(size: 9, weight: .medium, design: .rounded))
-                                    .foregroundColor(Color.SubtitleText)
-
-                                ForEach(entry.transactions.prefix(3), id: \.self) { transaction in
-                                    HStack(spacing: 5) {
-                                        Capsule()
-                                            .fill(Color(transaction.colour))
-                                            .frame(width: 4, height: 12)
-
-                                        Text(transaction.note)
-                                            .lineLimit(1)
-                                            .font(.system(size: 13, weight: .regular, design: .rounded))
-                                            .foregroundColor(Color.PrimaryText)
-                                            .frame(maxWidth: .infinity, alignment: .leading)
-
-                                        if transaction.income {
-                                            Text("+\(currencySymbol)\(transaction.amount, specifier: (showCents && transaction.amount < 100) ? "%.2f" : "%.0f")")
-                                                .font(.system(size: 13, weight: .regular, design: .rounded))
-                                                .foregroundColor(Color.IncomeGreen)
-                                                .lineLimit(1)
-                                                .layoutPriority(1)
-                                        } else {
-                                            Text("-\(currencySymbol)\(transaction.amount, specifier: (showCents && transaction.amount < 100) ? "%.2f" : "%.0f")")
-                                                .font(.system(size: 13, weight: .regular, design: .rounded))
-                                                .foregroundColor(Color.SubtitleText)
-                                                .lineLimit(1)
-                                                .layoutPriority(1)
-                                        }
-                                    }
-                                }
-
-                                if entry.transactions.count < 2 {
-                                    HStack(spacing: 5) {
-                                        Image(systemName: "plus")
-                                            .font(.system(size: 10, weight: .medium, design: .rounded))
-
-                                        Text("New Expense")
-                                            .font(.system(size: 12, weight: .medium, design: .rounded))
-                                            .foregroundColor(Color.PrimaryText)
-                                    }
-                                    .padding(.vertical, 5)
-                                    .frame(maxWidth: .infinity)
-                                    .background(RoundedRectangle(cornerRadius: 8).fill(Color.SecondaryBackground))
-                                    .frame(maxHeight: .infinity, alignment: .bottom)
-                                }
-                            }
-                            .padding(.top, entry.transactions.count == 3 ? 5 : 10)
-                            .frame(maxHeight: .infinity, alignment: .top)
-                        }
-                    }
-                    .padding(15)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.PrimaryBackground)
-                .widgetURL(entry.transactions.count < 2 ? URL(string: "dimeapp://newExpense") : nil)
-                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
             }
+            .dynamicTypeSize(...DynamicTypeSize.large)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .budgetWidgetBackground()
+            .widgetURL(entry.transactions.count < 2 ? URL(string: "dimeapp://newExpense") : nil)
 
         case .systemLarge:
-            if #available(iOS 17.0, *) {
-                GeometryReader { _ in
-                    VStack(spacing: 0) {
-                        VStack(spacing: 0) {
-                            Text((typeText + " " + inlineSubtitleText).uppercased())
-                                .font(.system(size: 12, weight: .semibold, design: .rounded))
-                                .foregroundColor(Color.SubtitleText)
+            VStack(alignment: .leading, spacing: 0) {
+                header(amountFont: .system(.largeTitle, design: .rounded).weight(.semibold))
 
-                            RecentTransactionsDollarView(amount: entry.amount, showCents: showCents, net: entry.type == .net)
-                                .frame(maxWidth: .infinity)
-                        }
-                        .frame(maxWidth: .infinity)
+                if entry.transactions.isEmpty {
+                    emptyMessage
+                } else {
+                    InsightsCardTitle("Recent expenses")
+                        .padding(.top, 16)
 
-                        Spacer()
-                            .frame(minHeight: 5, idealHeight: 15, maxHeight: 20)
-                            .fixedSize()
-
-                        if entry.transactions.isEmpty {
-                            VStack(spacing: 20) {
-                                Text("NO RECENT EXPENSES")
-                                    .font(.system(size: 15, weight: .medium, design: .rounded))
-                                    .foregroundColor(Color.SubtitleText)
-
-                                Link(destination: URL(string: "dimeapp://newExpense")!) {
-                                    HStack(spacing: 4) {
-                                        Image(systemName: "plus")
-                                            .font(.system(size: 13, weight: .semibold, design: .rounded))
-
-                                        Text("New Expense")
-                                            .font(.system(size: 16, weight: .semibold, design: .rounded))
-                                            .foregroundColor(Color.PrimaryText)
-                                    }
-                                    .padding(.vertical, 6)
-                                    .frame(width: 200)
-                                    .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Color.SecondaryBackground))
-                                }
-                            }
-                            .frame(maxHeight: .infinity)
-
-                        } else {
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text("RECENT EXPENSES")
-                                    .font(.system(size: 12, weight: .medium, design: .rounded))
-                                    .foregroundColor(Color.SubtitleText)
-
-                                ForEach(entry.transactions, id: \.self) { transaction in
-                                    HStack(spacing: 8) {
-                                        RoundedRectangle(cornerRadius: 5)
-                                            .fill(Color(hex: transaction.colour))
-                                            .frame(width: 15, height: 15)
-
-                                        Text(transaction.note)
-                                            .lineLimit(1)
-                                            .font(.system(size: 16, weight: .medium, design: .rounded))
-                                            .foregroundColor(Color.PrimaryText)
-                                            .frame(maxWidth: .infinity, alignment: .leading)
-
-                                        if transaction.income {
-                                            Text("+\(currencySymbol)\(transaction.amount, specifier: (showCents && transaction.amount < 100) ? "%.2f" : "%.0f")")
-                                                .font(.system(size: 16, weight: .regular, design: .rounded))
-                                                .foregroundColor(Color.IncomeGreen)
-                                                .lineLimit(1)
-                                                .layoutPriority(1)
-                                        } else {
-                                            Text("-\(currencySymbol)\(transaction.amount, specifier: (showCents && transaction.amount < 100) ? "%.2f" : "%.0f")")
-                                                .font(.system(size: 16, weight: .regular, design: .rounded))
-                                                .foregroundColor(Color.SubtitleText)
-                                                .lineLimit(1)
-                                                .layoutPriority(1)
-                                        }
-                                    }
-                                }
-
-                                if entry.transactions.count < 5 {
-                                    Link(destination: URL(string: "dimeapp://newExpense")!) {
-                                        HStack(spacing: 4) {
-                                            Image(systemName: "plus")
-                                                .font(.system(size: 13, weight: .semibold, design: .rounded))
-
-                                            Text("New Expense")
-                                                .font(.system(size: 16, weight: .semibold, design: .rounded))
-                                                .foregroundColor(Color.PrimaryText)
-                                        }
-                                        .padding(.vertical, 6)
-                                        .frame(width: 200)
-                                        .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Color.SecondaryBackground))
-                                    }
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-                                }
-                            }
-                            .frame(maxHeight: .infinity, alignment: .top)
+                    VStack(alignment: .leading, spacing: 6) {
+                        ForEach(Array(entry.transactions.prefix(8).enumerated()), id: \.offset) { _, transaction in
+                            row(transaction, tileSize: 26, font: .system(.subheadline, design: .rounded).weight(.medium))
                         }
                     }
+                    .padding(.top, 8)
+                    .frame(maxHeight: .infinity, alignment: .top)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .containerBackground(for: .widget) {
-                    Color.PrimaryBackground
+
+                if entry.transactions.count < 5 {
+                    WidgetNewExpenseButton()
                 }
             }
+            .dynamicTypeSize(...DynamicTypeSize.large)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .budgetWidgetBackground()
 
         default:
             EmptyView()
         }
     }
 
-    func getRectangularWidgetFont(width: CGFloat) -> CGFloat {
-        var fontSize = 15.0
+    func header(amountFont: Font) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            InsightsCardTitle(verbatim: title)
 
-        while fontSize > 12 {
-            var max = 0.0
-            entry.transactions.forEach { transaction in
-                let amountText: String
-                if showCents && transaction.amount < 100 {
-                    amountText = currencySymbol + String(format: "%.2f", transaction.amount)
-                } else {
-                    amountText = currencySymbol + String(format: "%.0f", transaction.amount)
-                }
+            InsightsAmountText(amount: abs(entry.amount), sign: totalSign, formatter: formatter, font: amountFont)
+        }
+    }
 
-                let holding = transaction.note.widthOfRoundedString(size: fontSize, weight: .semibold) + amountText.widthOfRoundedString(size: fontSize, weight: .regular) + 8
+    var emptyMessage: some View {
+        Text("No recent expenses")
+            .font(.system(.subheadline, design: .rounded).weight(.medium))
+            .foregroundColor(Color.SubtitleText)
+            .multilineTextAlignment(.center)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
 
-                if holding > max {
-                    max = holding
+    /// A log row: the category's emoji tile, the note, and the amount in green for income.
+    func row(_ transaction: HoldingTransaction, tileSize: CGFloat, font: Font) -> some View {
+        HStack(spacing: 8) {
+            WidgetEmojiTile(emoji: transaction.emoji, colour: transaction.colour, size: tileSize)
+
+            Text(transaction.note)
+                .foregroundColor(Color.PrimaryText)
+                .lineLimit(1)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Text(amountText(transaction))
+                .foregroundColor(transaction.income ? Color.IncomeGreen : Color.PrimaryText)
+                .lineLimit(1)
+                .layoutPriority(1)
+        }
+        .font(font)
+    }
+
+    var accessoryRectangle: some View {
+        Group {
+            if entry.transactions.isEmpty {
+                Text("No recent expenses")
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                GeometryReader { proxy in
+                    VStack(alignment: .leading, spacing: 2) {
+                        ForEach(Array(entry.transactions.prefix(3).enumerated()), id: \.offset) { _, transaction in
+                            HStack(spacing: 3) {
+                                Text(transaction.note)
+                                    .fontWeight(.semibold)
+                                    .lineLimit(1)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                                Text(amountText(transaction))
+                                    .lineLimit(1)
+                                    .layoutPriority(1)
+                            }
+                            .font(.system(size: rectangularFontSize(width: proxy.size.width), design: .rounded))
+                        }
+                    }
+                    .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
                 }
             }
+        }
+        .accessoryWidgetBackground()
+    }
 
-            if width > max {
+    /// The largest size from 15 down to 12 at which every row's note and amount fit on one line.
+    func rectangularFontSize(width: CGFloat) -> CGFloat {
+        var fontSize: CGFloat = 15
+
+        while fontSize > 12 {
+            let widest = entry.transactions.prefix(3).map {
+                $0.note.widthOfRoundedString(size: fontSize, weight: .semibold) + amountText($0).widthOfRoundedString(size: fontSize, weight: .regular) + 8
+            }.max() ?? 0
+
+            if width > widest {
                 return fontSize
             }
 
@@ -587,42 +337,5 @@ struct ExpenditureWidgetEntryView: View {
         }
 
         return 12
-    }
-}
-
-struct RecentTransactionsDollarView: View {
-    var amount: Double
-    var showCents: Bool
-    var net: Bool
-    var bigger: Bool = false
-
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
-    var currencySymbol: String {
-        return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
-    }
-
-    var actualAmount: Double {
-        if net {
-            return abs(amount)
-        } else {
-            return amount
-        }
-    }
-
-    var body: some View {
-        HStack(alignment: .lastTextBaseline, spacing: 1.3) {
-            Group {
-                Text(net ? "\(amount < 0 ? "-" : (amount == 0 ? "" : "+"))\(currencySymbol)" : currencySymbol)
-                    .font(.system(bigger ? .title3 : .subheadline, design: .rounded).weight(.medium))
-                    .foregroundColor(Color.SubtitleText) +
-
-                Text("\(actualAmount, specifier: showCents && actualAmount < 100  ? "%.2f" : "%.0f")")
-                    .font(.system(bigger ? .title : .title3, design: .rounded).weight(.medium))
-                    .foregroundColor(Color.PrimaryText)
-            }
-
-        }
-        .minimumScaleFactor(0.5)
-        .lineLimit(1)
     }
 }

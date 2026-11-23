@@ -312,31 +312,6 @@ struct InsightsPeriod: Equatable {
 
 // MARK: - Data
 
-struct InsightsFormatter {
-    let currencySymbol: String
-    let showCents: Bool
-
-    func number(_ amount: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        let digits = showCents && amount < 10000 ? 2 : 0
-        formatter.minimumFractionDigits = digits
-        formatter.maximumFractionDigits = digits
-        return formatter.string(from: NSNumber(value: amount)) ?? "0"
-    }
-
-    func string(_ amount: Double) -> String {
-        currencySymbol + number(amount)
-    }
-
-    func rounded(_ amount: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.maximumFractionDigits = 0
-        return currencySymbol + (formatter.string(from: NSNumber(value: amount.rounded())) ?? "0")
-    }
-}
-
 struct InsightsBucket: Identifiable {
     let date: Date
     let value: Double
@@ -960,22 +935,6 @@ struct InsightsCard<Content: View>: View {
     }
 }
 
-struct InsightsCardTitle: View {
-    let title: LocalizedStringKey
-
-    init(_ title: LocalizedStringKey) {
-        self.title = title
-    }
-
-    var body: some View {
-        Text(title)
-            .font(.system(.subheadline, design: .rounded).weight(.semibold))
-            .foregroundColor(Color.SubtitleText)
-            .lineLimit(1)
-            .accessibilityAddTraits(.isHeader)
-    }
-}
-
 struct InsightsCardButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -1006,21 +965,6 @@ struct InsightsTappableCard<Content: View>: View {
             }
         }
         .buttonStyle(InsightsCardButtonStyle())
-    }
-}
-
-struct InsightsAmountText: View {
-    let amount: Double
-    var sign: String = ""
-    let formatter: InsightsFormatter
-    let font: Font
-
-    var body: some View {
-        (Text(sign + formatter.currencySymbol).foregroundColor(Color.SubtitleText) + Text(formatter.number(amount)).foregroundColor(Color.PrimaryText))
-            .font(font)
-            .lineLimit(1)
-            .minimumScaleFactor(0.6)
-            .accessibilityLabel(sign + formatter.string(amount))
     }
 }
 
@@ -1440,7 +1384,7 @@ struct InsightsBarChart: View {
                 .frame(height: 1)
                 .offset(y: averageY)
 
-            (Text("avg ") + Text(compactAmount(average)).fontWeight(.semibold))
+            (Text("avg ") + Text(formatter.compact(average)).fontWeight(.semibold))
                 .font(.system(.footnote, design: .rounded).weight(.medium))
                 .foregroundColor(Color.SubtitleText)
                 .lineLimit(1)
@@ -1454,14 +1398,6 @@ struct InsightsBarChart: View {
         .allowsHitTesting(false)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text("Average") + Text(" ") + Text(formatter.string(average)))
-    }
-
-    func compactAmount(_ amount: Double) -> String {
-        if amount >= 1000 {
-            let thousands = amount / 1000
-            return formatter.currencySymbol + String(format: thousands >= 10 ? "%.0fk" : "%.1fk", thousands)
-        }
-        return formatter.currencySymbol + String(Int(amount.rounded()))
     }
 
     func bar(_ bucket: InsightsBucket, index: Int) -> some View {

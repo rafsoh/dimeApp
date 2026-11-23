@@ -179,6 +179,8 @@
 "%@ SPENT" = "%@ dépensé";
 "left %@" = "restants %@";
 "over %@" = "dépassé %@";
+"left of %@" = "restant sur %@";
+"widget-log-button" = "Noter";
 "left today" = "restants aujourd'hui";
 "left on %@" = "restants le %@";
 "over today" = "en plus d'aujourd'hui";
@@ -285,6 +287,8 @@
 "%lld%% spent" = "%lld%% dépensés";
 "NO RECENT EXPENSES" = "Pas de dépenses récentes";
 "RECENT EXPENSES" = "Dépenses récentes";
+"Recent expenses" = "Dépenses récentes";
+"No recent expenses" = "Pas de dépenses récentes";
 "in %@" = "en %@";
 "net" = "net";
 "earned" = "perçu";

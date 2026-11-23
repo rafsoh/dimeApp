@@ -83,14 +83,60 @@ struct HomeView: View {
         self.bottomEdge = bottomEdge
     }
 
-    private func tab<Content: View>(_ name: String, @ViewBuilder content: () -> Content) -> some View {
+    private func tabContent<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
         content()
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .readsVerticalBar($usesVerticalBar)
+    }
+
+    private func legacyTab<Content: View>(_ name: String, @ViewBuilder content: () -> Content) -> some View {
+        tabContent(content)
             .tabItem {
                 Label(LocalizedStringKey(name), image: name)
             }
             .tag(name)
+    }
+
+    private var logTab: some View {
+        LogView(topEdge: topEdge, launchSearch: launchSearch)
+            .id(timeFrameID)
+            .ignoresSafeArea(.all, edges: .vertical)
+    }
+
+    private var insightsTab: some View {
+        InsightsView()
+            .id(timeFrameID)
+    }
+
+    private var budgetTab: some View {
+        BudgetView()
+            .id(timeFrameID)
+    }
+
+    @ViewBuilder
+    private var tabView: some View {
+        if #available(iOS 27.1, *) {
+            TabView(selection: tabSelection) {
+                Tab("Log", image: "Log", value: "Log") { tabContent { logTab } }
+                Tab("Insights", image: "Insights", value: "Insights") { tabContent { insightsTab } }
+                Tab("Budget", image: "Budget", value: "Budget") { tabContent { budgetTab } }
+                Tab("Settings", image: "Settings", value: "Settings") { tabContent { SettingsView() } }
+
+                // The prominent role sets the add button apart from the tabs in the Duo's vertical bar.
+                if usesVerticalBar {
+                    Tab("Add New Transaction", systemImage: "plus", value: Self.addTab, role: .prominent) {
+                        Color.PrimaryBackground
+                    }
+                }
+            }
+        } else {
+            TabView(selection: tabSelection) {
+                legacyTab("Log") { logTab }
+                legacyTab("Insights") { insightsTab }
+                legacyTab("Budget") { budgetTab }
+                legacyTab("Settings") { SettingsView() }
+            }
+        }
     }
 
     private func updateTabBarTop(_ top: CGFloat) {
@@ -101,42 +147,14 @@ struct HomeView: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            TabView(selection: tabSelection) {
-                tab("Log") {
-                    LogView(topEdge: topEdge, launchSearch: launchSearch)
-                        .id(timeFrameID)
-                        .ignoresSafeArea(.all, edges: .vertical)
+            tabView
+                .background {
+                    DeleteTransactionAlert()
                 }
-
-                tab("Insights") {
-                    InsightsView()
-                        .id(timeFrameID)
-                }
-
-                if usesVerticalBar {
-                    Color.PrimaryBackground
-                        .tabItem {
-                            Label("Add New Transaction", systemImage: "plus")
-                        }
-                        .tag(Self.addTab)
-                }
-
-                tab("Budget") {
-                    BudgetView()
-                        .id(timeFrameID)
-                }
-
-                tab("Settings") {
-                    SettingsView()
-                }
-            }
-            .background {
-                DeleteTransactionAlert()
-            }
-            .environmentObject(toastPresenter)
-            .environmentObject(transactionManager)
-            .environment(\.tabBarTop, usesVerticalBar || tabBarManager.hideTab ? nil : tabBarTop)
-            .addTransactionSheet(isPresented: $addTransaction, counter: $counter, launchAdd: launchAdd)
+                .environmentObject(toastPresenter)
+                .environmentObject(transactionManager)
+                .environment(\.tabBarTop, usesVerticalBar || tabBarManager.hideTab ? nil : tabBarTop)
+                .addTransactionSheet(isPresented: $addTransaction, counter: $counter, launchAdd: launchAdd)
 
             if !usesVerticalBar {
                 CustomTabBar(currentTab: $currentTab, topEdge: topEdge, bottomEdge: bottomEdge, addTransaction: $addTransaction)
