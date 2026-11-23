@@ -1724,7 +1724,7 @@ struct DateStepperView: View {
 
     let currentDate = Calendar.current.date(bySettingHour: 0, minute: 0, second: 0, of: Date.now) ?? Date.now
 
-    var dateString: String {
+    func dateString(_ date: Date) -> String {
         let dateFormatter = DateFormatter()
 
         dateFormatter.dateFormat = "d MMM yyyy"
@@ -1732,21 +1732,22 @@ struct DateStepperView: View {
         return dateFormatter.string(from: date)
     }
 
+    func shifted(by days: Int) -> Date? {
+        guard let shifted = Calendar.current.date(byAdding: .day, value: days, to: date) else { return nil }
+        guard days == 0 || (shifted >= endDate && shifted <= currentDate) else { return nil }
+        return shifted
+    }
+
     var body: some View {
         GlassStepperCapsule(
-            title: dateString,
-            accessibilityTitle: "showing transactions on \(dateString)",
+            accessibilityTitle: "showing transactions on \(dateString(date))",
             previousLabel: "Previous day",
-            nextLabel: "Next day",
-            canGoPrevious: date > endDate,
-            canGoNext: date < currentDate
-        ) {
-            if date > endDate {
-                date = Calendar.current.date(byAdding: .day, value: -1, to: date) ?? Date.now
-            }
-        } onNext: {
-            if date < currentDate {
-                date = Calendar.current.date(byAdding: .day, value: 1, to: date) ?? Date.now
+            nextLabel: "Next day"
+        ) { offset in
+            shifted(by: offset).map(dateString)
+        } onStep: { offset in
+            if let shifted = shifted(by: offset) {
+                date = shifted
             }
         }
         .onAppear {
@@ -1783,15 +1784,21 @@ struct WeekStepperView: View {
 
     @State var startDate = Date.now
 
-    var dateString: String {
+    func dateString(_ weekStart: Date) -> String {
         let dateFormatter = DateFormatter()
 
         dateFormatter.dateFormat = "d MMM"
 
         let endComponents = DateComponents(day: 7, second: -1)
-        let endWeekDate = Calendar.current.date(byAdding: endComponents, to: showingDate) ?? Date.now
+        let endWeekDate = Calendar.current.date(byAdding: endComponents, to: weekStart) ?? Date.now
 
-        return dateFormatter.string(from: showingDate) + " - " + dateFormatter.string(from: endWeekDate)
+        return dateFormatter.string(from: weekStart) + " - " + dateFormatter.string(from: endWeekDate)
+    }
+
+    func shifted(by weeks: Int) -> Date? {
+        guard let shifted = Calendar.current.date(byAdding: .day, value: 7 * weeks, to: showingDate) else { return nil }
+        guard weeks == 0 || (shifted >= endDate && shifted <= startDate) else { return nil }
+        return shifted
     }
 
     var accessibilityDateString: String {
@@ -1807,19 +1814,14 @@ struct WeekStepperView: View {
 
     var body: some View {
         GlassStepperCapsule(
-            title: dateString,
             accessibilityTitle: accessibilityDateString,
             previousLabel: "Previous week",
-            nextLabel: "Next week",
-            canGoPrevious: showingDate != endDate,
-            canGoNext: showingDate != startDate
-        ) {
-            if showingDate > endDate {
-                showingDate = Calendar.current.date(byAdding: .day, value: -7, to: showingDate) ?? Date.now
-            }
-        } onNext: {
-            if showingDate < startDate {
-                showingDate = Calendar.current.date(byAdding: .day, value: 7, to: showingDate) ?? Date.now
+            nextLabel: "Next week"
+        ) { offset in
+            shifted(by: offset).map(dateString)
+        } onStep: { offset in
+            if let shifted = shifted(by: offset) {
+                showingDate = shifted
             }
         }
         .onAppear {
@@ -1865,29 +1867,30 @@ struct MonthStepperView: View {
 
     @State var startDate = Date.now
 
-    var dateString: String {
+    func dateString(_ month: Date) -> String {
         let dateFormatter = DateFormatter()
 
         dateFormatter.dateFormat = "MMM yyyy"
 
-        return dateFormatter.string(from: showingDate)
+        return dateFormatter.string(from: month)
+    }
+
+    func shifted(by months: Int) -> Date? {
+        guard let shifted = Calendar.current.date(byAdding: .month, value: months, to: showingDate) else { return nil }
+        guard months == 0 || (shifted >= endDate && shifted <= startDate) else { return nil }
+        return shifted
     }
 
     var body: some View {
         GlassStepperCapsule(
-            title: dateString,
-            accessibilityTitle: "showing transactions in \(dateString)",
+            accessibilityTitle: "showing transactions in \(dateString(showingDate))",
             previousLabel: "Previous month",
-            nextLabel: "Next month",
-            canGoPrevious: showingDate != endDate,
-            canGoNext: showingDate != startDate
-        ) {
-            if showingDate > endDate {
-                showingDate = Calendar.current.date(byAdding: .month, value: -1, to: showingDate) ?? Date.now
-            }
-        } onNext: {
-            if showingDate < startDate {
-                showingDate = Calendar.current.date(byAdding: .month, value: 1, to: showingDate) ?? Date.now
+            nextLabel: "Next month"
+        ) { offset in
+            shifted(by: offset).map(dateString)
+        } onStep: { offset in
+            if let shifted = shifted(by: offset) {
+                showingDate = shifted
             }
         }
         .onAppear {

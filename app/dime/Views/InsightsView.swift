@@ -82,15 +82,14 @@ struct InsightsView: View {
                 .tabBarClearance()
                 .floatingAboveTabBar {
                     GlassStepperCapsule(
-                        title: period.title,
                         previousLabel: period.previousLabel,
-                        nextLabel: period.nextLabel,
-                        canGoPrevious: period.start > earliestStart,
-                        canGoNext: period.start < currentStart
-                    ) {
-                        step(by: -1)
-                    } onNext: {
-                        step(by: 1)
+                        nextLabel: period.nextLabel
+                    ) { offset in
+                        let shifted = period.shifted(by: offset)
+                        guard offset == 0 || (shifted.start >= earliestStart && shifted.start <= currentStart) else { return nil }
+                        return shifted.title
+                    } onStep: { offset in
+                        step(by: offset)
                     }
                 }
             }

@@ -625,50 +625,305 @@ struct GlassCapsuleTag: View {
 }
 
 struct GlassStepperCapsule: View {
-    let title: String
     var accessibilityTitle: String?
     let previousLabel: LocalizedStringKey
     let nextLabel: LocalizedStringKey
-    let canGoPrevious: Bool
-    let canGoNext: Bool
-    let onPrevious: () -> Void
-    let onNext: () -> Void
+    /// The title `offset` steps from the current one (negative is earlier), or nil past either end.
+    let title: (Int) -> String?
+    /// Moves by a number of steps; called once per tap, or once when a drag is released.
+    let onStep: (Int) -> Void
 
     @ScaledMetric(relativeTo: .body) private var capsuleWidth: CGFloat = 288
 
+    @State private var isScrubbing = false
+    /// The end the drag is held against: 1 for the latest, -1 for the earliest, 0 for neither.
+    @State private var pinnedDirection = 0
+    /// Accelerated drag distance; positive is rightward, towards earlier dates.
+    @State private var travel: CGFloat = 0
+    /// Where the drag would land, in steps from the current one.
+    @State private var pending = 0
+    /// The steps that have a title, found when a drag starts; one gauge tick each.
+    @State private var reachable = 0...0
+    @State private var isTouching = false
+    /// Set when a touch turns out to be a vertical drag, so it never becomes a scrub.
+    @State private var ignoresTouch = false
+    @State private var pressTimer: DispatchWorkItem?
+    @State private var latestTranslation: CGFloat = 0
+    @State private var lastTranslation: CGFloat = 0
+    @State private var lastSampleTime = Date.distantPast
+    @State private var scrubStart = Date.distantPast
+    /// Distance moved since the scrub began, used to ease in its first stretch.
+    @State private var warmup: CGFloat = 0
+    @State private var lastScrubEnd = Date.distantPast
+    @State private var haptics = StepperHaptics()
+
+    /// Drag distance per step at slow speeds, and the spacing of the gauge ticks.
+    private let tickSpacing: CGFloat = 9
+    private let scrubSpring = Animation.spring(response: 0.38, dampingFraction: 0.78)
+
     var body: some View {
+        let restingWidth = min(capsuleWidth, UIScreen.main.bounds.width - 32)
+        let scrubbingWidth = min(capsuleWidth + 56, UIScreen.main.bounds.width - 32)
+        let currentTitle = title(0) ?? ""
+
         HStack(spacing: 8) {
-            chevron("chevron.left", label: previousLabel, enabled: canGoPrevious, action: onPrevious)
+            chevron("chevron.left", label: previousLabel, enabled: title(-1) != nil) { onStep(-1) }
 
-            Text(title)
-                .font(.system(.body, design: .rounded).weight(.semibold))
-                .foregroundColor(Color.PrimaryText)
-                .lineLimit(1)
-                .minimumScaleFactor(0.75)
-                .padding(.horizontal, 4)
-                .frame(maxWidth: .infinity)
-                .accessibilityLabel(accessibilityTitle ?? title)
+            VStack(spacing: 6) {
+                Text(isScrubbing ? title(pending) ?? currentTitle : currentTitle)
+                    .font(.system(.body, design: .rounded).weight(.semibold))
+                    .foregroundColor(Color.PrimaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+                    .monospacedDigit()
+                    .padding(.horizontal, 4)
+                    .accessibilityLabel(accessibilityTitle ?? currentTitle)
 
-            chevron("chevron.right", label: nextLabel, enabled: canGoNext, action: onNext)
+                if isScrubbing {
+                    gauge
+                        .transition(.opacity.combined(with: .scale(scale: 0.6, anchor: .top)))
+                }
+            }
+            .frame(maxWidth: .infinity)
+
+            chevron("chevron.right", label: nextLabel, enabled: title(1) != nil) { onStep(1) }
         }
         .padding(4)
-        .frame(width: min(capsuleWidth, UIScreen.main.bounds.width - 32))
-        .glassCapsule()
+        .frame(width: isScrubbing ? scrubbingWidth : restingWidth, height: isScrubbing ? 66 : 44)
+        .glassBackground(in: Capsule(), tint: .glassTint)
+        .contentShape(Capsule())
+        .simultaneousGesture(scrubGesture)
+        .frame(width: restingWidth, height: 44, alignment: .bottom)
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+    }
+
+    var gauge: some View {
+        Canvas { context, size in
+            let mid = size.width / 2
+            // Tick `step` sits at `mid + step * tickSpacing + travel`, so earlier steps lie to the left.
+            let first = max(reachable.lowerBound, Int(((-mid - travel) / tickSpacing).rounded(.down)))
+            let last = min(reachable.upperBound, Int(((mid - travel) / tickSpacing).rounded(.up)))
+            guard first <= last else { return }
+
+            for step in first...last {
+                let x = mid + CGFloat(step) * tickSpacing + travel
+                let isCentre = step == pending
+                let closeness = max(0, 1 - abs(x - mid) / mid)
+                let height = isCentre ? 12 : 3 + 6 * closeness * closeness
+                let width: CGFloat = isCentre ? 2 : 1.5
+                let tick = CGRect(x: x - width / 2, y: (size.height - height) / 2, width: width, height: height)
+                let opacity = isCentre ? 1 : 0.08 + 0.27 * closeness
+                context.fill(Path(roundedRect: tick, cornerRadius: width / 2), with: .color(Color.PrimaryText.opacity(opacity)))
+            }
+        }
+        .frame(height: 12)
+        .mask {
+            LinearGradient(stops: [
+                .init(color: .clear, location: 0),
+                .init(color: .black, location: 0.25),
+                .init(color: .black, location: 0.75),
+                .init(color: .clear, location: 1),
+            ], startPoint: .leading, endPoint: .trailing)
+        }
+        .padding(.horizontal, -24)
+        .accessibilityHidden(true)
+    }
+
+    var scrubGesture: some Gesture {
+        DragGesture(minimumDistance: 0)
+            .onChanged { value in
+                let now = Date()
+                latestTranslation = value.translation.width
+
+                if !isTouching {
+                    isTouching = true
+                    ignoresTouch = false
+                    haptics.prepare()
+                    let press = DispatchWorkItem {
+                        if isTouching && !ignoresTouch && !isScrubbing {
+                            beginScrub()
+                        }
+                    }
+                    pressTimer = press
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.22, execute: press)
+                    return
+                }
+
+                guard isScrubbing else {
+                    let horizontal = abs(value.translation.width)
+                    let vertical = abs(value.translation.height)
+                    guard !ignoresTouch, max(horizontal, vertical) > 8 else { return }
+                    if horizontal > vertical {
+                        beginScrub()
+                    } else {
+                        // A vertical drag belongs to whatever is behind the island.
+                        ignoresTouch = true
+                        pressTimer?.cancel()
+                    }
+                    return
+                }
+
+                let delta = value.translation.width - lastTranslation
+                let elapsed = max(now.timeIntervalSince(lastSampleTime), 1 / 120)
+                lastTranslation = value.translation.width
+                lastSampleTime = now
+
+                // Flicking speeds up the steps, so long ranges cross in one swipe while slow drags stay precise.
+                let speed = abs(delta) / CGFloat(elapsed)
+                let gain = 1 + min(max(speed - 250, 0) / 400, 4)
+
+                // Ease in the first stretch of movement so the gauge is in place before dates start moving.
+                warmup += abs(delta)
+                let settle = min(1, CGFloat(now.timeIntervalSince(scrubStart)) / 0.2)
+                let ease = min(settle, warmup / 18)
+                scrub(by: delta * gain * ease * ease)
+            }
+            .onEnded { _ in
+                isTouching = false
+                pressTimer?.cancel()
+                pressTimer = nil
+                guard isScrubbing else { return }
+
+                let steps = pending
+                lastScrubEnd = Date()
+                if steps != 0 {
+                    haptics.light.impactOccurred()
+                }
+                withAnimation(scrubSpring) {
+                    isScrubbing = false
+                    pinnedDirection = 0
+                    travel = 0
+                    pending = 0
+                }
+                if steps != 0 {
+                    onStep(steps)
+                }
+            }
+    }
+
+    /// Expands the island and shows the gauge, from a long press or the start of a sideways drag.
+    func beginScrub() {
+        let now = Date()
+        lastTranslation = latestTranslation
+        lastSampleTime = now
+        scrubStart = now
+        warmup = 0
+        reachable = limit(towards: -1)...limit(towards: 1)
+        haptics.soft.impactOccurred(intensity: 0.7)
+        haptics.prepare()
+        withAnimation(scrubSpring) {
+            isScrubbing = true
+        }
+    }
+
+    /// Dragging right travels back in time, like pulling earlier dates into view.
+    func scrub(by distance: CGFloat) {
+        if distance * CGFloat(pinnedDirection) > 0 {
+            pinnedDirection = 0
+        }
+
+        var next = travel + distance
+        let target = -Int((next / tickSpacing).rounded())
+        let reached = min(max(target, reachable.lowerBound), reachable.upperBound)
+
+        if reached != target {
+            // Hold the gauge just shy of the step past the end.
+            let direction = target > reached ? 1 : -1
+            next = -CGFloat(reached) * tickSpacing - CGFloat(direction) * tickSpacing * 0.4
+            if pinnedDirection != direction {
+                pinnedDirection = direction
+                haptics.rigid.impactOccurred(intensity: 0.8)
+                haptics.rigid.prepare()
+            }
+        }
+
+        travel = next
+        if reached != pending {
+            pending = reached
+            haptics.tick()
+        }
+    }
+
+    /// The furthest step with a title in one direction, found by doubling then halving so long histories stay cheap.
+    func limit(towards direction: Int) -> Int {
+        var found = 0
+        var missing: Int?
+        var probe = 1
+
+        while missing == nil, probe <= 1 << 16 {
+            if title(probe * direction) != nil {
+                found = probe
+                probe *= 2
+            } else {
+                missing = probe
+            }
+        }
+
+        guard var missing else { return found * direction }
+        while missing - found > 1 {
+            let middle = (found + missing) / 2
+            if title(middle * direction) != nil {
+                found = middle
+            } else {
+                missing = middle
+            }
+        }
+        return found * direction
     }
 
     func chevron(_ systemName: String, label: LocalizedStringKey, enabled: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
+        Button {
+            // A drag that starts on a chevron can end as a tap on it.
+            guard !isScrubbing, Date().timeIntervalSince(lastScrubEnd) > 0.3 else { return }
+            haptics.tick()
+            action()
+        } label: {
             Image(systemName: systemName)
                 .font(.system(.subheadline, design: .rounded).weight(.semibold))
                 .foregroundColor(Color.PrimaryText)
                 .frame(width: 36, height: 36)
-                .background(Circle().fill(Color.PrimaryText.opacity(0.08)))
                 .contentShape(Rectangle().inset(by: -4))
         }
-        .buttonStyle(.plain)
-        .opacity(enabled ? 1 : 0.3)
+        .buttonStyle(StepperChevronButtonStyle())
+        .opacity(isScrubbing ? 0 : (enabled ? 1 : 0.3))
+        .scaleEffect(isScrubbing ? 0.6 : 1)
         .disabled(!enabled)
         .accessibilityLabel(label)
+    }
+}
+
+/// The stepper's feedback generators, kept warm so the first tick isn't late.
+private final class StepperHaptics {
+    let selection = UISelectionFeedbackGenerator()
+    let soft = UIImpactFeedbackGenerator(style: .soft)
+    let rigid = UIImpactFeedbackGenerator(style: .rigid)
+    let light = UIImpactFeedbackGenerator(style: .light)
+    private var lastTick = Date.distantPast
+
+    func prepare() {
+        selection.prepare()
+        soft.prepare()
+        rigid.prepare()
+        light.prepare()
+    }
+
+    /// Fast flicks can cross a step on every touch update; spacing the ticks keeps them crisp instead of a buzz.
+    func tick() {
+        let now = Date()
+        guard now.timeIntervalSince(lastTick) > 0.03 else { return }
+        lastTick = now
+        selection.selectionChanged()
+        selection.prepare()
+    }
+}
+
+/// Shows the circle behind a chevron only while it's pressed.
+private struct StepperChevronButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .background(Circle().fill(Color.PrimaryText.opacity(configuration.isPressed ? 0.1 : 0)))
+            .scaleEffect(configuration.isPressed ? 0.92 : 1)
+            .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
     }
 }
 
