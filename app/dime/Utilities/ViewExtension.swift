@@ -542,9 +542,9 @@ extension View {
         }
     }
 
-    func glassCapsule() -> some View {
+    func glassCapsule(interactive: Bool = true) -> some View {
         frame(height: 44)
-            .glassBackground(in: Capsule(), tint: .glassTint)
+            .glassBackground(in: Capsule(), tint: .glassTint, interactive: interactive)
             .contentShape(Capsule())
             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     }
