@@ -126,7 +126,7 @@ struct InsightsProvider: IntentTimelineProvider {
                     continue
                 }
 
-                let newCategory = HoldingCategory(colour: category.wrappedColour, name: category.wrappedName, percent: total / totalForWeek)
+                let newCategory = HoldingCategory(colour: category.wrappedColour, emoji: category.wrappedEmoji, name: category.wrappedName, percent: total / totalForWeek)
 
                 holdingCat.append(newCategory)
             }
@@ -196,7 +196,7 @@ struct InsightsProvider: IntentTimelineProvider {
                     continue
                 }
 
-                let newCategory = HoldingCategory(colour: category.wrappedColour, name: category.wrappedName, percent: total / totalForMonth)
+                let newCategory = HoldingCategory(colour: category.wrappedColour, emoji: category.wrappedEmoji, name: category.wrappedName, percent: total / totalForMonth)
 
                 holdingCat.append(newCategory)
             }
@@ -266,7 +266,7 @@ struct InsightsProvider: IntentTimelineProvider {
                     continue
                 }
 
-                let newCategory = HoldingCategory(colour: category.wrappedColour, name: category.wrappedName, percent: total / totalForYear)
+                let newCategory = HoldingCategory(colour: category.wrappedColour, emoji: category.wrappedEmoji, name: category.wrappedName, percent: total / totalForYear)
 
                 holdingCat.append(newCategory)
             }
@@ -293,562 +293,263 @@ struct InsightsWidgetEntry: TimelineEntry {
     let income: Bool
 }
 
+/// The medium widget, laid out like the Spent and Categories cards on the Insights tab.
 struct InsightsWidgetEntryView: View {
     let entry: InsightsProvider.Entry
+    let formatter = InsightsFormatter.current
 
-    let numberArray = [1, 8, 15, 22, 29]
-    let monthNumberArray = [1, 4, 7, 10]
-    let monthNames: [Int: String] = [1: "Jan", 4: "Apr", 7: "Jul", 10: "Oct"]
-
-    @AppStorage("firstDayOfMonth", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var firstDayOfMonth: Int = 1
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
-    var currencySymbol: String {
-        return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
-    }
-
-    @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
-
-    var dollarText: String {
-        if entry.amount < 10000 && showCents {
-            return "\(String(format: "%.2f", entry.amount))"
-        } else {
-            return "\(Int(round(entry.amount)))"
-        }
-    }
-
-    var subtitleText: String {
+    var title: String {
+        let verb = entry.income ? String(localized: "Earned") : String(localized: "Spent")
         switch entry.duration {
         case .unknown:
-            return "NIL"
+            return verb
         case .week:
-            return String(localized: "THIS WEEK").uppercased()
+            return "\(verb) \(String(localized: "this week"))"
         case .month:
-            return String(localized: "THIS MONTH").uppercased()
+            return "\(verb) \(String(localized: "this month"))"
         case .year:
-            let formatter = DateFormatter()
-            formatter.dateFormat = "yyyy"
-            return String(localized: "in \(formatter.string(from: Date.now))").uppercased()
+            return "\(verb) \(String(localized: "this year"))"
         }
     }
 
-    var subtitleText1: String {
-        switch entry.duration {
-        case .unknown:
-            return "NIL"
-        case .week:
-            return String(localized: "THIS WEEK").uppercased()
-        case .month:
-            return String(localized: "THIS MONTH").uppercased()
-        case .year:
-            return String(localized: "THIS YEAR").uppercased()
-        }
-    }
+    var buckets: [WidgetChartBucket] {
+        let yearly = entry.duration == .year
+        let labelFormatter = DateFormatter()
+        labelFormatter.dateFormat = yearly ? "MMMMM" : (entry.duration == .month ? "d" : "EEEEE")
 
-    var verbText: String {
-        if entry.income {
-            return String(localized: "EARNED ").uppercased()
-        } else {
-            return String(localized: "SPENT ").uppercased()
+        return entry.dates.enumerated().map { index, date in
+            WidgetChartBucket(
+                date: date,
+                value: entry.dictionary[date] ?? 0,
+                label: entry.duration != .month || index % 7 == 0 ? labelFormatter.string(from: date) : "",
+                isCurrent: Calendar.current.isDate(date, equalTo: Date.now, toGranularity: yearly ? .month : .day)
+            )
         }
     }
 
     var body: some View {
-        if #available(iOS 17.0, *) {
-            GeometryReader { proxy in
-                HStack(spacing: 0) {
-                    VStack(spacing: 8) {
-                        VStack(alignment: .leading, spacing: -1) {
-                            Text(verbText + subtitleText)
-                                .font(.system(size: 10, weight: .semibold, design: .rounded))
-                                .foregroundColor(Color.SubtitleText)
+        GeometryReader { proxy in
+            HStack(alignment: .top, spacing: 16) {
+                VStack(alignment: .leading, spacing: 0) {
+                    InsightsCardTitle(verbatim: title)
 
-                            InsightsWidgetDollarView(currencySymbol: currencySymbol, dollarText: dollarText)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    InsightsAmountText(amount: entry.amount, formatter: formatter, font: .system(.title2, design: .rounded).weight(.semibold))
+                        .padding(.top, 2)
 
-                        GeometryReader { proxy in
-                            ZStack(alignment: .top) {
-                                HStack(alignment: .top, spacing: 4) {
-                                    // axes
-                                    VStack(alignment: .leading) {
-                                        Text(getMaxText())
-                                            .lineLimit(1)
-                                            .font(.system(size: 8, weight: .regular, design: .rounded))
-                                            .foregroundColor(Color.SubtitleText)
-
-                                        Spacer()
-
-                                        Text("0")
-                                            .font(.system(size: 8, weight: .regular, design: .rounded))
-                                            .foregroundColor(Color.SubtitleText)
-                                    }
-                                    .frame(height: proxy.size.height * 0.85)
-
-                                    if entry.duration == .week {
-                                        HStack(spacing: 3) {
-                                            ForEach(entry.dates, id: \.self) { day in
-                                                VStack(spacing: 3) {
-                                                    ZStack(alignment: .bottom) {
-                                                        RoundedRectangle(cornerRadius: 3.5, style: .continuous)
-                                                            .fill(Color.SecondaryBackground)
-                                                            .frame(height: proxy.size.height * 0.85)
-
-                                                        RoundedRectangle(cornerRadius: 3.5, style: .continuous)
-                                                            .frame(height: getBarHeight(point: entry.dictionary[day]!, size: proxy.size))
-                                                    }
-
-                                                    Text(getWeekday(day: day).prefix(1))
-                                                        .font(.system(size: 8, weight: .bold, design: .rounded))
-                                                        .foregroundColor(Color.SubtitleText)
-                                                }
-                                                .opacity(day > Date.now ? 0.3 : 1)
-                                                .frame(maxWidth: .infinity)
-                                            }
-                                        }
-                                        .frame(maxWidth: .infinity)
-                                    } else if entry.duration == .month {
-                                        HStack(spacing: 1.5) {
-                                            ForEach(entry.dates, id: \.self) { day in
-                                                ZStack(alignment: .bottom) {
-                                                    Capsule()
-                                                        .fill(Color.SecondaryBackground)
-                                                        .frame(height: proxy.size.height * 0.85)
-
-                                                    Capsule()
-                                                        .frame(height: getBarHeight(point: entry.dictionary[day]!, size: proxy.size))
-                                                        .overlay(alignment: .bottom) {
-                                                            if numberArray.contains((entry.dates.firstIndex(of: day) ?? -1) + 1) && firstDayOfMonth == 1 {
-                                                                Text("\((entry.dates.firstIndex(of: day) ?? -1) + 1)")
-                                                                    .font(.system(size: 8, weight: .bold, design: .rounded))
-                                                                    .foregroundColor(Color.SubtitleText)
-                                                                    .frame(width: 20, alignment: .center)
-                                                                    .offset(y: 15)
-                                                            }
-                                                        }
-                                                }
-                                                .padding(.bottom, firstDayOfMonth == 1 ? 13 : 0)
-                                                .opacity(day > Date.now ? 0.3 : 1)
-                                                .frame(maxWidth: .infinity)
-                                            }
-                                        }
-                                        .frame(maxWidth: .infinity)
-                                    } else {
-                                        HStack(spacing: 2.5) {
-                                            ForEach(entry.dates, id: \.self) { day in
-                                                ZStack(alignment: .bottom) {
-                                                    RoundedRectangle(cornerRadius: 2.7, style: .continuous)
-                                                        .fill(Color.SecondaryBackground)
-                                                        .frame(height: proxy.size.height * 0.85)
-
-                                                    RoundedRectangle(cornerRadius: 2.7, style: .continuous)
-                                                        .frame(height: getBarHeight(point: entry.dictionary[day]!, size: proxy.size))
-                                                        .overlay(alignment: .bottom) {
-                                                            if monthNumberArray.contains((entry.dates.firstIndex(of: day) ?? -1) + 1) {
-                                                                Text(LocalizedStringKey(monthNames[(entry.dates.firstIndex(of: day)! + 1)] ?? ""))
-                                                                    .font(.system(size: 8, weight: .bold, design: .rounded))
-                                                                    .foregroundColor(Color.SubtitleText)
-                                                                    .frame(width: 20, alignment: .center)
-                                                                    .offset(y: 15)
-                                                            }
-                                                        }
-                                                }
-                                                .padding(.bottom, 13)
-                                                .opacity(day > Date.now ? 0.3 : 1)
-                                                .frame(maxWidth: .infinity)
-                                            }
-                                        }
-                                        .frame(maxWidth: .infinity)
-                                    }
-                                }
-                                .frame(width: proxy.size.width)
-                                .frame(maxHeight: .infinity)
-
-                                HStack(spacing: 4) {
-                                    Text(getAverageText())
-                                        .lineLimit(1)
-                                        .font(.system(size: 8, weight: .regular, design: .rounded))
-                                        .foregroundColor(Color.PrimaryText)
-                                        .opacity((entry.average / Double(getMax())) < 0.2 || (entry.average / Double(getMax())) > 0.8 ? 0 : 1)
-
-                                    Line()
-                                        .stroke(Color.SubtitleText, style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [5]))
-                                        .frame(height: 1)
-                                        .frame(maxWidth: .infinity)
-                                }
-                                .frame(width: proxy.size.width)
-                                .opacity(entry.numberOfDays <= 1 ? 0 : 1)
-                                .offset(y: getOffset(size: proxy.size) - 5)
-                            }
-                        }
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    }
-                    .padding([.trailing], 20)
-                    .frame(width: 185)
-                    .frame(maxHeight: .infinity)
-                    .background(Color.PrimaryBackground)
-
-                    InsightsWidgetCategoryBreakdownView(amount: entry.amount, income: entry.income, categories: entry.categories, duration: entry.duration, ios17: true)
-//                    .frame(width: proxy.size.width * 0.43)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    WidgetBarChart(buckets: buckets, average: entry.average, colour: entry.income ? Color.IncomeGreen : Color.PrimaryText, formatter: formatter)
+                        .padding(.top, 8)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .widgetURL(URL(string: "dimeapp://insights"))
-            .containerBackground(for: .widget) {
-                Color.PrimaryBackground
-            }
-        } else {
-            GeometryReader { proxy in
-                HStack(spacing: 0) {
-                    VStack(spacing: 8) {
-                        VStack(alignment: .leading, spacing: -1) {
-                            Text(verbText + subtitleText)
-                                .font(.system(size: 10, weight: .semibold, design: .rounded))
-                                .foregroundColor(Color.SubtitleText)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
 
-                            InsightsWidgetDollarView(currencySymbol: currencySymbol, dollarText: dollarText)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-
-                        GeometryReader { proxy in
-                            ZStack(alignment: .top) {
-                                HStack(alignment: .top, spacing: 4) {
-                                    // axes
-                                    VStack(alignment: .leading) {
-                                        Text(getMaxText())
-                                            .lineLimit(1)
-                                            .font(.system(size: 8, weight: .regular, design: .rounded))
-                                            .foregroundColor(Color.SubtitleText)
-
-                                        Spacer()
-
-                                        Text("0")
-                                            .font(.system(size: 8, weight: .regular, design: .rounded))
-                                            .foregroundColor(Color.SubtitleText)
-                                    }
-                                    .frame(height: proxy.size.height * 0.85)
-
-                                    if entry.duration == .week {
-                                        HStack(spacing: 3) {
-                                            ForEach(entry.dates, id: \.self) { day in
-                                                VStack(spacing: 3) {
-                                                    ZStack(alignment: .bottom) {
-                                                        RoundedRectangle(cornerRadius: 3.5, style: .continuous)
-                                                            .fill(Color.SecondaryBackground)
-                                                            .frame(height: proxy.size.height * 0.85)
-
-                                                        RoundedRectangle(cornerRadius: 3.5, style: .continuous)
-                                                            .frame(height: getBarHeight(point: entry.dictionary[day]!, size: proxy.size))
-                                                    }
-
-                                                    Text(getWeekday(day: day).prefix(1))
-                                                        .font(.system(size: 8, weight: .bold, design: .rounded))
-                                                        .foregroundColor(Color.SubtitleText)
-                                                }
-                                                .opacity(day > Date.now ? 0.3 : 1)
-                                                .frame(maxWidth: .infinity)
-                                            }
-                                        }
-                                        .frame(maxWidth: .infinity)
-                                    } else if entry.duration == .month {
-                                        HStack(spacing: 1.5) {
-                                            ForEach(entry.dates, id: \.self) { day in
-                                                ZStack(alignment: .bottom) {
-                                                    Capsule()
-                                                        .fill(Color.SecondaryBackground)
-                                                        .frame(height: proxy.size.height * 0.85)
-
-                                                    Capsule()
-                                                        .frame(height: getBarHeight(point: entry.dictionary[day]!, size: proxy.size))
-                                                        .overlay(alignment: .bottom) {
-                                                            if numberArray.contains((entry.dates.firstIndex(of: day) ?? -1) + 1) && firstDayOfMonth == 1 {
-                                                                Text("\((entry.dates.firstIndex(of: day) ?? -1) + 1)")
-                                                                    .font(.system(size: 8, weight: .bold, design: .rounded))
-                                                                    .foregroundColor(Color.SubtitleText)
-                                                                    .frame(width: 20, alignment: .center)
-                                                                    .offset(y: 15)
-                                                            }
-                                                        }
-                                                }
-                                                .padding(.bottom, firstDayOfMonth == 1 ? 13 : 0)
-                                                .opacity(day > Date.now ? 0.3 : 1)
-                                                .frame(maxWidth: .infinity)
-                                            }
-                                        }
-                                        .frame(maxWidth: .infinity)
-                                    } else {
-                                        HStack(spacing: 2.5) {
-                                            ForEach(entry.dates, id: \.self) { day in
-                                                ZStack(alignment: .bottom) {
-                                                    RoundedRectangle(cornerRadius: 2.7, style: .continuous)
-                                                        .fill(Color.SecondaryBackground)
-                                                        .frame(height: proxy.size.height * 0.85)
-
-                                                    RoundedRectangle(cornerRadius: 2.7, style: .continuous)
-                                                        .frame(height: getBarHeight(point: entry.dictionary[day]!, size: proxy.size))
-                                                        .overlay(alignment: .bottom) {
-                                                            if monthNumberArray.contains((entry.dates.firstIndex(of: day) ?? -1) + 1) {
-                                                                Text(LocalizedStringKey(monthNames[(entry.dates.firstIndex(of: day)! + 1)] ?? ""))
-                                                                    .font(.system(size: 8, weight: .bold, design: .rounded))
-                                                                    .foregroundColor(Color.SubtitleText)
-                                                                    .frame(width: 20, alignment: .center)
-                                                                    .offset(y: 15)
-                                                            }
-                                                        }
-                                                }
-                                                .padding(.bottom, 13)
-                                                .opacity(day > Date.now ? 0.3 : 1)
-                                                .frame(maxWidth: .infinity)
-                                            }
-                                        }
-                                        .frame(maxWidth: .infinity)
-                                    }
-                                }
-                                .frame(width: proxy.size.width)
-                                .frame(maxHeight: .infinity)
-
-                                HStack(spacing: 4) {
-                                    Text(getAverageText())
-                                        .lineLimit(1)
-                                        .font(.system(size: 8, weight: .regular, design: .rounded))
-                                        .foregroundColor(Color.PrimaryText)
-                                        .opacity((entry.average / Double(getMax())) < 0.2 || (entry.average / Double(getMax())) > 0.8 ? 0 : 1)
-
-                                    Line()
-                                        .stroke(Color.SubtitleText, style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [5]))
-                                        .frame(height: 1)
-                                        .frame(maxWidth: .infinity)
-                                }
-                                .frame(width: proxy.size.width)
-                                .opacity(entry.numberOfDays <= 1 ? 0 : 1)
-                                .offset(y: getOffset(size: proxy.size) - 5)
-                            }
-                        }
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    }
-                    .padding(15)
-                    .frame(width: proxy.size.width * 0.57)
+                InsightsWidgetCategories(categories: entry.categories, income: entry.income)
+                    .frame(width: proxy.size.width * 0.42)
                     .frame(maxHeight: .infinity)
-                    .background(Color.PrimaryBackground)
-
-                    InsightsWidgetCategoryBreakdownView(amount: entry.amount, income: entry.income, categories: entry.categories, duration: entry.duration, ios17: false)
-                    .padding(15)
-                    .frame(width: proxy.size.width * 0.43)
-                    .frame(maxHeight: .infinity)
-                    .background(Color.SecondaryBackground)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            .widgetURL(URL(string: "dimeapp://insights"))
         }
-    }
-
-    func getOffset(size: CGSize) -> Double {
-        let maxi = getMax()
-
-        if maxi == 0 {
-            return 0
-        } else {
-            let height = (size.height * 0.85) - ((entry.average / Double(maxi)) * (size.height * 0.85))
-            return height
-        }
-    }
-
-    func getAverageText() -> String {
-        let string = String(entry.average)
-
-        let stringArray = string.compactMap { String($0) }
-
-        if entry.average >= 1_000_000 {
-            return stringArray[0] + "M"
-        } else if entry.average >= 100_000 {
-            return string.prefix(3) + "k"
-        } else if entry.average >= 10000 {
-            return string.prefix(2) + "k"
-        } else if entry.average >= 1000 {
-            return stringArray[0] + "." + stringArray[1] + "k"
-        } else {
-            return String(Int(round(entry.average)))
-        }
-    }
-
-    func getMaxText() -> String {
-        let maxi = getMax()
-
-        if maxi == 0 {
-            return "10"
-        }
-
-        let string = String(maxi)
-
-        let stringArray = string.compactMap { String($0) }
-
-        if maxi >= 1_000_000 {
-            return stringArray[0] + "M"
-        } else if maxi >= 100_000 {
-            return string.prefix(3) + "k"
-        } else if maxi >= 10000 {
-            return string.prefix(2) + "k"
-        } else if maxi >= 1000 {
-            let string = String(maxi)
-
-            let stringArray = string.compactMap { String($0) }
-
-            return stringArray[0] + "." + stringArray[1] + "k"
-        } else {
-            return String(maxi)
-        }
-    }
-
-    func getMax() -> Int {
-        let maximum = entry.maximum * 1.1
-
-        return Int(ceil(maximum / 10) * 10)
-    }
-
-    func getBarHeight(point: CGFloat, size: CGSize) -> CGFloat {
-        let maxi = getMax()
-
-        if maxi == 0 {
-            return 0
-        } else {
-            let height = (point / CGFloat(maxi)) * (size.height * 0.85)
-            return height
-        }
-    }
-
-    func getWeekday(day: Date) -> String {
-        let dateFormatter = DateFormatter()
-
-        dateFormatter.dateFormat = "EEE"
-
-        return dateFormatter.string(from: day)
+        .dynamicTypeSize(...DynamicTypeSize.large)
+        .budgetWidgetBackground()
+        .widgetURL(URL(string: "dimeapp://insights"))
     }
 }
 
 struct HoldingCategory: Hashable {
     let colour: String
+    let emoji: String
     let name: String
     let percent: Double
 }
 
-struct HorizontalBarGraph: View {
-    var categories: [HoldingCategory]
-    let income: Bool
+struct WidgetChartBucket: Identifiable {
+    let date: Date
+    let value: Double
+    let label: String
+    let isCurrent: Bool
+
+    var id: Date { date }
+
+    var isFuture: Bool { date > Date.now }
+}
+
+/// A compact version of the Insights tab's bar chart: tracks behind every bar, today in full
+/// strength while the period runs, and a dashed average with its label.
+struct WidgetBarChart: View {
+    let buckets: [WidgetChartBucket]
+    let average: Double
+    let colour: Color
+    let formatter: InsightsFormatter
+
+    private let averageLabelHeight: CGFloat = 15
+
+    private var maxValue: Double {
+        let maximum = max(buckets.map(\.value).max() ?? 0, average)
+        return maximum > 0 ? maximum * 1.1 : 1
+    }
+
+    private var spacing: CGFloat {
+        buckets.count > 20 ? 1.5 : (buckets.count > 8 ? 3 : 6)
+    }
+
+    private var radius: CGFloat {
+        buckets.count > 20 ? 1.5 : (buckets.count > 8 ? 3 : 5)
+    }
+
+    private var trackOpacity: Double {
+        buckets.count > 20 ? 0.055 : 0.07
+    }
+
+    private var emphasisesCurrent: Bool {
+        buckets.contains(where: \.isCurrent)
+    }
+
+    // An average of one or two scattered days is noise, so it needs a quarter of the elapsed buckets.
+    private var showsAverage: Bool {
+        let withData = buckets.filter { $0.value > 0 }.count
+        let elapsed = buckets.filter { !$0.isFuture }.count
+        return average > 0 && withData > 1 && Double(withData) >= Double(elapsed) * 0.25
+    }
 
     var body: some View {
-        GeometryReader { proxy in
-            HStack(spacing: proxy.size.width * 0.015) {
-                ForEach(categories, id: \.self) { category in
-                    if category.percent < 0.02 {
-                        EmptyView()
-                    } else if category.percent < 0.1 {
-                        RoundedRectangle(cornerRadius: 0.09 + (0.25 * category.percent * 100), style: .continuous)
-                            .fill(income ? Color(hex: Color.colorArray[categories.firstIndex(of: category) ?? 0]) : Color(hex: category.colour))
-                            .frame(width: (proxy.size.width * (1.0 - (0.015 * Double(categories.count - 1)))) * category.percent)
+        VStack(spacing: 4) {
+            GeometryReader { proxy in
+                let height = proxy.size.height
 
-                    } else {
-                        RoundedRectangle(cornerRadius: 3.5, style: .continuous)
-                            .fill(income ? Color(hex: Color.colorArray[categories.firstIndex(of: category) ?? 0]) : Color(hex: category.colour))
-                            .frame(width: (proxy.size.width * (1.0 - (0.015 * Double(categories.count - 1)))) * category.percent)
+                HStack(alignment: .bottom, spacing: spacing) {
+                    ForEach(buckets) { bucket in
+                        bar(bucket, height: height)
+                    }
+                }
+                .overlay {
+                    if showsAverage {
+                        averageOverlay(height: height)
                     }
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-    }
-}
 
-struct InsightsWidgetDollarView: View {
-    let currencySymbol: String
-    let dollarText: String
-
-    var body: some View {
-        HStack(alignment: .lastTextBaseline, spacing: 1.3) {
-            Group {
-                Text(currencySymbol)
-                    .font(.system(.subheadline, design: .rounded).weight(.medium))
-                    .foregroundColor(Color.SubtitleText) +
-
-                Text(dollarText)
-                    .font(.system(.title3, design: .rounded).weight(.medium))
-                    .foregroundColor(Color.PrimaryText)
+            HStack(spacing: spacing) {
+                ForEach(buckets) { bucket in
+                    Text(bucket.label)
+                        .font(.system(.caption2, design: .rounded).weight(.medium))
+                        .foregroundColor(bucket.isCurrent ? Color.PrimaryText : Color.SubtitleText)
+                        .fixedSize()
+                        .frame(maxWidth: .infinity)
+                }
             }
-
         }
-        .minimumScaleFactor(0.5)
-        .lineLimit(1)
+        .accessibilityHidden(true)
+    }
+
+    func bar(_ bucket: WidgetChartBucket, height: CGFloat) -> some View {
+        let valueHeight = bucket.value > 0 ? max(3, height * bucket.value / maxValue) : 0
+        let dimmed = emphasisesCurrent && !bucket.isCurrent
+
+        return ZStack(alignment: .bottom) {
+            RoundedRectangle(cornerRadius: radius, style: .continuous)
+                .fill(Color.PrimaryText.opacity(bucket.isFuture ? trackOpacity / 2 : trackOpacity))
+
+            if valueHeight > 0 {
+                RoundedRectangle(cornerRadius: min(radius, valueHeight / 2), style: .continuous)
+                    .fill(colour.opacity(dimmed ? 0.7 : 1))
+                    .frame(height: valueHeight)
+            }
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    // The label sits just above the line, or just below it when the line is too close to the top.
+    func averageOverlay(height: CGFloat) -> some View {
+        let averageY = height - height * average / maxValue
+        let above = averageY - 2 - averageLabelHeight
+        let labelY = above >= 0 ? above : min(averageY + 2, height - averageLabelHeight)
+
+        return ZStack(alignment: .topTrailing) {
+            Line()
+                .stroke(Color.SubtitleText, style: StrokeStyle(lineWidth: 1, lineCap: .round, dash: [3, 3]))
+                .frame(height: 1)
+                .offset(y: averageY)
+
+            (Text("avg ") + Text(formatter.compact(average)).fontWeight(.semibold))
+                .font(.system(.caption2, design: .rounded).weight(.medium))
+                .foregroundColor(Color.SubtitleText)
+                .lineLimit(1)
+                .fixedSize()
+                .padding(.horizontal, 5)
+                .frame(height: averageLabelHeight)
+                .background(Color.PrimaryBackground.opacity(0.9), in: Capsule())
+                .offset(y: labelY)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
     }
 }
 
-struct InsightsWidgetCategoryBreakdownView: View {
-    let amount: Double
-    let income: Bool
+/// The share bar and top categories from the Insights tab's Categories card.
+struct InsightsWidgetCategories: View {
     let categories: [HoldingCategory]
-    let duration: InsightsTimePeriod
-    let ios17: Bool
+    let income: Bool
 
-    var subtitleText1: String {
-        switch duration {
-        case .unknown:
-            return "NIL"
-        case .week:
-            return String(localized: "THIS WEEK").uppercased()
-        case .month:
-            return String(localized: "THIS MONTH").uppercased()
-        case .year:
-            return String(localized: "THIS YEAR").uppercased()
-        }
+    private var top: [HoldingCategory] {
+        Array(categories.prefix(3))
+    }
+
+    func colour(for category: HoldingCategory) -> String {
+        income ? Color.colorArray[(categories.firstIndex(of: category) ?? 0) % Color.colorArray.count] : category.colour
     }
 
     var body: some View {
-        VStack(spacing: 8) {
-            if amount != 0 {
-                HorizontalBarGraph(categories: categories, income: income)
-                    .frame(height: 16)
+        VStack(alignment: .leading, spacing: 10) {
+            if categories.isEmpty {
+                Text("No transactions")
+                    .font(.system(.subheadline, design: .rounded).weight(.medium))
+                    .foregroundColor(Color.SubtitleText)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                shareBar
 
-                VStack(spacing: 5) {
-                    ForEach(Array(categories.prefix(3)), id: \.self) { category in
-                        HStack(spacing: 7) {
-                            RoundedRectangle(cornerRadius: 3)
-                                .fill(income ? Color(hex: Color.colorArray[categories.firstIndex(of: category) ?? 0]) : Color(hex: category.colour))
-                                .frame(width: 8, height: 8)
+                VStack(alignment: .leading, spacing: 5) {
+                    ForEach(top, id: \.self) { category in
+                        HStack(spacing: 6) {
+                            WidgetEmojiTile(emoji: category.emoji, colour: colour(for: category), size: 20)
+
                             Text(category.name)
-                                .lineLimit(1)
-                                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                                .font(.system(.footnote, design: .rounded).weight(.medium))
                                 .foregroundColor(Color.PrimaryText)
+                                .lineLimit(1)
                                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                            Text("\(Int(round(category.percent * 100)))%")
-                                .font(.system(size: 12, weight: .regular, design: .rounded))
+                            Text("\(Int((category.percent * 100).rounded()))%")
+                                .font(.system(.footnote, design: .rounded).weight(.medium))
                                 .foregroundColor(Color.SubtitleText)
+                                .lineLimit(1)
+                                .layoutPriority(1)
                         }
                     }
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            } else {
-                Text("NO TRANSACTIONS\n\(subtitleText1)")
-                    .font(.system(size: 10,
-                                  weight: .medium, design: .rounded))
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(Color.SubtitleText)
-                    .frame(maxHeight: .infinity)
+                .frame(maxHeight: .infinity, alignment: .top)
             }
 
-            Link(destination: URL(string: "dimeapp://newExpense")!) {
-                HStack(spacing: 4) {
-                    Image(systemName: "plus")
-                        .font(.system(size: 9, weight: .medium, design: .rounded))
-
-                    Text("New Expense")
-                        .font(.system(size: 12, weight: .medium, design: .rounded))
-                        .foregroundColor(Color.PrimaryText)
-                }
-                .padding(.vertical, 4)
-                .frame(maxWidth: .infinity)
-                .background(RoundedRectangle(cornerRadius: 5).fill(ios17 ? Color.SecondaryBackground : Color.PrimaryBackground))
+            if categories.count < 3 {
+                WidgetNewExpenseButton()
             }
         }
+    }
+
+    var shareBar: some View {
+        let shown = categories.filter { $0.percent >= 0.01 }
+        let shownTotal = shown.reduce(0) { $0 + $1.percent }
+
+        return GeometryReader { proxy in
+            let available = proxy.size.width - 2 * CGFloat(max(0, shown.count - 1))
+
+            HStack(spacing: 2) {
+                ForEach(shown, id: \.self) { category in
+                    Rectangle()
+                        .fill(Color(hex: colour(for: category)))
+                        .frame(width: max(4, available * category.percent / max(shownTotal, 0.0001)))
+                }
+            }
+        }
+        .frame(height: 10)
+        .clipShape(Capsule())
+        .accessibilityHidden(true)
     }
 }

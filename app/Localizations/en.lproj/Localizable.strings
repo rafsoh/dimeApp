@@ -180,6 +180,8 @@
 "%@ SPENT" = "%@ SPENT";
 "left %@" = "left %@";
 "over %@" = "over %@";
+"left of %@" = "left of %@";
+"widget-log-button" = "Log";
 "left today" = "left today";
 "left on %@" = "left on %@";
 "over today" = "over today";
@@ -286,6 +288,8 @@
 "%lld%% spent" = "%lld%% spent";
 "NO RECENT EXPENSES" = "NO RECENT EXPENSES";
 "RECENT EXPENSES" = "RECENT EXPENSES";
+"Recent expenses" = "Recent expenses";
+"No recent expenses" = "No recent expenses";
 "in %@" = "in %@";
 "net" = "net";
 "earned" = "earned";

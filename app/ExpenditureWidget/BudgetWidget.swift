@@ -75,12 +75,20 @@ struct BudgetWidgetData {
         isOverall ? URL(string: "dimeapp://budget") : URL(string: "dimeapp://budget?budget=\(name)")
     }
 
+    /// "left of $200" or "over $200", so every budget widget shows what the budget is.
     var amountWord: String {
-        isOverall ? snapshot.overallAmountWord(BudgetFormatter.current) : snapshot.resultWord
+        let amount = BudgetFormatter.current.whole(snapshot.amount)
+        return snapshot.isOver ? String(localized: "over \(amount)") : String(localized: "left of \(amount)")
     }
 
-    var statusLine: Text {
-        isOverall ? Text(snapshot.overallTrailing) : snapshot.tileStatus()
+    /// Widgets leave out how long the period has to go, so a budget that's on track has no status line.
+    var statusLine: Text? {
+        switch snapshot.status {
+        case .onTrack, .abovePace:
+            return nil
+        case .nearLimit, .over, .ended, .fresh:
+            return snapshot.tileStatus()
+        }
     }
 
     static var sample: BudgetWidgetData {
@@ -178,12 +186,14 @@ struct BudgetTileWidgetView: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
 
-            budget.statusLine
-                .font(.system(.caption, design: .rounded).weight(.medium))
-                .foregroundColor(Color.SubtitleText)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-                .padding(.top, 2)
+            if let statusLine = budget.statusLine {
+                statusLine
+                    .font(.system(.caption, design: .rounded).weight(.medium))
+                    .foregroundColor(Color.SubtitleText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                    .padding(.top, 2)
+            }
 
             BudgetMeter(segments: budget.segments, tick: snapshot.showsTick ? snapshot.period.elapsed : nil, height: 10)
                 .padding(.top, 10)
@@ -224,7 +234,7 @@ struct BudgetAccessoryRectangleView: View {
                 .font(.system(size: 15, weight: .semibold, design: .rounded))
                 .lineLimit(1)
 
-            (Text("\(formatter.money(snapshot.difference)) \(snapshot.resultWord) · ") + budget.statusLine)
+            Text("\(formatter.money(snapshot.difference)) \(budget.amountWord)")
                 .font(.system(size: 14, weight: .regular, design: .rounded))
                 .foregroundColor(Color.SubtitleText)
                 .lineLimit(1)
@@ -280,6 +290,37 @@ struct BudgetAccessoryMessage: View {
                 .frame(maxWidth: .infinity)
         }
         .accessoryWidgetBackground()
+    }
+}
+
+/// A category's emoji on a tint of its colour, like the rows in the log.
+struct WidgetEmojiTile: View {
+    let emoji: String
+    let colour: String
+    let size: CGFloat
+
+    var body: some View {
+        Text(emoji)
+            .font(.system(size: size * 0.5))
+            .frame(width: size, height: size)
+            .background(Color(hex: colour).opacity(0.25), in: RoundedRectangle(cornerRadius: size * 0.32, style: .continuous))
+            .accessibilityHidden(true)
+    }
+}
+
+/// The dark capsule with a plus that the app uses for adding a transaction.
+struct WidgetNewExpenseButton: View {
+    var body: some View {
+        Link(destination: URL(string: "dimeapp://newExpense")!) {
+            Label("widget-log-button", systemImage: "plus")
+                .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                .foregroundColor(Color.LightIcon)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+                .padding(.vertical, 7)
+                .frame(maxWidth: .infinity)
+                .background(Color.DarkBackground, in: Capsule())
+        }
     }
 }
 
