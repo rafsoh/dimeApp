@@ -55,6 +55,10 @@ extension Notification {
     var keyboardHeight: CGFloat {
         return (userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect)?.height ?? 0
     }
+
+    var keyboardEndFrame: CGRect {
+        (userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect) ?? .null
+    }
 }
 
 extension View {
@@ -80,6 +84,10 @@ final class KeyboardHeightCache {
     static let shared = KeyboardHeightCache()
 
     private var observer: NSObjectProtocol?
+    private var frameObserver: NSObjectProtocol?
+
+    /// Where the keyboard is or is heading, in screen coordinates. Off screen or `.null` while hidden.
+    private(set) var screenFrame: CGRect = .null
 
     func start() {
         guard observer == nil else { return }
@@ -89,6 +97,10 @@ final class KeyboardHeightCache {
             if height > 200 {
                 UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.set(Double(height - 20), forKey: "keyboard")
             }
+        }
+
+        frameObserver = NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillChangeFrameNotification, object: nil, queue: .main) { [weak self] notification in
+            self?.screenFrame = notification.keyboardEndFrame
         }
     }
 }
