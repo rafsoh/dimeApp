@@ -12,7 +12,7 @@ import XCTest
 final class MoneySummingEquivalenceTests: XCTestCase {
     private let dataController = DataController.shared
     private var inserted: [NSManagedObject] = []
-    private var category: Category!
+    private var category: dime.Category!
 
     override func setUpWithError() throws {
         let context = dataController.container.viewContext
@@ -169,7 +169,7 @@ final class MoneySummingEquivalenceTests: XCTestCase {
 }
 
 private extension DataController {
-    func legacyGetShortcutInsights(type: Int, timeframe: Int, optionalIncome: Bool?, categories: [Category]) -> Double {
+    func legacyGetShortcutInsights(type: Int, timeframe: Int, optionalIncome: Bool?, categories: [dime.Category]) -> Double {
         let fetchRequest = fetchRequestForLogView(type: timeframe, optionalIncome: optionalIncome, categoryFilters: categories)
         let allTransactions = results(for: fetchRequest)
 
