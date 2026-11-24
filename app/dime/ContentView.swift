@@ -4,6 +4,7 @@
 //  Created by Rafael Soh on 3/6/22.
 //
 
+import Foundation
 import SwiftUI
 import WidgetKit
 
