@@ -5,6 +5,16 @@
 
 import Foundation
 
+enum CSVExport {
+    // Currency was added last, so the earlier columns stay where older exports had them.
+    static let header = "Date,Note,Amount,Category,Type,Currency\n"
+
+    /// Two decimals as before, or three for currencies like KWD so no digit is lost.
+    static func amount(_ amount: Double, currencyCode: String) -> String {
+        String(format: "%.\(max(2, CurrencyDigits.fractionDigits(for: currencyCode)))f", amount)
+    }
+}
+
 struct CSVTable {
     let headers: [String]
     let hasHeaderRow: Bool
@@ -126,7 +136,7 @@ struct CSVTable {
 }
 
 enum ImportField: CaseIterable, Hashable {
-    case date, amount, category, note, type
+    case date, amount, category, note, type, currency
 
     var title: String {
         switch self {
@@ -135,6 +145,7 @@ enum ImportField: CaseIterable, Hashable {
         case .category: return "Category"
         case .note: return "Note"
         case .type: return "Type"
+        case .currency: return "Currency"
         }
     }
 
@@ -145,13 +156,14 @@ enum ImportField: CaseIterable, Hashable {
         case .category: return "square.grid.2x2.fill"
         case .note: return "doc.plaintext.fill"
         case .type: return "plusminus"
+        case .currency: return "coloncurrencysign.circle.fill"
         }
     }
 
     var isRequired: Bool {
         switch self {
         case .date, .amount, .category: return true
-        case .note, .type: return false
+        case .note, .type, .currency: return false
         }
     }
 
@@ -162,6 +174,7 @@ enum ImportField: CaseIterable, Hashable {
         case .category: return ["category", "categories", "tag", "group"]
         case .note: return ["note", "description", "memo", "title", "name", "payee", "merchant", "details", "subtitle"]
         case .type: return ["type", "kind", "direction", "income/expense", "flow"]
+        case .currency: return ["currency", "ccy", "currency code", "iso currency"]
         }
     }
 }
@@ -369,6 +382,19 @@ struct ColumnMapping: Equatable {
         var mapping = ColumnMapping()
         var free = Set(0 ..< table.columnCount)
 
+        // Only a column of known currency codes counts, whatever its header says, so one isn't taken for a category.
+        let currencyColumns = free.sorted().filter { column in
+            let values = table.rows.prefix(50).map { $0[column] }.filter { !$0.isEmpty }
+            return !values.isEmpty && values.allSatisfy { Currency.knownCode($0) != nil }
+        }
+        let currencyHeader = { (column: Int) in
+            ImportField.currency.headerKeywords.contains { table.headers[column].lowercased().contains($0) }
+        }
+        if let column = currencyColumns.first(where: { table.hasHeaderRow && currencyHeader($0) }) ?? (table.hasHeaderRow ? nil : currencyColumns.first) {
+            mapping.columns[.currency] = column
+            free.remove(column)
+        }
+
         if table.hasHeaderRow {
             for field in [ImportField.type, .category, .amount, .date, .note] {
                 let candidates = free.sorted()
@@ -434,13 +460,14 @@ struct ColumnMapping: Equatable {
 }
 
 enum ImportSkipReason: CaseIterable, Hashable {
-    case date, amount, category
+    case date, amount, category, currency
 
     var description: String {
         switch self {
         case .date: return "without a readable date"
         case .amount: return "without a readable amount"
         case .category: return "without a category"
+        case .currency: return "with an unknown currency"
         }
     }
 }
@@ -453,6 +480,12 @@ struct ImportedRow {
     let categoryName: String
     /// Set when the file says whether the row is income, through a type column or signed amounts.
     let income: Bool?
+    /// From the file's currency column; nil means the main currency.
+    var currencyCode: String?
+
+    func money(income: Bool) -> MoneyEntry {
+        MoneyEntry(id: nil, amount: amount, currencyCode: currencyCode, date: date, income: income)
+    }
 }
 
 /// One category name from the file, split by income where the file says so.
@@ -494,6 +527,16 @@ struct ImportParseResult {
                 continue
             }
 
+            // An unrecognised code is skipped rather than read as the main currency.
+            var currencyCode: String?
+            if let currencyColumn = mapping[.currency], !row[currencyColumn].trimmingCharacters(in: .whitespaces).isEmpty {
+                guard let code = Currency.knownCode(row[currencyColumn]) else {
+                    skipped[.currency, default: 0] += 1
+                    continue
+                }
+                currencyCode = code
+            }
+
             var income = mapping[.type].flatMap { ImportParsing.isIncome(row[$0]) }
             if income == nil, signsSayIncome, amount != 0 {
                 income = amount > 0
@@ -504,7 +547,8 @@ struct ImportParseResult {
                 amount: abs(amount),
                 note: mapping[.note].map { row[$0] } ?? "",
                 categoryName: categoryName,
-                income: income
+                income: income,
+                currencyCode: currencyCode
             ))
         }
 

@@ -100,20 +100,22 @@ struct ExportCatalog {
 enum ExportCSV {
     static let dateFormat = "yyyy-MM-dd HH:mm:ss Z"
 
-    static func text(for transactions: [Transaction]) -> String {
+    static func text(for transactions: [Transaction], mainCurrency: String = CurrencyConverter.current().mainCurrency) -> String {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.calendar = Calendar(identifier: .gregorian)
         formatter.dateFormat = dateFormat
 
-        var csv = "Date,Note,Amount,Category,Type\n"
+        var csv = CSVExport.header
         for transaction in transactions.sorted(by: { $0.wrappedDate > $1.wrappedDate }) {
             let date = formatter.string(from: transaction.wrappedDate)
             let note = field(transaction.wrappedNote)
-            let amount = String(format: "%.2f", transaction.wrappedAmount)
+            // A transaction without a currency is in the main currency.
+            let currencyCode = (transaction.currencyCode ?? mainCurrency).uppercased()
+            let amount = CSVExport.amount(transaction.wrappedAmount, currencyCode: currencyCode)
             let category = field(transaction.category?.wrappedName ?? "")
             let type = transaction.income ? "Income" : "Expense"
-            csv += "\(date),\(note),\(amount),\(category),\(type)\n"
+            csv += "\(date),\(note),\(amount),\(category),\(type),\(currencyCode)\n"
         }
         return csv
     }

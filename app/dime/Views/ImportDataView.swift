@@ -471,8 +471,11 @@ struct ImportDataView: View {
 
     var reviewStep: some View {
         let rows = rowsToImport
-        let expenses = rows.filter { !income(for: $0) }.reduce(0) { $0 + $1.amount }
-        let incomes = rows.filter { income(for: $0) }.reduce(0) { $0 + $1.amount }
+        let converter = CurrencyConverter.current()
+        let expenseTotal = converter.total(of: rows.filter { !income(for: $0) }.map { $0.money(income: false) })
+        let incomeTotal = converter.total(of: rows.filter { income(for: $0) }.map { $0.money(income: true) })
+        let expenses = expenseTotal.value
+        let incomes = incomeTotal.value
         let newCategories = parsed.categoryKeys.filter { choice(for: $0.key) == .create }.count
 
         return ScrollView(showsIndicators: false) {
@@ -488,9 +491,9 @@ struct ImportDataView: View {
                     }
 
                     Divider()
-                    SummaryRow(title: "Expenses", value: formatted(expenses, income: nil), color: Color.PrimaryText)
+                    SummaryRow(title: "Expenses", value: expenseTotal.report.marking(formatted(expenses, income: nil)), color: Color.PrimaryText)
                     Divider()
-                    SummaryRow(title: "Income", value: formatted(incomes, income: nil), color: Color.IncomeGreen)
+                    SummaryRow(title: "Income", value: incomeTotal.report.marking(formatted(incomes, income: nil)), color: Color.IncomeGreen)
                     Divider()
                     SummaryRow(title: "New Categories", value: "\(newCategories)", color: Color.PrimaryText)
 
@@ -724,10 +727,10 @@ struct ImportDataView: View {
         return parsed.rows.enumerated().filter { !duplicateRows.contains($0.offset) }.map(\.element)
     }
 
-    func duplicateKey(date: Date, amount: Double, note: String, income: Bool) -> String {
+    func duplicateKey(date: Date, amount: Double, note: String, income: Bool, currencyCode: String?) -> String {
         let day = Calendar.current.startOfDay(for: date).timeIntervalSinceReferenceDate
         let cents = Int((amount * 100).rounded())
-        return "\(day)|\(cents)|\(note.trimmingCharacters(in: .whitespaces).lowercased())|\(income)"
+        return "\(day)|\(cents)|\(note.trimmingCharacters(in: .whitespaces).lowercased())|\(income)|\((currencyCode ?? currency).uppercased())"
     }
 
     /// Rows that match a transaction already in Dime by day, amount, note and type. Each existing transaction matches
@@ -746,13 +749,13 @@ struct ImportDataView: View {
 
         var existing: [String: Int] = [:]
         for transaction in dataController.results(for: request) {
-            existing[duplicateKey(date: transaction.wrappedDate, amount: transaction.amount, note: transaction.wrappedNote, income: transaction.income), default: 0] += 1
+            existing[duplicateKey(date: transaction.wrappedDate, amount: transaction.amount, note: transaction.wrappedNote, income: transaction.income, currencyCode: transaction.currencyCode), default: 0] += 1
         }
 
         var duplicates = Set<Int>()
         for (index, row) in parsed.rows.enumerated() {
             // Notes left empty are saved as the category's name.
-            let key = duplicateKey(date: row.date, amount: row.amount, note: row.note.isEmpty ? row.categoryName : row.note, income: income(for: row))
+            let key = duplicateKey(date: row.date, amount: row.amount, note: row.note.isEmpty ? row.categoryName : row.note, income: income(for: row), currencyCode: row.currencyCode)
             if let count = existing[key], count > 0 {
                 existing[key] = count - 1
                 duplicates.insert(index)
@@ -810,10 +813,11 @@ struct ImportDataView: View {
                     }
                 }
 
-                _ = dataController.insertTransaction(note: row.note, category: category, income: income, amount: row.amount, date: row.date)
+                _ = dataController.insertTransaction(note: row.note, category: category, income: income, amount: row.amount, currencyCode: row.currencyCode ?? currency.uppercased(), date: row.date)
             }
 
             dataController.save()
+            dataController.refreshExchangeRates()
 
             importedCount = rows.count
             UINotificationFeedbackGenerator().notificationOccurred(.success)

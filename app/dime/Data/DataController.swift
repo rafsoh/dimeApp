@@ -697,7 +697,7 @@ class DataController: ObservableObject {
         }
 
         transaction.amount = amount
-        transaction.currencyCode = currencyCode
+        transaction.currencyCode = currencyCode ?? currencyForNewTransaction()
         transaction.date = date
         transaction.id = UUID()
 
@@ -722,7 +722,8 @@ class DataController: ObservableObject {
     func newTemplateTransaction(order: Int) {
         if let match = getTemplateTransaction(order: order) {
             if let unwrappedCategory = match.category {
-                _ = newTransaction(note: match.note ?? "", category: unwrappedCategory, income: match.income, amount: match.amount, date: Date.now, repeatType: Int(match.recurringType), repeatCoefficient: Int(match.recurringCoefficient), delay: false)
+                // Templates have no currency and were made in the main currency.
+                _ = newTransaction(note: match.note ?? "", category: unwrappedCategory, income: match.income, amount: match.amount, currencyCode: currencyConverter.mainCurrency, date: Date.now, repeatType: Int(match.recurringType), repeatCoefficient: Int(match.recurringCoefficient), delay: false)
 
                 addedTransaction = true
             }
@@ -1174,6 +1175,18 @@ class DataController: ObservableObject {
 
     var currencyConverter: CurrencyConverter {
         .current()
+    }
+
+    // In a shared store participants may have different main currencies, so a missing currency would be
+    // ambiguous: every new transaction names its currency.
+    func currencyForNewTransaction() -> String {
+        let defaults = UserDefaults(suiteName: "group.com.rafaelsoh.dime")
+
+        return CurrencyPreferences.defaultCurrency(
+            mainCurrency: currencyConverter.mainCurrency,
+            multipleCurrenciesEnabled: CurrencyPreferences.isMultipleCurrenciesEnabled(in: defaults),
+            recent: CurrencyPreferences.recentCurrencies(in: defaults)
+        )
     }
 
     /// Dates of transactions in a currency other than the main one, the only days rates are needed for.
