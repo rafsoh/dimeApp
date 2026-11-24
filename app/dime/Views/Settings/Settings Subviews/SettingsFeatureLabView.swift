@@ -29,10 +29,6 @@ struct SettingsGoofyView: View {
     "showTransactionRecommendations", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
   var showRecommendations: Bool = false
 
-  @AppStorage(
-    CurrencyPreferences.multipleCurrenciesKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
-  var multipleCurrencies: Bool = false
-
   @Namespace var animation
 
   var body: some View {
@@ -51,12 +47,6 @@ struct SettingsGoofyView: View {
       .settingsSectionRows()
 
       SettingsSectionFooter("Experimental features - proceed with caution.")
-        .padding(.bottom, .settingsHeaderSpacing)
-
-      ToggleRow(text: "Multiple Currencies", bool: $multipleCurrencies)
-        .settingsSectionRows()
-
-      SettingsSectionFooter("Log transactions in other currencies. Totals, insights, budgets and widgets convert them to your main currency at the rate on each transaction's date, marked with ≈. Converted amounts are never saved to your data.")
         .padding(.bottom, .settingsHeaderSpacing)
 
       ToggleRow(text: "Replace Time Label", bool: $swapTimeLabel)

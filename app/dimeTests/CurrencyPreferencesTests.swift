@@ -15,10 +15,9 @@ final class CurrencyPreferencesTests: XCTestCase {
         XCTAssertEqual(CurrencyDigits.fractionDigits(for: "EUR"), 2)
     }
 
-    func testDefaultCurrencyIsTheMainOneUnlessTheFeatureIsOn() {
-        XCTAssertEqual(CurrencyPreferences.defaultCurrency(mainCurrency: "sgd", multipleCurrenciesEnabled: false, recent: ["EUR"]), "SGD")
-        XCTAssertEqual(CurrencyPreferences.defaultCurrency(mainCurrency: "SGD", multipleCurrenciesEnabled: true, recent: []), "SGD")
-        XCTAssertEqual(CurrencyPreferences.defaultCurrency(mainCurrency: "SGD", multipleCurrenciesEnabled: true, recent: ["EUR", "JPY"]), "EUR")
+    func testDefaultCurrencyIsTheLastUsedOneOrTheMainOne() {
+        XCTAssertEqual(CurrencyPreferences.defaultCurrency(mainCurrency: "sgd", recent: []), "SGD")
+        XCTAssertEqual(CurrencyPreferences.defaultCurrency(mainCurrency: "SGD", recent: ["EUR", "JPY"]), "EUR")
     }
 
     func testRecentCurrencies() {

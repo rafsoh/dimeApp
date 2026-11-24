@@ -1184,7 +1184,6 @@ class DataController: ObservableObject {
 
         return CurrencyPreferences.defaultCurrency(
             mainCurrency: currencyConverter.mainCurrency,
-            multipleCurrenciesEnabled: CurrencyPreferences.isMultipleCurrenciesEnabled(in: defaults),
             recent: CurrencyPreferences.recentCurrencies(in: defaults)
         )
     }

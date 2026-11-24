@@ -112,10 +112,6 @@ struct SettingsView: View {
   @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency:
     String = Locale.current.currencyCode!
 
-  @AppStorage(
-    CurrencyPreferences.multipleCurrenciesKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
-  var multipleCurrencies: Bool = false
-
   @AppStorage("incomeTracking", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
   var incomeTracking: Bool = true
     
@@ -182,15 +178,13 @@ struct SettingsView: View {
 
               NavigationLink(destination: SettingsCurrencyView()) {
                 SettingsRowView(
-                  systemImage: "coloncurrencysign.square.fill", title: "Currency", colour: 103,
+                  systemImage: "coloncurrencysign.square.fill", title: "Primary Currency", colour: 103,
                   optionalText: currency)
               }
 
-              if multipleCurrencies {
-                NavigationLink(destination: SettingsExchangeRatesView()) {
-                  SettingsRowView(
-                    systemImage: "arrow.left.arrow.right.square.fill", title: "Exchange Rates", colour: 103)
-                }
+              NavigationLink(destination: SettingsExchangeRatesView()) {
+                SettingsRowView(
+                  systemImage: "arrow.left.arrow.right.square.fill", title: "Exchange Rates", colour: 103)
               }
 
               NavigationLink(

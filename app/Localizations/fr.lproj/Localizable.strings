@@ -351,8 +351,6 @@
 "Not Now" = "Plus tard";
 
 /* Multiple currencies */
-"≈ converted" = "≈ converti";
-"Converted from other currencies at daily rates" = "Converti depuis d'autres devises aux taux du jour";
 "No exchange rate yet" = "Pas encore de taux de change";
 "Currency, %@" = "Devise, %@";
 "Recent" = "Récentes";
@@ -366,10 +364,10 @@
 "Refresh Rates" = "Actualiser les taux";
 "Rates come from fawazahmed0/exchange-api, and from Frankfurter (European Central Bank) for dates before March 2024. Each transaction is converted at the rate on its own date. Rates are kept on this device only and are never added to your data or iCloud." = "Les taux proviennent de fawazahmed0/exchange-api, et de Frankfurter (Banque centrale européenne) pour les dates antérieures à mars 2024. Chaque transaction est convertie au taux de sa propre date. Les taux restent sur cet appareil et ne sont jamais ajoutés à vos données ni à iCloud.";
 "Some rates couldn't be downloaded. Dime will try again later, and amounts without a rate are left out of totals until then." = "Certains taux n'ont pas pu être téléchargés. Dime réessaiera plus tard ; d'ici là, les montants sans taux ne sont pas comptés dans les totaux.";
-"Multiple Currencies" = "Plusieurs devises";
-"Log transactions in other currencies. Totals, insights, budgets and widgets convert them to your main currency at the rate on each transaction's date, marked with ≈. Converted amounts are never saved to your data." = "Enregistrez des transactions dans d'autres devises. Les totaux, statistiques, budgets et widgets les convertissent dans votre devise principale au taux de la date de chaque transaction, avec le signe ≈. Les montants convertis ne sont jamais enregistrés dans vos données.";
 "with an unknown currency" = "avec une devise inconnue";
-"Change your main currency?" = "Changer votre devise principale ?";
+"Change your primary currency?" = "Changer votre devise principale ?";
+"Primary Currency" = "Devise principale";
+"Changes the currency of this transaction" = "Change la devise de cette transaction";
 "My transactions were actually in %@" = "Mes transactions étaient en fait en %@";
 "Convert to %@" = "Convertir en %@";
 "Relabelling keeps every amount as it is and treats your %@ transactions as %@. Converting keeps them in %@ and shows them in %@ at each day's rate. Dime backs up your data first." = "Réétiqueter garde chaque montant tel quel et considère vos transactions en %@ comme étant en %@. Convertir les garde en %@ et les affiche en %@ au taux de chaque jour. Dime sauvegarde d'abord vos données.";

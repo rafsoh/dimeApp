@@ -351,8 +351,6 @@
 "Not Now" = "Не сейчас";
 
 /* Multiple currencies */
-"≈ converted" = "≈ пересчитано";
-"Converted from other currencies at daily rates" = "Пересчитано из других валют по дневному курсу";
 "No exchange rate yet" = "Курс пока недоступен";
 "Currency, %@" = "Валюта, %@";
 "Recent" = "Недавние";
@@ -366,10 +364,10 @@
 "Refresh Rates" = "Обновить курсы";
 "Rates come from fawazahmed0/exchange-api, and from Frankfurter (European Central Bank) for dates before March 2024. Each transaction is converted at the rate on its own date. Rates are kept on this device only and are never added to your data or iCloud." = "Курсы берутся из fawazahmed0/exchange-api, а для дат до марта 2024 года — из Frankfurter (Европейский центральный банк). Каждая операция пересчитывается по курсу на её дату. Курсы хранятся только на этом устройстве и никогда не добавляются в ваши данные или iCloud.";
 "Some rates couldn't be downloaded. Dime will try again later, and amounts without a rate are left out of totals until then." = "Не удалось загрузить некоторые курсы. Dime попробует снова позже, а до тех пор суммы без курса не учитываются в итогах.";
-"Multiple Currencies" = "Несколько валют";
-"Log transactions in other currencies. Totals, insights, budgets and widgets convert them to your main currency at the rate on each transaction's date, marked with ≈. Converted amounts are never saved to your data." = "Записывайте операции в других валютах. Итоги, статистика, бюджеты и виджеты пересчитывают их в основную валюту по курсу на дату каждой операции и отмечают знаком ≈. Пересчитанные суммы никогда не сохраняются в ваших данных.";
 "with an unknown currency" = "с неизвестной валютой";
-"Change your main currency?" = "Сменить основную валюту?";
+"Change your primary currency?" = "Сменить основную валюту?";
+"Primary Currency" = "Основная валюта";
+"Changes the currency of this transaction" = "Меняет валюту этой транзакции";
 "My transactions were actually in %@" = "Мои операции на самом деле были в %@";
 "Convert to %@" = "Пересчитать в %@";
 "Relabelling keeps every amount as it is and treats your %@ transactions as %@. Converting keeps them in %@ and shows them in %@ at each day's rate. Dime backs up your data first." = "При смене метки суммы не меняются, а операции в %@ считаются операциями в %@. При пересчёте они остаются в %@ и показываются в %@ по курсу на каждый день. Сначала Dime создаст резервную копию.";

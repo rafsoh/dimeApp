@@ -6,19 +6,9 @@
 import SwiftUI
 
 extension ConversionReport {
-    /// "≈ converted · 2 excluded", or nil when nothing was converted or left out.
+    /// "2 excluded" when a total leaves out amounts without a rate, otherwise nil.
     var note: String? {
-        var parts: [String] = []
-
-        if isApproximate {
-            parts.append(String(localized: "≈ converted"))
-        }
-
-        if excludedCount > 0 {
-            parts.append(String(localized: "\(excludedCount) excluded"))
-        }
-
-        return parts.isEmpty ? nil : parts.joined(separator: " · ")
+        excludedCount > 0 ? String(localized: "\(excludedCount) excluded") : nil
     }
 
     var approximatePrefix: String {
@@ -62,7 +52,7 @@ struct ConversionNote: View {
                 .foregroundColor(Color.SubtitleText)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
-                .accessibilityLabel(report.isComplete ? Text("Converted from other currencies at daily rates") : Text("\(report.excludedCount) transactions have no exchange rate yet and are left out"))
+                .accessibilityLabel(Text("\(report.excludedCount) transactions have no exchange rate yet and are left out"))
         }
     }
 }

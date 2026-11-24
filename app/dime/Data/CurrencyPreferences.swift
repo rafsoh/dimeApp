@@ -32,13 +32,8 @@ enum MoneyFormatter {
 }
 
 enum CurrencyPreferences {
-    static let multipleCurrenciesKey = "multipleCurrencies"
     static let recentCurrenciesKey = "recentCurrencies"
     static let recentLimit = 5
-
-    static func isMultipleCurrenciesEnabled(in defaults: UserDefaults?) -> Bool {
-        defaults?.bool(forKey: multipleCurrenciesKey) ?? false
-    }
 
     static func recentCurrencies(in defaults: UserDefaults?) -> [String] {
         defaults?.stringArray(forKey: recentCurrenciesKey) ?? []
@@ -53,10 +48,10 @@ enum CurrencyPreferences {
         defaults?.set(recording(currencyCode, in: recentCurrencies(in: defaults)), forKey: recentCurrenciesKey)
     }
 
-    /// The only place a new transaction's currency is chosen: the last one used while multiple currencies
-    /// are on, otherwise the main currency. A future account's default currency belongs here too.
-    static func defaultCurrency(mainCurrency: String, multipleCurrenciesEnabled: Bool, recent: [String]) -> String {
-        guard multipleCurrenciesEnabled, let last = recent.first else {
+    /// The only place a new transaction's currency is chosen: the last one used, otherwise the main currency.
+    /// A future account's default currency belongs here too.
+    static func defaultCurrency(mainCurrency: String, recent: [String]) -> String {
+        guard let last = recent.first else {
             return mainCurrency.uppercased()
         }
 

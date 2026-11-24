@@ -40,9 +40,9 @@ exactly what every transaction meant before currencies were stored, so migration
 
 ## The one place a new transaction's currency is chosen
 
-`CurrencyPreferences.defaultCurrency(mainCurrency:multipleCurrenciesEnabled:recent:)`, called through
-`DataController.currencyForNewTransaction()`. It returns the last currency used while the Multiple
-Currencies Feature Lab option is on, and the main currency otherwise. When accounts arrive, an account's
+`CurrencyPreferences.defaultCurrency(mainCurrency:recent:)`, called through
+`DataController.currencyForNewTransaction()`. It returns the last currency used, and the main currency
+if none has been. When accounts arrive, an account's
 default currency goes here, between the last used currency and the main currency. Templates have no
 currency and always create transactions in the main currency.
 
@@ -80,11 +80,11 @@ currency and always create transactions in the main currency.
 
 ## Changing the main currency
 
-Settings › Currency asks, while Multiple Currencies is on:
+Settings › Primary Currency asks:
 
 - **My transactions were actually in X** (relabel): transactions labelled with the old main currency are
   relabelled X, and those without a currency follow the main currency. This is what changing the currency
-  always did, and it's what happens without asking while the feature is off.
+  always did.
 - **Convert to X**: transactions without a currency are labelled with the old main currency, then the main
   currency becomes X, so they're converted from then on.
 
