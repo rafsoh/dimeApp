@@ -202,6 +202,9 @@
 		E7A1C0DE2B11000300D1E001 /* PullToSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A1C0DE2B11000400D1E001 /* PullToSearch.swift */; };
 		F80783587532F3DB79987B0C /* ExchangeRateStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B836338BBA573E260BA57B8E /* ExchangeRateStore.swift */; };
 		FCD721AAB121BA80CFF1293F /* SettingsBackupsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86CFCBA6EAE7ED44DDE226DA /* SettingsBackupsView.swift */; };
+		D7C0E1A12F2B000200A1B2C3 /* OpenNewExpenseIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7C0E1A12F2B000100A1B2C3 /* OpenNewExpenseIntent.swift */; };
+		D7C0E1A12F2B000300A1B2C3 /* OpenNewExpenseIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7C0E1A12F2B000100A1B2C3 /* OpenNewExpenseIntent.swift */; };
+		D7C0E1A12F2B000500A1B2C3 /* NewExpenseControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7C0E1A12F2B000400A1B2C3 /* NewExpenseControl.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -416,6 +419,8 @@
 		E4B0A0122B11000100C8C001 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = Localizations/ru.lproj/Localizable.strings; sourceTree = "<group>"; };
 		E4B0A0132B11000100C8C001 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = fr; path = Localizations/fr.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 		E4B0A0142B11000100C8C001 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = ru; path = Localizations/ru.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
+		D7C0E1A12F2B000100A1B2C3 /* OpenNewExpenseIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenNewExpenseIntent.swift; sourceTree = "<group>"; };
+		D7C0E1A12F2B000400A1B2C3 /* NewExpenseControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewExpenseControl.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -654,6 +659,7 @@
 				53B822A92A6D50CC000FC7C9 /* NewTransactionIntent.swift */,
 				536FA6C02A7E05C600C52490 /* GetInsightsIntent.swift */,
 				536FA6C22A7F941B00C52490 /* BudgetInsightsIntent.swift */,
+				D7C0E1A12F2B000100A1B2C3 /* OpenNewExpenseIntent.swift */,
 			);
 			path = Actions;
 			sourceTree = "<group>";
@@ -682,6 +688,7 @@
 				530C9DFC28ACE14A0038535F /* BudgetWidget.swift */,
 				53620B8A28CAE3520058F216 /* LockBudgetWidget.swift */,
 				534973D128CB3594000201F9 /* NewExpenseWidget.swift */,
+				D7C0E1A12F2B000400A1B2C3 /* NewExpenseControl.swift */,
 				53D520FB2AAF1190000AC055 /* TemplateTransactionWidget.swift */,
 				53B1D192288ED87000E28062 /* Assets.xcassets */,
 				53B1D194288ED87000E28062 /* Info.plist */,
@@ -1091,6 +1098,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D7C0E1A12F2B000200A1B2C3 /* OpenNewExpenseIntent.swift in Sources */,
 				D7A1B2C32E9F000200A1B2C3 /* BudgetModel.swift in Sources */,
 				D7A1B2C32E9F001100A1B2C3 /* InsightsStyle.swift in Sources */,
 				536A2A152A59C47400D81E02 /* Wiggle.swift in Sources */,
@@ -1203,6 +1211,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D7C0E1A12F2B000300A1B2C3 /* OpenNewExpenseIntent.swift in Sources */,
+				D7C0E1A12F2B000500A1B2C3 /* NewExpenseControl.swift in Sources */,
 				D7A1B2C32E9F000300A1B2C3 /* BudgetModel.swift in Sources */,
 				D7A1B2C32E9F001200A1B2C3 /* InsightsStyle.swift in Sources */,
 				D7A1B2C32E9F000400A1B2C3 /* RoundedTriangle.swift in Sources */,
