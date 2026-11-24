@@ -716,13 +716,16 @@ struct BrandNewBudgetView: View {
         case .day:
             return today
         case .week:
+            let setting = UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.integer(forKey: "firstWeekday") ?? 0
+            let first = (1 ... 7).contains(setting) ? setting : 1
             var calendar = Calendar(identifier: .gregorian)
-            calendar.firstWeekday = 1
+            calendar.firstWeekday = first
             calendar.minimumDaysInFirstWeek = 4
 
             let dateComponents = calendar.dateComponents([.weekOfYear, .yearForWeekOfYear], from: today)
-            let sunday = calendar.date(from: dateComponents)!
-            let holdingDate = calendar.date(byAdding: .day, value: chosenDayWeek - 1, to: sunday)!
+            let weekStart = calendar.date(from: dateComponents)!
+            let offset = (chosenDayWeek - first + 7) % 7
+            let holdingDate = calendar.date(byAdding: .day, value: offset, to: weekStart)!
 
             if holdingDate > today {
                 return calendar.date(byAdding: .day, value: -7, to: holdingDate)!

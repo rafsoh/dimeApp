@@ -16,8 +16,6 @@ struct SettingsWeekStartView: View {
   var firstDayOfMonth: Int = 1
   @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
 
-  let options = ["Sunday", "Monday"]
-
   @Namespace var animation
 
   var body: some View {
@@ -26,9 +24,9 @@ struct SettingsWeekStartView: View {
         SettingsSectionHeader("Start of Week")
 
         VStack(spacing: 0) {
-          ForEach(options.indices, id: \.self) { option in
+          ForEach(0 ..< 7, id: \.self) { option in
             HStack {
-              Text(LocalizedStringKey(options[option]))
+              Text(dimeWeekdaySymbol(option + 1))
                 .font(.system(.body, design: .rounded))
                 .foregroundColor(Color.PrimaryText)
 
@@ -55,7 +53,7 @@ struct SettingsWeekStartView: View {
               }
             }
             .overlay(alignment: .bottom) {
-              if option < (options.count - 1) {
+              if option < 6 {
                 Divider()
               }
             }
@@ -129,4 +127,14 @@ struct SettingsWeekStartView: View {
 
     return formatter.string(from: number as NSNumber)!.replacingOccurrences(of: ".", with: "")
   }
+}
+
+func dimeWeekdaySymbol(_ weekday: Int) -> String {
+  var calendar = Calendar(identifier: .gregorian)
+  calendar.locale = .current
+  calendar.firstWeekday = 1
+  let symbols = calendar.weekdaySymbols
+  let index = min(max(weekday, 1), 7) - 1
+  guard symbols.indices.contains(index) else { return "" }
+  return symbols[index].localizedCapitalized
 }

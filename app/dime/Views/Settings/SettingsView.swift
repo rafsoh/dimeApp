@@ -45,11 +45,7 @@ struct SettingsView: View {
   @AppStorage("firstWeekday", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
   var firstWeekday: Int = 1
   var firstWeekdayString: String {
-    if firstWeekday == 1 {
-      return String(localized: "Sunday")
-    } else {
-      return String(localized: "Monday")
-    }
+    dimeWeekdaySymbol(firstWeekday)
   }
 
   @AppStorage("showNotifications", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
