@@ -236,7 +236,7 @@ struct LogView: View {
 
             ZStack(alignment: .leading) {
                 if searchQuery.isEmpty {
-                    Text("Search")
+                    Text("Search by note, category, amount or date")
                         .font(.system(.body, design: .rounded))
                         .foregroundColor(Color.SubtitleText)
                         .lineLimit(1)
@@ -725,7 +725,7 @@ struct FilteredSearchView: View {
         let contains = NSPredicate(format: "%K CONTAINS[cd] %@", #keyPath(Transaction.note), query)
         let category = NSPredicate(format: "%K CONTAINS[cd] %@", #keyPath(Transaction.category.name), query)
         var parts = [begins, contains, category]
-        if let amount = Double(query) {
+        if let amount = TransactionAmountSearch.value(in: query) {
             parts.append(NSPredicate(format: "amount == %@", NSNumber(value: amount)))
         }
         return NSCompoundPredicate(orPredicateWithSubpredicates: parts)
