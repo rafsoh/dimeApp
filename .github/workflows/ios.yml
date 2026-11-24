@@ -1,0 +1,107 @@
+name: iOS build & test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build, test & screenshot
+    # macOS runners are free for public repositories.
+    runs-on: macos-15
+    timeout-minutes: 45
+
+    env:
+      PROJECT: app/dime.xcodeproj
+      SCHEME: dime
+      DERIVED_DATA: build
+      BUNDLE_ID: com.rafaelsoh.dime
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Cache Swift packages
+        uses: actions/cache@v4
+        with:
+          path: .spm
+          key: spm-${{ runner.os }}-${{ hashFiles('app/dime.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          restore-keys: spm-${{ runner.os }}-
+
+      - name: Pick an iPhone simulator
+        run: |
+          # Newest available iOS runtime, first iPhone on it. Avoids hardcoding device names
+          # that change whenever GitHub updates the runner image.
+          UDID=$(xcrun simctl list devices available --json | python3 -c '
+          import json, sys
+          data = json.load(sys.stdin)["devices"]
+          ios = sorted((k for k in data if "iOS" in k),
+                       key=lambda k: [int(p) for p in k.rsplit("iOS-", 1)[-1].split("-")])
+          for runtime in reversed(ios):
+              phones = [d for d in data[runtime] if d["name"].startswith("iPhone")]
+              if phones:
+                  print(phones[0]["udid"]); break
+          ')
+          if [ -z "$UDID" ]; then echo "No iPhone simulator found"; exit 1; fi
+          xcrun simctl list devices | grep "$UDID"
+          echo "SIM_UDID=$UDID" >> "$GITHUB_ENV"
+
+      - name: Build and run tests
+        run: |
+          status=0
+          xcodebuild test \
+            -project "$PROJECT" \
+            -scheme "$SCHEME" \
+            -destination "id=$SIM_UDID" \
+            -derivedDataPath "$DERIVED_DATA" \
+            -clonedSourcePackagesDirPath .spm \
+            -resultBundlePath TestResults.xcresult \
+            CODE_SIGNING_ALLOWED=NO \
+            > xcodebuild.log 2>&1 || status=$?
+          # Print a readable summary; the full log is uploaded if the job fails.
+          grep -E "error:|Test Suite|Test Case.*(passed|failed)|\*\* (BUILD|TEST)" xcodebuild.log || true
+          if [ "$status" -ne 0 ]; then tail -80 xcodebuild.log; fi
+          exit "$status"
+
+      - name: Launch app and take screenshots
+        # Smoke check: the app starts, and the dimeapp://newExpense link (used by the
+        # New Expense widget and control) opens the add sheet.
+        continue-on-error: true
+        run: |
+          mkdir -p screenshots
+          APP=$(find "$DERIVED_DATA/Build/Products" -maxdepth 2 -name "*.app" -path "*iphonesimulator*" | head -1)
+          echo "App: $APP"
+          xcrun simctl bootstatus "$SIM_UDID" -b
+          xcrun simctl install "$SIM_UDID" "$APP"
+          xcrun simctl launch "$SIM_UDID" "$BUNDLE_ID"
+          sleep 8
+          xcrun simctl io "$SIM_UDID" screenshot screenshots/1-launch.png
+          xcrun simctl openurl "$SIM_UDID" "dimeapp://newExpense"
+          sleep 4
+          xcrun simctl io "$SIM_UDID" screenshot screenshots/2-new-expense.png
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: screenshots
+          if-no-files-found: ignore
+
+      - name: Upload logs and test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            xcodebuild.log
+            TestResults.xcresult
+          if-no-files-found: ignore
