@@ -1176,6 +1176,34 @@ class DataController: ObservableObject {
         .current()
     }
 
+    /// Dates of transactions in a currency other than the main one, the only days rates are needed for.
+    func foreignCurrencyDates() -> [Date] {
+        let request: NSFetchRequest<Transaction> = Transaction.fetchRequest()
+        request.predicate = NSPredicate(format: "%K != nil AND NOT (%K ==[c] %@)", #keyPath(Transaction.currencyCode), #keyPath(Transaction.currencyCode), currencyConverter.mainCurrency)
+        return results(for: request).compactMap(\.date)
+    }
+
+    // Only the app fetches rates; the widgets and intents read what it cached. Without foreign transactions
+    // nothing is fetched unless `force` is set.
+    func refreshExchangeRates(force: Bool = false) {
+        let dates = foreignCurrencyDates()
+
+        guard force || !dates.isEmpty else {
+            return
+        }
+
+        Task {
+            let result = await ExchangeRateStore.shared.refresh(dates: dates, force: force)
+
+            if result.addedDays > 0 {
+                DispatchQueue.main.async {
+                    self.objectWillChange.send()
+                    WidgetCenter.shared.reloadAllTimelines()
+                }
+            }
+        }
+    }
+
     func getShortcutInsights(type: Int, timeframe: Int, optionalIncome: Bool?, categories: [Category]) -> Double {
         shortcutInsightsTotal(type: type, timeframe: timeframe, optionalIncome: optionalIncome, categories: categories).value
     }
