@@ -340,9 +340,10 @@ struct BudgetAmountText: View {
     let amount: Double
     let font: Font
     var formatter = BudgetFormatter.current
+    var prefix = ""
 
     var body: some View {
-        (Text(formatter.currencySymbol)
+        (Text(prefix + formatter.currencySymbol)
             .foregroundColor(Color.SubtitleText)
             + Text(formatter.number(amount))
             .foregroundColor(Color.PrimaryText))

@@ -349,3 +349,22 @@
 "Some of your data may be missing" = "Certaines de vos données semblent manquer";
 "Backup from %@: %lld transactions. On this device now: %lld. Restore what's missing? Nothing you have now will be removed or changed." = "Sauvegarde du %@ : %lld transactions. Sur cet appareil actuellement : %lld. Restaurer ce qui manque ? Rien de ce que vous avez actuellement ne sera supprimé ni modifié.";
 "Not Now" = "Plus tard";
+
+/* Multiple currencies */
+"≈ converted" = "≈ converti";
+"Converted from other currencies at daily rates" = "Converti depuis d'autres devises aux taux du jour";
+"No exchange rate yet" = "Pas encore de taux de change";
+"Currency, %@" = "Devise, %@";
+"Recent" = "Récentes";
+"All Currencies" = "Toutes les devises";
+"Exchange Rates" = "Taux de change";
+"None yet" = "Aucune pour l'instant";
+"Never" = "Jamais";
+"Source" = "Source";
+"Last Updated" = "Dernière mise à jour";
+"Days Saved" = "Jours enregistrés";
+"Refresh Rates" = "Actualiser les taux";
+"Rates come from fawazahmed0/exchange-api, and from Frankfurter (European Central Bank) for dates before March 2024. Each transaction is converted at the rate on its own date. Rates are kept on this device only and are never added to your data or iCloud." = "Les taux proviennent de fawazahmed0/exchange-api, et de Frankfurter (Banque centrale européenne) pour les dates antérieures à mars 2024. Chaque transaction est convertie au taux de sa propre date. Les taux restent sur cet appareil et ne sont jamais ajoutés à vos données ni à iCloud.";
+"Some rates couldn't be downloaded. Dime will try again later, and amounts without a rate are left out of totals until then." = "Certains taux n'ont pas pu être téléchargés. Dime réessaiera plus tard ; d'ici là, les montants sans taux ne sont pas comptés dans les totaux.";
+"Multiple Currencies" = "Plusieurs devises";
+"Log transactions in other currencies. Totals, insights, budgets and widgets convert them to your main currency at the rate on each transaction's date, marked with ≈. Converted amounts are never saved to your data." = "Enregistrez des transactions dans d'autres devises. Les totaux, statistiques, budgets et widgets les convertissent dans votre devise principale au taux de la date de chaque transaction, avec le signe ≈. Les montants convertis ne sont jamais enregistrés dans vos données.";

@@ -66,6 +66,7 @@ struct BudgetWidgetData {
     let emoji: String?
     let snapshot: BudgetSnapshot
     let segments: [BudgetMeterSegment]
+    var conversion = ConversionReport()
 
     var isOverall: Bool {
         emoji == nil
@@ -109,11 +110,12 @@ struct BudgetWidgetData {
         else { return nil }
 
         let period = BudgetPeriod(type: Int(budget.type), start: budget.wrappedDate).current
-        let spent = transactions(in: period, category: budget.category).total(using: dataController.currencyConverter).value
-        let snapshot = BudgetSnapshot(amount: budget.amount, spent: spent, period: period)
+        let spending = transactions(in: period, category: budget.category).total(using: dataController.currencyConverter)
+        let snapshot = BudgetSnapshot(amount: budget.amount, spent: spending.value, period: period)
 
         return BudgetWidgetData(name: budget.wrappedName, emoji: budget.wrappedEmoji, snapshot: snapshot,
-                            segments: [BudgetMeterSegment(id: "fill", share: snapshot.share, colour: Color(hex: budget.wrappedColour))])
+                            segments: [BudgetMeterSegment(id: "fill", share: snapshot.share, colour: Color(hex: budget.wrappedColour))],
+                            conversion: spending.report)
     }
 
     static func overall() -> BudgetWidgetData? {
@@ -123,11 +125,12 @@ struct BudgetWidgetData {
 
         let period = BudgetPeriod(type: Int(budget.type), start: budget.wrappedDate).current
         let transactions = transactions(in: period, category: nil)
-        let spent = transactions.total(using: dataController.currencyConverter).value
-        let snapshot = BudgetSnapshot(amount: budget.amount, spent: spent, period: period)
+        let spending = transactions.total(using: dataController.currencyConverter)
+        let snapshot = BudgetSnapshot(amount: budget.amount, spent: spending.value, period: period)
 
         return BudgetWidgetData(name: String(localized: "Overall"), emoji: nil, snapshot: snapshot,
-                            segments: budgetStripSegments(transactions, denominator: max(snapshot.amount, snapshot.spent)))
+                            segments: budgetStripSegments(transactions, denominator: max(snapshot.amount, snapshot.spent)),
+                            conversion: spending.report)
     }
 
     private static func transactions(in period: BudgetPeriod, category: Category?) -> [Transaction] {
@@ -178,7 +181,7 @@ struct BudgetTileWidgetView: View {
 
             Spacer(minLength: 0)
 
-            BudgetAmountText(amount: snapshot.difference, font: .system(.title, design: .rounded).weight(.semibold), formatter: formatter)
+            BudgetAmountText(amount: snapshot.difference, font: .system(.title, design: .rounded).weight(.semibold), formatter: formatter, prefix: budget.conversion.approximatePrefix)
 
             Text(budget.amountWord)
                 .font(.system(.subheadline, design: .rounded).weight(.medium))
@@ -234,7 +237,7 @@ struct BudgetAccessoryRectangleView: View {
                 .font(.system(size: 15, weight: .semibold, design: .rounded))
                 .lineLimit(1)
 
-            Text("\(formatter.money(snapshot.difference)) \(budget.amountWord)")
+            Text("\(budget.conversion.approximatePrefix)\(formatter.money(snapshot.difference)) \(budget.amountWord)")
                 .font(.system(size: 14, weight: .regular, design: .rounded))
                 .foregroundColor(Color.SubtitleText)
                 .lineLimit(1)

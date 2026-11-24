@@ -182,5 +182,45 @@
             <string>%lld транзакции</string>
         </dict>
     </dict>
+    <key>%lld excluded</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@VARIABLE@</string>
+        <key>VARIABLE</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>lld</string>
+            <key>one</key>
+            <string>%lld исключена</string>
+            <key>few</key>
+            <string>%lld исключены</string>
+            <key>many</key>
+            <string>%lld исключено</string>
+            <key>other</key>
+            <string>%lld исключено</string>
+        </dict>
+    </dict>
+    <key>%lld transactions have no exchange rate yet and are left out</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@VARIABLE@</string>
+        <key>VARIABLE</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>lld</string>
+            <key>one</key>
+            <string>У %lld операции ещё нет курса, она не учтена</string>
+            <key>few</key>
+            <string>У %lld операций ещё нет курса, они не учтены</string>
+            <key>many</key>
+            <string>У %lld операций ещё нет курса, они не учтены</string>
+            <key>other</key>
+            <string>У %lld операции ещё нет курса, они не учтены</string>
+        </dict>
+    </dict>
 </dict>
 </plist>

@@ -46,16 +46,16 @@ struct Provider: IntentTimelineProvider {
     public typealias Entry = RecentWidgetEntry
 
     func placeholder(in _: Context) -> RecentWidgetEntry {
-        RecentWidgetEntry(date: Date(), amount: loadAmount(type: .week, insightsType: .net), transactions: loadTransactions(type: .week, count: 9), duration: .week, type: .net)
+        RecentWidgetEntry(date: Date(), amount: loadAmount(type: .week, insightsType: .net), transactions: loadTransactions(type: .week, count: 9), duration: .week, type: .net, conversion: loadReport(type: .week, insightsType: .net))
     }
 
     func getSnapshot(for configuration: RecentWidgetConfigurationIntent, in _: Context, completion: @escaping (RecentWidgetEntry) -> Void) {
-        let entry = RecentWidgetEntry(date: Date(), amount: loadAmount(type: configuration.duration, insightsType: configuration.insightsType), transactions: loadTransactions(type: configuration.duration, count: 9), duration: configuration.duration, type: configuration.insightsType)
+        let entry = RecentWidgetEntry(date: Date(), amount: loadAmount(type: configuration.duration, insightsType: configuration.insightsType), transactions: loadTransactions(type: configuration.duration, count: 9), duration: configuration.duration, type: configuration.insightsType, conversion: loadReport(type: configuration.duration, insightsType: configuration.insightsType))
         completion(entry)
     }
 
     func getTimeline(for configuration: RecentWidgetConfigurationIntent, in _: Context, completion: @escaping (Timeline<Entry>) -> Void) {
-        let entry = RecentWidgetEntry(date: Date(), amount: loadAmount(type: configuration.duration, insightsType: configuration.insightsType), transactions: loadTransactions(type: configuration.duration, count: 9), duration: configuration.duration, type: configuration.insightsType)
+        let entry = RecentWidgetEntry(date: Date(), amount: loadAmount(type: configuration.duration, insightsType: configuration.insightsType), transactions: loadTransactions(type: configuration.duration, count: 9), duration: configuration.duration, type: configuration.insightsType, conversion: loadReport(type: configuration.duration, insightsType: configuration.insightsType))
 
         let timeline = Timeline(entries: [entry], policy: .atEnd)
 
@@ -100,6 +100,35 @@ struct Provider: IntentTimelineProvider {
         }
     }
 
+    func loadReport(type: TimePeriod, insightsType: InsightsType) -> ConversionReport {
+        let dataController = DataController.shared
+        let timeframe: Int
+
+        switch type {
+        case .day:
+            timeframe = 1
+        case .week:
+            timeframe = 2
+        case .month:
+            timeframe = 3
+        case .year:
+            timeframe = 4
+        case .unknown:
+            timeframe = 0
+        }
+
+        switch insightsType {
+        case .net:
+            return dataController.logViewNetTotal(type: timeframe).report
+        case .income:
+            return dataController.logViewTotal(type: timeframe, income: true).report
+        case .expense:
+            return dataController.logViewTotal(type: timeframe, income: false).report
+        case .unknown:
+            return ConversionReport()
+        }
+    }
+
     func loadTransactions(type: TimePeriod, count: Int) -> [HoldingTransaction] {
 //        let dataController = DataController()
         let dataController = DataController.shared
@@ -109,7 +138,7 @@ struct Provider: IntentTimelineProvider {
         var sending = [HoldingTransaction]()
 
         holding.forEach { transaction in
-            let t = HoldingTransaction(colour: transaction.category?.wrappedColour ?? "", emoji: transaction.category?.wrappedEmoji ?? "", note: transaction.wrappedNote, amount: transaction.wrappedAmount, income: transaction.income)
+            let t = HoldingTransaction(colour: transaction.category?.wrappedColour ?? "", emoji: transaction.category?.wrappedEmoji ?? "", note: transaction.wrappedNote, amount: transaction.wrappedAmount, income: transaction.income, currencyCode: transaction.currencyCode)
 
             sending.append(t)
         }
@@ -124,6 +153,7 @@ struct RecentWidgetEntry: TimelineEntry {
     let transactions: [HoldingTransaction]
     let duration: TimePeriod
     let type: InsightsType
+    var conversion = ConversionReport()
 }
 
 struct HoldingTransaction: Hashable {
@@ -132,6 +162,7 @@ struct HoldingTransaction: Hashable {
     let note: String
     let amount: Double
     let income: Bool
+    var currencyCode: String?
 }
 
 struct ExpenditureWidgetEntryView: View {
@@ -187,13 +218,18 @@ struct ExpenditureWidgetEntryView: View {
 
     func amountText(_ transaction: HoldingTransaction) -> String {
         let sign = showExpenseOrIncomeSign ? (transaction.income ? "+" : "-") : ""
+
+        if let code = transaction.currencyCode, !CurrencyConverter.current().isMainCurrency(code) {
+            return sign + MoneyFormatter.string(transaction.amount, currencyCode: code, showCents: formatter.showCents)
+        }
+
         return sign + formatter.string(transaction.amount)
     }
 
     var body: some View {
         switch widgetFamily {
         case .accessoryInline:
-            Text("\(totalSign)\(formatter.string(abs(entry.amount))) \(typeText) \(periodText)")
+            Text("\(entry.conversion.approximatePrefix)\(totalSign)\(formatter.string(abs(entry.amount))) \(typeText) \(periodText)")
 
         case .accessoryRectangular:
             accessoryRectangle
@@ -259,7 +295,7 @@ struct ExpenditureWidgetEntryView: View {
         VStack(alignment: .leading, spacing: 2) {
             InsightsCardTitle(verbatim: title)
 
-            InsightsAmountText(amount: abs(entry.amount), sign: totalSign, formatter: formatter, font: amountFont)
+            InsightsAmountText(amount: abs(entry.amount), sign: entry.conversion.approximatePrefix + totalSign, formatter: formatter, font: amountFont)
         }
     }
 

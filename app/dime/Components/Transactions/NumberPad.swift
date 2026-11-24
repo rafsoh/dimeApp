@@ -9,7 +9,33 @@ import SwiftUI
 import CoreHaptics
 
 enum AssignedDecimal {
-    case none, first, second
+    case none, first, second, third
+
+    init(count: Int) {
+        switch count {
+        case ...0:
+            self = .none
+        case 1:
+            self = .first
+        case 2:
+            self = .second
+        default:
+            self = .third
+        }
+    }
+
+    var count: Int {
+        switch self {
+        case .none:
+            return 0
+        case .first:
+            return 1
+        case .second:
+            return 2
+        case .third:
+            return 3
+        }
+    }
 }
 
 struct NumberPad: View {
@@ -18,6 +44,7 @@ struct NumberPad: View {
     @Binding var isEditingDecimal: Bool
     @Binding var decimalValuesAssigned: AssignedDecimal
     var showingNotePicker: Bool = false
+    var fractionDigits: Int = 2
     var submit: () -> Void
 
     @AppStorage("numberEntryType", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var numberEntryType: Int = 1
@@ -60,7 +87,9 @@ struct NumberPad: View {
                                 .foregroundColor(Color.PrimaryText)
                                 .keyFrame(size: proxy.size)
                                 .glassBackground(in: keyShape(size: proxy.size), tint: Color.glassTint)
+                                .opacity(fractionDigits == 0 ? 0.6 : 1)
                         }
+                        .disabled(fractionDigits == 0)
                         .buttonStyle(NumPadKeyStyle())
                     }
 
@@ -154,21 +183,14 @@ struct NumberPad: View {
 
     public func deleteLastDigit() {
         if numberEntryType == 1 {
-            price = Double(Int(price * 10)) / 100
+            price = AmountEntry.shiftingOut(of: price, fractionDigits: fractionDigits)
         } else if !isEditingDecimal {
-            price = Double(Int(price / 10))
+            price = AmountEntry.removingWhole(from: price)
+        } else if decimalValuesAssigned == .none {
+            isEditingDecimal = false
         } else {
-            switch decimalValuesAssigned {
-                case .none:
-                    isEditingDecimal = false
-                    return
-                case .first:
-                    price = Double(Int(price))
-                    decimalValuesAssigned = .none
-                case .second:
-                    price = Double(Int(price * 10)) / 10
-                    decimalValuesAssigned = .first
-            }
+            price = AmountEntry.removingDecimal(from: price, assigned: decimalValuesAssigned.count)
+            decimalValuesAssigned = AssignedDecimal(count: decimalValuesAssigned.count - 1)
         }
     }
 
@@ -188,24 +210,16 @@ struct NumberPad: View {
             }
 
             if numberEntryType == 1 {
-                price *= 10
-                price += Double(number) / 100
-            } else {
-                if isEditingDecimal {
-                    switch decimalValuesAssigned {
-                        case .none:
-                            price += Double(number) / 10
-                            decimalValuesAssigned = .first
-                        case .first:
-                            price += Double(number) / 100
-                            decimalValuesAssigned = .second
-                        case .second:
-                            return
-                    }
-                } else {
-                    price *= 10
-                    price += Double(number)
+                price = AmountEntry.shiftingIn(number, to: price, fractionDigits: fractionDigits)
+            } else if isEditingDecimal {
+                guard let next = AmountEntry.appendingDecimal(number, to: price, assigned: decimalValuesAssigned.count, fractionDigits: fractionDigits) else {
+                    return
                 }
+
+                price = next
+                decimalValuesAssigned = AssignedDecimal(count: decimalValuesAssigned.count + 1)
+            } else {
+                price = AmountEntry.appendingWhole(number, to: price)
             }
         } label: {
             Text("\(number)")
@@ -264,10 +278,17 @@ struct NumberPadTextView: View {
     @Binding var price: Double
     @Binding var isEditingDecimal: Bool
     @Binding var decimalValuesAssigned: AssignedDecimal
+    var fractionDigits: Int = 2
+    /// Nil shows the main currency.
+    var currencyCode: String?
 
     @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
     var currencySymbol: String {
-        return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
+        guard let currencyCode else {
+            return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
+        }
+
+        return Locale.current.localizedCurrencySymbol(forCurrencyCode: currencyCode) ?? currencyCode
     }
 //
 //    var displayNumbers: [String] {
@@ -277,20 +298,7 @@ struct NumberPadTextView: View {
     @AppStorage("numberEntryType", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var numberEntryType: Int = 1
 
     public var amount: String {
-        if numberEntryType == 1 {
-            return String(format: "%.2f", price)
-        }
-        if isEditingDecimal {
-            switch decimalValuesAssigned {
-                case .none:
-                    return String(format: "%.0f", price) + "."
-                case .first:
-                    return String(format: "%.1f", price)
-                case .second:
-                    return String(format: "%.2f", price)
-            }
-        }
-        return String(format: "%.0f", price)
+        AmountEntry.display(price, entryType: numberEntryType, isEditingDecimal: isEditingDecimal, assigned: decimalValuesAssigned.count, fractionDigits: fractionDigits)
     }
 
     @Environment(\.dynamicTypeSize) var dynamicTypeSize
@@ -359,21 +367,14 @@ struct NumberPadTextView: View {
 
     public func deleteLastDigit() {
         if numberEntryType == 1 {
-            price = Double(Int(price * 10)) / 100
+            price = AmountEntry.shiftingOut(of: price, fractionDigits: fractionDigits)
         } else if !isEditingDecimal {
-            price = Double(Int(price / 10))
+            price = AmountEntry.removingWhole(from: price)
+        } else if decimalValuesAssigned == .none {
+            isEditingDecimal = false
         } else {
-            switch decimalValuesAssigned {
-                case .none:
-                    isEditingDecimal = false
-                    return
-                case .first:
-                    price = Double(Int(price))
-                    decimalValuesAssigned = .none
-                case .second:
-                    price = Double(Int(price * 10)) / 10
-                    decimalValuesAssigned = .first
-            }
+            price = AmountEntry.removingDecimal(from: price, assigned: decimalValuesAssigned.count)
+            decimalValuesAssigned = AssignedDecimal(count: decimalValuesAssigned.count - 1)
         }
     }
 }
