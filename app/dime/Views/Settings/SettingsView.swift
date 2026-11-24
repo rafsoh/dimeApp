@@ -457,13 +457,14 @@ struct SettingsView: View {
 
                 .foregroundColor(Color.SubtitleText)
 
-              Text("What's New")
-                .font(.system(.footnote, design: .rounded).weight(.medium))
-
-                .foregroundColor(Color.PrimaryText)
-                .onTapGesture {
-                  showUpdate = true
-                }
+              Button {
+                showUpdate = true
+              } label: {
+                Text("What's New")
+                  .font(.system(.footnote, design: .rounded).weight(.medium))
+                  .foregroundColor(Color.PrimaryText)
+              }
+              .buttonStyle(.plain)
             }
 
             Text("Made with ❤️ by \(makeAttributedString()) from 🇸🇬")
@@ -486,8 +487,8 @@ struct SettingsView: View {
       .fullScreenCover(isPresented: $showTipJarMenu) {
         TipJarAlert()
       }
-      .fullScreenCover(isPresented: $showUpdate) {
-        UpdateAlert()
+      .sheet(isPresented: $showUpdate) {
+        WhatsNewSheet()
       }
       .fullScreenCover(isPresented: $showImportGuide) {
         ImportDataView()
