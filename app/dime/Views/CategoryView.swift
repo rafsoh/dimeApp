@@ -1279,10 +1279,6 @@ struct CategoryConfirmButton: View {
 }
 
 class UIEmojiTextField: UITextField {
-    override var textInputMode: UITextInputMode? {
-        .activeInputModes.first(where: { $0.primaryLanguage == "emoji" })
-    }
-
     override func caretRect(for _: UITextPosition) -> CGRect {
         return CGRect.zero
     }
@@ -1302,6 +1298,7 @@ struct EmojiTextField: UIViewRepresentable {
         emojiTextField.textAlignment = .center
         emojiTextField.endFloatingCursor()
         emojiTextField.becomeFirstResponder()
+        emojiTextField.keyboardType = .emoji ?? .default
         return emojiTextField
     }
 
@@ -1326,6 +1323,10 @@ struct EmojiTextField: UIViewRepresentable {
             }
         }
     }
+}
+
+extension UIKeyboardType {
+    static let emoji = UIKeyboardType(rawValue: 124)
 }
 
 struct NormalTextField: UIViewRepresentable {
