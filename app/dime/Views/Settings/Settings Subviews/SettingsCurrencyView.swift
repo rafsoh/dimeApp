@@ -92,7 +92,7 @@ struct SettingsCurrencyView: View {
 
       Button("Cancel", role: .cancel) {}
     } message: { currency in
-      Text("Relabelling keeps every amount as it is and treats your \(currencyCode) transactions as \(currency.code). Converting keeps them in \(currencyCode) and shows them in \(currency.code) at each day's rate. Dime backs up your data first.")
+      Text("Relabelling keeps every amount as it is and treats your \(currencyCode) transactions as \(currency.code). Converting keeps them in \(currencyCode) and shows them in \(currency.code) at each day's rate. Budgets and templates keep their amounts. Dime backs up your data first.")
     }
     .alert(
       Text("Currency not changed"),

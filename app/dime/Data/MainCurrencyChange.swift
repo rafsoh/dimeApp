@@ -183,7 +183,21 @@ final class MainCurrencyChangeManager: ObservableObject {
         context.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
 
         context.perform { [logger] in
-            let result = Result { try MainCurrencyChanger.apply(plan, in: context) }
+            // Sync and recurring transactions can add matching rows while a pass runs, and the main currency
+            // must not move on while any are left.
+            let result = Result { () throws -> Int in
+                var changed = 0
+
+                for _ in 0 ..< 3 {
+                    changed += try MainCurrencyChanger.apply(plan, in: context)
+
+                    if try MainCurrencyChanger.count(plan, in: context) == 0 {
+                        return changed
+                    }
+                }
+
+                throw MainCurrencyChanger.ChangeError.notConverging
+            }
 
             DispatchQueue.main.async {
                 self.isWorking = false
@@ -204,6 +218,11 @@ final class MainCurrencyChangeManager: ObservableObject {
     private func finish(_ plan: MainCurrencyChangePlan, changed: Int) {
         defaults?.set(plan.newCurrency, forKey: "currency")
         NSUbiquitousKeyValueStore.default.set(plan.newCurrency, forKey: "currency")
+
+        // After relabelling, the old code no longer means anything the user spends in.
+        let recent = CurrencyPreferences.recentCurrencies(in: defaults).filter { plan.kind == .convert || $0 != plan.oldCurrency }
+        defaults?.set(CurrencyPreferences.recording(plan.newCurrency, in: recent), forKey: CurrencyPreferences.recentCurrenciesKey)
+
         defaults?.removeObject(forKey: Self.pendingPlanKey)
         logger.notice("The main currency is now \(plan.newCurrency, privacy: .public); \(changed) transactions changed")
 

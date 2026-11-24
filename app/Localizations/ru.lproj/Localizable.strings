@@ -367,10 +367,11 @@
 "with an unknown currency" = "с неизвестной валютой";
 "Change your primary currency?" = "Сменить основную валюту?";
 "Primary Currency" = "Основная валюта";
+"Can't restore yet" = "Пока нельзя восстановить";
 "Changes the currency of this transaction" = "Меняет валюту этой транзакции";
 "My transactions were actually in %@" = "Мои операции на самом деле были в %@";
 "Convert to %@" = "Пересчитать в %@";
-"Relabelling keeps every amount as it is and treats your %@ transactions as %@. Converting keeps them in %@ and shows them in %@ at each day's rate. Dime backs up your data first." = "При смене метки суммы не меняются, а операции в %@ считаются операциями в %@. При пересчёте они остаются в %@ и показываются в %@ по курсу на каждый день. Сначала Dime создаст резервную копию.";
+"Relabelling keeps every amount as it is and treats your %@ transactions as %@. Converting keeps them in %@ and shows them in %@ at each day's rate. Budgets and templates keep their amounts. Dime backs up your data first." = "При смене метки суммы не меняются, а операции в %@ считаются операциями в %@. При пересчёте они остаются в %@ и показываются в %@ по курсу на каждый день. Бюджеты и шаблоны сохраняют свои суммы. Сначала Dime создаст резервную копию.";
 "Currency not changed" = "Валюта не изменена";
 "Dime is still finishing your last currency change. Try again in a moment." = "Dime ещё завершает прошлую смену валюты. Попробуйте чуть позже.";
 "Dime is still catching up with iCloud. Try again once it's up to date." = "Dime ещё синхронизируется с iCloud. Попробуйте после завершения синхронизации.";

@@ -590,7 +590,8 @@ class DataController: ObservableObject {
         occurrence.note = transaction.wrappedNote
         occurrence.category = transaction.category
         occurrence.amount = transaction.wrappedAmount
-        occurrence.currencyCode = transaction.currencyCode
+        // A missing currency would follow later changes of the main currency, so new rows always name one.
+        occurrence.currencyCode = transaction.currencyCode ?? currencyConverter.mainCurrency
         occurrence.date = date
         occurrence.id = UUID()
         occurrence.income = transaction.income
@@ -1178,13 +1179,16 @@ class DataController: ObservableObject {
     }
 
     // In a shared store participants may have different main currencies, so a missing currency would be
-    // ambiguous: every new transaction names its currency.
+    // ambiguous: every new transaction names its currency. Shortcuts, automations and imports nobody watches
+    // use the main currency; only the entry screen, where the currency is on show, starts from the last used.
     func currencyForNewTransaction() -> String {
-        let defaults = UserDefaults(suiteName: "group.com.rafaelsoh.dime")
+        currencyConverter.mainCurrency
+    }
 
-        return CurrencyPreferences.defaultCurrency(
+    func currencyForNewEntry() -> String {
+        CurrencyPreferences.defaultCurrency(
             mainCurrency: currencyConverter.mainCurrency,
-            recent: CurrencyPreferences.recentCurrencies(in: defaults)
+            recent: CurrencyPreferences.recentCurrencies(in: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
         )
     }
 

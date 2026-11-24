@@ -367,10 +367,11 @@
 "with an unknown currency" = "avec une devise inconnue";
 "Change your primary currency?" = "Changer votre devise principale ?";
 "Primary Currency" = "Devise principale";
+"Can't restore yet" = "Restauration impossible pour le moment";
 "Changes the currency of this transaction" = "Change la devise de cette transaction";
 "My transactions were actually in %@" = "Mes transactions étaient en fait en %@";
 "Convert to %@" = "Convertir en %@";
-"Relabelling keeps every amount as it is and treats your %@ transactions as %@. Converting keeps them in %@ and shows them in %@ at each day's rate. Dime backs up your data first." = "Réétiqueter garde chaque montant tel quel et considère vos transactions en %@ comme étant en %@. Convertir les garde en %@ et les affiche en %@ au taux de chaque jour. Dime sauvegarde d'abord vos données.";
+"Relabelling keeps every amount as it is and treats your %@ transactions as %@. Converting keeps them in %@ and shows them in %@ at each day's rate. Budgets and templates keep their amounts. Dime backs up your data first." = "Réétiqueter garde chaque montant tel quel et considère vos transactions en %@ comme étant en %@. Convertir les garde en %@ et les affiche en %@ au taux de chaque jour. Les budgets et les modèles gardent leurs montants. Dime sauvegarde d'abord vos données.";
 "Currency not changed" = "Devise non modifiée";
 "Dime is still finishing your last currency change. Try again in a moment." = "Dime termine encore votre dernier changement de devise. Réessayez dans un instant.";
 "Dime is still catching up with iCloud. Try again once it's up to date." = "Dime est encore en cours de synchronisation avec iCloud. Réessayez une fois la synchronisation terminée.";

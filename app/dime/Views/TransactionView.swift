@@ -143,7 +143,7 @@ struct TransactionView: View {
             return (transaction.currencyCode ?? currency).uppercased()
         }
 
-        return dataController.currencyForNewTransaction()
+        return dataController.currencyForNewEntry()
     }
 
     var usesMainCurrency: Bool {

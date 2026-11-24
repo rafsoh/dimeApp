@@ -13,6 +13,7 @@ struct SettingsBackupsView: View {
     case confirmRestore(BackupSummary)
     case restored(Int)
     case waitingForICloud
+    case currencyChangeInProgress
     case failed
 
     var id: String {
@@ -23,6 +24,8 @@ struct SettingsBackupsView: View {
         return "restored-\(count)"
       case .waitingForICloud:
         return "waiting"
+      case .currencyChangeInProgress:
+        return "currency"
       case .failed:
         return "failed"
       }
@@ -124,6 +127,12 @@ struct SettingsBackupsView: View {
           message: Text("You can restore once iCloud finishes syncing, so nothing gets added twice."),
           dismissButton: .default(Text("OK"))
         )
+      case .currencyChangeInProgress:
+        return Alert(
+          title: Text("Can't restore yet"),
+          message: Text("Dime is still finishing your last currency change. Try again in a moment."),
+          dismissButton: .default(Text("OK"))
+        )
       case .failed:
         return Alert(
           title: Text("Something went wrong"),
@@ -141,6 +150,8 @@ struct SettingsBackupsView: View {
         alert = .restored(restored.total)
       case .failure(BackupManager.RestoreError.waitingForICloud):
         alert = .waitingForICloud
+      case .failure(BackupManager.RestoreError.currencyChangeInProgress):
+        alert = .currencyChangeInProgress
       case .failure:
         alert = .failed
       }

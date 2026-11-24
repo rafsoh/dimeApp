@@ -368,10 +368,11 @@
 "with an unknown currency" = "with an unknown currency";
 "Change your primary currency?" = "Change your primary currency?";
 "Primary Currency" = "Primary Currency";
+"Can't restore yet" = "Can't restore yet";
 "Changes the currency of this transaction" = "Changes the currency of this transaction";
 "My transactions were actually in %@" = "My transactions were actually in %@";
 "Convert to %@" = "Convert to %@";
-"Relabelling keeps every amount as it is and treats your %@ transactions as %@. Converting keeps them in %@ and shows them in %@ at each day's rate. Dime backs up your data first." = "Relabelling keeps every amount as it is and treats your %@ transactions as %@. Converting keeps them in %@ and shows them in %@ at each day's rate. Dime backs up your data first.";
+"Relabelling keeps every amount as it is and treats your %@ transactions as %@. Converting keeps them in %@ and shows them in %@ at each day's rate. Budgets and templates keep their amounts. Dime backs up your data first." = "Relabelling keeps every amount as it is and treats your %@ transactions as %@. Converting keeps them in %@ and shows them in %@ at each day's rate. Budgets and templates keep their amounts. Dime backs up your data first.";
 "Currency not changed" = "Currency not changed";
 "Dime is still finishing your last currency change. Try again in a moment." = "Dime is still finishing your last currency change. Try again in a moment.";
 "Dime is still catching up with iCloud. Try again once it's up to date." = "Dime is still catching up with iCloud. Try again once it's up to date.";
