@@ -636,6 +636,15 @@ class DataController: ObservableObject {
     }
 
     func newTransaction(note: String, category: Category?, income: Bool, amount: Double, date: Date, repeatType: Int, repeatCoefficient: Int, delay _: Bool) -> Transaction {
+        let transaction = insertTransaction(note: note, category: category, income: income, amount: amount, date: date, repeatType: repeatType, repeatCoefficient: repeatCoefficient)
+
+        save()
+
+        return transaction
+    }
+
+    /// Inserts a transaction without saving, so imports can save many at once.
+    func insertTransaction(note: String, category: Category?, income: Bool, amount: Double, date: Date, repeatType: Int = 0, repeatCoefficient: Int = 1) -> Transaction {
         let transaction = Transaction(context: container.viewContext)
 
         if note.trimmingCharacters(in: .whitespacesAndNewlines) == "" {
@@ -668,8 +677,6 @@ class DataController: ObservableObject {
             transaction.recurringCoefficient = Int16(repeatCoefficient)
             updateRecurringTransaction(transaction: transaction)
         }
-
-        save()
 
         return transaction
     }

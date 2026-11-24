@@ -23,7 +23,7 @@ struct SettingsHapticsView: View {
     @State var wordShake: Bool = false
 
     var body: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 0) {
             VStack(spacing: 0) {
                 ForEach(options.indices, id: \.self) { option in
                     HStack {
@@ -59,16 +59,11 @@ struct SettingsHapticsView: View {
                     }
                 }
             }
-            .padding(.horizontal, 16)
-            .settingsSectionBackground()
+            .settingsSectionRows()
             .offset(x: shake ? -5 : 5)
             .offset(x: alternateShake ? 0 : -5)
 
-            Text("The 'Excessive' mode makes the entire numpad haptic.")
-                .font(.system(.footnote, design: .rounded).weight(.medium))
-                .foregroundColor(Color.SubtitleText)
-                .padding(.horizontal, 14)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            SettingsSectionFooter("The 'Excessive' mode makes the entire numpad haptic.")
         }
         .modifier(SettingsSubviewModifier(title: "Haptic Feedback"))
         .onChange(of: hapticType) { newValue in

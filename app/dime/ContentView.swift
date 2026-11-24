@@ -28,18 +28,13 @@ struct ContentView: View {
     @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
 
     @State var showIntro: Bool = false
-    @State var showUpdate: Bool = false
+    @State var showWhatsNew: Bool = false
+    @State var whatsNewPending: Bool = false
 
     var center = UNUserNotificationCenter.current()
 
     @AppStorage("topEdge", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var savedTopEdge: Double = 30
     @AppStorage("bottomEdge", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var savedBottomEdge: Double = 15
-
-    // updateSheetShowing
-
-    @AppStorage("previousVersion", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var previousVersionString: String = "Version \(UIApplication.appVersion ?? "") (\(UIApplication.buildNumber ?? ""))"
-
-    @AppStorage("showUpdateSheet", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showUpdateSheet: Bool = true
 
     var body: some View {
         GeometryReader { proxy in
@@ -52,8 +47,8 @@ struct ContentView: View {
                 .fullScreenCover(isPresented: $showIntro) {
                     WelcomeSheetView()
                 }
-                .fullScreenCover(isPresented: $showUpdate) {
-                    UpdateAlert()
+                .sheet(isPresented: $showWhatsNew) {
+                    WhatsNewSheet()
                 }
                 .onAppear {
                     savedTopEdge = topEdge
@@ -93,7 +88,7 @@ struct ContentView: View {
             if firstLaunch {
                 showIntro = true
                 firstLaunch = false
-                showUpdateSheet = false
+                WhatsNew.markSeen()
 
                 // Fresh installs have no legacy data, and running these on categories that are still
                 // arriving from iCloud would overwrite the user's order and colours on every device.
@@ -157,10 +152,8 @@ struct ContentView: View {
                 dataMigration2 = false
             }
 
-            if showUpdateSheet {
-                showUpdate = true
-                showUpdateSheet = false
-            }
+            whatsNewPending = WhatsNew.hasUnseenRelease
+            presentWhatsNewIfReady()
 
             center.getNotificationSettings { settings in
                 if settings.authorizationStatus == .authorized {
@@ -178,6 +171,12 @@ struct ContentView: View {
                     }
                 }
             }
+        }
+        .onChange(of: appLockVM.isAppUnLocked) { _ in
+            presentWhatsNewIfReady()
+        }
+        .onChange(of: backupManager.suggestedRestore == nil) { _ in
+            presentWhatsNewIfReady()
         }
         .onChange(of: scenePhase) { newPhase in
             if newPhase == .background || newPhase == .inactive {
@@ -207,6 +206,25 @@ struct ContentView: View {
                     }
                 }
             }
+        }
+    }
+
+    /// Waits for the lock screen and any restore offer, since the sheet would cover the first and block the second.
+    func presentWhatsNewIfReady() {
+        guard whatsNewPending, !showIntro, !showWhatsNew, backupManager.suggestedRestore == nil, !appLockVM.isAppLockEnabled || appLockVM.isAppUnLocked else {
+            return
+        }
+
+        whatsNewPending = false
+
+        // Lets the home screen settle first; a restore offer can still arrive in the meantime.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+            guard backupManager.suggestedRestore == nil, !appLockVM.isAppLockEnabled || appLockVM.isAppUnLocked else {
+                whatsNewPending = true
+                return
+            }
+            WhatsNew.markSeen()
+            showWhatsNew = true
         }
     }
 }

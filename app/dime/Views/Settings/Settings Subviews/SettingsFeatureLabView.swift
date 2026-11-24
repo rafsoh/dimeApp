@@ -32,57 +32,33 @@ struct SettingsGoofyView: View {
   @Namespace var animation
 
   var body: some View {
-    VStack {
+    VStack(spacing: 0) {
       VStack(spacing: 0) {
         ToggleRow(text: "Celebrate Expenses", bool: $confetti)
 
         Divider()
-          .padding(.horizontal, 16)
 
         ToggleRow(text: "Show Line Graph", bool: $lineGraph)
 
         Divider()
-          .padding(.horizontal, 16)
 
         ToggleRow(text: "Budget Rows", bool: $budgetRows)
       }
-      .settingsSectionBackground()
+      .settingsSectionRows()
 
-      Text("Experimental features - proceed with caution.")
-        .font(.system(.footnote, design: .rounded).weight(.medium))
-        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-        //                    .font(.system(size: 12, weight: .medium, design: .rounded))
-        .foregroundColor(Color.SubtitleText)
-        .padding(.horizontal, 14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.bottom, 30)
+      SettingsSectionFooter("Experimental features - proceed with caution.")
+        .padding(.bottom, .settingsHeaderSpacing)
 
       ToggleRow(text: "Replace Time Label", bool: $swapTimeLabel)
-        .settingsSectionBackground()
+        .settingsSectionRows()
 
-      Text(
-        "Swaps the time label of each transaction with its category name. However, if you do not manually input a note for each transaction - in which case the note is the category name by default - duplicate text will appear."
-      )
-      .font(.system(.footnote, design: .rounded).weight(.medium))
-      .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-      //                    .font(.system(size: 12, weight: .medium, design: .rounded))
-      .foregroundColor(Color.SubtitleText)
-      .padding(.horizontal, 14)
-      .frame(maxWidth: .infinity, alignment: .leading)
-      .padding(.bottom, 30)
+      SettingsSectionFooter("Swaps the time label of each transaction with its category name. However, if you do not manually input a note for each transaction - in which case the note is the category name by default - duplicate text will appear.")
+        .padding(.bottom, .settingsHeaderSpacing)
 
       ToggleRow(text: "Show Note Suggestions", bool: $showRecommendations)
-        .settingsSectionBackground()
+        .settingsSectionRows()
 
-      Text(
-        "Displays transaction suggestions whilst you type in the 'Note' field of the new transaction page."
-      )
-      .font(.system(.footnote, design: .rounded).weight(.medium))
-      .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-      //                    .font(.system(size: 12, weight: .medium, design: .rounded))
-      .foregroundColor(Color.SubtitleText)
-      .padding(.horizontal, 14)
-      .frame(maxWidth: .infinity, alignment: .leading)
+      SettingsSectionFooter("Displays transaction suggestions whilst you type in the 'Note' field of the new transaction page.")
 
       //            ToggleRow(text: "Miles-Morales Effect", bool: $chromatic, id: 5)
       //            .background(Color.SettingsBackground, in: RoundedRectangle(cornerRadius: 9))
@@ -106,6 +82,5 @@ struct SettingsGoofyView: View {
     }
     .tint(.green)
     .frame(minHeight: .settingsRowHeight)
-    .padding(.horizontal, 16)
   }
 }

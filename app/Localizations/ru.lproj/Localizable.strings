@@ -22,9 +22,9 @@
 "no_expense_categories" = "Нет категорий расходов";
 "Suggestions Hidden" = "Предложения скрыты";
 "Successfully Edited" = "Изменено";
-"INCOME CATEGORIES" = "Категории доходов";
-"EXPENSE CATEGORIES" = "Категории расходов";
-"SUGGESTED" = "Предложения";
+"Income Categories" = "Категории доходов";
+"Expense Categories" = "Категории расходов";
+"Suggested" = "Предложения";
 "Income Category" = "Категория дохода";
 "Expense Category" = "Категория расхода";
 "New" = "Добавить";
@@ -201,9 +201,9 @@
 
 // Settings
 "Settings" = "Настройки";
-"GENERAL" = "Основные";
-"DATA" = "Данные";
-"OTHERS" = "Другое";
+"General" = "Основные";
+"Data" = "Данные";
+"Others" = "Другое";
 "Appearance" = "Внешний вид";
 "Start of Week" = "Начало недели";
 "Notifications" = "Уведомления";

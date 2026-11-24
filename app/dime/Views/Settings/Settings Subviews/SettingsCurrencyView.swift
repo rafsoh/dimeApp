@@ -61,7 +61,7 @@ struct SettingsCurrencyView: View {
               Divider()
             }
           }
-          .padding(.horizontal, 16)
+          .padding(.horizontal, .settingsRowInset)
           .id(currency.code)
         }
       }

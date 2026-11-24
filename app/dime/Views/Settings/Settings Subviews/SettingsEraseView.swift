@@ -14,7 +14,7 @@ struct SettingsEraseView: View {
   @State var showAlert = false
 
   var body: some View {
-    VStack(spacing: 10) {
+    VStack(spacing: 0) {
       Button {
         showAlert = true
       } label: {
@@ -23,18 +23,10 @@ struct SettingsEraseView: View {
           .foregroundColor(Color.AlertRed)
           .frame(maxWidth: .infinity, alignment: .leading)
           .frame(minHeight: .settingsRowHeight)
-          .padding(.horizontal, 16)
-          .settingsSectionBackground()
+          .settingsSectionRows()
       }
 
-      Text(
-        "This action would delete all existing transactions, categories, and budgets, and cannot be undone."
-      )
-      .font(.system(.footnote, design: .rounded).weight(.medium))
-      .multilineTextAlignment(.leading)
-      .foregroundColor(Color.SubtitleText)
-      .padding(.horizontal, 14)
-      .frame(maxWidth: .infinity, alignment: .leading)
+      SettingsSectionFooter("This action would delete all existing transactions, categories, and budgets, and cannot be undone.")
     }
     .modifier(SettingsSubviewModifier(title: "Erase Data"))
     .sheet(isPresented: $showAlert) {
