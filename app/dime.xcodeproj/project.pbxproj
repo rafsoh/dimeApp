@@ -353,6 +353,7 @@
 		53E832E42B0A2CAF000CBBA0 /* InsightsSummaryBlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsSummaryBlock.swift; sourceTree = "<group>"; };
 		53E832E62B0B067B000CBBA0 /* TransactionCategoryPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionCategoryPicker.swift; sourceTree = "<group>"; };
 		53EB931028A65F670026BE28 /* ExpenditureWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ExpenditureWidgetExtension.entitlements; sourceTree = "<group>"; };
+		55E30C4DCFF029D0E8F8975B /* MainModel 3.xcdatamodel */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = wrapper.xcdatamodel; path = "MainModel 3.xcdatamodel"; sourceTree = "<group>"; };
 		726F48F68CFB577527C9FD9B /* StoreMigrationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StoreMigrationTests.swift; sourceTree = "<group>"; };
 		7C2F4C180CD6273FAE74092C /* StoreSnapshot.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StoreSnapshot.swift; sourceTree = "<group>"; };
 		86CFCBA6EAE7ED44DDE226DA /* SettingsBackupsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsBackupsView.swift; sourceTree = "<group>"; };
@@ -1808,8 +1809,9 @@
 			children = (
 				53BC2A402A8B21920019E4A8 /* MainModel 2.xcdatamodel */,
 				53BC2A412A8B21920019E4A8 /* MainModel.xcdatamodel */,
+				55E30C4DCFF029D0E8F8975B /* MainModel 3.xcdatamodel */,
 			);
-			currentVersion = 53BC2A402A8B21920019E4A8 /* MainModel 2.xcdatamodel */;
+			currentVersion = 55E30C4DCFF029D0E8F8975B /* MainModel 3.xcdatamodel */;
 			path = MainModel.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;

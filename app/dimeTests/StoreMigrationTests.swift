@@ -16,6 +16,10 @@ final class StoreMigrationTests: XCTestCase {
         var month: Date?
         var recurringType: Int16?
         var categoryName: String?
+        var income: Bool?
+        var onceRecurring: Bool?
+        var recurringCoefficient: Int16?
+        var currencyCode: String?
     }
 
     private var directory: URL!
@@ -54,7 +58,7 @@ final class StoreMigrationTests: XCTestCase {
             let snapshot = try XCTUnwrap(StoreSnapshot.snapshotIfMigrationNeeded(storeAt: storeURL, to: currentModel, in: StoreSnapshot.directory(forStoreAt: storeURL)))
             XCTAssertEqual(try readTransactions(at: snapshot, model: model), expected, "The snapshot of model \(index) differs from the original")
 
-            XCTAssertEqual(try readTransactions(at: storeURL, model: currentModel), expected, "Migrating model \(index) changed transactions")
+            XCTAssertEqual(try readTransactions(at: storeURL, model: currentModel, comparingAttributesOf: model), expected, "Migrating model \(index) changed transactions")
             XCTAssertFalse(StoreSnapshot.needsMigration(storeAt: storeURL, to: currentModel))
 
             let context = try openStore(at: storeURL, model: currentModel)
@@ -65,6 +69,50 @@ final class StoreMigrationTests: XCTestCase {
             XCTAssertEqual((budgets.first?.value(forKey: "category") as? NSManagedObject)?.value(forKey: "name") as? String, "Food")
             try close(context)
         }
+    }
+
+    // Model 2 is the only earlier version with MainBudget.
+    private var previousModel: NSManagedObjectModel? {
+        earlierModels.first { $0.entitiesByName["MainBudget"] != nil }
+    }
+
+    func testCurrentModelOnlyAddsAnOptionalCurrencyToTransactions() throws {
+        let previous = try XCTUnwrap(previousModel)
+
+        XCTAssertEqual(Set(currentModel.entitiesByName.keys), Set(previous.entitiesByName.keys))
+
+        for (name, entity) in currentModel.entitiesByName where name != "Transaction" {
+            XCTAssertEqual(entity.versionHash, previous.entitiesByName[name]?.versionHash, "\(name) changed")
+        }
+
+        let transaction = try XCTUnwrap(currentModel.entitiesByName["Transaction"])
+        let previousTransaction = try XCTUnwrap(previous.entitiesByName["Transaction"])
+        XCTAssertEqual(Set(transaction.propertiesByName.keys), Set(previousTransaction.propertiesByName.keys).union(["currencyCode"]))
+
+        for (name, property) in previousTransaction.propertiesByName {
+            XCTAssertEqual(transaction.propertiesByName[name]?.versionHash, property.versionHash, "Transaction.\(name) changed")
+        }
+
+        let currency = try XCTUnwrap(transaction.attributesByName["currencyCode"])
+        XCTAssertEqual(currency.attributeType, .stringAttributeType)
+        XCTAssertTrue(currency.isOptional)
+        XCTAssertNil(currency.defaultValue)
+    }
+
+    func testModelTwoStoreMigratesWithNoCurrencyOnAnyTransaction() throws {
+        let previous = try XCTUnwrap(previousModel)
+        let storeURL = directory.appendingPathComponent("Main.sqlite")
+        let expected = try writeFixture(to: storeURL, model: previous)
+
+        try StoreSnapshot.snapshotIfMigrationNeeded(storeAt: storeURL, to: currentModel, in: StoreSnapshot.directory(forStoreAt: storeURL))
+        XCTAssertEqual(try readTransactions(at: storeURL, model: currentModel, comparingAttributesOf: previous), expected)
+
+        let context = try openStore(at: storeURL, model: currentModel)
+        let request = NSFetchRequest<NSManagedObject>(entityName: "Transaction")
+        XCTAssertEqual(try context.count(for: request), expected.count)
+        request.predicate = NSPredicate(format: "currencyCode != nil")
+        XCTAssertEqual(try context.count(for: request), 0)
+        try close(context)
     }
 
     func testStoreOnTheCurrentModelIsNotSnapshotted() throws {
@@ -154,7 +202,14 @@ final class StoreMigrationTests: XCTestCase {
                 "category": category
             ])
 
-            expected[id] = TransactionValues(amount: amount, note: note, date: date, day: day, month: month, recurringType: Int16(index % 4), categoryName: category.value(forKey: "name") as? String)
+            expected[id] = TransactionValues(
+                amount: amount, note: note, date: date, day: day, month: month, recurringType: Int16(index % 4),
+                categoryName: category.value(forKey: "name") as? String,
+                income: value(transaction, "income") as? Bool,
+                onceRecurring: value(transaction, "onceRecurring") as? Bool,
+                recurringCoefficient: value(transaction, "recurringCoefficient") as? Int16,
+                currencyCode: nil
+            )
         }
 
         let budget = NSEntityDescription.insertNewObject(forEntityName: "Budget", into: context)
@@ -165,23 +220,38 @@ final class StoreMigrationTests: XCTestCase {
         return expected
     }
 
-    private func readTransactions(at url: URL, model: NSManagedObjectModel) throws -> [UUID: TransactionValues] {
+    private func value(_ object: NSManagedObject, _ key: String) -> Any? {
+        object.entity.propertiesByName[key] == nil ? nil : object.value(forKey: key)
+    }
+
+    // Attributes added after `source` get their default on migration, so only the ones it had are compared.
+    // The currency is always read, so migrated rows are checked to have none.
+    private func readTransactions(at url: URL, model: NSManagedObjectModel, comparingAttributesOf source: NSManagedObjectModel? = nil) throws -> [UUID: TransactionValues] {
         let context = try openStore(at: url, model: model)
         defer { try? close(context) }
 
+        let sourceProperties = (source ?? model).entitiesByName["Transaction"]?.propertiesByName ?? [:]
         let transactions = try context.fetch(NSFetchRequest<NSManagedObject>(entityName: "Transaction"))
         var values: [UUID: TransactionValues] = [:]
 
         for transaction in transactions {
+            func compared(_ key: String) -> Any? {
+                sourceProperties[key] == nil ? nil : value(transaction, key)
+            }
+
             let id = try XCTUnwrap(transaction.value(forKey: "id") as? UUID)
             values[id] = TransactionValues(
-                amount: transaction.value(forKey: "amount") as? Double,
-                note: transaction.value(forKey: "note") as? String,
-                date: transaction.value(forKey: "date") as? Date,
-                day: transaction.value(forKey: "day") as? Date,
-                month: transaction.value(forKey: "month") as? Date,
-                recurringType: transaction.value(forKey: "recurringType") as? Int16,
-                categoryName: (transaction.value(forKey: "category") as? NSManagedObject)?.value(forKey: "name") as? String
+                amount: compared("amount") as? Double,
+                note: compared("note") as? String,
+                date: compared("date") as? Date,
+                day: compared("day") as? Date,
+                month: compared("month") as? Date,
+                recurringType: compared("recurringType") as? Int16,
+                categoryName: (compared("category") as? NSManagedObject)?.value(forKey: "name") as? String,
+                income: compared("income") as? Bool,
+                onceRecurring: compared("onceRecurring") as? Bool,
+                recurringCoefficient: compared("recurringCoefficient") as? Int16,
+                currencyCode: value(transaction, "currencyCode") as? String
             )
         }
 
