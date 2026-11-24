@@ -38,6 +38,7 @@ struct CategoryView: View {
         switch mode {
         case .settings:
             content
+                .modifier(SettingsPageHeader(title: "Categories"))
         case .welcome, .transaction:
             if #available(iOS 16.0, *) {
                 NavigationStack { content }
@@ -84,7 +85,7 @@ struct CategoryView: View {
                     .glassBackground(in: Capsule(), tint: .glassTint)
                     .opacity(disabled ? 0.5 : 1)
                 }
-                .padding(.horizontal, 20)
+                .padding(.horizontal, .settingsPageInset)
                 .padding(.top, 8)
                 .padding(.bottom, 12)
             }
@@ -218,7 +219,7 @@ struct CategoryListView: View {
                             if categories.isEmpty {
                                 if showSuggestions {
                                     emptyState
-                                        .listRowBackground(Color.SettingsBackground)
+                                        .listRowBackground(Rectangle().fill(Color.SettingsBackground))
                                 }
                             } else {
                                 ForEach(categories) { category in
@@ -244,7 +245,7 @@ struct CategoryListView: View {
                                     }
                                     .frame(minHeight: .settingsRowHeight)
                                     .listRowInsets(EdgeInsets(top: 0, leading: .settingsRowInset, bottom: 0, trailing: .settingsRowInset))
-                                    .listRowBackground(Color.SettingsBackground)
+                                    .listRowBackground(Rectangle().fill(Color.SettingsBackground))
                                     .listRowSeparatorTint(Color.Outline)
                                     .contentShape(Rectangle())
                                     .onTapGesture {
@@ -279,13 +280,14 @@ struct CategoryListView: View {
                     .scrollIndicators(.hidden)
                     .environment(\.editMode, .constant(self.isEditing ? EditMode.active : EditMode.inactive))
                     .environment(\.defaultMinListRowHeight, .settingsRowHeight)
+                    .settingsListMargins()
                 } else {
                     List {
                         Section(header: categoriesHeader) {
                             if categories.isEmpty {
                                 if showSuggestions {
                                     emptyState
-                                        .listRowBackground(Color.SettingsBackground)
+                                        .listRowBackground(Rectangle().fill(Color.SettingsBackground))
                                 }
                             } else {
                                 ForEach(categories) { category in
@@ -311,7 +313,7 @@ struct CategoryListView: View {
                                     }
                                     .frame(minHeight: .settingsRowHeight)
                                     .listRowInsets(EdgeInsets(top: 0, leading: .settingsRowInset, bottom: 0, trailing: .settingsRowInset))
-                                    .listRowBackground(Color.SettingsBackground)
+                                    .listRowBackground(Rectangle().fill(Color.SettingsBackground))
                                     .listRowSeparatorTint(Color.Outline)
                                     .contentShape(Rectangle())
                                     .onTapGesture {
@@ -344,6 +346,7 @@ struct CategoryListView: View {
                     }
                     .environment(\.editMode, .constant(self.isEditing ? EditMode.active : EditMode.inactive))
                     .environment(\.defaultMinListRowHeight, .settingsRowHeight)
+                    .settingsListMargins()
                 }
             }
         }
@@ -1194,7 +1197,7 @@ struct SuggestedCategoriesView: View {
                     .foregroundColor(Color.PrimaryText)
                     .frame(minHeight: .settingsRowHeight)
                     .listRowInsets(EdgeInsets(top: 0, leading: .settingsRowInset, bottom: 0, trailing: .settingsRowInset))
-                    .listRowBackground(Color.SettingsBackground)
+                    .listRowBackground(Rectangle().fill(Color.SettingsBackground))
                     .listRowSeparatorTint(Color.Outline)
                     .contentShape(Rectangle())
                     .onTapGesture {
@@ -1526,4 +1529,21 @@ struct OpenAICompletionsResponse: Decodable {
 
 struct OpenAICompletionsOptions: Decodable {
     let text: String
+}
+
+private extension View {
+    /// A List uses a side safe area, like the iPhone Duo's vertical bar, in place of its margin rather than adding
+    /// to it, so its sections run up to the bar. Widen the safe area by the page inset so they clear it like other pages.
+    @ViewBuilder func settingsListMargins() -> some View {
+        if #available(iOS 17.0, *) {
+            GeometryReader { proxy in
+                self
+                    .safeAreaPadding(.leading, proxy.safeAreaInsets.leading > 0 ? .settingsPageInset : 0)
+                    .safeAreaPadding(.trailing, proxy.safeAreaInsets.trailing > 0 ? .settingsPageInset : 0)
+                    .contentMargins(.leading, .settingsPageInset, for: .scrollContent)
+            }
+        } else {
+            self
+        }
+    }
 }

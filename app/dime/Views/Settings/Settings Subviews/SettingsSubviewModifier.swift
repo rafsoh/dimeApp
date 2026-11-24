@@ -41,9 +41,7 @@ struct SettingsSubviewModifier: ViewModifier {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.PrimaryBackground.ignoresSafeArea())
-        .navigationTitle(title)
-        .navigationBarTitleDisplayMode(.inline)
-        .settingsNavigationBar(hidden: false)
+        .modifier(SettingsPageHeader(title: title))
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     }
 
@@ -52,6 +50,24 @@ struct SettingsSubviewModifier: ViewModifier {
             .padding(.horizontal, .settingsPageInset)
             .padding(.top, 8)
             .frame(maxWidth: .infinity, alignment: .top)
+    }
+}
+
+/// A pushed Settings page's header. Settings never shows the system navigation bar: when it appears for a pushed page,
+/// it takes over the top scroll edge effect of the page beneath, which drops out while popping back to the root.
+struct SettingsPageHeader: ViewModifier {
+    @Environment(\.dismiss) private var dismiss
+
+    let title: LocalizedStringKey
+
+    func body(content: Content) -> some View {
+        content
+            .tabHeader {
+                GlassSheetHeader(title: Text(title), showsBack: true) {
+                    dismiss()
+                }
+            }
+            .settingsNavigationBar(hidden: true)
     }
 }
 

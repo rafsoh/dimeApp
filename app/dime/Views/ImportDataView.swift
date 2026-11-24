@@ -63,26 +63,27 @@ struct ImportDataView: View {
     private let stepAnimation = Animation.spring(response: 0.42, dampingFraction: 0.88)
 
     var body: some View {
-        VStack(spacing: 0) {
+        ZStack {
+            stepContent
+                .id(step)
+                .transition(.asymmetric(
+                    insertion: .move(edge: movingForward ? .trailing : .leading).combined(with: .opacity),
+                    removal: .move(edge: movingForward ? .leading : .trailing).combined(with: .opacity)
+                ))
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .tabHeader {
             header
                 .padding(.top, 20)
-
-            ZStack {
-                stepContent
-                    .id(step)
-                    .transition(.asymmetric(
-                        insertion: .move(edge: movingForward ? .trailing : .leading).combined(with: .opacity),
-                        removal: .move(edge: movingForward ? .leading : .trailing).combined(with: .opacity)
-                    ))
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            .clipped()
-
-            bottomButtons
                 .padding(.bottom, 8)
+                .padding(.horizontal, .settingsPageInset)
         }
-        .padding(.horizontal, .settingsPageInset)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .bottomBar {
+            bottomButtons
+                .padding(.top, 8)
+                .padding(.bottom, 8)
+                .padding(.horizontal, .settingsPageInset)
+        }
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .background(Color.PrimaryBackground)
         .modifier(TransactionSheetPresentation())
@@ -200,8 +201,9 @@ struct ImportDataView: View {
                     RequirementRow(systemImage: ImportField.note.systemImage, title: "Note", subtitle: "Optional.")
                 }
             }
-            .padding(.top, 24)
+            .padding(.top, 16)
             .padding(.bottom, 20)
+            .padding(.horizontal, .settingsPageInset)
         }
     }
 
@@ -227,8 +229,9 @@ struct ImportDataView: View {
                     dateFormatSection
                 }
             }
-            .padding(.top, 24)
+            .padding(.top, 16)
             .padding(.bottom, 20)
+            .padding(.horizontal, .settingsPageInset)
         }
         .scrollDismissesKeyboardInteractively()
     }
@@ -384,8 +387,9 @@ struct ImportDataView: View {
                 }
                 .settingsSectionRows()
             }
-            .padding(.top, 24)
+            .padding(.top, 16)
             .padding(.bottom, 20)
+            .padding(.horizontal, .settingsPageInset)
         }
     }
 
@@ -523,8 +527,9 @@ struct ImportDataView: View {
                     .padding(.top, -16)
                 }
             }
-            .padding(.top, 24)
+            .padding(.top, 16)
             .padding(.bottom, 20)
+            .padding(.horizontal, .settingsPageInset)
         }
     }
 
@@ -559,6 +564,7 @@ struct ImportDataView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.horizontal, .settingsPageInset)
         .accessibilityElement(children: .combine)
     }
 
@@ -1058,7 +1064,7 @@ private struct SummaryRow: View {
 private extension View {
     /// Settings' row height, with room for rows whose subtitle makes them taller at large text sizes.
     func importRowHeight() -> some View {
-        padding(.vertical, 4)
+        padding(.vertical, 10)
             .frame(maxWidth: .infinity, minHeight: .settingsRowHeight)
     }
 }
