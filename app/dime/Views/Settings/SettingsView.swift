@@ -154,323 +154,329 @@ struct SettingsView: View {
   @EnvironmentObject var dataController: DataController
 
   var body: some View {
-    NavigationView {
-      VStack {
-        ScrollView(showsIndicators: false) {
+    if #available(iOS 16.0, *) {
+      NavigationStack { root }
+    } else {
+      NavigationView { root }
+    }
+  }
+
+  private var root: some View {
+    VStack {
+      ScrollView(showsIndicators: false) {
+        VStack(spacing: 0) {
           VStack(spacing: 0) {
+            SettingsSectionHeader("General")
+
             VStack(spacing: 0) {
-              SettingsSectionHeader("General")
 
-              VStack(spacing: 0) {
-
-                NavigationLink(destination: SettingsNotificationsView()) {
-                  SettingsRowView(
-                    systemImage: "bell.fill", title: "Notifications", colour: 102,
-                    optionalText: notificationString)
-                }
-
-                NavigationLink(destination: SettingsCurrencyView()) {
-                  SettingsRowView(
-                    systemImage: "coloncurrencysign.square.fill", title: "Currency", colour: 103,
-                    optionalText: currency)
-                }
-
-                NavigationLink(
-                  destination: SettingsNumberEntryView()
-                    .onAppear {
-                      withAnimation(.easeOut.speed(1.5)) {
-                        tabBarManager.navigationHideTab()
-                      }
-                    }
-                    .onDisappear {
-                      withAnimation(.easeOut.speed(1.5)) {
-                        tabBarManager.navigationShowTab()
-                      }
-                    }
-                ) {
-                  SettingsRowView(
-                    systemImage: "keyboard.fill", title: "Number Entry", colour: 104,
-                    optionalText: numberEntryString)
-                }
-
-                ToggleRow(
-                  icon: "faceid", color: "105", text: "Authentication",
-                  bool: appLockVM.isAppLockEnabled,
-                  onTap: {
-                    appLockVM.appLockStateChange(appLockState: !appLockVM.isAppLockEnabled)
-                  })
-
-                ToggleRow(
-                  icon: "banknote.fill", color: "106", text: "Income Tracking", bool: incomeTracking,
-                  onTap: {
-                    incomeTracking.toggle()
-
-                    if !incomeTracking {
-                      UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.set(
-                        false, forKey: "insightsViewIncomeFiltering")
-                      UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.set(
-                        3, forKey: "logInsightsType")
-                    }
-                  })
-
-                NavigationLink(destination: SettingsWeekStartView()) {
-                  SettingsRowView(systemImage: "calendar", title: "Time Frames", colour: 109)
-                }
-                
+              NavigationLink(destination: SettingsNotificationsView()) {
+                SettingsRowView(
+                  systemImage: "bell.fill", title: "Notifications", colour: 102,
+                  optionalText: notificationString)
               }
-              .settingsSectionRows()
-            }
-            .padding(.horizontal, .settingsPageInset)
-            .padding(.top, 6)
-            .padding(.bottom, .settingsHeaderSpacing)
-            .onChange(of: currency) { _ in
-              WidgetCenter.shared.reloadAllTimelines()
-            }
-            .onChange(of: firstWeekday) { _ in
-              WidgetCenter.shared.reloadAllTimelines()
-            }
-            .onChange(of: showCents) { _ in
-              WidgetCenter.shared.reloadAllTimelines()
-            }
 
-            VStack(spacing: 0) {
-              SettingsSectionHeader("Appearance")
-
-              VStack(spacing: 0) {
-                NavigationLink(destination: SettingsAppearanceView()) {
-                  SettingsRowView(
-                    systemImage: "circle.righthalf.filled", title: "Theme", colour: 100,
-                    optionalText: colourSchemeString)
-                }
-
-                NavigationLink(destination: SettingsAppIconView()) {
-                  SettingsRowView(
-                    systemImage: "app.badge.fill", title: "App Icon", colour: 101,
-                    optionalText: appIconString)
-                }
-
-                ToggleRow(
-                  icon: "centsign.circle.fill", color: "107", text: "Display Cents", bool: showCents,
-                  onTap: {
-                    showCents.toggle()
-                  })
-
-                NavigationLink(destination: SettingsUpcomingView()) {
-                  SettingsRowView(
-                    systemImage: "sun.min.fill", title: "Upcoming Logs", colour: 108,
-                    optionalText: upcomingString)
-                }
-                
-                ToggleRow(
-                  icon: "plusminus", color: "123", text: "Display +/- Symbol", bool: showExpenseOrIncomeSign,
-                  onTap: {
-                      showExpenseOrIncomeSign.toggle()
-                  })
-
-                ToggleRow(
-                  icon: "hare.fill", color: "121", text: "Animated Charts", bool: animated, smaller: true,
-                  onTap: {
-                    animated.toggle()
-                  })
-
+              NavigationLink(destination: SettingsCurrencyView()) {
+                SettingsRowView(
+                  systemImage: "coloncurrencysign.square.fill", title: "Currency", colour: 103,
+                  optionalText: currency)
               }
-              .settingsSectionRows()
-            }
-            .padding(.horizontal, .settingsPageInset)
-            .padding(.bottom, .settingsHeaderSpacing)
-            .onChange(of: currency) { _ in
-              WidgetCenter.shared.reloadAllTimelines()
-            }
-            .onChange(of: firstWeekday) { _ in
-              WidgetCenter.shared.reloadAllTimelines()
-            }
-            .onChange(of: showCents) { _ in
-              WidgetCenter.shared.reloadAllTimelines()
-            }
 
-            VStack(spacing: 0) {
-              SettingsSectionHeader("Data")
-
-              VStack(spacing: 0) {
-                NavigationLink(
-                  destination: SettingsCategoryView()
-                    .onAppear {
-                      withAnimation(.easeOut.speed(1.5)) {
-                        tabBarManager.navigationHideTab()
-                      }
+              NavigationLink(
+                destination: SettingsNumberEntryView()
+                  .onAppear {
+                    withAnimation(.easeOut.speed(1.5)) {
+                      tabBarManager.navigationHideTab()
                     }
-                    .onDisappear {
-                      withAnimation(.easeOut.speed(1.5)) {
-                        tabBarManager.navigationShowTab()
-                      }
+                  }
+                  .onDisappear {
+                    withAnimation(.easeOut.speed(1.5)) {
+                      tabBarManager.navigationShowTab()
                     }
-
-                ) {
-                  SettingsRowView(
-                    systemImage: "rectangle.grid.2x2.fill", title: "Categories", colour: 110)
-                }
-
-                NavigationLink(destination: SettingsCloudView()) {
-                  SettingsRowView(
-                    systemImage: "icloud.fill", title: "iCloud Sync", colour: 111,
-                    optionalText: iCloudString)
-                }
-
-                NavigationLink(destination: SettingsBackupsView()) {
-                  SettingsRowView(
-                    systemImage: "clock.arrow.circlepath", title: "Backups", colour: 106)
-                }
-
-                //
-                //                            NavigationLink(destination: SettingsQuickAddWidgetView()) {
-                //                                SettingsRowView(systemImage: "bolt.square.fill", title: "Quick-Add Widget", colour: 115)
-                //                            }
-
-                Button {
-                  showImportGuide = true
-                } label: {
-                  SettingsRowView(
-                    systemImage: "square.and.arrow.down.fill", title: "Import Data", colour: 112)
-                }
-
-                Button {
-                  exportData()
-                } label: {
-                  SettingsRowView(
-                    systemImage: "square.and.arrow.up.fill", title: "Export Data", colour: 113)
-                }
-
-                NavigationLink(destination: SettingsEraseView()) {
-                  SettingsRowView(systemImage: "xmark.bin.fill", title: "Erase Data", colour: 114)
-                }
+                  }
+              ) {
+                SettingsRowView(
+                  systemImage: "keyboard.fill", title: "Number Entry", colour: 104,
+                  optionalText: numberEntryString)
               }
-              .settingsSectionRows()
+
+              ToggleRow(
+                icon: "faceid", color: "105", text: "Authentication",
+                bool: appLockVM.isAppLockEnabled,
+                onTap: {
+                  appLockVM.appLockStateChange(appLockState: !appLockVM.isAppLockEnabled)
+                })
+
+              ToggleRow(
+                icon: "banknote.fill", color: "106", text: "Income Tracking", bool: incomeTracking,
+                onTap: {
+                  incomeTracking.toggle()
+
+                  if !incomeTracking {
+                    UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.set(
+                      false, forKey: "insightsViewIncomeFiltering")
+                    UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.set(
+                      3, forKey: "logInsightsType")
+                  }
+                })
+
+              NavigationLink(destination: SettingsWeekStartView()) {
+                SettingsRowView(systemImage: "calendar", title: "Time Frames", colour: 109)
+              }
+              
             }
-            .padding(.horizontal, .settingsPageInset)
-            .padding(.bottom, .settingsHeaderSpacing)
+            .settingsSectionRows()
+          }
+          .padding(.horizontal, .settingsPageInset)
+          .padding(.top, 6)
+          .padding(.bottom, .settingsHeaderSpacing)
+          .onChange(of: currency) { _ in
+            WidgetCenter.shared.reloadAllTimelines()
+          }
+          .onChange(of: firstWeekday) { _ in
+            WidgetCenter.shared.reloadAllTimelines()
+          }
+          .onChange(of: showCents) { _ in
+            WidgetCenter.shared.reloadAllTimelines()
+          }
+
+          VStack(spacing: 0) {
+            SettingsSectionHeader("Appearance")
 
             VStack(spacing: 0) {
-              SettingsSectionHeader("Others")
+              NavigationLink(destination: SettingsAppearanceView()) {
+                SettingsRowView(
+                  systemImage: "circle.righthalf.filled", title: "Theme", colour: 100,
+                  optionalText: colourSchemeString)
+              }
 
-              VStack(spacing: 0) {
+              NavigationLink(destination: SettingsAppIconView()) {
+                SettingsRowView(
+                  systemImage: "app.badge.fill", title: "App Icon", colour: 101,
+                  optionalText: appIconString)
+              }
 
-                  NavigationLink(destination: SettingsHapticsView()) {
-                    SettingsRowView(
-                      systemImage: "hand.tap.fill", title: "Haptics", colour: 100,
-                      optionalText: hapticString)
+              ToggleRow(
+                icon: "centsign.circle.fill", color: "107", text: "Display Cents", bool: showCents,
+                onTap: {
+                  showCents.toggle()
+                })
+
+              NavigationLink(destination: SettingsUpcomingView()) {
+                SettingsRowView(
+                  systemImage: "sun.min.fill", title: "Upcoming Logs", colour: 108,
+                  optionalText: upcomingString)
+              }
+              
+              ToggleRow(
+                icon: "plusminus", color: "123", text: "Display +/- Symbol", bool: showExpenseOrIncomeSign,
+                onTap: {
+                    showExpenseOrIncomeSign.toggle()
+                })
+
+              ToggleRow(
+                icon: "hare.fill", color: "121", text: "Animated Charts", bool: animated, smaller: true,
+                onTap: {
+                  animated.toggle()
+                })
+
+            }
+            .settingsSectionRows()
+          }
+          .padding(.horizontal, .settingsPageInset)
+          .padding(.bottom, .settingsHeaderSpacing)
+          .onChange(of: currency) { _ in
+            WidgetCenter.shared.reloadAllTimelines()
+          }
+          .onChange(of: firstWeekday) { _ in
+            WidgetCenter.shared.reloadAllTimelines()
+          }
+          .onChange(of: showCents) { _ in
+            WidgetCenter.shared.reloadAllTimelines()
+          }
+
+          VStack(spacing: 0) {
+            SettingsSectionHeader("Data")
+
+            VStack(spacing: 0) {
+              NavigationLink(
+                destination: SettingsCategoryView()
+                  .onAppear {
+                    withAnimation(.easeOut.speed(1.5)) {
+                      tabBarManager.navigationHideTab()
+                    }
+                  }
+                  .onDisappear {
+                    withAnimation(.easeOut.speed(1.5)) {
+                      tabBarManager.navigationShowTab()
+                    }
                   }
 
-                NavigationLink(destination: SettingsGoofyView()) {
-                  SettingsRowView(systemImage: "flame.fill", title: "Feature Lab", colour: 122)
-                }
-
-                Button {
-                  showTipJarMenu = true
-                } label: {
-                  SettingsRowView(systemImage: "heart.fill", title: "Tip Jar", colour: 123)
-                }
-
-                Button {
-                  supportEmail.send(openURL: openURL)
-                } label: {
-                  SettingsRowView(systemImage: "ladybug.fill", title: "Report Bug", colour: 124)
-                }
-
-                Button {
-                  featureRequestEmail.send(openURL: openURL)
-                } label: {
-                  SettingsRowView(
-                    systemImage: "hand.wave.fill", title: "Feature Request", colour: 125)
-                }
-
-                Button {
-                  let url = "https://apps.apple.com/app/id1635280255?action=write-review"
-                  guard let writeReviewURL = URL(string: url)
-                  else { fatalError("Expected a valid URL") }
-                  UIApplication.shared.open(writeReviewURL, options: [:], completionHandler: nil)
-                } label: {
-                  SettingsRowView(systemImage: "star.fill", title: "Rate on App Store", colour: 126)
-                }
-
-                Button {
-                  shareSheet(url: "https://apps.apple.com/app/id1635280255")
-                } label: {
-                  SettingsRowView(systemImage: "shareplay", title: "Share with Friends", colour: 127)
-                }
-
-                Button {
-                  if let url = URL(string: "https://www.x.com/budgetwithdime") {
-                    UIApplication.shared.open(url)
-                  }
-                } label: {
-                  SettingsRowView(systemImage: "bird.fill", title: "Follow Dime on X", colour: 128)
-                    .frame(maxWidth: .infinity)
-                }
-
-                Button {
-                  if let url = URL(string: "https://www.x.com/rarfell") {
-                    UIApplication.shared.open(url)
-                  }
-                } label: {
-                  SettingsRowView(
-                    systemImage: "camera.fill", title: "Follow Rafael on X", colour: 129)
-                }
+              ) {
+                SettingsRowView(
+                  systemImage: "rectangle.grid.2x2.fill", title: "Categories", colour: 110)
               }
-              .settingsSectionRows()
+
+              NavigationLink(destination: SettingsCloudView()) {
+                SettingsRowView(
+                  systemImage: "icloud.fill", title: "iCloud Sync", colour: 111,
+                  optionalText: iCloudString)
+              }
+
+              NavigationLink(destination: SettingsBackupsView()) {
+                SettingsRowView(
+                  systemImage: "clock.arrow.circlepath", title: "Backups", colour: 106)
+              }
+
+              //
+              //                            NavigationLink(destination: SettingsQuickAddWidgetView()) {
+              //                                SettingsRowView(systemImage: "bolt.square.fill", title: "Quick-Add Widget", colour: 115)
+              //                            }
+
+              Button {
+                showImportGuide = true
+              } label: {
+                SettingsRowView(
+                  systemImage: "square.and.arrow.down.fill", title: "Import Data", colour: 112)
+              }
+
+              Button {
+                exportData()
+              } label: {
+                SettingsRowView(
+                  systemImage: "square.and.arrow.up.fill", title: "Export Data", colour: 113)
+              }
+
+              NavigationLink(destination: SettingsEraseView()) {
+                SettingsRowView(systemImage: "xmark.bin.fill", title: "Erase Data", colour: 114)
+              }
             }
-            .padding(.horizontal, .settingsPageInset)
-            .padding(.bottom, 15)
+            .settingsSectionRows()
+          }
+          .padding(.horizontal, .settingsPageInset)
+          .padding(.bottom, .settingsHeaderSpacing)
 
-            VStack(spacing: 5) {
-              HStack(spacing: 3) {
-                Text("Version \(UIApplication.appVersion ?? "") (\(UIApplication.buildNumber ?? ""))")
-                  .font(.system(.footnote, design: .rounded).weight(.medium))
+          VStack(spacing: 0) {
+            SettingsSectionHeader("Others")
 
-                  //                                .font(.system(size: 14, weight: .medium, design: .rounded))
-                  .foregroundColor(Color.SubtitleText)
+            VStack(spacing: 0) {
 
-                Text("·")
-                  .font(.system(.footnote, design: .rounded).weight(.medium))
-
-                  .foregroundColor(Color.SubtitleText)
-
-                Button {
-                  showUpdate = true
-                } label: {
-                  Text("What's New")
-                    .font(.system(.footnote, design: .rounded).weight(.medium))
-                    .foregroundColor(Color.PrimaryText)
+                NavigationLink(destination: SettingsHapticsView()) {
+                  SettingsRowView(
+                    systemImage: "hand.tap.fill", title: "Haptics", colour: 100,
+                    optionalText: hapticString)
                 }
-                .buttonStyle(.plain)
+
+              NavigationLink(destination: SettingsGoofyView()) {
+                SettingsRowView(systemImage: "flame.fill", title: "Feature Lab", colour: 122)
               }
 
-              Text("Made with ❤️ by \(makeAttributedString()) from 🇸🇬")
+              Button {
+                showTipJarMenu = true
+              } label: {
+                SettingsRowView(systemImage: "heart.fill", title: "Tip Jar", colour: 123)
+              }
+
+              Button {
+                supportEmail.send(openURL: openURL)
+              } label: {
+                SettingsRowView(systemImage: "ladybug.fill", title: "Report Bug", colour: 124)
+              }
+
+              Button {
+                featureRequestEmail.send(openURL: openURL)
+              } label: {
+                SettingsRowView(
+                  systemImage: "hand.wave.fill", title: "Feature Request", colour: 125)
+              }
+
+              Button {
+                let url = "https://apps.apple.com/app/id1635280255?action=write-review"
+                guard let writeReviewURL = URL(string: url)
+                else { fatalError("Expected a valid URL") }
+                UIApplication.shared.open(writeReviewURL, options: [:], completionHandler: nil)
+              } label: {
+                SettingsRowView(systemImage: "star.fill", title: "Rate on App Store", colour: 126)
+              }
+
+              Button {
+                shareSheet(url: "https://apps.apple.com/app/id1635280255")
+              } label: {
+                SettingsRowView(systemImage: "shareplay", title: "Share with Friends", colour: 127)
+              }
+
+              Button {
+                if let url = URL(string: "https://www.x.com/budgetwithdime") {
+                  UIApplication.shared.open(url)
+                }
+              } label: {
+                SettingsRowView(systemImage: "bird.fill", title: "Follow Dime on X", colour: 128)
+                  .frame(maxWidth: .infinity)
+              }
+
+              Button {
+                if let url = URL(string: "https://www.x.com/rafsoh") {
+                  UIApplication.shared.open(url)
+                }
+              } label: {
+                SettingsRowView(
+                  systemImage: "camera.fill", title: "Follow Rafael on X", colour: 129)
+              }
+            }
+            .settingsSectionRows()
+          }
+          .padding(.horizontal, .settingsPageInset)
+          .padding(.bottom, 15)
+
+          VStack(spacing: 5) {
+            HStack(spacing: 3) {
+              Text("Version \(UIApplication.appVersion ?? "") (\(UIApplication.buildNumber ?? ""))")
+                .font(.system(.footnote, design: .rounded).weight(.medium))
+
+                //                                .font(.system(size: 14, weight: .medium, design: .rounded))
+                .foregroundColor(Color.SubtitleText)
+
+              Text("·")
                 .font(.system(.footnote, design: .rounded).weight(.medium))
 
                 .foregroundColor(Color.SubtitleText)
-                .multilineTextAlignment(.center)
+
+              Button {
+                showUpdate = true
+              } label: {
+                Text("What's New")
+                  .font(.system(.footnote, design: .rounded).weight(.medium))
+                  .foregroundColor(Color.PrimaryText)
+              }
+              .buttonStyle(.plain)
             }
-            .padding(.horizontal, .settingsPageInset)
+
+            Text("Made with ❤️ by \(makeAttributedString()) from 🇸🇬")
+              .font(.system(.footnote, design: .rounded).weight(.medium))
+
+              .foregroundColor(Color.SubtitleText)
+              .multilineTextAlignment(.center)
           }
-        }
-        .tabBarClearance()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-        .tabHeader {
-          TabHeader("Settings")
+          .padding(.horizontal, .settingsPageInset)
         }
       }
-      .settingsNavigationBar(hidden: true)
-      .background(Color.PrimaryBackground)
-      .fullScreenCover(isPresented: $showTipJarMenu) {
-        TipJarAlert()
+      .tabBarClearance()
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+      .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+      .tabHeader {
+        TabHeader("Settings")
       }
-      .sheet(isPresented: $showUpdate) {
-        WhatsNewSheet()
-      }
-      .sheet(isPresented: $showImportGuide) {
-        ImportDataView()
-      }
+    }
+    .settingsNavigationBar(hidden: true)
+    .background(Color.PrimaryBackground)
+    .sheet(isPresented: $showTipJarMenu) {
+      TipJarSheet()
+    }
+    .sheet(isPresented: $showUpdate) {
+      WhatsNewSheet()
+    }
+    .sheet(isPresented: $showImportGuide) {
+      ImportDataView()
     }
   }
 
@@ -501,7 +507,7 @@ struct SettingsView: View {
   func makeAttributedString() -> AttributedString {
     var string = AttributedString("Rafael")
     string.foregroundColor = Color.PrimaryText
-    string.link = URL(string: "https://www.x.com/rarfell")
+    string.link = URL(string: "https://www.x.com/rafsoh")
 
     return string
   }
@@ -563,236 +569,175 @@ struct SettingsView: View {
   }
 }
 
-struct TipJarAlert: View {
+struct TipJarSheet: View {
   @Environment(\.dismiss) var dismiss
-  @Environment(\.colorScheme) var systemColorScheme
   @EnvironmentObject var unlockManager: UnlockManager
 
-  @State private var offset: CGFloat = 0
+  @State private var contentHeight: CGFloat = 0
+  @State private var confetti = 0
 
-  @AppStorage("bottomEdge", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
-  var bottomEdge: Double = 15
-
-  @State var opacity = 0.0
-  @State var counter = 0
-
-  var bottomCaption: String {
-    if unlockManager.failedTransaction {
-      return "Tip failed to go through, please try again!"
-    } else if unlockManager.purchaseCount > 0 {
-      return "Thanks a million, \(Image(systemName: "heart.fill")) Rafael"
+  var body: some View {
+    if #available(iOS 16.0, *) {
+      content
+        .presentationDetents(detents)
+        .presentationDragIndicator(.hidden)
     } else {
-      return "Have a great day ahead!"
+      content
     }
   }
 
-  //    var sortedProducts: [SKProduct] {
-  //        let holding = unlockManager.loadedProducts.sorted {
-  //            $0.price.doubleValue > $1.price.doubleValue
-  //        }
-  //
-  //        return holding
-  //    }
+  @available(iOS 16.0, *)
+  var detents: Set<PresentationDetent> {
+    if contentHeight == 0 {
+      return [.height(420)]
+    } else if contentHeight > UIScreen.main.bounds.height * 0.9 {
+      return [.large]
+    } else {
+      return [.height(contentHeight)]
+    }
+  }
 
-  var body: some View {
-    ZStack(alignment: .bottom) {
-      Color.PrimaryBackground.opacity(opacity)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .contentShape(Rectangle())
-        .onTapGesture {
-          withAnimation(.easeIn(duration: 0.15)) {
-            opacity = 0
-            offset += 300
-          }
-          DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-            dismiss()
-          }
-        }
-        .onAppear {
-          DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-            withAnimation {
-              opacity = 0.4
-            }
-          }
+  var bottomCaption: Text {
+    if unlockManager.failedTransaction {
+      return Text("Tip failed to go through, please try again!")
+    } else if unlockManager.purchaseCount > 0 {
+      return Text("Thanks a million, \(Image(systemName: "heart.fill")) Rafael")
+    } else {
+      return Text("Have a great day ahead!")
+    }
+  }
+
+  var content: some View {
+    VStack(alignment: .leading, spacing: 0) {
+      HStack {
+        GlassIconButton(systemName: "xmark", accessibilityLabel: "Close") {
+          dismiss()
         }
 
-      VStack {
+        Spacer()
+      }
+      .frame(height: 44)
+      .overlay {
+        CategoryEditorTitle(title: "Tip Jar")
+      }
+
+      Text(
+        "Hey! Dime was built by a solo student developer, and is intended to be completely free-of-charge, with no paywalls or ads. If you enjoy using Dime and want to support development, please consider a small tip."
+      )
+      .font(.system(.body, design: .rounded).weight(.medium))
+      .foregroundColor(Color.SubtitleText)
+      .fixedSize(horizontal: false, vertical: true)
+      .padding(.top, 20)
+      .padding(.horizontal, 4)
+
+      Group {
         switch unlockManager.requestState {
         case .loading:
-          ProgressView {
-            Text("Loading")
-              .font(.system(.body, design: .rounded).weight(.medium))
-              //                            .font(.system(size: 18, weight: .medium, design: .rounded))
-              .foregroundColor(Color.SubtitleText)
-              .frame(maxWidth: .infinity)
-              .frame(height: 200)
-          }
+          ProgressView()
+            .frame(maxWidth: .infinity)
+            .frame(height: 170)
         case .failed:
           Text("Unable to load tip options, please try again later 🥲")
             .font(.system(.body, design: .rounded).weight(.medium))
-
-            //                        .font(.system(size: 18, weight: .medium, design: .rounded))
             .multilineTextAlignment(.center)
             .foregroundColor(Color.SubtitleText)
             .frame(maxWidth: .infinity)
-            .frame(height: 200)
-        default:
-          VStack(alignment: .leading, spacing: 4) {
-            HStack {
-              Image(systemName: "heart.fill")
-                .font(.system(.callout, design: .rounded))
-
-              //                                .font(.system(size: 16))
-              Text("Tip Jar")
-                .font(.system(.title2, design: .rounded).weight(.medium))
-
-              //                                .font(.system(size: 22, weight: .medium, design: .rounded))
-            }
-            .foregroundColor(.PrimaryText)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .overlay(alignment: .trailing) {
-              Button {
-                withAnimation(.easeIn(duration: 0.15)) {
-                  opacity = 0
-                  offset += 300
-                }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                  dismiss()
-                }
-              } label: {
-                Image(systemName: "xmark")
-                  .font(.system(.subheadline, design: .rounded).weight(.semibold))
-
-                  //                                    .font(.system(size: 14, weight: .semibold))
-                  .foregroundColor(Color.SubtitleText)
-                  .padding(7)
-                  .background(Color.SecondaryBackground, in: Circle())
-                  .contentShape(Circle())
-              }
-              .offset(x: 5, y: -5)
+            .frame(height: 170)
+        case .loaded:
+          VStack(spacing: 10) {
+            ForEach(sortedProducts, id: \.self) { product in
+              TipOptionButton(product: product)
             }
 
-            Text(
-              "Hey! Dime was built by a solo student developer, and is intended to be completely free-of-charge, with no paywalls or ads. If you enjoy using Dime and want to support development, please consider a small tip."
-            )
-            .font(.system(.callout, design: .rounded).weight(.medium))
-
-            //                            .font(.system(size: 16, weight: .medium, design: .rounded))
-            .foregroundColor(.SubtitleText)
-            .padding(.bottom, 20)
-
-            ProductView(
-              products: unlockManager.loadedProducts.sorted {
-                $0.price.doubleValue < $1.price.doubleValue
-              }
-            )
-            .padding(.bottom, 20)
-
-            Text(bottomCaption)
+            bottomCaption
               .font(.system(.subheadline, design: .rounded).weight(.medium))
-
-              //                                .font(.system(size: 14, weight: .medium, design: .rounded))
+              .foregroundColor(Color.SubtitleText)
               .frame(maxWidth: .infinity)
-              .foregroundColor(.SubtitleText)
+              .padding(.top, 10)
+              .animation(.easeInOut, value: unlockManager.failedTransaction)
           }
         }
       }
-      .padding(18)
-      .animation(.easeInOut, value: unlockManager.failedTransaction)
-      .background(
-        RoundedRectangle(cornerRadius: 13).fill(Color.PrimaryBackground).shadow(
-          color: systemColorScheme == .dark ? Color.clear : Color.gray.opacity(0.25), radius: 6)
-      )
-      .overlay(
-        RoundedRectangle(cornerRadius: 13).stroke(
-          systemColorScheme == .dark ? Color.gray.opacity(0.1) : Color.clear, lineWidth: 1.3)
-      )
-      .offset(y: offset)
-      .confettiCannon(
-        counter: $counter, num: 50, openingAngle: Angle(degrees: 0),
-        closingAngle: Angle(degrees: 360), radius: 200
-      )
-      .gesture(
-        DragGesture()
-          .onChanged { gesture in
-            if gesture.translation.height < 0 {
-              offset = gesture.translation.height / 3
-            } else {
-              offset = gesture.translation.height
-            }
-          }
-          .onEnded { value in
-            if value.translation.height > 30 {
-              withAnimation(.easeIn(duration: 0.15)) {
-                opacity = 0
-                offset += 300
-              }
-              DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                dismiss()
-              }
-
-            } else {
-              withAnimation {
-                offset = 0
-              }
-            }
-          }
-      )
-      .padding(.horizontal, 17)
-      .padding(.bottom, bottomEdge == 0 ? 13 : bottomEdge)
-      .onChange(of: unlockManager.purchaseCount) { _ in
-        counter += 1
+      .padding(.top, 24)
+    }
+    .padding(.horizontal, 20)
+    .padding(.top, 20)
+    .padding(.bottom, 16)
+    .fixedSize(horizontal: false, vertical: true)
+    .background {
+      GeometryReader { proxy in
+        Color.clear.preference(key: SheetContentHeightKey.self, value: proxy.size.height)
       }
     }
-    .edgesIgnoringSafeArea(.all)
-    .background(BackgroundBlurView())
+    .onPreferenceChange(SheetContentHeightKey.self) { height in
+      contentHeight = height
+    }
+    .frame(maxHeight: .infinity, alignment: .top)
+    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+    .sheetBackground()
+    .confettiCannon(
+      counter: $confetti, num: 50, openingAngle: Angle(degrees: 0),
+      closingAngle: Angle(degrees: 360), radius: 200
+    )
+    .onAppear {
+      unlockManager.loadProductsIfNeeded()
+    }
+    .onChange(of: unlockManager.purchaseCount) { _ in
+      confetti += 1
+    }
+  }
+
+  var sortedProducts: [SKProduct] {
+    unlockManager.loadedProducts.sorted {
+      $0.price.doubleValue < $1.price.doubleValue
+    }
   }
 }
 
-struct ProductView: View {
+private struct TipOptionButton: View {
   @EnvironmentObject var unlockManager: UnlockManager
-  let products: [SKProduct]
+  let product: SKProduct
 
   var body: some View {
-    VStack {
-      ForEach(products, id: \.self) { product in
-        HStack {
-          Text(getText(product.productIdentifier))
+    Button {
+      unlockManager.buy(product: product)
+    } label: {
+      HStack(spacing: 12) {
+        Text(title)
+          .foregroundColor(Color.PrimaryText)
+          .lineLimit(1)
+          .minimumScaleFactor(0.8)
 
-          Spacer()
+        Spacer(minLength: 12)
 
-          Button {
-            unlock(product)
-          } label: {
-            Text(product.localizedPrice)
-              .monospacedDigit()
-              .padding(6)
-              .background(
-                Color.SecondaryBackground, in: RoundedRectangle(cornerRadius: 8, style: .continuous)
-              )
-          }
-        }
+        Text(product.localizedPrice)
+          .monospacedDigit()
+          .foregroundColor(Color.LightIcon)
+          .padding(.horizontal, 14)
+          .frame(height: 36)
+          .background(Color.DarkBackground, in: Capsule())
       }
+      .font(.system(.body, design: .rounded).weight(.semibold))
+      .padding(.leading, 18)
+      .padding(.trailing, 7)
+      .frame(height: 50)
+      .contentShape(Capsule())
     }
-    .foregroundColor(.PrimaryText)
-    .font(.system(.body, design: .rounded).weight(.semibold))
-    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-    //        .font(.system(size: 18, weight: .semibold, design: .rounded))
+    .buttonStyle(.plain)
+    .glassBackground(in: Capsule(), tint: Color.glassTint)
+    .accessibilityLabel(Text("\(title), \(product.localizedPrice)"))
   }
 
-  func unlock(_ product: SKProduct) {
-    unlockManager.buy(product: product)
-  }
-
-  func getText(_ string: String) -> String {
-    if string == "com.rafaelsoh.dime.smalltip" {
+  var title: String {
+    switch product.productIdentifier {
+    case "com.rafaelsoh.dime.smalltip":
       return String(localized: "☕ Coffee-Sized Tip")
-    } else if string == "com.rafaelsoh.dime.mediumtip" {
+    case "com.rafaelsoh.dime.mediumtip":
       return String(localized: "🌮 Taco-Sized Tip")
-    } else if string == "com.rafaelsoh.dime.largetip" {
+    case "com.rafaelsoh.dime.largetip":
       return String(localized: "🍕 Pizza-Sized Tip")
-    } else {
-      return ""
+    default:
+      return product.localizedTitle
     }
   }
 }
