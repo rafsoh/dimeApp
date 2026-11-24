@@ -725,8 +725,9 @@ struct FilteredSearchView: View {
         let contains = NSPredicate(format: "%K CONTAINS[cd] %@", #keyPath(Transaction.note), query)
         let category = NSPredicate(format: "%K CONTAINS[cd] %@", #keyPath(Transaction.category.name), query)
         var parts = [begins, contains, category]
-        if let amount = Double(query) {
-            parts.append(NSPredicate(format: "amount == %@", NSNumber(value: amount)))
+        if let amount = TransactionAmountSearch.value(in: query) {
+            // Stored amounts are binary doubles, so match to the cent rather than exactly.
+            parts.append(NSPredicate(format: "amount >= %@ AND amount < %@", NSNumber(value: amount - 0.005), NSNumber(value: amount + 0.005)))
         }
         return NSCompoundPredicate(orPredicateWithSubpredicates: parts)
     }

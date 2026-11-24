@@ -136,6 +136,7 @@
 		53D6BDCA2AF73B7A00F5728E /* SettingsAppIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53D6BDC92AF73B7A00F5728E /* SettingsAppIconView.swift */; };
 		53D6BDCC2AF73BC800F5728E /* SettingsCurrencyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53D6BDCB2AF73BC800F5728E /* SettingsCurrencyView.swift */; };
 		53D6BDCE2AF73BDA00F5728E /* SettingsWeekStartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53D6BDCD2AF73BDA00F5728E /* SettingsWeekStartView.swift */; };
+		E4B0A0022B11000100C8C001 /* ExportPeriodSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4B0A0012B11000100C8C001 /* ExportPeriodSheet.swift */; };
 		53D6BDD02AF73C4300F5728E /* SettingsNumberEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53D6BDCF2AF73C4300F5728E /* SettingsNumberEntryView.swift */; };
 		53D6BDD22AF73C5D00F5728E /* SettingsNotificationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53D6BDD12AF73C5D00F5728E /* SettingsNotificationView.swift */; };
 		53D6BDD42AF73CA100F5728E /* SettingsFeatureLabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53D6BDD32AF73CA100F5728E /* SettingsFeatureLabView.swift */; };
@@ -339,6 +340,7 @@
 		53D6BDC92AF73B7A00F5728E /* SettingsAppIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsAppIconView.swift; sourceTree = "<group>"; };
 		53D6BDCB2AF73BC800F5728E /* SettingsCurrencyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsCurrencyView.swift; sourceTree = "<group>"; };
 		53D6BDCD2AF73BDA00F5728E /* SettingsWeekStartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWeekStartView.swift; sourceTree = "<group>"; };
+		E4B0A0012B11000100C8C001 /* ExportPeriodSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportPeriodSheet.swift; sourceTree = "<group>"; };
 		53D6BDCF2AF73C4300F5728E /* SettingsNumberEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsNumberEntryView.swift; sourceTree = "<group>"; };
 		53D6BDD12AF73C5D00F5728E /* SettingsNotificationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsNotificationView.swift; sourceTree = "<group>"; };
 		53D6BDD32AF73CA100F5728E /* SettingsFeatureLabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsFeatureLabView.swift; sourceTree = "<group>"; };
@@ -371,6 +373,10 @@
 		E796D802A7C21DDF8E956B94 /* BackupRoundTripTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BackupRoundTripTests.swift; sourceTree = "<group>"; };
 		E7A1C0DE2B11000200D1E001 /* TransactionSearchQuery.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TransactionSearchQuery.swift; sourceTree = "<group>"; };
 		E7A1C0DE2B11000400D1E001 /* PullToSearch.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PullToSearch.swift; sourceTree = "<group>"; };
+		E4B0A0112B11000100C8C001 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = Localizations/fr.lproj/Localizable.strings; sourceTree = "<group>"; };
+		E4B0A0122B11000100C8C001 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = Localizations/ru.lproj/Localizable.strings; sourceTree = "<group>"; };
+		E4B0A0132B11000100C8C001 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = fr; path = Localizations/fr.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
+		E4B0A0142B11000100C8C001 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = ru; path = Localizations/ru.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -686,6 +692,7 @@
 				53D6BDCF2AF73C4300F5728E /* SettingsNumberEntryView.swift */,
 				53D6BDC92AF73B7A00F5728E /* SettingsAppIconView.swift */,
 				53D6BDCD2AF73BDA00F5728E /* SettingsWeekStartView.swift */,
+				E4B0A0012B11000100C8C001 /* ExportPeriodSheet.swift */,
 				53D6BDD12AF73C5D00F5728E /* SettingsNotificationView.swift */,
 				53D6BDD32AF73CA100F5728E /* SettingsFeatureLabView.swift */,
 				53D6BDD52AF73CE400F5728E /* SettingsUpcomingView.swift */,
@@ -878,6 +885,8 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				fr,
+				ru,
 				Base,
 			);
 			mainGroup = 5327D27A287C697400F76ADF;
@@ -1022,6 +1031,7 @@
 				536A2A152A59C47400D81E02 /* Wiggle.swift in Sources */,
 				AEADEF742AE94DC3006EB614 /* ToolbarButton.swift in Sources */,
 				53D6BDCE2AF73BDA00F5728E /* SettingsWeekStartView.swift in Sources */,
+				E4B0A0022B11000100C8C001 /* ExportPeriodSheet.swift in Sources */,
 				53D6BDCA2AF73B7A00F5728E /* SettingsAppIconView.swift in Sources */,
 				5327D2DA287C6B5F00F76ADF /* TestView.swift in Sources */,
 				538A32AA2A505AC6008AEF8C /* BottomSheet.swift in Sources */,
@@ -1197,6 +1207,8 @@
 			isa = PBXVariantGroup;
 			children = (
 				D63B20472D8728C300CAFB20 /* en */,
+				E4B0A0112B11000100C8C001 /* fr */,
+				E4B0A0122B11000100C8C001 /* ru */,
 			);
 			name = Localizable.strings;
 			sourceTree = "<group>";
@@ -1205,6 +1217,8 @@
 			isa = PBXVariantGroup;
 			children = (
 				D63B20492D8728C300CAFB20 /* en */,
+				E4B0A0132B11000100C8C001 /* fr */,
+				E4B0A0142B11000100C8C001 /* ru */,
 			);
 			name = Localizable.stringsdict;
 			sourceTree = "<group>";
