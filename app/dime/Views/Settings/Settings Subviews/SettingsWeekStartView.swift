@@ -16,8 +16,6 @@ struct SettingsWeekStartView: View {
   var firstDayOfMonth: Int = 1
   @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
 
-  let options = ["Sunday", "Monday"]
-
   @Namespace var animation
 
   var body: some View {
@@ -26,15 +24,15 @@ struct SettingsWeekStartView: View {
         SettingsSectionHeader("Start of Week")
 
         VStack(spacing: 0) {
-          ForEach(options.indices, id: \.self) { option in
+          ForEach(1 ... 7, id: \.self) { weekday in
             HStack {
-              Text(LocalizedStringKey(options[option]))
+              Text(dimeWeekdaySymbol(weekday))
                 .font(.system(.body, design: .rounded))
                 .foregroundColor(Color.PrimaryText)
 
               Spacer()
 
-              if firstWeekday == (option + 1) {
+              if firstWeekday == weekday {
                 Image(systemName: "checkmark")
                   .font(.system(.subheadline, design: .rounded).weight(.medium))
                   .foregroundColor(.DarkIcon.opacity(0.6))
@@ -46,7 +44,7 @@ struct SettingsWeekStartView: View {
             .onTapGesture {
               DispatchQueue.main.async {
                 withAnimation(.easeIn(duration: 0.15)) {
-                  firstWeekday = (option + 1)
+                  firstWeekday = weekday
                 }
               }
 
@@ -55,7 +53,7 @@ struct SettingsWeekStartView: View {
               }
             }
             .overlay(alignment: .bottom) {
-              if option < (options.count - 1) {
+              if weekday < 7 {
                 Divider()
               }
             }
@@ -129,4 +127,11 @@ struct SettingsWeekStartView: View {
 
     return formatter.string(from: number as NSNumber)!.replacingOccurrences(of: ".", with: "")
   }
+}
+
+/// The weekday's name as a standalone label, capitalized for languages like French that lowercase them.
+/// `weekday` counts from 1 for Sunday, like `Calendar`.
+func dimeWeekdaySymbol(_ weekday: Int) -> String {
+  let symbols = Calendar.current.standaloneWeekdaySymbols
+  return symbols[(weekday - 1 + symbols.count) % symbols.count].localizedCapitalized
 }
