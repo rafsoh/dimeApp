@@ -47,10 +47,13 @@ jobs:
           # Newest available iOS runtime, first iPhone on it. Avoids hardcoding device names
           # that change whenever GitHub updates the runner image.
           UDID=$(xcrun simctl list devices available --json | python3 -c '
-          import json, sys
+          import json, re, sys
           data = json.load(sys.stdin)["devices"]
-          ios = sorted((k for k in data if "iOS" in k),
-                       key=lambda k: [int(p) for p in k.rsplit("iOS-", 1)[-1].split("-")])
+          def version(key):
+              # e.g. com.apple.CoreSimulator.SimRuntime.iOS-27-2 (some images add suffixes)
+              m = re.search(r"\.iOS-(\d+)-(\d+)", key)
+              return (int(m.group(1)), int(m.group(2))) if m else None
+          ios = sorted((k for k in data if version(k)), key=version)
           for runtime in reversed(ios):
               phones = [d for d in data[runtime] if d["name"].startswith("iPhone")]
               if phones:
