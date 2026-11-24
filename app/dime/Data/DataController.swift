@@ -301,7 +301,9 @@ class DataController: ObservableObject {
 
     init() {
         #if DEBUG
-        let demoDataset = DemoDataset(arguments: ProcessInfo.processInfo.arguments)
+        // Unit tests run inside the app, and must never open the simulator's real store.
+        let isRunningTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+        let demoDataset = DemoDataset(arguments: ProcessInfo.processInfo.arguments) ?? (isRunningTests ? .minimal : nil)
         let usesDemoData = demoDataset != nil
         #else
         let usesDemoData = false
@@ -343,6 +345,16 @@ class DataController: ObservableObject {
         }
 
         container.persistentStoreDescriptions = [description]
+
+        if !usesDemoData, let storeURL = description.url {
+            do {
+                if let snapshot = try StoreSnapshot.snapshotIfMigrationNeeded(storeAt: storeURL, to: container.managedObjectModel, in: StoreSnapshot.directory(forStoreAt: storeURL)) {
+                    logger.notice("Saved the store before migrating it to \(snapshot.path, privacy: .public)")
+                }
+            } catch {
+                logger.error("Saving the store before migrating it failed: \(String(describing: error), privacy: .public)")
+            }
+        }
 
         container.loadPersistentStores { description, error in
 
