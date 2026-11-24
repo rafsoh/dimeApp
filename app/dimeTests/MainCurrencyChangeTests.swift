@@ -113,6 +113,26 @@ final class MainCurrencyChangeTests: XCTestCase {
         XCTAssertEqual(foreign.currencyCode, "JPY")
     }
 
+    func testExportNamesEveryTransactionsCurrency() throws {
+        let context = DataController.shared.container.viewContext
+        let legacy = Transaction(context: context)
+        legacy.note = "Lunch, with Sam"
+        legacy.amount = 12.5
+        legacy.date = Date(timeIntervalSince1970: 1_700_000_000)
+        let foreign = Transaction(context: context)
+        foreign.note = "Taxi"
+        foreign.amount = 1.25
+        foreign.currencyCode = "kwd"
+        foreign.date = Date(timeIntervalSince1970: 1_700_000_100)
+        defer { [legacy, foreign].forEach(context.delete) }
+
+        let lines = ExportCSV.text(for: [legacy, foreign], mainCurrency: "usd").split(separator: "\n").map(String.init)
+
+        XCTAssertEqual(lines.first, "Date,Note,Amount,Category,Type,Currency")
+        XCTAssertTrue(lines[1].hasSuffix(",Taxi,1.250,,Expense,KWD"), lines[1])
+        XCTAssertTrue(lines[2].hasSuffix(",\"Lunch, with Sam\",12.50,,Expense,USD"), lines[2])
+    }
+
     // A recurring transaction from before currencies existed must not pass its missing currency on.
     func testOccurrencesOfALegacyRecurringTransactionNameTheMainCurrency() throws {
         let dataController = DataController.shared
