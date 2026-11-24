@@ -24,9 +24,9 @@
 "no_expense_categories" = "Aucune catégorie de dépenses trouvée";
 "Suggestions Hidden" = "Suggestions cachées";
 "Successfully Edited" = "Édité avec succès";
-"INCOME CATEGORIES" = "Catégories de revenus";
-"EXPENSE CATEGORIES" = "Catégories de dépenses";
-"SUGGESTED" = "Suggéré";
+"Income Categories" = "Catégories de revenus";
+"Expense Categories" = "Catégories de dépenses";
+"Suggested" = "Suggéré";
 "Income Category" = "Catégorie de revenus";
 "Expense Category" = "Catégorie de dépenses";
 "New" = "Nouveau";
@@ -202,9 +202,9 @@
 
 // Settings
 "Settings" = "Paramètres";
-"GENERAL" = "Général";
-"DATA" = "Vos données";
-"OTHERS" = "Autres";
+"General" = "Général";
+"Data" = "Vos données";
+"Others" = "Autres";
 "Appearance" = "Apparence";
 "Start of Week" = "Début de la semaine";
 "Notifications" = "Notifications";

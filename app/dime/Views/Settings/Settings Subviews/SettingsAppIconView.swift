@@ -40,7 +40,7 @@ struct SettingsAppIconView: View {
   @Namespace var animation
 
   var body: some View {
-    VStack(spacing: 10) {
+    VStack(spacing: 0) {
       VStack(spacing: 0) {
         ForEach(options.indices, id: \.self) { index in
           HStack(spacing: 13) {
@@ -89,8 +89,7 @@ struct SettingsAppIconView: View {
           }
         }
       }
-      .padding(.horizontal, 16)
-      .settingsSectionBackground()
+      .settingsSectionRows()
       .onChange(of: activeIcon) { newValue in
         UIApplication.shared.setAlternateIconName(newValue)
       }

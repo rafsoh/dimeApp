@@ -18,7 +18,7 @@ struct SettingsAppearanceView: View {
   @Namespace var animation
 
   var body: some View {
-    VStack(spacing: 10) {
+    VStack(spacing: 0) {
       VStack(spacing: 0) {
         ForEach(options.indices, id: \.self) { option in
           HStack {
@@ -53,14 +53,9 @@ struct SettingsAppearanceView: View {
           }
         }
       }
-      .padding(.horizontal, 16)
-      .settingsSectionBackground()
+      .settingsSectionRows()
 
-      Text("Close and reload app for change to take effect.")
-        .font(.system(.footnote, design: .rounded).weight(.medium))
-        .foregroundColor(Color.SubtitleText)
-        .padding(.horizontal, 14)
-        .frame(maxWidth: .infinity, alignment: .leading)
+      SettingsSectionFooter("Close and reload app for change to take effect.")
     }
     .modifier(SettingsSubviewModifier(title: "Appearance"))
   }

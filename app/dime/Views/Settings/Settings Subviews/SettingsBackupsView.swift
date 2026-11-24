@@ -30,7 +30,7 @@ struct SettingsBackupsView: View {
   }
 
   var body: some View {
-    VStack(spacing: 10) {
+    VStack(spacing: 0) {
       Button {
         backupManager.backUpNow { succeeded in
           if !succeeded {
@@ -54,15 +54,9 @@ struct SettingsBackupsView: View {
       }
       .buttonStyle(.plain)
       .disabled(backupManager.isWorking)
-      .padding(.horizontal, 16)
-      .settingsSectionBackground()
+      .settingsSectionRows()
 
-      Text("Dime backs up your data on this device once a day and keeps the last 14 backups. Restoring adds back anything that's missing and never removes or changes what you have now. Backups are deleted if you delete Dime.")
-        .font(.system(.footnote, design: .rounded).weight(.medium))
-        .multilineTextAlignment(.leading)
-        .foregroundColor(Color.SubtitleText)
-        .padding(.horizontal, 14)
-        .frame(maxWidth: .infinity, alignment: .leading)
+      SettingsSectionFooter("Dime backs up your data on this device once a day and keeps the last 14 backups. Restoring adds back anything that's missing and never removes or changes what you have now. Backups are deleted if you delete Dime.")
 
       if backupManager.backups.isEmpty {
         EmptyStateView(systemImage: "clock.arrow.circlepath", title: "No backups yet")
@@ -99,9 +93,8 @@ struct SettingsBackupsView: View {
             }
           }
         }
-        .padding(.horizontal, 16)
-        .settingsSectionBackground()
-        .padding(.top, 10)
+        .settingsSectionRows()
+        .padding(.top, .settingsHeaderSpacing)
       }
     }
     .modifier(SettingsSubviewModifier(title: "Backups"))

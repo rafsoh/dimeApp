@@ -16,7 +16,7 @@ struct SettingsCloudView: View {
   @Namespace var animation
 
   var body: some View {
-    VStack(spacing: 10) {
+    VStack(spacing: 0) {
       VStack(spacing: 0) {
         Toggle(isOn: $iCloudStorage) {
           Text("Enable Sync")
@@ -26,19 +26,13 @@ struct SettingsCloudView: View {
         .tint(.green)
         .frame(minHeight: .settingsRowHeight)
       }
-      .padding(.horizontal, 16)
-      .settingsSectionBackground()
+      .settingsSectionRows()
 
-      Text("Close and reload app for change to take effect.")
-        .font(.system(.footnote, design: .rounded).weight(.medium))
-        .multilineTextAlignment(.leading)
-        .foregroundColor(Color.SubtitleText)
-        .padding(.horizontal, 14)
-        .frame(maxWidth: .infinity, alignment: .leading)
+      SettingsSectionFooter("Close and reload app for change to take effect.")
 
       if iCloudStorage && dataController.isCloudKitSyncEnabled {
         SyncStatusSection(status: dataController.syncStatus)
-          .padding(.top, 10)
+          .padding(.top, .settingsHeaderSpacing)
       }
     }
     .modifier(SettingsSubviewModifier(title: "iCloud Sync"))
@@ -85,7 +79,7 @@ struct SyncStatusSection: View {
       .frame(maxWidth: .infinity, alignment: .leading)
     }
     .padding(.vertical, 12)
-    .padding(.horizontal, 16)
+    .padding(.horizontal, .settingsRowInset)
     .frame(minHeight: .settingsRowHeight)
     .settingsSectionBackground()
     .accessibilityElement(children: .combine)

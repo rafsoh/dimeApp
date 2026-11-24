@@ -24,9 +24,9 @@
 "no_expense_categories" = "No expense categories found";
 "Suggestions Hidden" = "Suggestions Hidden";
 "Successfully Edited" = "Successfully Edited";
-"INCOME CATEGORIES" = "INCOME CATEGORIES";
-"EXPENSE CATEGORIES" = "EXPENSE CATEGORIES";
-"SUGGESTED" = "SUGGESTED";
+"Income Categories" = "Income Categories";
+"Expense Categories" = "Expense Categories";
+"Suggested" = "Suggested";
 "Income Category" = "Income Category";
 "Expense Category" = "Expense Category";
 "New" = "New";
@@ -203,9 +203,9 @@
 
 // Settings
 "Settings" = "Settings";
-"GENERAL" = "GENERAL";
-"DATA" = "DATA";
-"OTHERS" = "OTHERS";
+"General" = "General";
+"Data" = "Data";
+"Others" = "Others";
 "Appearance" = "Appearance";
 "Start of Week" = "Start of Week";
 "Notifications" = "Notifications";

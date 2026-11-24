@@ -23,7 +23,7 @@ struct SettingsNotificationsView: View {
   @Namespace var animation
 
   var body: some View {
-    VStack {
+    VStack(spacing: 0) {
       VStack(spacing: 0) {
         Toggle(isOn: Binding(get: { showNotifications }, set: { _ in toggleNotifications() })) {
           Text("Enable Notifications")
@@ -33,9 +33,8 @@ struct SettingsNotificationsView: View {
         .tint(.green)
         .frame(minHeight: .settingsRowHeight)
       }
-      .padding(.horizontal, 16)
-      .settingsSectionBackground()
-      .padding(.bottom, 20)
+      .settingsSectionRows()
+      .padding(.bottom, .settingsSectionSpacing)
 
       if showNotifications {
         VStack(spacing: 0) {
@@ -117,8 +116,7 @@ struct SettingsNotificationsView: View {
             }
           }
         }
-        .padding(.horizontal, 16)
-        .settingsSectionBackground()
+        .settingsSectionRows()
         .onChange(of: option) { newValue in
           UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.set(
             option, forKey: "notificationOption")

@@ -142,9 +142,9 @@ struct CategoryListView: View {
 
     var sectionHeader: LocalizedStringKey {
         if income {
-            return "INCOME CATEGORIES"
+            return "Income Categories"
         } else {
-            return "EXPENSE CATEGORIES"
+            return "Expense Categories"
         }
     }
 
@@ -168,8 +168,11 @@ struct CategoryListView: View {
                 }
             }
         }
+        .font(.system(.subheadline, design: .rounded).weight(.semibold))
         .frame(height: 32)
         .foregroundColor(Color.SubtitleText)
+        .textCase(.uppercase)
+        .listRowInsets(EdgeInsets(top: 0, leading: .settingsRowInset, bottom: 0, trailing: .settingsRowInset))
     }
 
     private var emptyState: some View {
@@ -239,7 +242,8 @@ struct CategoryListView: View {
                                                 .frame(width: 20, height: 20)
                                         }
                                     }
-                                    .padding(.vertical, 5)
+                                    .frame(minHeight: .settingsRowHeight)
+                                    .listRowInsets(EdgeInsets(top: 0, leading: .settingsRowInset, bottom: 0, trailing: .settingsRowInset))
                                     .listRowBackground(Color.SettingsBackground)
                                     .listRowSeparatorTint(Color.Outline)
                                     .contentShape(Rectangle())
@@ -274,6 +278,7 @@ struct CategoryListView: View {
                     .scrollContentBackground(.hidden)
                     .scrollIndicators(.hidden)
                     .environment(\.editMode, .constant(self.isEditing ? EditMode.active : EditMode.inactive))
+                    .environment(\.defaultMinListRowHeight, .settingsRowHeight)
                 } else {
                     List {
                         Section(header: categoriesHeader) {
@@ -304,7 +309,8 @@ struct CategoryListView: View {
                                                 .frame(width: 20, height: 20)
                                         }
                                     }
-                                    .padding(.vertical, 5)
+                                    .frame(minHeight: .settingsRowHeight)
+                                    .listRowInsets(EdgeInsets(top: 0, leading: .settingsRowInset, bottom: 0, trailing: .settingsRowInset))
                                     .listRowBackground(Color.SettingsBackground)
                                     .listRowSeparatorTint(Color.Outline)
                                     .contentShape(Rectangle())
@@ -337,6 +343,7 @@ struct CategoryListView: View {
                         SuggestedCategoriesView(income: income)
                     }
                     .environment(\.editMode, .constant(self.isEditing ? EditMode.active : EditMode.inactive))
+                    .environment(\.defaultMinListRowHeight, .settingsRowHeight)
                 }
             }
         }
@@ -1143,7 +1150,7 @@ struct SuggestedCategoriesView: View {
 
     private var suggestionsHeader: some View {
         HStack {
-            Text("SUGGESTED")
+            Text("Suggested")
 
             Spacer()
 
@@ -1156,8 +1163,11 @@ struct SuggestedCategoriesView: View {
                 }
             }
         }
+        .font(.system(.subheadline, design: .rounded).weight(.semibold))
         .frame(height: 32)
         .foregroundColor(Color.SubtitleText)
+        .textCase(.uppercase)
+        .listRowInsets(EdgeInsets(top: 0, leading: .settingsRowInset, bottom: 0, trailing: .settingsRowInset))
     }
 
     private var suggestionRows: some View {
@@ -1181,8 +1191,9 @@ struct SuggestedCategoriesView: View {
                             .foregroundColor(Color.SubtitleText)
                             .accessibilityLabel("Add")
                     }
-                    .padding(.vertical, 5)
                     .foregroundColor(Color.PrimaryText)
+                    .frame(minHeight: .settingsRowHeight)
+                    .listRowInsets(EdgeInsets(top: 0, leading: .settingsRowInset, bottom: 0, trailing: .settingsRowInset))
                     .listRowBackground(Color.SettingsBackground)
                     .listRowSeparatorTint(Color.Outline)
                     .contentShape(Rectangle())

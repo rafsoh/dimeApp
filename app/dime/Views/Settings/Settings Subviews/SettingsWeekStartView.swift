@@ -22,12 +22,8 @@ struct SettingsWeekStartView: View {
 
   var body: some View {
     ScrollViewReader { value in
-      VStack(spacing: 7) {
-        Text("Start of Week")
-          .font(.system(.subheadline, design: .rounded).weight(.semibold))
-          .foregroundColor(Color.SubtitleText)
-          .padding(.horizontal, 14)
-          .frame(maxWidth: .infinity, alignment: .leading)
+      VStack(spacing: 0) {
+        SettingsSectionHeader("Start of Week")
 
         VStack(spacing: 0) {
           ForEach(options.indices, id: \.self) { option in
@@ -65,15 +61,10 @@ struct SettingsWeekStartView: View {
             }
           }
         }
-        .padding(.horizontal, 16)
-        .settingsSectionBackground()
-        .padding(.bottom, 30)
+        .settingsSectionRows()
+        .padding(.bottom, .settingsHeaderSpacing)
 
-        Text("Start of Month")
-          .font(.system(.subheadline, design: .rounded).weight(.semibold))
-          .foregroundColor(Color.SubtitleText)
-          .padding(.horizontal, 14)
-          .frame(maxWidth: .infinity, alignment: .leading)
+        SettingsSectionHeader("Start of Month")
 
         VStack(alignment: .leading, spacing: 0) {
           ForEach(1..<29) { day in
@@ -113,8 +104,7 @@ struct SettingsWeekStartView: View {
             }
           }
         }
-        .padding(.horizontal, 16)
-        .settingsSectionBackground()
+        .settingsSectionRows()
       }
       .onAppear {
         value.scrollTo(firstDayOfMonth)

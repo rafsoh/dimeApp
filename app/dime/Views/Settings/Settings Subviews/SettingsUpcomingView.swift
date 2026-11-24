@@ -18,7 +18,7 @@ struct SettingsUpcomingView: View {
   @Namespace var animation
 
   var body: some View {
-    VStack(spacing: 10) {
+    VStack(spacing: 0) {
       VStack(spacing: 0) {
         Toggle(isOn: $showFuture.animation()) {
           Text("Display on Log Page")
@@ -52,18 +52,10 @@ struct SettingsUpcomingView: View {
             newValue, forKey: "showUpcomingTransactionsWhenUpcoming")
         }
       }
-      .padding(.horizontal, 16)
-      .settingsSectionBackground()
+      .settingsSectionRows()
 
-      Text(
-        "Don't worry, even if you do hide them there, you will aways be able to find all upcoming transactions right here."
-      )
-      .font(.system(.footnote, design: .rounded).weight(.medium))
-      .multilineTextAlignment(.leading)
-      .foregroundColor(Color.SubtitleText)
-      .padding(.horizontal, 14)
-      .padding(.bottom, 30)
-      .frame(maxWidth: .infinity, alignment: .leading)
+      SettingsSectionFooter("Don't worry, even if you do hide them there, you will aways be able to find all upcoming transactions right here.")
+        .padding(.bottom, .settingsHeaderSpacing)
 
       FutureListView(dataController: dataController, filterMode: true, limitedMode: false)
     }

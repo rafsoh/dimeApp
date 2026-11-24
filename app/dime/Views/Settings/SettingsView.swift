@@ -157,323 +157,301 @@ struct SettingsView: View {
     NavigationView {
       VStack {
         ScrollView(showsIndicators: false) {
-          VStack(spacing: 7) {
-            Text("GENERAL")
-              .font(.system(.subheadline, design: .rounded).weight(.semibold))
-              .foregroundColor(Color.SubtitleText)
-              .padding(.horizontal, 14)
-              .frame(maxWidth: .infinity, alignment: .leading)
-
+          VStack(spacing: 0) {
             VStack(spacing: 0) {
+              SettingsSectionHeader("General")
 
-              NavigationLink(destination: SettingsNotificationsView()) {
-                SettingsRowView(
-                  systemImage: "bell.fill", title: "Notifications", colour: 102,
-                  optionalText: notificationString)
-              }
+              VStack(spacing: 0) {
 
-              NavigationLink(destination: SettingsCurrencyView()) {
-                SettingsRowView(
-                  systemImage: "coloncurrencysign.square.fill", title: "Currency", colour: 103,
-                  optionalText: currency)
-              }
-
-              NavigationLink(
-                destination: SettingsNumberEntryView()
-                  .onAppear {
-                    withAnimation(.easeOut.speed(1.5)) {
-                      tabBarManager.navigationHideTab()
-                    }
-                  }
-                  .onDisappear {
-                    withAnimation(.easeOut.speed(1.5)) {
-                      tabBarManager.navigationShowTab()
-                    }
-                  }
-              ) {
-                SettingsRowView(
-                  systemImage: "keyboard.fill", title: "Number Entry", colour: 104,
-                  optionalText: numberEntryString)
-              }
-
-              ToggleRow(
-                icon: "faceid", color: "105", text: "Authentication",
-                bool: appLockVM.isAppLockEnabled,
-                onTap: {
-                  appLockVM.appLockStateChange(appLockState: !appLockVM.isAppLockEnabled)
-                })
-
-              ToggleRow(
-                icon: "banknote.fill", color: "106", text: "Income Tracking", bool: incomeTracking,
-                onTap: {
-                  incomeTracking.toggle()
-
-                  if !incomeTracking {
-                    UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.set(
-                      false, forKey: "insightsViewIncomeFiltering")
-                    UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.set(
-                      3, forKey: "logInsightsType")
-                  }
-                })
-
-              NavigationLink(destination: SettingsWeekStartView()) {
-                SettingsRowView(systemImage: "calendar", title: "Time Frames", colour: 109)
-              }
-                
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 4)
-            .settingsSectionBackground()
-          }
-          .padding(.horizontal, 16)
-          .padding(.top, 6)
-          .padding(.bottom, 25)
-          .onChange(of: currency) { _ in
-            WidgetCenter.shared.reloadAllTimelines()
-          }
-          .onChange(of: firstWeekday) { _ in
-            WidgetCenter.shared.reloadAllTimelines()
-          }
-          .onChange(of: showCents) { _ in
-            WidgetCenter.shared.reloadAllTimelines()
-          }
-
-          VStack(spacing: 7) {
-            Text("APPEARANCE")
-              .font(.system(.subheadline, design: .rounded).weight(.semibold))
-              .foregroundColor(Color.SubtitleText)
-              .padding(.horizontal, 14)
-              .frame(maxWidth: .infinity, alignment: .leading)
-
-            VStack(spacing: 0) {
-              NavigationLink(destination: SettingsAppearanceView()) {
-                SettingsRowView(
-                  systemImage: "circle.righthalf.filled", title: "Theme", colour: 100,
-                  optionalText: colourSchemeString)
-              }
-
-              NavigationLink(destination: SettingsAppIconView()) {
-                SettingsRowView(
-                  systemImage: "app.badge.fill", title: "App Icon", colour: 101,
-                  optionalText: appIconString)
-              }
-
-              ToggleRow(
-                icon: "centsign.circle.fill", color: "107", text: "Display Cents", bool: showCents,
-                onTap: {
-                  showCents.toggle()
-                })
-
-              NavigationLink(destination: SettingsUpcomingView()) {
-                SettingsRowView(
-                  systemImage: "sun.min.fill", title: "Upcoming Logs", colour: 108,
-                  optionalText: upcomingString)
-              }
-                
-              ToggleRow(
-                icon: "plusminus", color: "123", text: "Display +/- Symbol", bool: showExpenseOrIncomeSign,
-                onTap: {
-                    showExpenseOrIncomeSign.toggle()
-                })
-
-              ToggleRow(
-                icon: "hare.fill", color: "121", text: "Animated Charts", bool: animated, smaller: true,
-                onTap: {
-                  animated.toggle()
-                })
-
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 4)
-            .settingsSectionBackground()
-          }
-          .padding(.horizontal, 16)
-          .padding(.bottom, 25)
-          .onChange(of: currency) { _ in
-            WidgetCenter.shared.reloadAllTimelines()
-          }
-          .onChange(of: firstWeekday) { _ in
-            WidgetCenter.shared.reloadAllTimelines()
-          }
-          .onChange(of: showCents) { _ in
-            WidgetCenter.shared.reloadAllTimelines()
-          }
-
-          VStack(spacing: 7) {
-            Text("DATA")
-              .font(.system(.subheadline, design: .rounded).weight(.semibold))
-              .foregroundColor(Color.SubtitleText)
-              .padding(.horizontal, 14)
-              .frame(maxWidth: .infinity, alignment: .leading)
-
-            VStack(spacing: 0) {
-              NavigationLink(
-                destination: SettingsCategoryView()
-                  .onAppear {
-                    withAnimation(.easeOut.speed(1.5)) {
-                      tabBarManager.navigationHideTab()
-                    }
-                  }
-                  .onDisappear {
-                    withAnimation(.easeOut.speed(1.5)) {
-                      tabBarManager.navigationShowTab()
-                    }
-                  }
-
-              ) {
-                SettingsRowView(
-                  systemImage: "rectangle.grid.2x2.fill", title: "Categories", colour: 110)
-              }
-
-              NavigationLink(destination: SettingsCloudView()) {
-                SettingsRowView(
-                  systemImage: "icloud.fill", title: "iCloud Sync", colour: 111,
-                  optionalText: iCloudString)
-              }
-
-              NavigationLink(destination: SettingsBackupsView()) {
-                SettingsRowView(
-                  systemImage: "clock.arrow.circlepath", title: "Backups", colour: 106)
-              }
-
-              //
-              //                            NavigationLink(destination: SettingsQuickAddWidgetView()) {
-              //                                SettingsRowView(systemImage: "bolt.square.fill", title: "Quick-Add Widget", colour: 115)
-              //                            }
-
-              Button {
-                showImportGuide = true
-              } label: {
-                SettingsRowView(
-                  systemImage: "square.and.arrow.down.fill", title: "Import Data", colour: 112)
-              }
-
-              Button {
-                exportData()
-              } label: {
-                SettingsRowView(
-                  systemImage: "square.and.arrow.up.fill", title: "Export Data", colour: 113)
-              }
-
-              NavigationLink(destination: SettingsEraseView()) {
-                SettingsRowView(systemImage: "xmark.bin.fill", title: "Erase Data", colour: 114)
-              }
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 4)
-            .settingsSectionBackground()
-          }
-          .padding(.horizontal, 16)
-          .padding(.bottom, 25)
-
-          VStack(spacing: 7) {
-            Text("OTHERS")
-              .font(.system(.subheadline, design: .rounded).weight(.semibold))
-              .foregroundColor(Color.SubtitleText)
-              .padding(.horizontal, 14)
-              .frame(maxWidth: .infinity, alignment: .leading)
-
-            VStack(spacing: 0) {
-
-                NavigationLink(destination: SettingsHapticsView()) {
+                NavigationLink(destination: SettingsNotificationsView()) {
                   SettingsRowView(
-                    systemImage: "hand.tap.fill", title: "Haptics", colour: 100,
-                    optionalText: hapticString)
+                    systemImage: "bell.fill", title: "Notifications", colour: 102,
+                    optionalText: notificationString)
                 }
 
-              NavigationLink(destination: SettingsGoofyView()) {
-                SettingsRowView(systemImage: "flame.fill", title: "Feature Lab", colour: 122)
-              }
-
-              Button {
-                showTipJarMenu = true
-              } label: {
-                SettingsRowView(systemImage: "heart.fill", title: "Tip Jar", colour: 123)
-              }
-
-              Button {
-                supportEmail.send(openURL: openURL)
-              } label: {
-                SettingsRowView(systemImage: "ladybug.fill", title: "Report Bug", colour: 124)
-              }
-
-              Button {
-                featureRequestEmail.send(openURL: openURL)
-              } label: {
-                SettingsRowView(
-                  systemImage: "hand.wave.fill", title: "Feature Request", colour: 125)
-              }
-
-              Button {
-                let url = "https://apps.apple.com/app/id1635280255?action=write-review"
-                guard let writeReviewURL = URL(string: url)
-                else { fatalError("Expected a valid URL") }
-                UIApplication.shared.open(writeReviewURL, options: [:], completionHandler: nil)
-              } label: {
-                SettingsRowView(systemImage: "star.fill", title: "Rate on App Store", colour: 126)
-              }
-
-              Button {
-                shareSheet(url: "https://apps.apple.com/app/id1635280255")
-              } label: {
-                SettingsRowView(systemImage: "shareplay", title: "Share with Friends", colour: 127)
-              }
-
-              Button {
-                if let url = URL(string: "https://www.x.com/budgetwithdime") {
-                  UIApplication.shared.open(url)
+                NavigationLink(destination: SettingsCurrencyView()) {
+                  SettingsRowView(
+                    systemImage: "coloncurrencysign.square.fill", title: "Currency", colour: 103,
+                    optionalText: currency)
                 }
-              } label: {
-                SettingsRowView(systemImage: "bird.fill", title: "Follow Dime on X", colour: 128)
-                  .frame(maxWidth: .infinity)
-              }
 
-              Button {
-                if let url = URL(string: "https://www.x.com/rarfell") {
-                  UIApplication.shared.open(url)
+                NavigationLink(
+                  destination: SettingsNumberEntryView()
+                    .onAppear {
+                      withAnimation(.easeOut.speed(1.5)) {
+                        tabBarManager.navigationHideTab()
+                      }
+                    }
+                    .onDisappear {
+                      withAnimation(.easeOut.speed(1.5)) {
+                        tabBarManager.navigationShowTab()
+                      }
+                    }
+                ) {
+                  SettingsRowView(
+                    systemImage: "keyboard.fill", title: "Number Entry", colour: 104,
+                    optionalText: numberEntryString)
                 }
-              } label: {
-                SettingsRowView(
-                  systemImage: "camera.fill", title: "Follow Rafael on X", colour: 129)
+
+                ToggleRow(
+                  icon: "faceid", color: "105", text: "Authentication",
+                  bool: appLockVM.isAppLockEnabled,
+                  onTap: {
+                    appLockVM.appLockStateChange(appLockState: !appLockVM.isAppLockEnabled)
+                  })
+
+                ToggleRow(
+                  icon: "banknote.fill", color: "106", text: "Income Tracking", bool: incomeTracking,
+                  onTap: {
+                    incomeTracking.toggle()
+
+                    if !incomeTracking {
+                      UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.set(
+                        false, forKey: "insightsViewIncomeFiltering")
+                      UserDefaults(suiteName: "group.com.rafaelsoh.dime")!.set(
+                        3, forKey: "logInsightsType")
+                    }
+                  })
+
+                NavigationLink(destination: SettingsWeekStartView()) {
+                  SettingsRowView(systemImage: "calendar", title: "Time Frames", colour: 109)
+                }
+                
               }
+              .settingsSectionRows()
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 4)
-            .settingsSectionBackground()
-          }
-          .padding(.horizontal, 16)
-          .padding(.bottom, 15)
+            .padding(.horizontal, .settingsPageInset)
+            .padding(.top, 6)
+            .padding(.bottom, .settingsHeaderSpacing)
+            .onChange(of: currency) { _ in
+              WidgetCenter.shared.reloadAllTimelines()
+            }
+            .onChange(of: firstWeekday) { _ in
+              WidgetCenter.shared.reloadAllTimelines()
+            }
+            .onChange(of: showCents) { _ in
+              WidgetCenter.shared.reloadAllTimelines()
+            }
 
-          VStack(spacing: 5) {
-            HStack(spacing: 3) {
-              Text("Version \(UIApplication.appVersion ?? "") (\(UIApplication.buildNumber ?? ""))")
-                .font(.system(.footnote, design: .rounded).weight(.medium))
+            VStack(spacing: 0) {
+              SettingsSectionHeader("Appearance")
 
-                //                                .font(.system(size: 14, weight: .medium, design: .rounded))
-                .foregroundColor(Color.SubtitleText)
+              VStack(spacing: 0) {
+                NavigationLink(destination: SettingsAppearanceView()) {
+                  SettingsRowView(
+                    systemImage: "circle.righthalf.filled", title: "Theme", colour: 100,
+                    optionalText: colourSchemeString)
+                }
 
-              Text("·")
-                .font(.system(.footnote, design: .rounded).weight(.medium))
+                NavigationLink(destination: SettingsAppIconView()) {
+                  SettingsRowView(
+                    systemImage: "app.badge.fill", title: "App Icon", colour: 101,
+                    optionalText: appIconString)
+                }
 
-                .foregroundColor(Color.SubtitleText)
+                ToggleRow(
+                  icon: "centsign.circle.fill", color: "107", text: "Display Cents", bool: showCents,
+                  onTap: {
+                    showCents.toggle()
+                  })
 
-              Button {
-                showUpdate = true
-              } label: {
-                Text("What's New")
+                NavigationLink(destination: SettingsUpcomingView()) {
+                  SettingsRowView(
+                    systemImage: "sun.min.fill", title: "Upcoming Logs", colour: 108,
+                    optionalText: upcomingString)
+                }
+                
+                ToggleRow(
+                  icon: "plusminus", color: "123", text: "Display +/- Symbol", bool: showExpenseOrIncomeSign,
+                  onTap: {
+                      showExpenseOrIncomeSign.toggle()
+                  })
+
+                ToggleRow(
+                  icon: "hare.fill", color: "121", text: "Animated Charts", bool: animated, smaller: true,
+                  onTap: {
+                    animated.toggle()
+                  })
+
+              }
+              .settingsSectionRows()
+            }
+            .padding(.horizontal, .settingsPageInset)
+            .padding(.bottom, .settingsHeaderSpacing)
+            .onChange(of: currency) { _ in
+              WidgetCenter.shared.reloadAllTimelines()
+            }
+            .onChange(of: firstWeekday) { _ in
+              WidgetCenter.shared.reloadAllTimelines()
+            }
+            .onChange(of: showCents) { _ in
+              WidgetCenter.shared.reloadAllTimelines()
+            }
+
+            VStack(spacing: 0) {
+              SettingsSectionHeader("Data")
+
+              VStack(spacing: 0) {
+                NavigationLink(
+                  destination: SettingsCategoryView()
+                    .onAppear {
+                      withAnimation(.easeOut.speed(1.5)) {
+                        tabBarManager.navigationHideTab()
+                      }
+                    }
+                    .onDisappear {
+                      withAnimation(.easeOut.speed(1.5)) {
+                        tabBarManager.navigationShowTab()
+                      }
+                    }
+
+                ) {
+                  SettingsRowView(
+                    systemImage: "rectangle.grid.2x2.fill", title: "Categories", colour: 110)
+                }
+
+                NavigationLink(destination: SettingsCloudView()) {
+                  SettingsRowView(
+                    systemImage: "icloud.fill", title: "iCloud Sync", colour: 111,
+                    optionalText: iCloudString)
+                }
+
+                NavigationLink(destination: SettingsBackupsView()) {
+                  SettingsRowView(
+                    systemImage: "clock.arrow.circlepath", title: "Backups", colour: 106)
+                }
+
+                //
+                //                            NavigationLink(destination: SettingsQuickAddWidgetView()) {
+                //                                SettingsRowView(systemImage: "bolt.square.fill", title: "Quick-Add Widget", colour: 115)
+                //                            }
+
+                Button {
+                  showImportGuide = true
+                } label: {
+                  SettingsRowView(
+                    systemImage: "square.and.arrow.down.fill", title: "Import Data", colour: 112)
+                }
+
+                Button {
+                  exportData()
+                } label: {
+                  SettingsRowView(
+                    systemImage: "square.and.arrow.up.fill", title: "Export Data", colour: 113)
+                }
+
+                NavigationLink(destination: SettingsEraseView()) {
+                  SettingsRowView(systemImage: "xmark.bin.fill", title: "Erase Data", colour: 114)
+                }
+              }
+              .settingsSectionRows()
+            }
+            .padding(.horizontal, .settingsPageInset)
+            .padding(.bottom, .settingsHeaderSpacing)
+
+            VStack(spacing: 0) {
+              SettingsSectionHeader("Others")
+
+              VStack(spacing: 0) {
+
+                  NavigationLink(destination: SettingsHapticsView()) {
+                    SettingsRowView(
+                      systemImage: "hand.tap.fill", title: "Haptics", colour: 100,
+                      optionalText: hapticString)
+                  }
+
+                NavigationLink(destination: SettingsGoofyView()) {
+                  SettingsRowView(systemImage: "flame.fill", title: "Feature Lab", colour: 122)
+                }
+
+                Button {
+                  showTipJarMenu = true
+                } label: {
+                  SettingsRowView(systemImage: "heart.fill", title: "Tip Jar", colour: 123)
+                }
+
+                Button {
+                  supportEmail.send(openURL: openURL)
+                } label: {
+                  SettingsRowView(systemImage: "ladybug.fill", title: "Report Bug", colour: 124)
+                }
+
+                Button {
+                  featureRequestEmail.send(openURL: openURL)
+                } label: {
+                  SettingsRowView(
+                    systemImage: "hand.wave.fill", title: "Feature Request", colour: 125)
+                }
+
+                Button {
+                  let url = "https://apps.apple.com/app/id1635280255?action=write-review"
+                  guard let writeReviewURL = URL(string: url)
+                  else { fatalError("Expected a valid URL") }
+                  UIApplication.shared.open(writeReviewURL, options: [:], completionHandler: nil)
+                } label: {
+                  SettingsRowView(systemImage: "star.fill", title: "Rate on App Store", colour: 126)
+                }
+
+                Button {
+                  shareSheet(url: "https://apps.apple.com/app/id1635280255")
+                } label: {
+                  SettingsRowView(systemImage: "shareplay", title: "Share with Friends", colour: 127)
+                }
+
+                Button {
+                  if let url = URL(string: "https://www.x.com/budgetwithdime") {
+                    UIApplication.shared.open(url)
+                  }
+                } label: {
+                  SettingsRowView(systemImage: "bird.fill", title: "Follow Dime on X", colour: 128)
+                    .frame(maxWidth: .infinity)
+                }
+
+                Button {
+                  if let url = URL(string: "https://www.x.com/rarfell") {
+                    UIApplication.shared.open(url)
+                  }
+                } label: {
+                  SettingsRowView(
+                    systemImage: "camera.fill", title: "Follow Rafael on X", colour: 129)
+                }
+              }
+              .settingsSectionRows()
+            }
+            .padding(.horizontal, .settingsPageInset)
+            .padding(.bottom, 15)
+
+            VStack(spacing: 5) {
+              HStack(spacing: 3) {
+                Text("Version \(UIApplication.appVersion ?? "") (\(UIApplication.buildNumber ?? ""))")
                   .font(.system(.footnote, design: .rounded).weight(.medium))
-                  .foregroundColor(Color.PrimaryText)
+
+                  //                                .font(.system(size: 14, weight: .medium, design: .rounded))
+                  .foregroundColor(Color.SubtitleText)
+
+                Text("·")
+                  .font(.system(.footnote, design: .rounded).weight(.medium))
+
+                  .foregroundColor(Color.SubtitleText)
+
+                Button {
+                  showUpdate = true
+                } label: {
+                  Text("What's New")
+                    .font(.system(.footnote, design: .rounded).weight(.medium))
+                    .foregroundColor(Color.PrimaryText)
+                }
+                .buttonStyle(.plain)
               }
-              .buttonStyle(.plain)
+
+              Text("Made with ❤️ by \(makeAttributedString()) from 🇸🇬")
+                .font(.system(.footnote, design: .rounded).weight(.medium))
+
+                .foregroundColor(Color.SubtitleText)
+                .multilineTextAlignment(.center)
             }
-
-            Text("Made with ❤️ by \(makeAttributedString()) from 🇸🇬")
-              .font(.system(.footnote, design: .rounded).weight(.medium))
-
-              .foregroundColor(Color.SubtitleText)
-              .multilineTextAlignment(.center)
+            .padding(.horizontal, .settingsPageInset)
           }
-          .padding(.horizontal, 16)
         }
         .tabBarClearance()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
