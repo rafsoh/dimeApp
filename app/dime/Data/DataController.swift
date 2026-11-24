@@ -852,6 +852,13 @@ class DataController: ObservableObject {
         }
     }
 
+    func fetchRequestForDefaultCategory(income: Bool) -> NSFetchRequest<Category> {
+        let itemRequest: NSFetchRequest<Category> = Category.fetchRequest()
+        itemRequest.sortDescriptors = [NSSortDescriptor(key: "order", ascending: true)]
+        itemRequest.predicate = NSPredicate(format: "income = %d AND name == %@", income, "Default")
+        return itemRequest
+    }
+    
     func fetchRequestForCategories(income: Bool) -> NSFetchRequest<Category> {
         let itemRequest: NSFetchRequest<Category> = Category.fetchRequest()
         itemRequest.sortDescriptors = [NSSortDescriptor(key: "order", ascending: true)]
@@ -944,6 +951,31 @@ class DataController: ObservableObject {
             throw CustomError.notFound
         }
     }
+    
+    func getDefaultCategory(income: Bool) -> Category? {
+        
+        let request = fetchRequestForDefaultCategory(income: income)
+        
+        do {
+            let results = try container.viewContext.fetch(request)
+            if let category = results.first {
+                return category
+            } else {
+                let category = Category(context: self.container.viewContext)
+                category.name = "Default"
+                category.emoji = "🏷️"
+                category.dateCreated = Date.now
+                category.id = UUID()
+                category.income = income
+                category.colour = "#9E9E9E"
+
+                self.save()
+                return getDefaultCategory(income: income)
+            }
+        } catch {
+            return nil
+        }
+    }
 
     func categoryCheck(name: String, emoji: String, income: Bool) -> (error: CategoryError, order: Int64) {
         if name.trimmingCharacters(in: .whitespacesAndNewlines) == "" && emoji == "" {
@@ -953,51 +985,26 @@ class DataController: ObservableObject {
         } else if emoji == "" {
             return (CategoryError.missingEmoji, 0)
         }
-
-        if income {
-            let fetchRequest = fetchRequestForCategories(income: true)
-            let incomeCategories = results(for: fetchRequest)
-
-            var emojiArray = [String]()
-            var nameArray = [String]()
-
-            incomeCategories.forEach { category in
-                emojiArray.append(category.wrappedEmoji)
-                nameArray.append(category.wrappedName)
-            }
-
-            if emojiArray.contains(emoji) && nameArray.contains(name) {
-                return (CategoryError.duplicate, 0)
-            } else if emojiArray.contains(emoji) {
-                return (CategoryError.duplicateEmoji, 0)
-            } else if nameArray.contains(name) {
-                return (CategoryError.duplicateName, 0)
-            } else {
-                let newItemOrder = (incomeCategories.last?.order ?? 0) + 1
-                return (CategoryError.none, newItemOrder)
-            }
+        let fetchRequest = fetchRequestForCategories(income: income)
+        let categories = results(for: fetchRequest)
+        var emojiArray = [String]()
+        var nameArray = [String]()
+        
+        
+        categories.forEach { category in
+            emojiArray.append(category.wrappedEmoji)
+            nameArray.append(category.wrappedName)
+        }
+        
+        if emojiArray.contains(emoji) && nameArray.contains(name) {
+            return (CategoryError.duplicate, 0)
+        } else if emojiArray.contains(emoji) {
+            return (CategoryError.duplicateEmoji, 0)
+        } else if nameArray.contains(name) {
+            return (CategoryError.duplicateName, 0)
         } else {
-            let fetchRequest = fetchRequestForCategories(income: false)
-            let expenseCategories = results(for: fetchRequest)
-
-            var emojiArray = [String]()
-            var nameArray = [String]()
-
-            expenseCategories.forEach { category in
-                emojiArray.append(category.wrappedEmoji)
-                nameArray.append(category.wrappedName)
-            }
-
-            if emojiArray.contains(emoji) && nameArray.contains(name) {
-                return (CategoryError.duplicate, 0)
-            } else if emojiArray.contains(emoji) {
-                return (CategoryError.duplicateEmoji, 0)
-            } else if nameArray.contains(name) {
-                return (CategoryError.duplicateName, 0)
-            } else {
-                let newItemOrder = (expenseCategories.last?.order ?? 0) + 1
-                return (CategoryError.none, newItemOrder)
-            }
+            let newItemOrder = (categories.last?.order ?? 0) + 1
+            return (CategoryError.none, newItemOrder)
         }
     }
 
@@ -1009,59 +1016,31 @@ class DataController: ObservableObject {
         } else if emoji == "" {
             return (CategoryError.missingEmoji, 0)
         }
-
-        if toEdit.income {
-            let fetchRequest = fetchRequestForCategories(income: true)
-            var incomeCategories = results(for: fetchRequest)
-
-            if let position = incomeCategories.firstIndex(of: toEdit) {
-                incomeCategories.remove(at: position)
-            }
-
-            var emojiArray = [String]()
-            var nameArray = [String]()
-
-            incomeCategories.forEach { category in
-                emojiArray.append(category.wrappedEmoji)
-                nameArray.append(category.wrappedName)
-            }
-
-            if emojiArray.contains(emoji) && nameArray.contains(name) {
-                return (CategoryError.duplicate, 0)
-            } else if emojiArray.contains(emoji) {
-                return (CategoryError.duplicateEmoji, 0)
-            } else if nameArray.contains(name) {
-                return (CategoryError.duplicateName, 0)
-            } else {
-                let newItemOrder = (incomeCategories.last?.order ?? 0) + 1
-                return (CategoryError.none, newItemOrder)
-            }
+        
+        let fetchRequest = fetchRequestForCategories(income: toEdit.income)
+        var categories = results(for: fetchRequest)
+        
+        if let position = categories.firstIndex(of: toEdit) {
+            categories.remove(at: position)
+        }
+        
+        var emojiArray = [String]()
+        var nameArray = [String]()
+        
+        categories.forEach { category in
+            emojiArray.append(category.wrappedEmoji)
+            nameArray.append(category.wrappedName)
+        }
+        
+        if emojiArray.contains(emoji) && nameArray.contains(name) {
+            return (CategoryError.duplicate, 0)
+        } else if emojiArray.contains(emoji) {
+            return (CategoryError.duplicateEmoji, 0)
+        } else if nameArray.contains(name) {
+            return (CategoryError.duplicateName, 0)
         } else {
-            let fetchRequest = fetchRequestForCategories(income: false)
-            var expenseCategories = results(for: fetchRequest)
-
-            if let position = expenseCategories.firstIndex(of: toEdit) {
-                expenseCategories.remove(at: position)
-            }
-
-            var emojiArray = [String]()
-            var nameArray = [String]()
-
-            expenseCategories.forEach { category in
-                emojiArray.append(category.wrappedEmoji)
-                nameArray.append(category.wrappedName)
-            }
-
-            if emojiArray.contains(emoji) && nameArray.contains(name) {
-                return (CategoryError.duplicate, 0)
-            } else if emojiArray.contains(emoji) {
-                return (CategoryError.duplicateEmoji, 0)
-            } else if nameArray.contains(name) {
-                return (CategoryError.duplicateName, 0)
-            } else {
-                let newItemOrder = (expenseCategories.last?.order ?? 0) + 1
-                return (CategoryError.none, newItemOrder)
-            }
+            let newItemOrder = (categories.last?.order ?? 0) + 1
+            return (CategoryError.none, newItemOrder)
         }
     }
 

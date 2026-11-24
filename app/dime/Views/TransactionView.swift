@@ -641,6 +641,11 @@ struct TransactionView: View {
     func submit() {
         let generator = UINotificationFeedbackGenerator()
 
+        // select or create a default category if none is selected.
+        if self.category == nil {
+            self.category = self.dataController.getDefaultCategory(income: income)
+        }
+        
         if price == 0 && category == nil {
             toastImage = "questionmark.app"
             toastTitle = "Incomplete Entry"
