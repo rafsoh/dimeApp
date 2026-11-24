@@ -34,6 +34,17 @@ struct BudgetView: View {
 
     private var didSave = NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
 
+    private var orderedBudgets: [Budget] {
+        budgets.sorted { lhs, rhs in
+            let left = lhs.category?.order ?? Int64.max
+            let right = rhs.category?.order ?? Int64.max
+            if left == right {
+                return (lhs.dateCreated ?? .distantPast) < (rhs.dateCreated ?? .distantPast)
+            }
+            return left < right
+        }
+    }
+
     var columns: [GridItem] {
         let count = budgetRows || dynamicTypeSize >= .xxLarge ? 1 : 2
         return Array(repeating: GridItem(.flexible(), spacing: 12, alignment: .top), count: count)
@@ -65,7 +76,7 @@ struct BudgetView: View {
 
                         if !budgets.isEmpty {
                             LazyVGrid(columns: columns, spacing: 12) {
-                                ForEach(budgets, id: \.objectID) { budget in
+                                ForEach(orderedBudgets, id: \.objectID) { budget in
                                     Button {
                                         detail = .category(budget)
                                     } label: {

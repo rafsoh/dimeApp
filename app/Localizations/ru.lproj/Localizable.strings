@@ -87,6 +87,7 @@
 "Your Log is Empty" = "Ваш лог пуст";
 "Press the plus button to add your first entry" = "Нажмите на + чтобы добавить Вашу первую запись";
 "Search entry by note" = "Поиск записи по Примечанию";
+"Search" = "Поиск";
 "Search by note, category, amount or date" = "Поиск по заметке, категории, сумме или дате";
 "all entries" = "все записи";
 "by type" = "по типу";
@@ -102,6 +103,7 @@
 "filter-tag-month" = "месяц";
 "filter-tag-recurring" = "повторяющиеся";
 "filter-picker-income" = "Доход";
+"filter-tag-upcoming" = "предстоящие";
 "Total Spent" = "Всего потрачено";
 "Total Income" = "Общая прибыль";
 "Net Total" = "Сальдо";
@@ -139,8 +141,8 @@
 
 // budgets
 "Budgets" = "Бюджеты";
-"Budget Your Finances" = "Budget Your Finances";
-"Link budgets to categories and set appropriate expenditure goals" = "Link budgets to categories and set appropriate expenditure goals";
+"Budget Your Finances" = "Планируйте финансы";
+"Link budgets to categories and set appropriate expenditure goals" = "Привяжите бюджеты к категориям и задайте лимиты расходов";
 "No Budgets Found" = "Нет бюджетов";
 "Add your first budget today!" = "Добавьте свой первый бюджет!";
 "category budget" = "Бюджет по категории";
@@ -299,7 +301,7 @@
 "EARNED " = "Заработано ";
 "SPENT " = "Потрачено ";
 "ADD OVERALL BUDGET" = "Добавить общий бюджет";
-"Percent Spent" = "Percent Spent";
+"Percent Spent" = "Процент расходов";
 "Create your overall budget in the app" = "Создайте свой общий бюджет в приложении";
 "ADD BUDGET" = "Добавить бюджет";
 "over" = "свыше";
@@ -310,7 +312,7 @@
 "SELECT BUDGET" = "Выберите бюджет";
 "SELECT BUDGET IN WIDGET OPTIONS" = "Выберите бюджет в настройках виджета";
 
-"Time Period" = "Time Period";
+"Time Period" = "Период";
 
 // iCloud sync status
 "Up to date" = "Актуально";
@@ -380,3 +382,6 @@
 "Here you go! %@" = "Готово! %@";
 "A three-letter code such as EUR. Leave it empty to use the currency Dime picks for new transactions." = "Трёхбуквенный код, например EUR. Оставьте пустым, чтобы использовать валюту, которую Dime выбирает для новых операций.";
 "Which currency? Use a three-letter code such as EUR." = "Какая валюта? Используйте трёхбуквенный код, например EUR.";
+"Export" = "Экспорт";
+"All time" = "За всё время";
+"No transactions to export" = "Нет транзакций для экспорта";

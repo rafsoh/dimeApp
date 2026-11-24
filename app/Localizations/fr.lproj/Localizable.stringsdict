@@ -13,7 +13,7 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>lld</string>
 			<key>zero</key>
-			<string>Empty</string>
+			<string>Vide</string>
 			<key>one</key>
 			<string>1 jour restant</string>
 			<key>other</key>
@@ -31,7 +31,7 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>lld</string>
 			<key>zero</key>
-			<string>Empty</string>
+			<string>Vide</string>
 			<key>one</key>
 			<string>1 heure restante</string>
 			<key>other</key>
@@ -49,9 +49,9 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>lld</string>
 			<key>zero</key>
-			<string>days</string>
-			<key>one</key>
 			<string>jours</string>
+			<key>one</key>
+			<string>jour</string>
 			<key>other</key>
 			<string>jours</string>
 		</dict>
@@ -67,7 +67,7 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>lld</string>
 			<key>zero</key>
-			<string>semaine</string>
+			<string>semaines</string>
 			<key>one</key>
 			<string>semaine</string>
 			<key>other</key>
@@ -103,7 +103,7 @@
             <key>NSStringFormatValueTypeKey</key>
             <string>lld</string>
             <key>zero</key>
-            <string>weeks</string>
+            <string>semaines</string>
             <key>one</key>
             <string>il y a 1 semaine</string>
             <key>other</key>
@@ -121,7 +121,7 @@
             <key>NSStringFormatValueTypeKey</key>
             <string>lld</string>
             <key>zero</key>
-            <string>months</string>
+            <string>mois</string>
             <key>one</key>
             <string>il y a 1 mois</string>
             <key>other</key>
@@ -139,7 +139,7 @@
             <key>NSStringFormatValueTypeKey</key>
             <string>lld</string>
             <key>zero</key>
-            <string>years</string>
+            <string>ans</string>
             <key>one</key>
             <string>il y a 1 an</string>
             <key>other</key>
