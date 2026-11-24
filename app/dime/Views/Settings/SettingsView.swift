@@ -468,7 +468,7 @@ struct SettingsView: View {
       .sheet(isPresented: $showUpdate) {
         WhatsNewSheet()
       }
-      .fullScreenCover(isPresented: $showImportGuide) {
+      .sheet(isPresented: $showImportGuide) {
         ImportDataView()
       }
     }

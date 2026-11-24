@@ -6,807 +6,98 @@
 //
 
 import ConfettiSwiftUI
-import Foundation
+import CoreData
 import SwiftUI
-import UIKit
 import UniformTypeIdentifiers
 
-struct ColumnLabel {
-    let image: String
-    let label: String
-}
+private enum ImportStep: Int, Comparable {
+    case start, columns, categories, review, finished
 
-enum ProcessingState {
-    case loading, success, error
-}
-
-struct MatchedCategory: Hashable {
-    let excelValue: String
-    var income: Bool
-    var category: Category?
-
-    mutating func toggleIncome() {
-        income = !income
+    static func < (lhs: ImportStep, rhs: ImportStep) -> Bool {
+        lhs.rawValue < rhs.rawValue
     }
 }
 
-extension Sequence where Iterator.Element: Hashable {
-    func unique() -> [Iterator.Element] {
-        var seen: Set<Iterator.Element> = []
-        return filter { seen.insert($0).inserted }
-    }
+private enum ImportCategoryChoice: Hashable {
+    case create
+    case existing(Category)
 }
 
 struct ImportDataView: View {
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var dataController: DataController
 
-    @State private var exportSample = false
-    @State private var importing = false
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
 
-    @State private var data = ""
-    @State private var rows = [[String]]()
-    @State private var numberOfRows: Int = 0
-    @State private var displayedColumns = [[String]]()
-    @State private var columns = [[String]]()
+    @State private var step = ImportStep.start
+    @State private var movingForward = true
 
-    @State private var remainingColumns = [Int]()
-    @State private var selectedColumns = [Int]()
+    @State private var fileName = ""
+    @State private var table: CSVTable?
+    @State private var mapping = ColumnMapping()
+    @State private var dateFormat = ""
+    @State private var dateFormatOptions: [String] = []
+    @State private var customDateFormat = ""
+    @State private var editingCustomFormat = false
+    @State private var parsed = ImportParseResult(rows: [], skipped: [:])
 
-    var indexColumnWidth: CGFloat {
-        let additionalPadding: Double
+    @State private var categories: [Category] = []
+    @State private var choices: [ImportCategoryKey: ImportCategoryChoice] = [:]
+    @State private var incomeOverrides: [ImportCategoryKey: Bool] = [:]
 
-        if dynamicTypeSize > .xLarge {
-            additionalPadding = 10
-        } else {
-            additionalPadding = 0
-        }
+    @State private var duplicateRows: Set<Int> = []
+    @State private var skipDuplicates = true
 
-        if numberOfRows < 10 {
-            return "9".widthOfRoundedString(size: 15, weight: .bold) + 16.0 + additionalPadding
-        } else if numberOfRows < 100 {
-            return "99".widthOfRoundedString(size: 15, weight: .bold) + 16.0 + additionalPadding
-        } else {
-            return "999".widthOfRoundedString(size: 15, weight: .bold) + 16.0 + additionalPadding
-        }
-    }
+    @State private var isImporting = false
+    @State private var importedCount = 0
+    @State private var confetti = 0
 
-    @State var progress = 1
+    @State private var choosingFile = false
+    @State private var sharingSample = false
 
-    @State var selectedColumn = 0
-    @State var columnSelectionCompleted = false
-    @State var sampleDateString = ""
-    @State var dateFormatString = ""
-    @State var validDateFormatString = false
-    @State var uniqueCategories: [MatchedCategory] = .init()
+    @State private var showToast = false
+    @State private var toastTitle = ""
 
-    @State var processingState = ProcessingState.loading
-    @State var errorMessage = "Invalid dates in date column."
-    @State var confettiNumber = 0
+    @FocusState private var customFormatFocused: Bool
 
-    var numberOfLinkedCategories: Int {
-        uniqueCategories.filter { $0.category != nil }.count
-    }
-
-    @State var showToast = false
-    @State var toastMessage: String = "Invalid File"
-
-    @State var showingCategoryView = false
-    @State var pageIndex = 0
-
-    // just for the adding of transactions
-    @State var income = false
-
-    @Environment(\.dynamicTypeSize) var dynamicTypeSize
-
-    var columnWidth: CGFloat {
-        if dynamicTypeSize > .xLarge {
-            return 150
-        } else {
-            return 100
-        }
-    }
-
-    let instructions: [InstructionHeadings] = [
-        InstructionHeadings(title: "Import transactions", subtitle: "Begin by adding a CSV file with 4 columns: amount, note, date, and category."),
-        InstructionHeadings(title: "Assign category column", subtitle: "Select a column from your import that corresponds to the categories of your transactions."),
-        InstructionHeadings(title: "Assign note column", subtitle: "Select a column from your import that corresponds to the notes/subtitles of your transactions."),
-        InstructionHeadings(title: "Assign date column", subtitle: "Select a column from your import that corresponds to the dates of your transactions."),
-        InstructionHeadings(title: "Assign amount column", subtitle: "Select a column from your import that corresponds to the values of your transactions."),
-        InstructionHeadings(title: "Indicate date format", subtitle: "Referencing this article, state the format of the dates in the assigned column."),
-        InstructionHeadings(title: "Link categories", subtitle: "Match values found in the 'Category' column to the corresponding categories in Dime."),
-        InstructionHeadings(title: "Processing import", subtitle: "Please wait while we process your new transactions.")
-    ]
-
-    let labels: [ColumnLabel] = [
-        ColumnLabel(image: "square.grid.2x2.fill", label: "Category"),
-        ColumnLabel(image: "doc.plaintext.fill", label: "Note"),
-        ColumnLabel(image: "calendar", label: "Date"),
-        ColumnLabel(image: "dollarsign.circle.fill", label: "Amount")
-    ]
-
-    let pointers = ["Ensure that the values in the 'Amount' column do not contain any currency symbols.", "All dates should be of a consistent, recognizable format. If no timestamps are provided, the time of transaction will default to 12:00 am.", "Remove all commas in the 'Note' and 'Category' columns as they would disrupt the parsing of your file."]
-
-    var incomeCategories: [Category] {
-        dataController.getAllCategories(income: true)
-    }
-
-    var expenseCategories: [Category] {
-        dataController.getAllCategories(income: false)
-    }
+    private let stepAnimation = Animation.spring(response: 0.42, dampingFraction: 0.88)
 
     var body: some View {
         VStack(spacing: 0) {
-            if progress == 8 {
-                VStack(spacing: 15) {
-                    switch processingState {
-                    case .loading:
-                        ProgressView()
-                            .controlSize(.large)
-                            .scaleEffect(0.8)
-
-                        Text("Processing Import")
-                            .font(.system(.title2, design: .rounded).weight(.medium))
-
-//                            .font(.system(size: 22, weight: .medium, design: .rounded))
-                            .foregroundColor(Color.SubtitleText)
-                    case .success:
-
-                        Image(systemName: "checkmark")
-                            .font(.system(.title2, design: .rounded).weight(.semibold))
-
-//                            .font(.system(size: 21, weight: .semibold, design: .rounded))
-                            .foregroundColor(Color.IncomeGreen)
-                            .frame(width: 35, height: 35)
-                            .background(Color.IncomeGreen.opacity(0.3), in: Circle())
-
-                        Text("Import Successful")
-                            .font(.system(.title2, design: .rounded).weight(.medium))
-
-//                            .font(.system(size: 22, weight: .medium, design: .rounded))
-                            .foregroundColor(Color.IncomeGreen)
-                    case .error:
-                        Image(systemName: "x")
-                            .font(.system(.title2, design: .rounded).weight(.semibold))
-
-//                            .font(.system(size: 21, weight: .semibold, design: .rounded))
-                            .foregroundColor(Color.AlertRed)
-                            .frame(width: 35, height: 35)
-                            .background(Color.Alert.opacity(0.3), in: Circle())
-
-                        Text("Import Failed")
-                            .font(.system(.title2, design: .rounded).weight(.medium))
-
-//                            .font(.system(size: 22, weight: .medium, design: .rounded))
-                            .foregroundColor(Color.PrimaryText)
-
-                        Text(errorMessage)
-                            .font(.system(.subheadline, design: .rounded).weight(.medium))
-
-//                            .font(.system(size: 15, weight: .medium, design: .rounded))
-                            .foregroundColor(Color.SubtitleText)
-                    }
-                }
-                .frame(maxHeight: .infinity)
-            } else {
-                HStack {
-                    if #available(iOS 17.0, *) {
-                        Button {
-                            if progress == 2 {
-                                withAnimation(.interactiveSpring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.8)) {
-                                    progress -= 1
-                                }
-                            } else if progress > 6 {
-                                withAnimation(.interactiveSpring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.8)) {
-                                    progress -= 1
-                                }
-                            } else if progress > 2 {
-                                withAnimation(.interactiveSpring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.8)) {
-                                    if let removedColumn = selectedColumns.popLast() {
-                                        remainingColumns.append(removedColumn)
-                                        remainingColumns.sort()
-                                        selectedColumn = remainingColumns[0]
-                                        columnSelectionCompleted = false
-
-                                        progress -= 1
-                                    }
-                                }
-                            } else {
-                                dismiss()
-                            }
-                        } label: {
-                            Image(systemName: progress > 1 ? "chevron.left" : "xmark")
-                                .font(.system(.callout, design: .rounded).weight(.semibold))
-
-                                .foregroundColor(Color.SubtitleText)
-                                .padding(8)
-                                .background(Color.SecondaryBackground, in: Circle())
-                        }
-                        .contentTransition(.symbolEffect(.replace.downUp.wholeSymbol))
-                    } else {
-                        Button {
-                            if progress > 1 {
-                                withAnimation(.interactiveSpring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.8)) {
-                                    progress -= 1
-                                }
-                            } else {
-                                dismiss()
-                            }
-                        } label: {
-                            Image(systemName: progress > 1 ? "chevron.left" : "xmark")
-                                .font(.system(.callout, design: .rounded).weight(.semibold))
-                                .foregroundColor(Color.SubtitleText)
-                                .padding(8)
-                                .background(Color.SecondaryBackground, in: Circle())
-                        }
-                    }
-
-                    Spacer()
-
-                    CustomCapsuleProgress(percent: Double(progress) / 7, width: 4, topStroke: Color.DarkBackground, bottomStroke: Color.SecondaryBackground)
-                        .frame(width: 60)
-                }
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-                .overlay {
-                    if showToast {
-                        HStack(spacing: 6.5) {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .font(.system(.subheadline, design: .rounded).weight(.semibold))
-
-//                                .font(.system(size: 15, weight: .semibold))
-                                .foregroundColor(Color.AlertRed)
-
-                            Text(toastMessage)
-                                .font(.system(.callout, design: .rounded).weight(.semibold))
-
-//                                .font(.system(size: 16, weight: .semibold, design: .rounded))
-                                .foregroundColor(Color.AlertRed)
-                        }
-                        .padding(8)
-                        .background(Color.AlertRed.opacity(0.23), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-                        .transition(AnyTransition.opacity.combined(with: .move(edge: .top)))
-                        .frame(width: 250)
-                    }
-                }
-                .padding(.bottom, 50)
-                .animation(.easeInOut, value: progress > 1)
-
-                VStack(alignment: .leading, spacing: 5) {
-                    if progress == 6 {
-                        HStack {
-                            Text("Indicate date format")
-                                .foregroundColor(.PrimaryText)
-                                .font(.system(.title2, design: .rounded).weight(.semibold))
-
-//                                .font(.system(size: 26, weight: .semibold, design: .rounded))
-
-                            Spacer()
-                        }
-                        .frame(maxWidth: .infinity)
-
-                        Text("Referencing \(makeAttributedString()), state the format of the dates in the assigned column.")
-                            .foregroundColor(.SubtitleText)
-                            .font(.system(.body, design: .rounded).weight(.medium))
-
-//                            .font(.system(size: 17, weight: .medium, design: .rounded))
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    } else {
-                        HStack {
-                            Text(instructions[progress - 1].title)
-                                .foregroundColor(Color.PrimaryText)
-                                .font(.system(.title2, design: .rounded).weight(.semibold))
-
-//                                .font(.system(size: 26, weight: .semibold, design: .rounded))
-
-                            if progress == 7 {
-                                Button {
-                                    showingCategoryView = true
-                                } label: {
-                                    Image(systemName: "plus")
-                                        .font(.system(.footnote, design: .rounded).weight(.semibold))
-                                        .foregroundColor(Color.SubtitleText)
-                                        .padding(4)
-                                        .background(Color.SecondaryBackground, in: Circle())
-                                        .contentShape(Circle())
-                                }
-                            }
-
-                            Spacer()
-                        }
-                        .frame(maxWidth: .infinity)
-
-                        Text(instructions[progress - 1].subtitle)
-                            .foregroundColor(.SubtitleText)
-                            .font(.system(.body, design: .rounded).weight(.medium))
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                }
-                .frame(height: UIScreen.main.bounds.size.height / (dynamicTypeSize > .xLarge ? 5.3 : 5.8), alignment: .top)
-                .padding(.bottom, 10)
-
-                if progress == 1 {
-                    HStack(spacing: 6) {
-                        Image(systemName: "info.circle.fill")
-                            .font(.system(.subheadline, design: .rounded).weight(.medium))
-
-//                            .font(.system(size: 15, weight: .semibold, design: .rounded))
-
-                        Text("Additional Pointers")
-                            .font(.system(.body, design: .rounded).weight(.semibold))
-
-//                            .font(.system(size: 17, weight: .semibold, design: .rounded))
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .padding(12)
-                    .foregroundColor(Color.IncomeGreen)
-                    .background(Color.IncomeGreen.opacity(0.23), in: RoundedRectangle(cornerRadius: 13, style: .continuous))
-                    .padding(.bottom, 20)
-
-                    ScrollView(showsIndicators: false) {
-                        VStack(alignment: .leading, spacing: 22) {
-                            ForEach(pointers.indices, id: \.self) { index in
-                                PointerView(number: index + 1, text: pointers[index])
-                            }
-                        }
-                    }
-                } else if progress < 6 {
-                    VStack(spacing: 10) {
-                        Text("Sampled Rows from Import CSV")
-                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
-
-//                            .font(.system(size: 15, weight: .semibold, design: .rounded))
-                            .foregroundColor(Color.SubtitleText)
-
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 0) {
-                                VStack(spacing: 0) {
-                                    ForEach(0 ..< (numberOfRows + 1)) { number in
-                                        if number == 0 {
-                                            Rectangle()
-                                                .fill(Color.PrimaryBackground)
-                                                .frame(width: indexColumnWidth, height: 30, alignment: .leading)
-                                        } else {
-                                            Text("\(number)")
-                                                .foregroundStyle(Color.SubtitleText)
-                                                .font(.system(.subheadline, design: .rounded).weight(.bold))
-
-//                                                .font(.system(size: 15, weight: .bold, design: .rounded))
-                                                .padding(.horizontal, 8)
-                                                .frame(width: indexColumnWidth, height: 30, alignment: .leading)
-                                                .overlay(Rectangle().stroke(Color.Outline, lineWidth: 1))
-                                        }
-                                    }
-                                }
-                                .background(Color.SecondaryBackground.opacity(0.6))
-
-                                HStack(spacing: 0) {
-                                    ForEach(displayedColumns.indices, id: \.self) { columnIndex in
-
-                                        VStack(spacing: 0) {
-                                            if selectedColumns.contains(columnIndex) {
-                                                if let index = selectedColumns.firstIndex(of: columnIndex) {
-                                                    HStack(spacing: 4.5) {
-                                                        Image(systemName: labels[index].image)
-                                                            .font(.system(.caption, design: .rounded).weight(.semibold))
-
-//                                                            .font(.system(size: 12, weight: .semibold, design: .rounded))
-
-                                                        Text(labels[index].label)
-                                                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
-
-//                                                            .font(.system(size: 14, weight: .semibold, design: .rounded))
-                                                            .frame(maxWidth: .infinity, alignment: .leading)
-                                                    }
-                                                    .padding(.horizontal, 10)
-                                                    .frame(width: columnWidth, height: 30, alignment: .leading)
-                                                    .foregroundColor(Color(labels[index].label))
-                                                    .background(Color(labels[index].label).opacity(0.23), in: RoundedCorner(radius: 10, corners: [.topLeft, .topRight]))
-                                                }
-                                            } else {
-                                                Rectangle()
-                                                    .fill(Color.PrimaryBackground)
-                                                    .frame(width: columnWidth, height: 30, alignment: .leading)
-                                            }
-
-                                            VStack(spacing: 0) {
-                                                ForEach(displayedColumns[columnIndex], id: \.self) { value in
-                                                    Text(value)
-                                                        .foregroundStyle(Color.PrimaryText)
-                                                        .font(.system(.subheadline, design: .rounded).weight(.medium))
-
-//                                                        .font(.system(size: 15, weight: .medium, design: .rounded))
-                                                        .padding(.horizontal, 8)
-                                                        .frame(width: columnWidth, height: 30, alignment: .leading)
-                                                        .overlay(Rectangle().stroke(Color.Outline, lineWidth: 1))
-                                                    //
-                                                }
-                                            }
-                                            .onTapGesture {
-                                                if progress >= 2 {
-                                                    if remainingColumns.contains(columnIndex) {
-                                                        withAnimation {
-                                                            selectedColumn = columnIndex
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                .overlay(alignment: .leading) {
-                                    if !columnSelectionCompleted && progress < 6 {
-                                        VStack(spacing: 0) {
-                                            HStack(spacing: 4.5) {
-                                                Image(systemName: labels[progress - 2].image)
-                                                    .font(.system(.caption, design: .rounded).weight(.semibold))
-
-//                                                    .font(.system(size: 12, weight: .semibold, design: .rounded))
-
-                                                Text(labels[progress - 2].label)
-                                                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
-
-//                                                    .font(.system(size: 14, weight: .semibold, design: .rounded))
-                                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                            }
-                                            .padding(.horizontal, 10)
-                                            .frame(width: columnWidth + 2, height: 30, alignment: .leading)
-                                            .foregroundColor(Color.LightIcon)
-                                            .background(Color.DarkBackground, in: RoundedCorner(radius: 10, corners: [.topLeft, .topRight]))
-
-                                            Rectangle()
-                                                .stroke(Color.DarkBackground, lineWidth: 2)
-                                                .frame(width: columnWidth)
-                                                .frame(maxHeight: .infinity)
-                                        }
-                                        .offset(x: CGFloat(CGFloat(selectedColumn) * columnWidth))
-                                    }
-                                }
-                            }
-                            .padding(2)
-                        }
-                    }
-                } else if progress == 6 {
-                    VStack(spacing: 10) {
-                        Text("Sample from 'Date' Column")
-                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
-
-//                            .font(.system(size: 15, weight: .semibold, design: .rounded))
-                            .foregroundColor(Color.SubtitleText)
-
-                        Text(sampleDateString)
-                            .font(.system(.title3, design: .rounded).weight(.semibold))
-
-//                            .font(.system(size: 20, weight: .semibold, design: .rounded))
-                            .foregroundColor(Color.PrimaryText)
-                            .frame(width: 300, height: 40)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 11, style: .continuous)
-                                    .stroke(Color.Outline, lineWidth: 2)
-                            )
-                            .padding(.bottom, 30)
-
-                        HStack(spacing: 7) {
-                            Image(systemName: "calendar")
-                                .font(.system(.callout, design: .rounded).weight(.semibold))
-
-//                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(Color.SubtitleText)
-
-                            TextField("Date Format", text: $dateFormatString)
-                                .foregroundColor(Color.PrimaryText)
-                                .font(.system(.title3, design: .rounded).weight(.semibold))
-
-//                                .font(.system(size: 20, weight: .semibold, design: .rounded))
-                                .frame(maxWidth: .infinity)
-
-                            if validDateFormatString {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .font(.system(.callout, design: .rounded).weight(.semibold))
-
-//                                        .font(.system(size: 16, weight: .semibold))
-                                    .foregroundColor(Color.IncomeGreen)
-                            } else if !validDateFormatString && dateFormatString != "" {
-                                ProgressView()
-                            }
-                        }
-                        .padding(.horizontal, 10)
-                        .frame(width: 300, height: 40)
-                        .background {
-                            RoundedRectangle(cornerRadius: 11, style: .continuous)
-                                .stroke(Color.SubtitleText, lineWidth: 2)
-                                .background(Color.SecondaryBackground, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
-                        }
-                        .onChange(of: dateFormatString) { newValue in
-                            let dateFormatter = DateFormatter()
-                            dateFormatter.dateFormat = newValue
-
-                            if dateFormatter.date(from: sampleDateString) != nil {
-                                validDateFormatString = true
-                            } else {
-                                validDateFormatString = false
-                            }
-                        }
-                    }
-                } else if progress == 7 {
-                    VStack(spacing: 10) {
-                        Text("\(numberOfLinkedCategories)/^[\(uniqueCategories.count) category](inflect: true) linked")
-                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
-
-//                            .font(.system(size: 15, weight: .semibold, design: .rounded))
-                            .foregroundColor(Color.SubtitleText)
-
-                        TabView(selection: $pageIndex) {
-                            ForEach(uniqueCategories.indices, id: \.self) { categoryIndex in
-                                VStack(spacing: 20) {
-                                    HStack(spacing: 8) {
-                                        Text(uniqueCategories[categoryIndex].excelValue)
-                                            .font(.system(.title3, design: .rounded).weight(.semibold))
-
-                                            .lineLimit(1)
-//                                            .font(.system(size: 20, weight: .semibold, design: .rounded))
-                                            .foregroundColor(Color.PrimaryText)
-//                                            .frame(height: 36)
-                                            .padding(.vertical, 6)
-                                            .padding(.horizontal, 10)
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                                    .strokeBorder(Color.Outline, lineWidth: 2)
-                                            )
-                                            .minimumScaleFactor(0.7)
-
-                                        if let unwrappedCategory = uniqueCategories[categoryIndex].category {
-                                            HStack(spacing: 8) {
-                                                Image(systemName: "triangle.fill")
-                                                    .rotationEffect(Angle(degrees: 90))
-                                                    .font(.system(size: 12, weight: .regular, design: .rounded))
-                                                    .foregroundColor(Color.SubtitleText)
-
-                                                HStack(spacing: 5) {
-                                                    Text(unwrappedCategory.wrappedEmoji)
-//                                                        .font(.system(size: 15))
-                                                        .font(.system(.subheadline, design: .rounded))
-
-                                                    Text(unwrappedCategory.wrappedName)
-                                                        .font(.system(.title3, design: .rounded).weight(.semibold))
-
-                                                        .lineLimit(1)
-
-//                                                        .font(.system(size: 19, weight: .semibold, design: .rounded))
-                                                }
-                                                .padding(.vertical, 6)
-                                                .padding(.horizontal, 10)
-//                                                .frame(height: 36)
-                                                .foregroundColor(Color(hex: unwrappedCategory.wrappedColour))
-                                                .background(Color(hex: unwrappedCategory.wrappedColour).opacity(0.35), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                                                .minimumScaleFactor(0.7)
-                                            }
-                                            .transition(.opacity)
-                                        }
-                                    }
-                                    .drawingGroup()
-
-                                    MatchCategoryStepperView(category: $uniqueCategories[categoryIndex].category, categories: uniqueCategories[categoryIndex].income ? incomeCategories : expenseCategories, pageIndex: $pageIndex, maxIndex: uniqueCategories.count)
-                                        .overlay(alignment: .bottomTrailing) {
-                                            let income = uniqueCategories[categoryIndex].income
-
-                                            ZStack {
-                                                RoundedRectangle(cornerRadius: 9, style: .continuous)
-                                                    .fill(Color.PrimaryBackground)
-
-                                                Image(systemName: income ? "plus" : "minus")
-                                                    .font(.system(size: 18, weight: .semibold))
-                                                    .foregroundColor(income ? Color.IncomeGreen : Color.AlertRed)
-                                                    .frame(width: 30, height: 30)
-                                                    .background(income ? Color.IncomeGreen.opacity(0.23) : Color.AlertRed.opacity(0.23), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-                                            }
-                                            .frame(width: 30, height: 30)
-                                            .contentShape(Rectangle())
-                                            .onTapGesture {
-                                                uniqueCategories[categoryIndex].income.toggle()
-                                            }
-                                            .padding(12)
-                                        }
-
-                                    Spacer()
-                                }
-                                .padding(10)
-                                .tag(categoryIndex)
-                            }
-                        }
-                        .tabViewStyle(.page(indexDisplayMode: .always))
-                        .frame(height: 390)
-                    }
-                }
-
-                Spacer()
-
-                if progress == 1 {
-                    VStack(spacing: 13) {
-                        Button {
-                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-
-                            importing = true
-
-                        } label: {
-                            HStack(spacing: 6) {
-                                Text("Import")
-                                    .font(.system(.title3, design: .rounded).weight(.semibold))
-
-//                                    .font(.system(size: 19, weight: .semibold, design: .rounded))
-
-                                Image(systemName: "square.and.arrow.up.fill")
-                                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
-
-//                                    .font(.system(size: 15, weight: .semibold, design: .rounded))
-                            }
-                            .frame(height: 50)
-                            .frame(maxWidth: .infinity)
-                            .foregroundColor(Color.LightIcon)
-                            .background(Color.DarkBackground, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
-                        }
-                        .buttonStyle(BouncyButton(duration: 0.2, scale: 0.8))
-
-                        Button {
-                            exportSample = true
-                        } label: {
-                            HStack(spacing: 6) {
-//                                Image(systemName: "doc.text")
-//                                    .font(.system(size: 13, weight: .semibold, design: .rounded))
-                                Text("Sample Sheet")
-                                    .underline()
-                                    .font(.system(.body, design: .rounded).weight(.semibold))
-
-//                                    .font(.system(size: 18, weight: .semibold, design: .rounded))
-                            }
-                            .foregroundColor(Color.SubtitleText)
-                        }
-                    }
-
-                } else {
-                    Button {
-                        if progress == 7 {
-                            if numberOfLinkedCategories == uniqueCategories.count {
-                                withAnimation(.interactiveSpring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.8)) {
-                                    progress += 1
-                                }
-
-                                importData()
-                            } else {
-                                showToast = true
-                                toastMessage = "Unlinked Categories"
-                            }
-
-                        } else if progress > 5 {
-                            withAnimation(.interactiveSpring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.8)) {
-                                progress += 1
-                            }
-                        } else {
-                            withAnimation(.interactiveSpring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.8)) {
-                                guard !remainingColumns.isEmpty else { return }
-
-                                if progress == 4 {
-                                    let sample = displayedColumns[selectedColumn][0]
-
-                                    guard sample.containsDigits else {
-                                        showToast = true
-                                        toastMessage = "Invalid Column"
-                                        return
-                                    }
-                                }
-
-                                if progress == 5 {
-                                    let stringColumn = displayedColumns[selectedColumn]
-
-                                    guard validateDoubles(strings: stringColumn) else {
-                                        showToast = true
-                                        toastMessage = "Invalid Column"
-                                        return
-                                    }
-                                }
-
-                                // remove from possible pool
-                                let index = remainingColumns.firstIndex(of: selectedColumn) ?? 0
-                                remainingColumns.remove(at: index)
-
-                                // add to holding pool
-                                selectedColumns.append(selectedColumn)
-
-                                if progress < 5 {
-                                    guard !remainingColumns.isEmpty else {
-                                        showToast = true
-                                        toastMessage = "Insufficient Columns"
-                                        return
-                                    }
-                                    selectedColumn = remainingColumns[0]
-                                }
-
-                                // reset selected column
-
-                                if progress == 5 {
-                                    let dateColumnIndex = selectedColumns[2]
-                                    sampleDateString = displayedColumns[dateColumnIndex][0]
-
-                                    if let deducedFormat = deduceDateFormat(from: sampleDateString) {
-                                        dateFormatString = deducedFormat
-                                        validDateFormatString = true
-                                    }
-
-                                    let categoryColumnIndex = selectedColumns[0]
-                                    uniqueCategories = columns[categoryColumnIndex].unique().map {
-                                        MatchedCategory(excelValue: $0, income: false)
-                                    }
-
-                                    columnSelectionCompleted = true
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                        withAnimation {
-                                            progress += 1
-                                        }
-                                    }
-                                } else {
-                                    progress += 1
-                                }
-                            }
-                        }
-                    } label: {
-                        Text("Continue")
-                            .font(.system(.title3, design: .rounded).weight(.semibold))
-
-//                            .font(.system(size: 19, weight: .semibold, design: .rounded))
-                            .frame(height: 50)
-                            .frame(maxWidth: .infinity)
-                            .foregroundColor(Color.LightIcon)
-                            .background(Color.DarkBackground, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
-                    }
-                    .buttonStyle(BouncyButton(duration: 0.2, scale: 0.8))
-                }
+            header
+                .padding(.top, 20)
+
+            ZStack {
+                stepContent
+                    .id(step)
+                    .transition(.asymmetric(
+                        insertion: .move(edge: movingForward ? .trailing : .leading).combined(with: .opacity),
+                        removal: .move(edge: movingForward ? .leading : .trailing).combined(with: .opacity)
+                    ))
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .clipped()
+
+            bottomButtons
+                .padding(.bottom, 8)
         }
-        .padding(20)
-        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+        .padding(.horizontal, .settingsPageInset)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .ignoresSafeArea(.keyboard)
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .background(Color.PrimaryBackground)
-        .fileImporter(
-            isPresented: $importing,
-            allowedContentTypes: [.commaSeparatedText]
-        ) { result in
+        .modifier(TransactionSheetPresentation())
+        .interactiveDismissDisabled((step != .start && step != .finished) || isImporting)
+        .fileImporter(isPresented: $choosingFile, allowedContentTypes: [.commaSeparatedText, .tabSeparatedText, .plainText]) { result in
             switch result {
-            case let .success(file):
-                do {
-                    if file.startAccessingSecurityScopedResource() {
-                        guard let message = try String(data: Data(contentsOf: file), encoding: .utf8) else {
-                            showToast = true
-                            toastMessage = "Invalid File"
-                            return
-                        }
-
-                        data = message
-
-                        processCSV()
-
-                        do {
-                            file.stopAccessingSecurityScopedResource()
-                        }
-                    }
-                } catch {}
-            case let .failure(error):
-                print(error.localizedDescription)
+            case let .success(url):
+                load(url)
+            case .failure:
+                toast("Couldn't Open File")
             }
         }
-        .sheet(isPresented: $exportSample) {
+        .sheet(isPresented: $sharingSample) {
             if let url = Bundle.main.url(forResource: "sample", withExtension: "csv") {
                 ActivityViewController(activityItems: [url])
-            }
-        }
-        .sheet(isPresented: $showingCategoryView) {
-            if #available(iOS 16.0, *) {
-                NewCategoryAlert(income: $income, bottomSpacers: false, budgetMode: false)
-                    .presentationDetents([.height(300)])
-                    .presentationDragIndicator(.hidden)
-            } else {
-                NewCategoryAlert(income: $income, bottomSpacers: true, budgetMode: false)
             }
         }
         .animation(.easeOut(duration: 0.2), value: showToast)
@@ -817,174 +108,958 @@ struct ImportDataView: View {
                 }
             }
         }
-        .onChange(of: processingState) { newValue in
-            if newValue == .success {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+        .confettiCannon(counter: $confetti, num: 50, openingAngle: Angle(degrees: 0), closingAngle: Angle(degrees: 360), radius: 200)
+    }
+
+    // MARK: - Chrome
+
+    var header: some View {
+        HStack {
+            if !isImporting {
+                GlassIconButton(systemName: step == .start || step == .finished ? "xmark" : "chevron.left", accessibilityLabel: step == .start || step == .finished ? "Close" : "Back") {
+                    goBack()
+                }
+            }
+
+            Spacer()
+
+            if step > .start, step < .finished {
+                StepLabel(current: step.rawValue, total: 3)
+            }
+        }
+        .frame(height: 44)
+        .overlay {
+            if showToast {
+                GlassToast(title: toastTitle, systemImage: "exclamationmark.triangle.fill", color: Color.AlertRed)
+            }
+        }
+    }
+
+    @ViewBuilder var bottomButtons: some View {
+        switch step {
+        case .start:
+            VStack(spacing: 10) {
+                PrimaryImportButton(title: "Choose CSV File") {
+                    choosingFile = true
+                }
+
+                ConfirmationCancelButton("Get a Sample File") {
+                    sharingSample = true
+                }
+            }
+        case .columns:
+            PrimaryImportButton(title: "Continue") {
+                confirmColumns()
+            }
+        case .categories:
+            PrimaryImportButton(title: "Continue") {
+                findDuplicates()
+                advance(to: .review)
+            }
+        case .review:
+            let count = rowsToImport.count
+            PrimaryImportButton(title: count == 1 ? "Import 1 Transaction" : "Import \(count) Transactions", enabled: count > 0) {
+                runImport()
+            }
+        case .finished:
+            if !isImporting {
+                PrimaryImportButton(title: "Done") {
                     dismiss()
                 }
+                .transition(.opacity)
             }
-        }
-        .confettiCannon(counter: $confettiNumber, num: 50, openingAngle: Angle(degrees: 0), closingAngle: Angle(degrees: 360), radius: 200)
-    }
-
-    func validateDoubles(strings: [String]) -> Bool {
-        for string in strings {
-            if let _ = Double(string) {
-                // Valid double
-            } else {
-                return false // Invalid double found
-            }
-        }
-        return true // All strings are valid doubles
-    }
-
-    func processCSV() {
-        guard data.containsDigits else {
-            showToast = true
-            toastMessage = "Invalid File"
-            return
-        }
-
-        var holdingRows = data.components(separatedBy: .newlines).filter { $0 != "" }
-
-        if !holdingRows[0].containsDigits {
-            holdingRows.removeFirst()
-        }
-
-        guard !holdingRows.isEmpty else {
-            showToast = true
-            toastMessage = "Invalid File"
-            return
-        }
-
-        let values = holdingRows.map { $0.components(separatedBy: ",") }.filter { !$0.isEmpty }
-
-        rows = values
-
-        // Transpose rows to columns
-        let maxColumnCount = values.map { $0.count }.max() ?? 0
-//
-        guard maxColumnCount > 3 else {
-            showToast = true
-            toastMessage = "Invalid File"
-            return
-        }
-
-        var holdingColumns: [[String]] = Array(repeating: [], count: maxColumnCount)
-
-        for row in values {
-            for (index, value) in row.enumerated() {
-                holdingColumns[index].append(value)
-            }
-        }
-
-        columns = holdingColumns
-
-        displayedColumns = holdingColumns.map { $0.prefix(8).map { $0 } }
-
-        numberOfRows = displayedColumns[0].count
-
-        remainingColumns = Array(0 ..< maxColumnCount)
-
-        withAnimation {
-            progress += 1
         }
     }
 
-    func importData() {
-        let categoryColumnIndex = selectedColumns[0]
-        let noteColumnIndex = selectedColumns[1]
-        let dateColumnIndex = selectedColumns[2]
-        let amountColumnIndex = selectedColumns[3]
+    @ViewBuilder var stepContent: some View {
+        switch step {
+        case .start:
+            startStep
+        case .columns:
+            columnsStep
+        case .categories:
+            categoriesStep
+        case .review:
+            reviewStep
+        case .finished:
+            finishedStep
+        }
+    }
 
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = dateFormatString
+    // MARK: - Start
 
-        let categoryDictionary: [String: Category] = Dictionary(uniqueKeysWithValues: uniqueCategories.map { ($0.excelValue, $0.category!) })
+    var startStep: some View {
+        ScrollView(showsIndicators: false) {
+            VStack(alignment: .leading, spacing: 24) {
+                StepTitle(title: "Import Transactions", subtitle: "Bring in your history from a spreadsheet or another app. Dime reads CSV files and works out the columns for you.")
 
-        rows.forEach { row in
-//            let rowCategory = categoryDictionary[row[categoryColumnIndex]]
-            if let transactionDate = dateFormatter.date(from: row[dateColumnIndex]) {
-                if let rowCategory = categoryDictionary[row[categoryColumnIndex]] {
-                    if let transactionAmount = Double(row[amountColumnIndex]) {
-                        _ = dataController.newTransaction(note: row[noteColumnIndex], category: rowCategory, income: rowCategory.income, amount: abs(transactionAmount), date: transactionDate, repeatType: 0, repeatCoefficient: 1, delay: false)
-                    } else {
-                        processingState = .error
-                        errorMessage = "Invalid values in amount column."
-                        return
-                    }
-                } else {
-                    processingState = .error
-                    errorMessage = "Error occurred while matching categories."
-                    return
+                VStack(alignment: .leading, spacing: 18) {
+                    RequirementRow(systemImage: ImportField.date.systemImage, title: "Date", subtitle: "Any common format, with or without a time.")
+                    RequirementRow(systemImage: ImportField.amount.systemImage, title: "Amount", subtitle: "Currency symbols, separators and negative amounts are fine.")
+                    RequirementRow(systemImage: ImportField.category.systemImage, title: "Category", subtitle: "Matched to your categories, or created for you.")
+                    RequirementRow(systemImage: ImportField.note.systemImage, title: "Note", subtitle: "Optional.")
                 }
-            } else {
-                processingState = .error
-                errorMessage = "Invalid dates in date column."
-                return
             }
-        }
-
-        dataController.save()
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-            withAnimation {
-                processingState = .success
-                confettiNumber += 1
-            }
+            .padding(.top, 24)
+            .padding(.bottom, 20)
         }
     }
 
-    func deduceDateFormat(from dateString: String) -> String? {
-        let dateFormats = ["yyyy-MM-dd", "dd-MM-yyyy", "MM-dd-yyyy",
-                           "yyyy/MM/dd", "dd/MM/yyyy", "MM/dd/yyyy",
-                           "yyyyMMdd", "ddMMyyyy", "MMddyyyy", "yyyy-MM-dd HH:mm:ss Z",
-                           "dd/MM/yyyy HH:mm:ss"]
+    // MARK: - Columns
 
-        let dateFormatter = DateFormatter()
+    var columnsStep: some View {
+        ScrollView(showsIndicators: false) {
+            VStack(alignment: .leading, spacing: 24) {
+                StepTitle(title: "Match Columns", subtitle: "Dime matched the columns in \(fileName). Tap a column to change it.")
 
-        for dateFormat in dateFormats {
-            dateFormatter.dateFormat = dateFormat
-            if let _ = dateFormatter.date(from: dateString) {
-                return dateFormat
+                VStack(spacing: 0) {
+                    ForEach(ImportField.allCases, id: \.self) { field in
+                        columnRow(field)
+
+                        if field != ImportField.allCases.last {
+                            Divider()
+                        }
+                    }
+                }
+                .settingsSectionRows()
+
+                if mapping[.date] != nil {
+                    dateFormatSection
+                }
+            }
+            .padding(.top, 24)
+            .padding(.bottom, 20)
+        }
+        .scrollDismissesKeyboardInteractively()
+    }
+
+    func columnRow(_ field: ImportField) -> some View {
+        let selection = Binding<Int?>(
+            get: { mapping[field] },
+            set: { newValue in
+                mapping[field] = newValue
+                columnsChanged(dateColumnChanged: field == .date)
+            }
+        )
+
+        return HStack(spacing: 12) {
+            FieldIcon(systemImage: field.systemImage)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(LocalizedStringKey(field.title))
+                    .font(.system(.body, design: .rounded).weight(.medium))
+                    .foregroundColor(Color.PrimaryText)
+
+                if let column = selection.wrappedValue, let sample = sampleValue(in: column) {
+                    Text(sample)
+                        .font(.system(.footnote, design: .rounded))
+                        .foregroundColor(Color.SubtitleText)
+                        .lineLimit(1)
+                } else {
+                    Text(field.isRequired ? "Required" : "Optional")
+                        .font(.system(.footnote, design: .rounded))
+                        .foregroundColor(field.isRequired ? Color.AlertRed : Color.SubtitleText)
+                }
+            }
+
+            Spacer(minLength: 8)
+
+            Menu {
+                Picker(selection: selection) {
+                    if !field.isRequired {
+                        Text("None").tag(Int?.none)
+                    }
+
+                    if let table {
+                        ForEach(0 ..< table.columnCount, id: \.self) { column in
+                            Text(columnMenuTitle(column)).tag(Int?.some(column))
+                        }
+                    }
+                } label: {
+                    EmptyView()
+                }
+            } label: {
+                MenuChip(title: selection.wrappedValue.map { table?.headers[$0] ?? "" } ?? (field.isRequired ? NSLocalizedString("Choose", comment: "pick a column") : NSLocalizedString("None", comment: "no column picked")), dimmed: selection.wrappedValue == nil)
             }
         }
-
-        return nil
+        .importRowHeight()
     }
 
-    func makeAttributedString() -> AttributedString {
-        var string = AttributedString("this article")
-        string.foregroundColor = Color.PrimaryText
-        string.link = URL(string: "https://pro.arcgis.com/en/pro-app/latest/help/mapping/time/convert-string-or-numeric-time-values-into-data-format.htm")
-        string.underlineColor = UIColor(Color.PrimaryText)
-        string.underlineStyle = .single
+    var dateFormatSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            VStack(spacing: 0) {
+                HStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Date Format")
+                            .font(.system(.body, design: .rounded).weight(.medium))
+                            .foregroundColor(Color.PrimaryText)
 
-        return string
-    }
+                        if let sample = dateSample {
+                            if let reading = ImportParsing.date(sample, format: dateFormat) {
+                                Text("Reads as \(reading.formatted(.dateTime.day().month(.abbreviated).year()))")
+                                    .font(.system(.footnote, design: .rounded))
+                                    .foregroundColor(Color.SubtitleText)
+                                    .lineLimit(1)
+                            } else {
+                                Text("Dime can't read \(sample)")
+                                    .font(.system(.footnote, design: .rounded))
+                                    .foregroundColor(Color.AlertRed)
+                                    .lineLimit(1)
+                            }
+                        }
+                    }
 
-    @ViewBuilder
-    func PointerView(number: Int, text: String) -> some View {
-        HStack(alignment: .top, spacing: 15) {
-            ZStack {
-                Circle()
-                    .fill(Color.SecondaryBackground)
+                    Spacer(minLength: 8)
 
-                Text("\(number)")
-                    .font(.system(.body, design: .rounded).weight(.bold))
+                    Menu {
+                        ForEach(dateFormatOptions, id: \.self) { format in
+                            Button {
+                                editingCustomFormat = false
+                                setDateFormat(format)
+                            } label: {
+                                if format == dateFormat && !editingCustomFormat {
+                                    Label(dateFormatMenuTitle(format), systemImage: "checkmark")
+                                } else {
+                                    Text(dateFormatMenuTitle(format))
+                                }
+                            }
+                        }
 
-//                    .font(.system(size: 17, weight: .bold, design: .rounded))
+                        Button {
+                            customDateFormat = dateFormat
+                            editingCustomFormat = true
+                            customFormatFocused = true
+                        } label: {
+                            Label("Custom Format", systemImage: "pencil")
+                        }
+                    } label: {
+                        MenuChip(title: editingCustomFormat ? NSLocalizedString("Custom", comment: "a custom date format") : dateFormat, dimmed: false)
+                    }
+                }
+                .importRowHeight()
+
+                if editingCustomFormat || dateFormatOptions.isEmpty {
+                    Divider()
+
+                    TextField("e.g. dd/MM/yyyy HH:mm", text: $customDateFormat)
+                        .font(.system(.body, design: .rounded).weight(.medium))
+                        .foregroundColor(Color.PrimaryText)
+                        .disableAutocorrection(true)
+                        .textInputAutocapitalization(.never)
+                        .focused($customFormatFocused)
+                        .importRowHeight()
+                        .onChange(of: customDateFormat) { newValue in
+                            setDateFormat(newValue.trimmingCharacters(in: .whitespaces))
+                        }
+                }
+            }
+            .settingsSectionRows()
+
+            if editingCustomFormat || dateFormatOptions.isEmpty {
+                Text("Use d for day, M for month, y for year, H for hour and m for minute, with the same separators as the file.")
+                    .font(.system(.footnote, design: .rounded))
                     .foregroundColor(Color.SubtitleText)
+                    .padding(.horizontal, .settingsRowInset)
             }
-            .frame(width: 25, height: 25)
-
-            Text(text)
-                .font(.system(.body, design: .rounded).weight(.medium))
-
-//                .font(.system(size: 17, weight: .medium, design: .rounded))
-                .foregroundColor(Color.PrimaryText)
-                .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+
+    // MARK: - Categories
+
+    var categoriesStep: some View {
+        let keys = parsed.categoryKeys
+
+        return ScrollView(showsIndicators: false) {
+            VStack(alignment: .leading, spacing: 24) {
+                StepTitle(title: "Link Categories", subtitle: "Each category in your file is linked to one in Dime. Anything new is created for you, and you can edit it later.")
+
+                VStack(spacing: 0) {
+                    ForEach(keys.indices, id: \.self) { index in
+                        categoryRow(keys[index].key, count: keys[index].count)
+
+                        if index < keys.count - 1 {
+                            Divider()
+                        }
+                    }
+                }
+                .settingsSectionRows()
+            }
+            .padding(.top, 24)
+            .padding(.bottom, 20)
+        }
+    }
+
+    func categoryRow(_ key: ImportCategoryKey, count: Int) -> some View {
+        let income = income(for: key)
+        let current = choice(for: key)
+
+        return HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(key.name)
+                    .font(.system(.body, design: .rounded).weight(.medium))
+                    .foregroundColor(Color.PrimaryText)
+                    .lineLimit(1)
+
+                HStack(spacing: 4) {
+                    Text(count == 1 ? "1 transaction" : "\(count) transactions")
+
+                    Text("·")
+
+                    if key.income == nil {
+                        Menu {
+                            Picker(selection: Binding(get: { income }, set: { incomeOverrides[key] = $0 })) {
+                                Text("Expense").tag(false)
+                                Text("Income").tag(true)
+                            } label: {
+                                EmptyView()
+                            }
+                        } label: {
+                            HStack(spacing: 3) {
+                                Text(income ? "Income" : "Expense")
+                                Image(systemName: "chevron.up.chevron.down")
+                                    .font(.system(.caption2, design: .rounded).weight(.semibold))
+                            }
+                            .foregroundColor(Color.PrimaryText)
+                        }
+                    } else {
+                        Text(income ? "Income" : "Expense")
+                    }
+                }
+                .font(.system(.footnote, design: .rounded))
+                .foregroundColor(Color.SubtitleText)
+                .lineLimit(1)
+            }
+
+            Spacer(minLength: 8)
+
+            Menu {
+                Button {
+                    choices[key] = .create
+                } label: {
+                    if current == .create {
+                        Label("New Category", systemImage: "checkmark")
+                    } else {
+                        Label("New Category", systemImage: "plus")
+                    }
+                }
+
+                Section(income ? "Income Categories" : "Expense Categories") {
+                    ForEach(categories.filter { $0.income == income }, id: \.self) { category in
+                        Button {
+                            choices[key] = .existing(category)
+                        } label: {
+                            if current == .existing(category) {
+                                Label(category.fullName, systemImage: "checkmark")
+                            } else {
+                                Text(category.fullName)
+                            }
+                        }
+                    }
+                }
+            } label: {
+                CategoryChip(choice: current, name: key.name, income: income)
+            }
+        }
+        .importRowHeight()
+    }
+
+    // MARK: - Review
+
+    var reviewStep: some View {
+        let rows = rowsToImport
+        let expenses = rows.filter { !income(for: $0) }.reduce(0) { $0 + $1.amount }
+        let incomes = rows.filter { income(for: $0) }.reduce(0) { $0 + $1.amount }
+        let newCategories = parsed.categoryKeys.filter { choice(for: $0.key) == .create }.count
+
+        return ScrollView(showsIndicators: false) {
+            VStack(alignment: .leading, spacing: 24) {
+                StepTitle(title: "Review Import", subtitle: "Here's what will be added to Dime.")
+
+                VStack(spacing: 0) {
+                    SummaryRow(title: "Transactions", value: "\(rows.count)", color: Color.PrimaryText)
+
+                    if let first = rows.map(\.date).min(), let last = rows.map(\.date).max() {
+                        Divider()
+                        SummaryRow(title: "Dates", value: dateRange(first, last), color: Color.PrimaryText)
+                    }
+
+                    Divider()
+                    SummaryRow(title: "Expenses", value: formatted(expenses, income: nil), color: Color.PrimaryText)
+                    Divider()
+                    SummaryRow(title: "Income", value: formatted(incomes, income: nil), color: Color.IncomeGreen)
+                    Divider()
+                    SummaryRow(title: "New Categories", value: "\(newCategories)", color: Color.PrimaryText)
+
+                    if !duplicateRows.isEmpty {
+                        Divider()
+
+                        Toggle(isOn: $skipDuplicates.animation()) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Skip Duplicates")
+                                    .font(.system(.body, design: .rounded).weight(.medium))
+                                    .foregroundColor(Color.PrimaryText)
+
+                                Text(duplicateRows.count == 1 ? "1 transaction is already in Dime" : "\(duplicateRows.count) transactions are already in Dime")
+                                    .font(.system(.footnote, design: .rounded))
+                                    .foregroundColor(Color.SubtitleText)
+                            }
+                        }
+                        .tint(.green)
+                        .importRowHeight()
+                    }
+                }
+                .settingsSectionRows()
+
+                if parsed.skippedCount > 0 {
+                    VStack(alignment: .leading, spacing: 4) {
+                        ForEach(ImportSkipReason.allCases.filter { (parsed.skipped[$0] ?? 0) > 0 }, id: \.self) { reason in
+                            let count = parsed.skipped[reason] ?? 0
+                            Text(count == 1 ? "1 row \(NSLocalizedString(reason.description, comment: "")) will be skipped." : "\(count) rows \(NSLocalizedString(reason.description, comment: "")) will be skipped.")
+                        }
+                    }
+                    .font(.system(.footnote, design: .rounded))
+                    .foregroundColor(Color.SubtitleText)
+                    .padding(.horizontal, .settingsRowInset)
+                    .padding(.top, -16)
+                }
+            }
+            .padding(.top, 24)
+            .padding(.bottom, 20)
+        }
+    }
+
+    // MARK: - Finished
+
+    var finishedStep: some View {
+        VStack(spacing: 16) {
+            if isImporting {
+                ProgressView()
+                    .controlSize(.large)
+
+                Text("Importing")
+                    .font(.system(.title2, design: .rounded).weight(.semibold))
+                    .foregroundColor(Color.SubtitleText)
+            } else {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 30, weight: .semibold, design: .rounded))
+                    .foregroundColor(Color.IncomeGreen)
+                    .frame(width: 72, height: 72)
+                    .glassBackground(in: Circle(), tint: Color.IncomeGreen.opacity(0.25), interactive: false, fallback: Color.IncomeGreen.opacity(0.23))
+
+                VStack(spacing: 6) {
+                    Text("Import Complete")
+                        .font(.system(.title2, design: .rounded).weight(.semibold))
+                        .foregroundColor(Color.PrimaryText)
+
+                    Text(importedCount == 1 ? "1 transaction was added to Dime." : "\(importedCount) transactions were added to Dime.")
+                        .font(.system(.body, design: .rounded))
+                        .foregroundColor(Color.SubtitleText)
+                        .multilineTextAlignment(.center)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .accessibilityElement(children: .combine)
+    }
+
+    // MARK: - Navigation
+
+    private func advance(to next: ImportStep) {
+        hideKeyboard()
+        movingForward = true
+        withAnimation(stepAnimation) {
+            step = next
+        }
+    }
+
+    func goBack() {
+        hideKeyboard()
+        switch step {
+        case .start, .finished:
+            dismiss()
+        case .columns:
+            movingForward = false
+            withAnimation(stepAnimation) {
+                step = .start
+            }
+        case .categories:
+            movingForward = false
+            withAnimation(stepAnimation) {
+                step = .columns
+            }
+        case .review:
+            movingForward = false
+            withAnimation(stepAnimation) {
+                step = .categories
+            }
+        }
+    }
+
+    func toast(_ title: String) {
+        toastTitle = title
+        showToast = true
+        UINotificationFeedbackGenerator().notificationOccurred(.error)
+    }
+
+    // MARK: - Loading
+
+    func load(_ url: URL) {
+        let accessing = url.startAccessingSecurityScopedResource()
+        defer {
+            if accessing {
+                url.stopAccessingSecurityScopedResource()
+            }
+        }
+
+        guard let data = try? Data(contentsOf: url) else {
+            toast("Couldn't Open File")
+            return
+        }
+
+        // Spreadsheet apps often save CSVs in a legacy encoding.
+        guard let text = String(data: data, encoding: .utf8) ?? String(data: data, encoding: .windowsCP1252) ?? String(data: data, encoding: .isoLatin1) else {
+            toast("Couldn't Read File")
+            return
+        }
+
+        guard let table = CSVTable.parse(text) else {
+            toast("No Transactions Found")
+            return
+        }
+
+        self.table = table
+        fileName = url.lastPathComponent
+        mapping = ColumnMapping.detect(in: table)
+        categories = dataController.getAllCategories(income: false) + dataController.getAllCategories(income: true)
+        choices = [:]
+        incomeOverrides = [:]
+        editingCustomFormat = false
+        detectDateFormat()
+        reparse()
+
+        advance(to: .columns)
+    }
+
+    func columnsChanged(dateColumnChanged: Bool) {
+        if dateColumnChanged {
+            editingCustomFormat = false
+            detectDateFormat()
+        }
+        reparse()
+    }
+
+    func detectDateFormat() {
+        guard let table, let column = mapping[.date] else {
+            dateFormatOptions = []
+            dateFormat = ""
+            return
+        }
+        dateFormatOptions = ImportParsing.dateFormats(fitting: Array(table.column(column).prefix(200)))
+        dateFormat = dateFormatOptions.first ?? ""
+    }
+
+    func setDateFormat(_ format: String) {
+        guard format != dateFormat else { return }
+        dateFormat = format
+        reparse()
+    }
+
+    func reparse() {
+        guard let table, mapping.isComplete, !dateFormat.isEmpty else {
+            parsed = ImportParseResult(rows: [], skipped: [:])
+            return
+        }
+        parsed = ImportParseResult.build(table: table, mapping: mapping, dateFormat: dateFormat)
+    }
+
+    func confirmColumns() {
+        if let missing = ImportField.allCases.first(where: { $0.isRequired && mapping[$0] == nil }) {
+            toast(String(format: NSLocalizedString("Choose a %@ Column", comment: "a column must be picked for a field"), NSLocalizedString(missing.title, comment: "")))
+        } else if parsed.rows.isEmpty {
+            toast(dateFormat.isEmpty || parsed.skipped[.date] != nil ? "Check the Date Format" : "No Readable Rows")
+        } else {
+            advance(to: .categories)
+        }
+    }
+
+    // MARK: - Categories
+
+    func income(for key: ImportCategoryKey) -> Bool {
+        key.income ?? incomeOverrides[key] ?? false
+    }
+
+    func income(for row: ImportedRow) -> Bool {
+        income(for: ImportCategoryKey(name: row.categoryName, income: row.income))
+    }
+
+    /// The user's choice while it still fits the category's type, otherwise a category with the same name, otherwise a new one.
+    private func choice(for key: ImportCategoryKey) -> ImportCategoryChoice {
+        let income = income(for: key)
+
+        switch choices[key] {
+        case let .existing(category) where category.income == income:
+            return .existing(category)
+        case .create:
+            return .create
+        case .existing, nil:
+            break
+        }
+
+        if let match = categories.first(where: { $0.income == income && $0.wrappedName.compare(key.name, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame }) {
+            return .existing(match)
+        }
+        return .create
+    }
+
+    // MARK: - Duplicates
+
+    var rowsToImport: [ImportedRow] {
+        guard skipDuplicates, !duplicateRows.isEmpty else { return parsed.rows }
+        return parsed.rows.enumerated().filter { !duplicateRows.contains($0.offset) }.map(\.element)
+    }
+
+    func duplicateKey(date: Date, amount: Double, note: String, income: Bool) -> String {
+        let day = Calendar.current.startOfDay(for: date).timeIntervalSinceReferenceDate
+        let cents = Int((amount * 100).rounded())
+        return "\(day)|\(cents)|\(note.trimmingCharacters(in: .whitespaces).lowercased())|\(income)"
+    }
+
+    /// Rows that match a transaction already in Dime by day, amount, note and type. Each existing transaction matches
+    /// one row, so repeated purchases in the file beyond what Dime has are still imported.
+    func findDuplicates() {
+        let dates = parsed.rows.map(\.date)
+        guard let first = dates.min(), let last = dates.max(),
+              let end = Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: last))
+        else {
+            duplicateRows = []
+            return
+        }
+
+        let request: NSFetchRequest<Transaction> = Transaction.fetchRequest()
+        request.predicate = NSPredicate(format: "date >= %@ AND date < %@", Calendar.current.startOfDay(for: first) as NSDate, end as NSDate)
+
+        var existing: [String: Int] = [:]
+        for transaction in dataController.results(for: request) {
+            existing[duplicateKey(date: transaction.wrappedDate, amount: transaction.amount, note: transaction.wrappedNote, income: transaction.income), default: 0] += 1
+        }
+
+        var duplicates = Set<Int>()
+        for (index, row) in parsed.rows.enumerated() {
+            // Notes left empty are saved as the category's name.
+            let key = duplicateKey(date: row.date, amount: row.amount, note: row.note.isEmpty ? row.categoryName : row.note, income: income(for: row))
+            if let count = existing[key], count > 0 {
+                existing[key] = count - 1
+                duplicates.insert(index)
+            }
+        }
+        duplicateRows = duplicates
+    }
+
+    // MARK: - Import
+
+    func runImport() {
+        let rows = rowsToImport
+        guard !rows.isEmpty else { return }
+
+        isImporting = true
+        advance(to: .finished)
+
+        // Lets the progress view appear before the main thread is busy.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+            var created: [String: Category] = [:]
+            var nextOrder: [Bool: Int64] = [
+                false: (categories.filter { !$0.income }.map(\.order).max() ?? -1) + 1,
+                true: (categories.filter { $0.income }.map(\.order).max() ?? -1) + 1
+            ]
+            var unusedColours = Color.colorArray.filter { colour in !categories.contains { $0.wrappedColour == colour } }
+
+            for row in rows {
+                let key = ImportCategoryKey(name: row.categoryName, income: row.income)
+                let income = income(for: key)
+                let category: Category
+
+                switch choice(for: key) {
+                case let .existing(existing):
+                    category = existing
+                case .create:
+                    let createdKey = "\(row.categoryName.lowercased())|\(income)"
+                    if let match = created[createdKey] {
+                        category = match
+                    } else {
+                        let new = Category(context: dataController.container.viewContext)
+                        new.id = UUID()
+                        new.name = row.categoryName
+                        new.emoji = ImportCategoryDefaults.emoji(for: row.categoryName, income: income)
+                        new.dateCreated = Date.now
+                        new.income = income
+                        new.order = nextOrder[income] ?? 0
+                        nextOrder[income] = new.order + 1
+                        if income {
+                            new.colour = "#76FBB1"
+                        } else {
+                            new.colour = unusedColours.isEmpty ? Color.colorArray[created.count % Color.colorArray.count] : unusedColours.removeFirst()
+                        }
+                        created[createdKey] = new
+                        category = new
+                    }
+                }
+
+                _ = dataController.insertTransaction(note: row.note, category: category, income: income, amount: row.amount, date: row.date)
+            }
+
+            dataController.save()
+
+            importedCount = rows.count
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+            withAnimation(stepAnimation) {
+                isImporting = false
+            }
+            confetti += 1
+        }
+    }
+
+    // MARK: - Formatting
+
+    func sampleValue(in column: Int) -> String? {
+        table?.column(column).first { !$0.isEmpty }
+    }
+
+    var dateSample: String? {
+        mapping[.date].flatMap { sampleValue(in: $0) }
+    }
+
+    func columnMenuTitle(_ column: Int) -> String {
+        guard let table else { return "" }
+        let header = table.headers[column]
+        guard !table.hasHeaderRow, let sample = sampleValue(in: column) else { return header }
+        return "\(header) · \(sample)"
+    }
+
+    /// Shows how a format reads the sample date, so formats like dd/MM and MM/dd can be told apart.
+    func dateFormatMenuTitle(_ format: String) -> String {
+        guard let sample = dateSample, let date = ImportParsing.date(sample, format: format) else { return format }
+        return "\(date.formatted(.dateTime.day().month(.wide).year())) (\(format))"
+    }
+
+    func dateRange(_ first: Date, _ last: Date) -> String {
+        if Calendar.current.isDate(first, inSameDayAs: last) {
+            return first.formatted(date: .abbreviated, time: .omitted)
+        }
+        return (first ..< last).formatted(.interval.day().month(.abbreviated).year())
+    }
+
+    func formatted(_ amount: Double, income: Bool?) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = currency
+        let text = formatter.string(from: NSNumber(value: amount)) ?? "\(amount)"
+        switch income {
+        case true?:
+            return "+" + text
+        case false?:
+            return "-" + text
+        case nil:
+            return text
+        }
+    }
+}
+
+// MARK: - Components
+
+private struct PrimaryImportButton: View {
+    let title: LocalizedStringKey
+    var enabled = true
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(.headline, design: .rounded))
+                .foregroundColor(.black)
+                .frame(maxWidth: .infinity)
+                .frame(height: 50)
+                .contentShape(Capsule())
+        }
+        .whiteGlassButtonStyle()
+        .disabled(!enabled)
+        .opacity(enabled ? 1 : 0.5)
+    }
+}
+
+private struct StepTitle: View {
+    let title: LocalizedStringKey
+    let subtitle: LocalizedStringKey
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+                .font(.system(.title, design: .rounded).weight(.semibold))
+                .foregroundColor(Color.PrimaryText)
+                .accessibilityAddTraits(.isHeader)
+
+            Text(subtitle)
+                .font(.system(.body, design: .rounded))
+                .foregroundColor(Color.SubtitleText)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private struct StepLabel: View {
+    let current: Int
+    let total: Int
+
+    var body: some View {
+        Text("Step \(current)/\(total)")
+            .font(.system(.subheadline, design: .rounded).weight(.semibold))
+            .foregroundColor(Color.PrimaryText)
+            .monospacedDigit()
+            .padding(.horizontal, 16)
+            .frame(height: 44)
+            .glassBackground(in: Capsule(), tint: .glassTint, interactive: false)
+            .accessibilityLabel(Text("Step \(current) of \(total)"))
+    }
+}
+
+private struct FieldIcon: View {
+    let systemImage: String
+
+    var body: some View {
+        Image(systemName: systemImage)
+            .font(.system(.body, design: .rounded).weight(.medium))
+            .foregroundColor(Color.PrimaryText)
+            .frame(width: 30, height: 30)
+            .glassBackground(in: RoundedRectangle(cornerRadius: 8, style: .continuous), tint: .glassTint, interactive: false)
+            .accessibilityHidden(true)
+    }
+}
+
+private struct RequirementRow: View {
+    let systemImage: String
+    let title: LocalizedStringKey
+    let subtitle: LocalizedStringKey
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 15) {
+            Image(systemName: systemImage)
+                .font(.system(size: 20, weight: .medium))
+                .foregroundColor(Color.PrimaryText)
+                .frame(width: 44, height: 44)
+                .glassBackground(in: RoundedRectangle(cornerRadius: 13, style: .continuous), interactive: false)
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(.body, design: .rounded).weight(.semibold))
+                    .foregroundColor(Color.PrimaryText)
+
+                Text(subtitle)
+                    .font(.system(.subheadline, design: .rounded))
+                    .foregroundColor(Color.SubtitleText)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.top, 2)
+        }
+        .accessibilityElement(children: .combine)
+    }
+}
+
+private struct MenuChip: View {
+    let title: String
+    let dimmed: Bool
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Text(title)
+                .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                .foregroundColor(dimmed ? Color.SubtitleText : Color.PrimaryText)
+                .lineLimit(1)
+
+            Image(systemName: "chevron.up.chevron.down")
+                .font(.system(.caption, design: .rounded).weight(.semibold))
+                .foregroundColor(Color.SubtitleText)
+        }
+        .padding(.horizontal, 12)
+        .frame(height: 36)
+        .glassBackground(in: Capsule(), tint: .glassTint)
+        .contentShape(Capsule())
+        .frame(maxWidth: 170, alignment: .trailing)
+    }
+}
+
+private struct CategoryChip: View {
+    let choice: ImportCategoryChoice
+    let name: String
+    let income: Bool
+
+    var body: some View {
+        HStack(spacing: 6) {
+            switch choice {
+            case let .existing(category):
+                let colour = Color(hex: category.wrappedColour)
+                Text(category.wrappedEmoji)
+                    .font(.system(.footnote, design: .rounded))
+
+                Text(category.wrappedName)
+                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .foregroundColor(colour)
+                    .lineLimit(1)
+            case .create:
+                Text(ImportCategoryDefaults.emoji(for: name, income: income))
+                    .font(.system(.footnote, design: .rounded))
+
+                Text("New")
+                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .foregroundColor(Color.PrimaryText)
+            }
+
+            Image(systemName: "chevron.up.chevron.down")
+                .font(.system(.caption, design: .rounded).weight(.semibold))
+                .foregroundColor(Color.SubtitleText)
+        }
+        .padding(.horizontal, 12)
+        .frame(height: 36)
+        .background {
+            if case let .existing(category) = choice {
+                Capsule().fill(Color(hex: category.wrappedColour).opacity(0.18))
+            }
+        }
+        .glassBackground(in: Capsule(), tint: .glassTint)
+        .contentShape(Capsule())
+        .frame(maxWidth: 170, alignment: .trailing)
+    }
+}
+
+private struct SummaryRow: View {
+    let title: LocalizedStringKey
+    let value: String
+    let color: Color
+
+    var body: some View {
+        HStack {
+            Text(title)
+                .font(.system(.body, design: .rounded).weight(.medium))
+                .foregroundColor(Color.PrimaryText)
+
+            Spacer(minLength: 8)
+
+            Text(value)
+                .font(.system(.body, design: .rounded).weight(.semibold))
+                .foregroundColor(color)
+                .monospacedDigit()
+                .lineLimit(1)
+        }
+        .importRowHeight()
+        .accessibilityElement(children: .combine)
+    }
+}
+
+private extension View {
+    /// Settings' row height, with room for rows whose subtitle makes them taller at large text sizes.
+    func importRowHeight() -> some View {
+        padding(.vertical, 4)
+            .frame(maxWidth: .infinity, minHeight: .settingsRowHeight)
     }
 }
 
@@ -998,166 +1073,4 @@ struct ActivityViewController: UIViewControllerRepresentable {
     }
 
     func updateUIViewController(_: UIActivityViewController, context _: UIViewControllerRepresentableContext<ActivityViewController>) {}
-}
-
-struct MatchCategoryStepperView: View {
-    @Binding var category: Category?
-    @Binding var pageIndex: Int
-    var categories: [Category]
-    var maxIndex: Int
-//
-//    @Environment(\.dynamicTypeSize) var dynamicTypeSize
-//
-//    var fontSize: CGFloat {
-//        switch dynamicTypeSize {
-//        case .xSmall:
-//            return 14
-//        case .small:
-//            return 15
-//        case .medium:
-//            return 16
-//        case .large:
-//            return 17
-//        case .xLarge:
-//            return 19
-//        case .xxLarge:
-//            return 21
-//        case .xxxLarge:
-//            return 23
-//        default:
-//            return 23
-//        }
-//    }
-
-    var body: some View {
-        VStack {
-            if categories.isEmpty {
-                EmptyStateView(systemImage: "square.grid.2x2", title: "No remaining categories")
-            } else {
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 8) {
-                        ForEach(getRows(), id: \.self) { rows in
-
-                            HStack(spacing: 8) {
-                                ForEach(rows) { row in
-
-                                    // Row View....
-                                    RowView(categoryInput: row)
-                                }
-                            }
-                        }
-                    }
-                }
-                .frame(maxWidth: .infinity)
-            }
-        }
-        .padding(15)
-        .frame(height: 250)
-        .background(Color.Outline.opacity(0.3), in: RoundedRectangle(cornerRadius: 11, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 11, style: .continuous)
-                .stroke(Color.Outline, lineWidth: 2)
-        }
-//        .background(Color.PrimaryBackground, in: )
-    }
-
-    func getRows() -> [[Category]] {
-        var rows: [[Category]] = []
-        var currentRow: [Category] = []
-
-        var totalWidth: CGFloat = 0
-
-        let screenWidth: CGFloat = UIScreen.main.bounds.width - 80
-
-        categories.forEach { category in
-
-            let roundedFont = UIFont.rounded(ofSize: UIFont.textStyleSize(.body), weight: .semibold)
-
-            let attributes = [NSAttributedString.Key.font: roundedFont]
-
-            let size = (category.fullName as NSString).size(withAttributes: attributes)
-
-            totalWidth += (size.width + 10 + 10 + 8)
-
-            if totalWidth > screenWidth {
-                totalWidth = (!currentRow.isEmpty || rows.isEmpty ? (size.width + 10 + 10 + 8) : 0)
-
-                rows.append(currentRow)
-                currentRow.removeAll()
-                currentRow.append(category)
-
-            } else {
-                currentRow.append(category)
-            }
-        }
-
-        // Safe check...
-        // if having any value storing it in rows...
-        if !currentRow.isEmpty {
-            rows.append(currentRow)
-            currentRow.removeAll()
-        }
-
-        return rows
-    }
-
-    @ViewBuilder
-    func RowView(categoryInput: Category) -> some View {
-        Button {
-            withAnimation {
-                category = categoryInput
-            }
-
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-                withAnimation {
-                    // remember to check for cap
-                    if pageIndex < maxIndex - 1 {
-                        pageIndex += 1
-                    }
-                }
-            }
-
-        } label: {
-            HStack(spacing: 5) {
-                Text(categoryInput.wrappedEmoji)
-                    .font(.system(.footnote, design: .rounded))
-
-//                    .font(.system(size: 13))
-                Text(categoryInput.wrappedName)
-                    .font(.system(.body, design: .rounded).weight(.semibold))
-
-//                    .font(.system(size: 17, weight: .semibold, design: .rounded))
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .foregroundColor(category == categoryInput ? Color(hex: categoryInput.wrappedColour) : Color.PrimaryText)
-            .background(category == categoryInput ? Color(hex: categoryInput.wrappedColour).opacity(0.35) : Color.PrimaryBackground, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-            .overlay {
-                if category != categoryInput {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .strokeBorder(Color.Outline,
-                                      style: StrokeStyle(lineWidth: 1.5))
-                }
-            }
-//            .opacity(category == nil ? 1 : (category == categoryInput ? 1 : 0.4))
-        }
-        .buttonStyle(BouncyButton(duration: 0.2, scale: 0.8))
-    }
-
-    init(category: Binding<Category?>?, categories: [Category], pageIndex: Binding<Int>, maxIndex: Int) {
-        _category = category ?? Binding.constant(nil)
-        _pageIndex = pageIndex
-        self.categories = categories
-        self.maxIndex = maxIndex
-    }
-}
-
-struct RoundedCorner: Shape {
-    var radius: CGFloat = .infinity
-    var corners: UIRectCorner = .allCorners
-
-    func path(in rect: CGRect) -> Path {
-        let path = UIBezierPath(roundedRect: rect, byRoundingCorners: corners, cornerRadii: CGSize(width: radius, height: radius))
-        return Path(path.cgPath)
-    }
 }
