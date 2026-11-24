@@ -373,11 +373,35 @@ class DataController: ObservableObject {
         }
 
         #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-initializeCloudKitSchema") {
+            initializeCloudKitSchema()
+        }
+
         if let demoDataset {
             seedDemoData(demoDataset)
         }
         #endif
     }
+
+    #if DEBUG
+    // Debug builds sync with the CloudKit development environment. New attributes must be pushed there
+    // with this, then deployed to production in the CloudKit Dashboard before a release ships them.
+    private func initializeCloudKitSchema() {
+        guard isCloudKitSyncEnabled else {
+            logger.error("Not initializing the CloudKit schema: iCloud sync is off or demo data is in use")
+            return
+        }
+
+        logger.notice("Initializing the CloudKit schema")
+
+        do {
+            try container.initializeCloudKitSchema(options: [])
+            logger.notice("Initialized the CloudKit schema")
+        } catch {
+            logger.error("Initializing the CloudKit schema failed: \(String(describing: error), privacy: .public)")
+        }
+    }
+    #endif
 
     private func observeCloudKitSync() {
         NotificationCenter.default.addObserver(forName: NSPersistentCloudKitContainer.eventChangedNotification, object: nil, queue: .main) { [weak self] notification in
@@ -566,6 +590,7 @@ class DataController: ObservableObject {
         occurrence.note = transaction.wrappedNote
         occurrence.category = transaction.category
         occurrence.amount = transaction.wrappedAmount
+        occurrence.currencyCode = transaction.currencyCode
         occurrence.date = date
         occurrence.id = UUID()
         occurrence.income = transaction.income
@@ -647,8 +672,8 @@ class DataController: ObservableObject {
         save()
     }
 
-    func newTransaction(note: String, category: Category?, income: Bool, amount: Double, date: Date, repeatType: Int, repeatCoefficient: Int, delay _: Bool) -> Transaction {
-        let transaction = insertTransaction(note: note, category: category, income: income, amount: amount, date: date, repeatType: repeatType, repeatCoefficient: repeatCoefficient)
+    func newTransaction(note: String, category: Category?, income: Bool, amount: Double, currencyCode: String? = nil, date: Date, repeatType: Int, repeatCoefficient: Int, delay _: Bool) -> Transaction {
+        let transaction = insertTransaction(note: note, category: category, income: income, amount: amount, currencyCode: currencyCode, date: date, repeatType: repeatType, repeatCoefficient: repeatCoefficient)
 
         save()
 
@@ -656,7 +681,7 @@ class DataController: ObservableObject {
     }
 
     /// Inserts a transaction without saving, so imports can save many at once.
-    func insertTransaction(note: String, category: Category?, income: Bool, amount: Double, date: Date, repeatType: Int = 0, repeatCoefficient: Int = 1) -> Transaction {
+    func insertTransaction(note: String, category: Category?, income: Bool, amount: Double, currencyCode: String? = nil, date: Date, repeatType: Int = 0, repeatCoefficient: Int = 1) -> Transaction {
         let transaction = Transaction(context: container.viewContext)
 
         if note.trimmingCharacters(in: .whitespacesAndNewlines) == "" {
@@ -672,6 +697,7 @@ class DataController: ObservableObject {
         }
 
         transaction.amount = amount
+        transaction.currencyCode = currencyCode
         transaction.date = date
         transaction.id = UUID()
 
@@ -2194,7 +2220,7 @@ extension DataController {
             return category
         }
 
-        func add(_ note: String, _ category: Category, _ amount: Double, daysAgo: Int, hour: Int, minute: Int = 0) {
+        func add(_ note: String, _ category: Category, _ amount: Double, currencyCode: String? = nil, daysAgo: Int, hour: Int, minute: Int = 0) {
             let day = calendar.date(byAdding: .day, value: -daysAgo, to: calendar.startOfDay(for: now)) ?? now
             var date = calendar.date(bySettingHour: hour, minute: minute, second: 0, of: day) ?? day
             if date > now {
@@ -2207,6 +2233,7 @@ extension DataController {
             transaction.category = category
             transaction.income = category.income
             transaction.amount = amount
+            transaction.currencyCode = currencyCode
             transaction.date = date
             transaction.day = calendar.startOfDay(for: date)
             transaction.month = calendar.date(from: calendar.dateComponents([.year, .month], from: date))

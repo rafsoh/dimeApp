@@ -31,7 +31,10 @@ struct RestoreResult {
 }
 
 private struct BackupFile: Codable {
-    var version = 1
+    // 2 added Transaction.currencyCode.
+    static let currentVersion = 2
+
+    var version = BackupFile.currentVersion
     var createdAt: Date
     var categories: [CategoryRecord]
     var transactions: [TransactionRecord]
@@ -63,8 +66,10 @@ private struct TransactionRecord: Codable {
     var recurringType: Int16
     var recurringCoefficient: Int16
     var categoryRef: String?
+    var currencyCode: String?
 
-    // Matches transactions from versions that didn't assign ids.
+    // Matches transactions from versions that didn't assign ids. Leaves out the currency so backups
+    // written before it existed still match.
     static func contentKey(date: Date?, amount: Double, note: String?, income: Bool) -> String {
         "\(date?.timeIntervalSinceReferenceDate ?? 0)|\(amount)|\(note ?? "")|\(income)"
     }
@@ -102,6 +107,10 @@ private struct TemplateRecord: Codable {
 // Backups are plain JSON rather than copies of the SQLite file, so restoring never touches the CloudKit
 // mirroring metadata stored in the database.
 struct BackupStore {
+    enum FormatError: Error {
+        case newerVersion(Int)
+    }
+
     let directory: URL
     var maximumCount = 14
 
@@ -154,7 +163,7 @@ struct BackupStore {
                 CategoryRecord(ref: Self.reference(for: $0), id: $0.id, name: $0.name, emoji: $0.emoji, colour: $0.colour, income: $0.income, order: $0.order, dateCreated: $0.dateCreated)
             },
             transactions: transactions.map {
-                TransactionRecord(id: $0.id, note: $0.note, amount: $0.amount, date: $0.date, day: $0.day, month: $0.month, income: $0.income, onceRecurring: $0.onceRecurring, recurringType: $0.recurringType, recurringCoefficient: $0.recurringCoefficient, categoryRef: $0.category.map(Self.reference(for:)))
+                TransactionRecord(id: $0.id, note: $0.note, amount: $0.amount, date: $0.date, day: $0.day, month: $0.month, income: $0.income, onceRecurring: $0.onceRecurring, recurringType: $0.recurringType, recurringCoefficient: $0.recurringCoefficient, categoryRef: $0.category.map(Self.reference(for:)), currencyCode: $0.currencyCode)
             },
             budgets: budgets.map {
                 BudgetRecord(id: $0.id, amount: $0.amount, dateCreated: $0.dateCreated, green: $0.green, startDate: $0.startDate, type: $0.type, categoryRef: $0.category.map(Self.reference(for:)))
@@ -185,6 +194,12 @@ struct BackupStore {
     // changed or removed. Call on the context's queue; the caller saves.
     func restore(_ backup: BackupSummary, into context: NSManagedObjectContext) throws -> RestoreResult {
         let file = try JSONDecoder().decode(BackupFile.self, from: Data(contentsOf: backup.url))
+
+        // Fields this version doesn't know would be dropped from the restored objects.
+        guard file.version <= BackupFile.currentVersion else {
+            throw FormatError.newerVersion(file.version)
+        }
+
         var result = RestoreResult()
 
         var categories: [Category] = try context.fetch(Category.fetchRequest())
@@ -235,6 +250,7 @@ struct BackupStore {
             transaction.id = record.id ?? UUID()
             transaction.note = record.note
             transaction.amount = record.amount
+            transaction.currencyCode = record.currencyCode
             transaction.date = record.date
             transaction.day = record.day
             transaction.month = record.month
