@@ -3,6 +3,7 @@
 //  dime
 //
 
+import Foundation
 import SwiftUI
 import WidgetKit
 
