@@ -14,10 +14,6 @@ struct SettingsCurrencyView: View {
   @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
   @Environment(\.dynamicTypeSize) var dynamicTypeSize
 
-  @AppStorage(
-    CurrencyPreferences.multipleCurrenciesKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
-  var multipleCurrencies: Bool = false
-
   @ObservedObject private var changeManager = MainCurrencyChangeManager.shared
   @State private var proposedCurrency: Currency?
   @State private var errorMessage: String?
@@ -58,11 +54,7 @@ struct SettingsCurrencyView: View {
               return
             }
 
-            if multipleCurrencies {
-              proposedCurrency = currency
-            } else {
-              change(to: currency, kind: .relabel)
-            }
+            proposedCurrency = currency
           }
           .overlay(alignment: .bottom) {
             if currency != currencies.last {
@@ -78,14 +70,14 @@ struct SettingsCurrencyView: View {
         value.scrollTo(currencyCode, anchor: .center)
       }
     }
-    .modifier(SettingsSubviewModifier(title: "Currencies"))
+    .modifier(SettingsSubviewModifier(title: "Primary Currency"))
     .overlay {
       if changeManager.isWorking {
         ProgressView()
       }
     }
     .confirmationDialog(
-      Text("Change your main currency?"),
+      Text("Change your primary currency?"),
       isPresented: Binding(get: { proposedCurrency != nil }, set: { if !$0 { proposedCurrency = nil } }),
       titleVisibility: .visible,
       presenting: proposedCurrency
@@ -100,7 +92,7 @@ struct SettingsCurrencyView: View {
 
       Button("Cancel", role: .cancel) {}
     } message: { currency in
-      Text("Relabelling keeps every amount as it is and treats your \(currencyCode) transactions as \(currency.code). Converting keeps them in \(currencyCode) and shows them in \(currency.code) at each day's rate. Dime backs up your data first.")
+      Text("Relabelling keeps every amount as it is and treats your \(currencyCode) transactions as \(currency.code). Converting keeps them in \(currencyCode) and shows them in \(currency.code) at each day's rate. Budgets and templates keep their amounts. Dime backs up your data first.")
     }
     .alert(
       Text("Currency not changed"),

@@ -281,6 +281,8 @@ struct NumberPadTextView: View {
     var fractionDigits: Int = 2
     /// Nil shows the main currency.
     var currencyCode: String?
+    /// Tapping the currency symbol; nil leaves it untappable.
+    var onCurrencyTap: (() -> Void)?
 
     @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
     var currencySymbol: String {
@@ -326,23 +328,20 @@ struct NumberPadTextView: View {
 
     var body: some View {
         HStack(alignment: .lastTextBaseline, spacing: 0) {
-            Group {
-                Text(currencySymbol)
-                    .font(.system(size: largerFontSize, weight: .regular, design: .rounded))
-                    .foregroundColor(Color.SubtitleText)
-
-//                ForEach(displayNumbers, id: \.self) { number in
-//                    Text(number)
-//                        .font(.system(size: largerFontSize, weight: .regular, design: .rounded))
-//                        .foregroundColor(Color.PrimaryText)
-//                        .transition(AnyTransition.opacity.combined(with: .scale).combined(with: .move(edge: .trailing)))
-//                }
-
-                + Text(amount)
-                    .font(.system(size: largerFontSize, weight: .regular, design: .rounded))
-                    .foregroundColor(Color.PrimaryText)
-
+            if let onCurrencyTap {
+                Button(action: onCurrencyTap) {
+                    symbolText
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text("Currency, \(currencyCode ?? currency)"))
+                .accessibilityHint(Text("Changes the currency of this transaction"))
+            } else {
+                symbolText
             }
+
+            Text(amount)
+                .font(.system(size: largerFontSize, weight: .regular, design: .rounded))
+                .foregroundColor(Color.PrimaryText)
         }
         .minimumScaleFactor(0.5)
         .lineLimit(1)
@@ -354,6 +353,12 @@ struct NumberPadTextView: View {
             }
         }
 //        .animation(.snappy.delay(0.1), value: displayNumbers)
+    }
+
+    var symbolText: some View {
+        Text(currencySymbol)
+            .font(.system(size: largerFontSize, weight: .regular, design: .rounded))
+            .foregroundColor(Color.SubtitleText)
     }
 
     @ViewBuilder

@@ -112,4 +112,75 @@ final class MainCurrencyChangeTests: XCTestCase {
         defer { dataController.container.viewContext.delete(foreign) }
         XCTAssertEqual(foreign.currencyCode, "JPY")
     }
+
+    func testExportNamesEveryTransactionsCurrency() throws {
+        let context = DataController.shared.container.viewContext
+        let legacy = Transaction(context: context)
+        legacy.note = "Lunch, with Sam"
+        legacy.amount = 12.5
+        legacy.date = Date(timeIntervalSince1970: 1_700_000_000)
+        let foreign = Transaction(context: context)
+        foreign.note = "Taxi"
+        foreign.amount = 1.25
+        foreign.currencyCode = "kwd"
+        foreign.date = Date(timeIntervalSince1970: 1_700_000_100)
+        defer { [legacy, foreign].forEach(context.delete) }
+
+        let lines = ExportCSV.text(for: [legacy, foreign], mainCurrency: "usd").split(separator: "\n").map(String.init)
+
+        XCTAssertEqual(lines.first, "Date,Note,Amount,Category,Type,Currency")
+        XCTAssertTrue(lines[1].hasSuffix(",Taxi,1.250,,Expense,KWD"), lines[1])
+        XCTAssertTrue(lines[2].hasSuffix(",\"Lunch, with Sam\",12.50,,Expense,USD"), lines[2])
+    }
+
+    // A recurring transaction from before currencies existed must not pass its missing currency on.
+    func testOccurrencesOfALegacyRecurringTransactionNameTheMainCurrency() throws {
+        let dataController = DataController.shared
+        let context = dataController.container.viewContext
+        let note = "Gym \(UUID().uuidString)"
+
+        let parent = Transaction(context: context)
+        parent.id = UUID()
+        parent.note = note
+        parent.amount = 30
+        parent.date = Calendar.current.date(byAdding: .day, value: -3, to: .now)
+        parent.day = parent.date
+        parent.month = parent.date
+        parent.recurringType = 1
+        parent.recurringCoefficient = 1
+        XCTAssertNil(parent.currencyCode)
+
+        XCTAssertTrue(dataController.updateRecurringTransaction(transaction: parent))
+
+        let request = NSFetchRequest<Transaction>(entityName: "Transaction")
+        request.predicate = NSPredicate(format: "note == %@", note)
+        let rows = try context.fetch(request)
+        defer {
+            rows.forEach(context.delete)
+            dataController.save()
+        }
+
+        let occurrences = rows.filter { $0 != parent }
+        XCTAssertFalse(occurrences.isEmpty)
+        XCTAssertTrue(occurrences.allSatisfy { $0.currencyCode == dataController.currencyConverter.mainCurrency })
+        XCTAssertNil(parent.currencyCode)
+    }
+
+    // A Shortcut or automation that names no currency must not pick up one last used on a trip.
+    func testTransactionsWithoutAChosenCurrencyUseTheMainOne() throws {
+        let dataController = DataController.shared
+        let defaults = UserDefaults(suiteName: "group.com.rafaelsoh.dime")
+        let savedRecent = defaults?.object(forKey: CurrencyPreferences.recentCurrenciesKey)
+        defer { defaults?.set(savedRecent, forKey: CurrencyPreferences.recentCurrenciesKey) }
+
+        let main = dataController.currencyConverter.mainCurrency
+        let foreignCode = main == "JPY" ? "EUR" : "JPY"
+        defaults?.set([foreignCode], forKey: CurrencyPreferences.recentCurrenciesKey)
+
+        let transaction = dataController.insertTransaction(note: "Automation", category: nil, income: false, amount: 9, date: .now)
+        defer { dataController.container.viewContext.delete(transaction) }
+
+        XCTAssertEqual(transaction.currencyCode, main)
+        XCTAssertEqual(dataController.currencyForNewEntry(), foreignCode)
+    }
 }

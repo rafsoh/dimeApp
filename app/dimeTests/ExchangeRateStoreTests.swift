@@ -176,7 +176,7 @@ final class ExchangeRateStoreTests: XCTestCase {
         XCTAssertEqual(StubURLProtocol.requested, [ExchangeRateStore.urls(for: .currencyAPILatest)[0].absoluteString])
     }
 
-    func testLookupFallsBackToEarlierDaysThenLatestAndNeverGuesses() async {
+    func testLookupFallsBackToEarlierDaysThenARecentLaterDayAndNeverGuesses() async {
         let store = makeStore()
         let now = date("2025-06-10")
         stub(.currencyAPILatest, currencyAPI("2025-06-09", ["EUR": 0.9, "THB": 33]))
@@ -184,8 +184,10 @@ final class ExchangeRateStoreTests: XCTestCase {
         await store.refresh(dates: [date("2025-01-01")], now: now)
 
         XCTAssertEqual(store.unitsPerDollar(of: "EUR", on: date("2025-02-15")), 0.97)
-        XCTAssertEqual(store.unitsPerDollar(of: "EUR", on: date("2024-06-01")), 0.9)
-        XCTAssertEqual(store.unitsPerDollar(of: "THB", on: date("2025-02-15")), 33)
+        XCTAssertEqual(store.unitsPerDollar(of: "EUR", on: date("2024-12-15")), 0.97)
+        XCTAssertNil(store.unitsPerDollar(of: "EUR", on: date("2024-06-01")))
+        XCTAssertEqual(store.unitsPerDollar(of: "THB", on: date("2025-05-20")), 33)
+        XCTAssertNil(store.unitsPerDollar(of: "THB", on: date("2025-02-15")))
         XCTAssertNil(store.unitsPerDollar(of: "XYZ", on: date("2025-02-15")))
 
         let converter = CurrencyConverter(mainCurrency: "EUR", rates: store)

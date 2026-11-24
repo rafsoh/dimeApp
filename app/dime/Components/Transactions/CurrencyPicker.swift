@@ -5,40 +5,6 @@
 
 import SwiftUI
 
-struct CurrencyChip: View {
-    let currencyCode: String
-    let preview: String?
-    let action: () -> Void
-
-    var body: some View {
-        VStack(spacing: 4) {
-            Button(action: action) {
-                HStack(spacing: 4) {
-                    Text(currencyCode)
-
-                    Image(systemName: "chevron.up.chevron.down")
-                        .font(.system(.caption, design: .rounded).weight(.semibold))
-                }
-                .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                .foregroundColor(Color.SubtitleText)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
-                .background(Color.SecondaryBackground, in: Capsule())
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(Text("Currency, \(currencyCode)"))
-
-            if let preview {
-                Text(preview)
-                    .font(.system(.subheadline, design: .rounded).weight(.medium))
-                    .foregroundColor(Color.SubtitleText)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-            }
-        }
-    }
-}
-
 struct CurrencyPickerSheet: View {
     @Binding var currencyCode: String
     let mainCurrency: String

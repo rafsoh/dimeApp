@@ -36,6 +36,8 @@ private struct BackupFile: Codable {
 
     var version = BackupFile.currentVersion
     var createdAt: Date
+    // What a transaction without a currency was in when this was written.
+    var mainCurrency: String?
     var categories: [CategoryRecord]
     var transactions: [TransactionRecord]
     var budgets: [BudgetRecord]
@@ -148,7 +150,7 @@ struct BackupStore {
 
     // Call on the context's queue.
     @discardableResult
-    func write(from context: NSManagedObjectContext, at date: Date = .now) throws -> BackupSummary {
+    func write(from context: NSManagedObjectContext, at date: Date = .now, mainCurrency: String? = UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.string(forKey: "currency")) throws -> BackupSummary {
         let categories: [Category] = try context.fetch(Category.fetchRequest())
         let transactionRequest: NSFetchRequest<Transaction> = Transaction.fetchRequest()
         transactionRequest.relationshipKeyPathsForPrefetching = ["category"]
@@ -159,6 +161,7 @@ struct BackupStore {
 
         let file = BackupFile(
             createdAt: date,
+            mainCurrency: mainCurrency?.uppercased(),
             categories: categories.map {
                 CategoryRecord(ref: Self.reference(for: $0), id: $0.id, name: $0.name, emoji: $0.emoji, colour: $0.colour, income: $0.income, order: $0.order, dateCreated: $0.dateCreated)
             },
@@ -250,7 +253,8 @@ struct BackupStore {
             transaction.id = record.id ?? UUID()
             transaction.note = record.note
             transaction.amount = record.amount
-            transaction.currencyCode = record.currencyCode
+            // The main currency may have changed since the backup, so a missing currency is pinned to the one it meant.
+            transaction.currencyCode = record.currencyCode ?? file.mainCurrency
             transaction.date = record.date
             transaction.day = record.day
             transaction.month = record.month
@@ -342,6 +346,7 @@ final class BackupManager: ObservableObject {
 
     enum RestoreError: Error {
         case waitingForICloud
+        case currencyChangeInProgress
     }
 
     static let shared = BackupManager(dataController: .shared)
@@ -479,6 +484,12 @@ final class BackupManager: ObservableObject {
         // Restoring before iCloud has caught up would re-add items that are about to be downloaded again.
         guard dataController.isDataCurrentWithICloud else {
             completion(.failure(RestoreError.waitingForICloud))
+            return
+        }
+
+        // Rows restored mid-change could miss it and be read in the wrong currency.
+        guard defaults?.data(forKey: MainCurrencyChangeManager.pendingPlanKey) == nil else {
+            completion(.failure(RestoreError.currencyChangeInProgress))
             return
         }
 

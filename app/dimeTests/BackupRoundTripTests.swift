@@ -23,7 +23,7 @@ final class BackupRoundTripTests: XCTestCase {
         let source = try makeContext()
         try populate(source)
         let store = BackupStore(directory: directory)
-        let backup = try store.write(from: source)
+        let backup = try store.write(from: source, mainCurrency: nil)
 
         let target = try makeContext()
         let result = try store.restore(backup, into: target)
@@ -136,7 +136,7 @@ final class BackupRoundTripTests: XCTestCase {
         let source = try makeContext()
         try populate(source)
         let store = BackupStore(directory: directory)
-        let backup = try store.write(from: source)
+        let backup = try store.write(from: source, mainCurrency: nil)
 
         let json = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: backup.url)) as? [String: Any])
         XCTAssertEqual(json["version"] as? Int, 2)
@@ -149,6 +149,23 @@ final class BackupRoundTripTests: XCTestCase {
 
         XCTAssertEqual(try transactionValues(in: target), try transactionValues(in: source))
         XCTAssertEqual(try all(Transaction.self, in: target).compactMap(\.currencyCode).sorted(), ["EUR", "JPY"])
+    }
+
+    // Restored after the main currency changed, a transaction without one must keep meaning the old main currency.
+    func testRestoreGivesTransactionsWithoutACurrencyTheBackupsMainCurrency() throws {
+        let source = try makeContext()
+        try populate(source)
+        let store = BackupStore(directory: directory)
+        let backup = try store.write(from: source, mainCurrency: "usd")
+
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: backup.url)) as? [String: Any])
+        XCTAssertEqual(json["mainCurrency"] as? String, "USD")
+
+        let target = try makeContext()
+        _ = try store.restore(backup, into: target)
+        try target.save()
+
+        XCTAssertEqual(try all(Transaction.self, in: target).compactMap(\.currencyCode).sorted(), ["EUR", "JPY", "USD"])
     }
 
     // A transaction from a version that didn't assign ids still matches its backup copy, whatever its currency.
