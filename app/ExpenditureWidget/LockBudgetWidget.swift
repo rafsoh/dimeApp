@@ -41,7 +41,7 @@ struct LockBudgetWidgetEntryView: View {
         switch widgetFamily {
         case .accessoryInline:
             if let budget = entry.budget, entry.isConfigured {
-                Text("\(budget.emoji ?? "") \(BudgetFormatter.current.money(budget.snapshot.difference)) \(budget.amountWord)")
+                Text("\(budget.emoji ?? "") \(budget.conversion.approximatePrefix)\(BudgetFormatter.current.money(budget.snapshot.difference)) \(budget.amountWord)")
                     .widgetURL(budget.url)
             } else {
                 Text("Select budget in widget options")

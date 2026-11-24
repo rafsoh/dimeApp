@@ -30,20 +30,20 @@ struct InsightsProvider: IntentTimelineProvider {
     func placeholder(in _: Context) -> InsightsWidgetEntry {
         let results = loadData(type: .week, income: true)
 
-        return InsightsWidgetEntry(date: Date(), amount: results.amount, duration: .week, maximum: results.maximum, dates: results.dates, dictionary: results.dateDictionary, numberOfDays: results.numberOfDays, average: results.average, categories: results.categories, income: true)
+        return InsightsWidgetEntry(date: Date(), amount: results.amount, duration: .week, maximum: results.maximum, dates: results.dates, dictionary: results.dateDictionary, numberOfDays: results.numberOfDays, average: results.average, categories: results.categories, income: true, conversion: results.report)
     }
 
     func getSnapshot(for configuration: InsightsWidgetConfigurationIntent, in _: Context, completion: @escaping (InsightsWidgetEntry) -> Void) {
         let loaded = loadData(type: configuration.duration, income: configuration.income == .income)
 
-        let entry = InsightsWidgetEntry(date: Date(), amount: loaded.amount, duration: configuration.duration, maximum: loaded.maximum, dates: loaded.dates, dictionary: loaded.dateDictionary, numberOfDays: loaded.numberOfDays, average: loaded.average, categories: loaded.categories, income: configuration.income == .income)
+        let entry = InsightsWidgetEntry(date: Date(), amount: loaded.amount, duration: configuration.duration, maximum: loaded.maximum, dates: loaded.dates, dictionary: loaded.dateDictionary, numberOfDays: loaded.numberOfDays, average: loaded.average, categories: loaded.categories, income: configuration.income == .income, conversion: loaded.report)
         completion(entry)
     }
 
     func getTimeline(for configuration: InsightsWidgetConfigurationIntent, in _: Context, completion: @escaping (Timeline<Entry>) -> Void) {
         let loaded = loadData(type: configuration.duration, income: configuration.income == .income)
 
-        let entry = InsightsWidgetEntry(date: Date(), amount: loaded.amount, duration: configuration.duration, maximum: loaded.maximum, dates: loaded.dates, dictionary: loaded.dateDictionary, numberOfDays: loaded.numberOfDays, average: loaded.average, categories: loaded.categories, income: configuration.income == .income)
+        let entry = InsightsWidgetEntry(date: Date(), amount: loaded.amount, duration: configuration.duration, maximum: loaded.maximum, dates: loaded.dates, dictionary: loaded.dateDictionary, numberOfDays: loaded.numberOfDays, average: loaded.average, categories: loaded.categories, income: configuration.income == .income, conversion: loaded.report)
 
         let timeline = Timeline(entries: [entry], policy: .atEnd)
 
@@ -275,6 +275,7 @@ struct InsightsWidgetEntry: TimelineEntry {
     let average: Double
     let categories: [HoldingCategory]
     let income: Bool
+    var conversion = ConversionReport()
 }
 
 /// The medium widget, laid out like the Spent and Categories cards on the Insights tab.
@@ -317,7 +318,7 @@ struct InsightsWidgetEntryView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     InsightsCardTitle(verbatim: title)
 
-                    InsightsAmountText(amount: entry.amount, formatter: formatter, font: .system(.title2, design: .rounded).weight(.semibold))
+                    InsightsAmountText(amount: entry.amount, sign: entry.conversion.approximatePrefix, formatter: formatter, font: .system(.title2, design: .rounded).weight(.semibold))
                         .padding(.top, 2)
 
                     WidgetBarChart(buckets: buckets, average: entry.average, colour: entry.income ? Color.IncomeGreen : Color.PrimaryText, formatter: formatter)

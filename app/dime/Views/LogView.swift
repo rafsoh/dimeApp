@@ -530,6 +530,16 @@ struct LogInsightsView: View {
         }
     }
 
+    var displayedReport: ConversionReport {
+        if displayType == 1 {
+            return dataController.logViewNetTotal(type: timeframe).report
+        } else if displayType == 2 {
+            return dataController.logViewTotal(type: timeframe, income: true).report
+        } else {
+            return dataController.logViewTotal(type: timeframe, income: false).report
+        }
+    }
+
     var headingText: String {
         if displayType == 1 {
             return "Net total"
@@ -568,6 +578,8 @@ struct LogInsightsView: View {
 
                 EmptyView()
                     .modifier(NumberView(number: amount, dynamicTypeSize: _dynamicTypeSize.wrappedValue, netTotal: displayType == 1, positive: netTotal.positive, hasCents: Int((abs(amount) * 100).rounded()) % 100 != 0))
+
+                ConversionNote(report: displayedReport)
             }
             .padding(7)
             .contentShape(Rectangle())
@@ -728,6 +740,9 @@ struct FilteredSearchView: View {
         if let amount = TransactionAmountSearch.value(in: query) {
             // Stored amounts are binary doubles, so match to the cent rather than exactly.
             parts.append(NSPredicate(format: "amount >= %@ AND amount < %@", NSNumber(value: amount - 0.005), NSNumber(value: amount + 0.005)))
+        }
+        if query.count == 3, query.allSatisfy(\.isLetter) {
+            parts.append(NSPredicate(format: "%K ==[c] %@", #keyPath(Transaction.currencyCode), query))
         }
         return NSCompoundPredicate(orPredicateWithSubpredicates: parts)
     }
@@ -936,7 +951,8 @@ struct ListView: View {
             numberFormatter.maximumFractionDigits = 0
         }
 
-        let total = dayTotal(dayTransaction: filtered)
+        let dayMoney = filtered.total(using: .current(), signed: true)
+        let total = dayMoney.value
 
         let text: String
 
@@ -946,7 +962,7 @@ struct ListView: View {
             text = (numberFormatter.string(from: NSNumber(value: total)) ?? "$0")
         }
 
-        return (filtered, text)
+        return (filtered, dayMoney.report.marking(text))
     }
 }
 
@@ -1010,12 +1026,13 @@ struct FutureListView: View {
             numberFormatter.maximumFractionDigits = 0
         }
 
-        let total = transactions.total(using: .current(), signed: true).value
+        let money = transactions.total(using: .current(), signed: true)
+        let total = money.value
 
         if total >= 0 {
-            return "+" + (numberFormatter.string(from: NSNumber(value: total)) ?? "$0")
+            return money.report.marking("+" + (numberFormatter.string(from: NSNumber(value: total)) ?? "$0"))
         } else {
-            return numberFormatter.string(from: NSNumber(value: total)) ?? "$0"
+            return money.report.marking(numberFormatter.string(from: NSNumber(value: total)) ?? "$0")
         }
     }
 
@@ -1115,6 +1132,10 @@ struct SingleTransactionView: View {
     }
 
     var transactionAmountString: String {
+        if let code = transaction.currencyCode, code.uppercased() != currency.uppercased() {
+            return MoneyFormatter.string(transaction.amount, currencyCode: code, showCents: showCents)
+        }
+
         let numberFormatter = NumberFormatter()
         numberFormatter.numberStyle = .currency
         numberFormatter.currencyCode = currency
@@ -1126,6 +1147,32 @@ struct SingleTransactionView: View {
         }
 
         return numberFormatter.string(from: NSNumber(value: transaction.amount)) ?? "$0"
+    }
+
+    var accessibilityAmount: String {
+        guard let converted = transaction.convertedAmountText(showCents: showCents) else {
+            return "\(currencySymbol)\(String(format: "%.2f", transaction.wrappedAmount))"
+        }
+
+        return "\(transactionAmountString), \(converted)"
+    }
+
+    @ViewBuilder
+    func amountWithConversion(_ amount: Text) -> some View {
+        if let converted = transaction.convertedAmountText(showCents: showCents) {
+            VStack(alignment: .trailing, spacing: 0) {
+                amount
+
+                Text(converted)
+                    .font(.system(.caption, design: .rounded).weight(.medium))
+                    .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+                    .foregroundColor(Color.SubtitleText)
+                    .lineLimit(1)
+            }
+            .layoutPriority(1)
+        } else {
+            amount
+        }
     }
 
     var body: some View {
@@ -1174,19 +1221,19 @@ struct SingleTransactionView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
                 if transaction.income {
-                    Text(showExpenseOrIncomeSign ? "+\(transactionAmountString)" : transactionAmountString)
+                    amountWithConversion(Text(showExpenseOrIncomeSign ? "+\(transactionAmountString)" : transactionAmountString)
                         .font(.system(.title3, design: .rounded).weight(.medium))
+                        .foregroundColor(future ? Color.SubtitleText : Color.IncomeGreen))
                         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                        .foregroundColor(future ? Color.SubtitleText : Color.IncomeGreen)
                         .minimumScaleFactor(0.7)
                         .lineLimit(1)
                         .layoutPriority(1)
 
                 } else {
-                    Text(showExpenseOrIncomeSign ? "-\(transactionAmountString)" : transactionAmountString)
+                    amountWithConversion(Text(showExpenseOrIncomeSign ? "-\(transactionAmountString)" : transactionAmountString)
                         .font(.system(.title3, design: .rounded).weight(.medium))
+                        .foregroundColor(future ? Color.SubtitleText : Color.PrimaryText))
                         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                        .foregroundColor(future ? Color.SubtitleText : Color.PrimaryText)
                         .minimumScaleFactor(0.7)
                         .lineLimit(1)
                         .layoutPriority(1)
@@ -1241,7 +1288,7 @@ struct SingleTransactionView: View {
             }
             .offset(x: offset)
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("\(transaction.wrappedNote), \(currencySymbol)\(String(format: "%.2f", transaction.wrappedAmount)), Transaction Category: \(transaction.category?.wrappedName ?? "Unknown"), Transaction made at \(timeConverterAccessibilityLabel(date: transaction.wrappedDate))")
+            .accessibilityLabel("\(transaction.wrappedNote), \(accessibilityAmount), Transaction Category: \(transaction.category?.wrappedName ?? "Unknown"), Transaction made at \(timeConverterAccessibilityLabel(date: transaction.wrappedDate))")
         }
         .background {
             GeometryReader { proxy in

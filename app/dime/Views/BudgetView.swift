@@ -195,7 +195,8 @@ struct BudgetOverallCard: View {
         if budget.isGone {
             EmptyView()
         } else {
-            let snapshot = BudgetSnapshot(amount: budget.amount, spent: transactions.total(using: .current()).value, period: period)
+            let spending = transactions.total(using: .current())
+            let snapshot = BudgetSnapshot(amount: budget.amount, spent: spending.value, period: period)
 
             InsightsCard {
                 VStack(alignment: .leading, spacing: 0) {
@@ -230,6 +231,9 @@ struct BudgetOverallCard: View {
                         .font(.system(.subheadline, design: .rounded).weight(.medium))
                         .foregroundColor(Color.SubtitleText)
                         .padding(.top, 12)
+
+                    ConversionNote(report: spending.report)
+                        .padding(.top, 4)
                 }
                 .padding(16)
             }
@@ -256,7 +260,8 @@ struct BudgetCategoryTile: View {
         if budget.isGone {
             EmptyView()
         } else {
-            let snapshot = BudgetSnapshot(amount: budget.amount, spent: transactions.total(using: .current()).value, period: period)
+            let spending = transactions.total(using: .current())
+            let snapshot = BudgetSnapshot(amount: budget.amount, spent: spending.value, period: period)
 
             InsightsCard {
                 VStack(alignment: .leading, spacing: 0) {
@@ -284,6 +289,8 @@ struct BudgetCategoryTile: View {
                             .lineLimit(1)
                     }
                     .padding(.top, 10)
+
+                    ConversionNote(report: spending.report)
 
                     snapshot.tileStatus()
                         .font(.system(.subheadline, design: .rounded).weight(.medium))
@@ -572,11 +579,16 @@ struct BudgetDetailContent: View {
 
     var body: some View {
         let transactions = Array(periodTransactions)
-        let snapshot = BudgetSnapshot(amount: route.amount, spent: transactions.total(using: .current()).value, period: period)
+        let spending = transactions.total(using: .current())
+        let snapshot = BudgetSnapshot(amount: route.amount, spent: spending.value, period: period)
 
         VStack(alignment: .leading, spacing: 32) {
-            hero(snapshot, transactions: transactions)
-                .padding(.horizontal, 24)
+            VStack(alignment: .leading, spacing: 4) {
+                hero(snapshot, transactions: transactions)
+
+                ConversionNote(report: spending.report)
+            }
+            .padding(.horizontal, 24)
 
             if route.category == nil && !transactions.isEmpty {
                 breakdown(transactions)

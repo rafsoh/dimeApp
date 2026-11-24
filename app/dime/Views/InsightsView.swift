@@ -595,6 +595,21 @@ struct InsightsRecurringCharge: Identifiable {
         return total
     }
 
+    static func report(for charges: [InsightsRecurringCharge]) -> ConversionReport {
+        let converter = CurrencyConverter.current()
+        var report = ConversionReport()
+
+        for charge in charges where !converter.isMainCurrency(charge.transaction.currencyCode) {
+            if charge.amount == nil {
+                report.recordExcluded(charge.transaction.money)
+            } else {
+                report.recordConverted()
+            }
+        }
+
+        return report
+    }
+
     // Sync can leave duplicate copies of a recurring transaction under the same id, so only the first counts.
     static func make(_ dataController: DataController) -> [InsightsRecurringCharge] {
         let now = Date.now
@@ -678,6 +693,7 @@ struct InsightsDashboard: View {
     let onSelect: (InsightsRoute) -> Void
     let buckets: [InsightsBucket]
     let spent: Double
+    let spentReport: ConversionReport
     let average: Double
     let income: Double
     let net: Double
@@ -752,6 +768,8 @@ struct InsightsDashboard: View {
                     }
 
                     InsightsAmountText(amount: spent, formatter: formatter, font: .system(.largeTitle, design: .rounded).weight(.semibold))
+
+                    ConversionNote(report: spentReport)
                 }
 
                 InsightsBarChart(buckets: buckets, average: average, formatter: formatter) { bucket in
@@ -898,6 +916,8 @@ struct InsightsDashboard: View {
                             .lineLimit(1)
                     }
                     .accessibilityElement(children: .combine)
+
+                    ConversionNote(report: InsightsRecurringCharge.report(for: recurring))
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 16)
@@ -920,6 +940,7 @@ struct InsightsDashboard: View {
         let spentInsights = dataController.getInsights(type: period.type, date: period.start, income: false)
         buckets = InsightsBucket.make(dates: spentInsights.dates, values: spentInsights.dateDictionary, type: period.type)
         spent = spentInsights.amount
+        spentReport = spentInsights.report
         average = spentInsights.amount / Double(insightsAverageSpan(dataController, period: period, firstDay: firstDay))
 
         let previous = dataController.getInsights(type: period.type, date: period.shifted(by: -1).start, income: false).amount
@@ -1277,6 +1298,11 @@ struct InsightsTallyList: View {
     var dateFormat = "d MMM"
     var emptyTitle: LocalizedStringKey = "No transactions"
 
+    var totalText: String {
+        let money = items.total(using: .current())
+        return money.report.marking(sign + formatter.string(money.value))
+    }
+
     var body: some View {
         if items.isEmpty {
             EmptyStateView(systemImage: "tray", title: emptyTitle)
@@ -1290,7 +1316,7 @@ struct InsightsTallyList: View {
 
                         Spacer()
 
-                        Text(sign + formatter.string(items.total(using: .current()).value))
+                        Text(totalText)
                             .layoutPriority(1)
                     }
                     .font(.system(.callout, design: .rounded).weight(.semibold))
@@ -1737,7 +1763,8 @@ struct InsightsDetailSheet: View {
 
     @ViewBuilder
     var allCategoriesContent: some View {
-        let categories = InsightsCategoryTotal.make(from: insightsTransactions(dataController, from: period.start, to: period.queryEnd, income: false))
+        let expenses = insightsTransactions(dataController, from: period.start, to: period.queryEnd, income: false)
+        let categories = InsightsCategoryTotal.make(from: expenses)
 
         if categories.isEmpty {
             EmptyStateView(systemImage: "tray", title: "No transactions")
@@ -1749,6 +1776,8 @@ struct InsightsDetailSheet: View {
                         path.append(.category(category))
                     }
                 }
+
+                ConversionNote(report: expenses.total(using: .current()).report)
 
                 categoryRows(categories)
             }
@@ -1796,6 +1825,8 @@ struct InsightsDetailSheet: View {
         } else {
             VStack(spacing: 20) {
                 InsightsSheetSummary(amount: monthly, formatter: formatter, caption: Text("/month"))
+
+                ConversionNote(report: InsightsRecurringCharge.report(for: charges))
 
                 VStack(spacing: 0) {
                     ForEach(charges) { charge in

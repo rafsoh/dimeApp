@@ -1183,6 +1183,13 @@ class DataController: ObservableObject {
         return results(for: request).compactMap(\.date)
     }
 
+    /// For when the user picks a foreign currency, so its conversion can be previewed before anything is saved.
+    func ensureLatestExchangeRates() {
+        if ExchangeRateStore.shared.needsLatest(now: Date()) {
+            refreshExchangeRates(force: true)
+        }
+    }
+
     // Only the app fetches rates; the widgets and intents read what it cached. Without foreign transactions
     // nothing is fetched unless `force` is set.
     func refreshExchangeRates(force: Bool = false) {

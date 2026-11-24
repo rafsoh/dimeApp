@@ -468,6 +468,8 @@ struct BrandNewBudgetView: View {
                 return String(format: "%.1f", price)
             case .second:
                 return String(format: "%.2f", price)
+            case .third:
+                return String(format: "%.3f", price)
             }
         }
         return String(format: "%.0f", price)

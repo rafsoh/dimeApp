@@ -131,6 +131,44 @@ struct TransactionView: View {
     @State var decimalValuesAssigned: AssignedDecimal = .none
     @State private var priceString: String = "0"
 
+    @AppStorage(CurrencyPreferences.multipleCurrenciesKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+    var multipleCurrencies: Bool = false
+    @State private var selectedCurrency: String?
+    @State private var showCurrencyPicker = false
+
+    var transactionCurrency: String {
+        if let selectedCurrency {
+            return selectedCurrency
+        }
+
+        if let transaction = toEdit {
+            return (transaction.currencyCode ?? currency).uppercased()
+        }
+
+        return CurrencyPreferences.defaultCurrency(mainCurrency: currency, multipleCurrenciesEnabled: multipleCurrencies, recent: CurrencyPreferences.recentCurrencies(in: UserDefaults(suiteName: "group.com.rafaelsoh.dime")))
+    }
+
+    var usesMainCurrency: Bool {
+        CurrencyPreferences.isSameCurrency(transactionCurrency, as: nil, mainCurrency: currency)
+    }
+
+    // Every currency is entered with two digits until multiple currencies are turned on.
+    var fractionDigits: Int {
+        multipleCurrencies ? CurrencyDigits.fractionDigits(for: transactionCurrency) : 2
+    }
+
+    var convertedPreview: String? {
+        guard multipleCurrencies, !usesMainCurrency else {
+            return nil
+        }
+
+        guard let converted = CurrencyConverter.current().convert(price, from: transactionCurrency, on: date) else {
+            return String(localized: "No exchange rate yet")
+        }
+
+        return "≈ " + MoneyFormatter.string(converted, currencyCode: currency)
+    }
+
     @State private var usesVerticalBar = VerticalBar.isActiveInKeyWindow
 
     var body: some View {
@@ -242,7 +280,14 @@ struct TransactionView: View {
 
                         // number display and note view
                         VStack(spacing: 8) {
-                            NumberPadTextView(price: $price, isEditingDecimal: $isEditingDecimal, decimalValuesAssigned: $decimalValuesAssigned)
+                            NumberPadTextView(price: $price, isEditingDecimal: $isEditingDecimal, decimalValuesAssigned: $decimalValuesAssigned, fractionDigits: fractionDigits, currencyCode: usesMainCurrency ? nil : transactionCurrency)
+
+                            if multipleCurrencies {
+                                CurrencyChip(currencyCode: transactionCurrency, preview: convertedPreview) {
+                                    showCurrencyPicker = true
+                                }
+                            }
+
                             NoteView(note: $note, focused: $textFieldFocused)
                         }
                     }
@@ -257,6 +302,10 @@ struct TransactionView: View {
                                         withAnimation {
                                             if price == 0 {
                                                 price = transaction.wrappedAmount
+
+                                                if multipleCurrencies {
+                                                    selectedCurrency = (transaction.currencyCode ?? currency).uppercased()
+                                                }
                                             }
                                             if category == nil {
                                                 category = transaction.category
@@ -271,7 +320,7 @@ struct TransactionView: View {
                                                 .padding(.vertical, 3.5)
                                                 .padding(.horizontal, 7)
 
-                                            Text("\(currencySymbol)\(Int(round(transaction.wrappedAmount)))")
+                                            Text("\(symbol(for: transaction))\(Int(round(transaction.wrappedAmount)))")
                                                 .lineLimit(1)
                                                 .foregroundStyle(Color(hex: transaction.wrappedColour))
                                                 .padding(.vertical, 3.5)
@@ -301,7 +350,8 @@ struct TransactionView: View {
                         category: $category,
                         isEditingDecimal: $isEditingDecimal,
                         decimalValuesAssigned: $decimalValuesAssigned,
-                        showingNotePicker: showingNotePicker
+                        showingNotePicker: showingNotePicker,
+                        fractionDigits: fractionDigits
                     ) {
                         submit()
                     }
@@ -374,9 +424,9 @@ struct TransactionView: View {
                     repeatCoefficient = Int(transaction.recurringCoefficient)
                     price = transaction.wrappedAmount
 
-                    if transaction.wrappedAmount.truncatingRemainder(dividingBy: 1) > 0 && numberEntryType == 2 {
+                    if transaction.wrappedAmount.truncatingRemainder(dividingBy: 1) > 0 && numberEntryType == 2 && fractionDigits > 0 {
                         isEditingDecimal = true
-                        decimalValuesAssigned = .second
+                        decimalValuesAssigned = AssignedDecimal(count: fractionDigits)
                     }
 
                     if transaction.wrappedDate > Date.now {
@@ -403,6 +453,9 @@ struct TransactionView: View {
         .sheet(isPresented: $showingDatePicker) {
             DateTimePickerSheet(date: $date)
         }
+        .sheet(isPresented: $showCurrencyPicker) {
+            CurrencyPickerSheet(currencyCode: Binding(get: { transactionCurrency }, set: { selectCurrency($0) }), mainCurrency: currency)
+        }
         .onChange(of: dateString) { _ in
             animateIcon = date > Date.now
         }
@@ -422,9 +475,35 @@ struct TransactionView: View {
                 || date != (transaction.date ?? date)
                 || repeatType != Int(transaction.recurringType)
                 || repeatCoefficient != Int(transaction.recurringCoefficient)
+                || !CurrencyPreferences.isSameCurrency(transaction.currencyCode, as: transactionCurrency, mainCurrency: currency)
         } else {
             return price > 0 || !note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
+    }
+
+    func symbol(for transaction: Transaction) -> String {
+        guard let code = transaction.currencyCode else {
+            return currencySymbol
+        }
+
+        return Locale.current.localizedCurrencySymbol(forCurrencyCode: code) ?? code
+    }
+
+    func selectCurrency(_ code: String) {
+        selectedCurrency = code
+
+        let digits = CurrencyDigits.fractionDigits(for: code)
+        price = AmountEntry.truncated(price, fractionDigits: digits)
+
+        if decimalValuesAssigned.count > digits {
+            decimalValuesAssigned = AssignedDecimal(count: digits)
+        }
+
+        if digits == 0 {
+            isEditingDecimal = false
+        }
+
+        dataController.ensureLatestExchangeRates()
     }
 
     var dateTokenText: String {
@@ -591,6 +670,10 @@ struct TransactionView: View {
 
         generator.notificationOccurred(.success)
 
+        // Only an explicit choice changes a transaction's currency, and only while the feature is on.
+        let chosenCurrency = transactionCurrency
+        let storesCurrency = multipleCurrencies
+
         if let editedTransaction = toEdit {
             if note.trimmingCharacters(in: .whitespacesAndNewlines) == "" {
                 editedTransaction.note = category!.wrappedName
@@ -605,6 +688,11 @@ struct TransactionView: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 withAnimation(.easeInOut(duration: 0.5)) {
                     editedTransaction.amount = price
+
+                    if storesCurrency && !CurrencyPreferences.isSameCurrency(editedTransaction.currencyCode, as: chosenCurrency, mainCurrency: currency) {
+                        editedTransaction.currencyCode = chosenCurrency
+                    }
+
                     editedTransaction.date = date
                     editedTransaction.income = income
 
@@ -630,6 +718,10 @@ struct TransactionView: View {
                     }
 
                     dataController.save()
+
+                    if storesCurrency {
+                        dataController.refreshExchangeRates()
+                    }
                 }
             }
 
@@ -653,6 +745,12 @@ struct TransactionView: View {
         }
 
         transaction.amount = price
+
+        if storesCurrency {
+            transaction.currencyCode = CurrencyPreferences.isSameCurrency(chosenCurrency, as: nil, mainCurrency: currency) ? nil : chosenCurrency
+            CurrencyPreferences.record(chosenCurrency, in: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+        }
+
         transaction.date = date
         transaction.id = UUID()
 
@@ -672,6 +770,10 @@ struct TransactionView: View {
         }
 
         dataController.save()
+
+        if transaction.currencyCode != nil {
+            dataController.refreshExchangeRates()
+        }
 
         dismiss()
     }

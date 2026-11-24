@@ -350,6 +350,25 @@
 "Some of your data may be missing" = "Some of your data may be missing";
 "Backup from %@: %lld transactions. On this device now: %lld. Restore what's missing? Nothing you have now will be removed or changed." = "Backup from %@: %lld transactions. On this device now: %lld. Restore what's missing? Nothing you have now will be removed or changed.";
 "Not Now" = "Not Now";
+
+/* Multiple currencies */
+"≈ converted" = "≈ converted";
+"Converted from other currencies at daily rates" = "Converted from other currencies at daily rates";
+"No exchange rate yet" = "No exchange rate yet";
+"Currency, %@" = "Currency, %@";
+"Recent" = "Recent";
+"All Currencies" = "All Currencies";
+"Exchange Rates" = "Exchange Rates";
+"None yet" = "None yet";
+"Never" = "Never";
+"Source" = "Source";
+"Last Updated" = "Last Updated";
+"Days Saved" = "Days Saved";
+"Refresh Rates" = "Refresh Rates";
+"Rates come from fawazahmed0/exchange-api, and from Frankfurter (European Central Bank) for dates before March 2024. Each transaction is converted at the rate on its own date. Rates are kept on this device only and are never added to your data or iCloud." = "Rates come from fawazahmed0/exchange-api, and from Frankfurter (European Central Bank) for dates before March 2024. Each transaction is converted at the rate on its own date. Rates are kept on this device only and are never added to your data or iCloud.";
+"Some rates couldn't be downloaded. Dime will try again later, and amounts without a rate are left out of totals until then." = "Some rates couldn't be downloaded. Dime will try again later, and amounts without a rate are left out of totals until then.";
+"Multiple Currencies" = "Multiple Currencies";
+"Log transactions in other currencies. Totals, insights, budgets and widgets convert them to your main currency at the rate on each transaction's date, marked with ≈. Converted amounts are never saved to your data." = "Log transactions in other currencies. Totals, insights, budgets and widgets convert them to your main currency at the rate on each transaction's date, marked with ≈. Converted amounts are never saved to your data.";
 "Export" = "Export";
 "All time" = "All time";
 "No transactions to export" = "No transactions to export";
