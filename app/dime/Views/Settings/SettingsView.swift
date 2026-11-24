@@ -542,7 +542,7 @@ struct SettingsView: View {
 
     let fileName = "export.csv"
     let path = NSURL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(fileName)
-    var csvText = "Date,Note,Amount,Category,Type\n"
+    var csvText = CSVExport.header
 
     for transaction in transactions {
       var string = transaction.wrappedNote
@@ -556,8 +556,11 @@ struct SettingsView: View {
 
       string.removeAll(where: { $0 == "," })
 
+      // A transaction without a currency is in the main currency.
+      let currencyCode = (transaction.currencyCode ?? currency).uppercased()
+
       csvText +=
-        "\(transaction.wrappedDate),\(string),\(String(format: "%.2f", transaction.wrappedAmount)),\(transaction.category?.wrappedName ?? ""),\(type)\n"
+        "\(transaction.wrappedDate),\(string),\(CSVExport.amount(transaction.wrappedAmount, currencyCode: currencyCode)),\(transaction.category?.wrappedName ?? ""),\(type),\(currencyCode)\n"
     }
 
     do {

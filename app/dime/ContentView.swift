@@ -121,6 +121,7 @@ struct ContentView: View {
             }
 
             dataController.refreshExchangeRates()
+            MainCurrencyChangeManager.shared.resumeIfNeeded()
 
             if dataMigration1 {
                 let categoryFetch = dataController.fetchRequestForCategoriesMigration(income: false)
@@ -177,6 +178,9 @@ struct ContentView: View {
         .onChange(of: appLockVM.isAppUnLocked) { _ in
             presentWhatsNewIfReady()
         }
+        .onReceive(NotificationCenter.default.publisher(for: DataController.dataIsCurrentNotification)) { _ in
+            MainCurrencyChangeManager.shared.resumeIfNeeded()
+        }
         .onChange(of: backupManager.suggestedRestore == nil) { _ in
             presentWhatsNewIfReady()
         }
@@ -192,6 +196,7 @@ struct ContentView: View {
                 }
             } else if newPhase == .active {
                 dataController.refreshExchangeRates()
+                MainCurrencyChangeManager.shared.resumeIfNeeded()
 
                 center.getNotificationSettings { settings in
                     if settings.authorizationStatus == .authorized {

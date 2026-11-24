@@ -33,12 +33,15 @@ struct BudgetIntent: AppIntent {
         let dataController = DataController.shared
 
         var amount: Double = 0
+        var report = ConversionReport()
         var budgetType: Int16 = 0
 
         switch type {
         case .overall:
             if let mainBudget = dataController.results(for: dataController.fetchRequestForMainBudget()).first {
-                amount = dataController.getBudgetLeftover(overallBudget: mainBudget)
+                let leftover = dataController.budgetLeftover(overallBudget: mainBudget)
+                amount = leftover.value
+                report = leftover.report
 
                 budgetType = mainBudget.type
             }
@@ -46,13 +49,17 @@ struct BudgetIntent: AppIntent {
             if let unwrappedBudget = budget {
                 let categoryBudget = try dataController.findBudget(withId: unwrappedBudget.id)
 
-                amount = dataController.getBudgetLeftover(budget: categoryBudget)
+                let leftover = dataController.budgetLeftover(budget: categoryBudget)
+                amount = leftover.value
+                report = leftover.report
 
                 budgetType = categoryBudget.type
             }
         }
 
-        return .result(value: amount, dialog: "Here you go!") {
+        let dialog: IntentDialog = report.note.map { IntentDialog("Here you go! \($0)") } ?? "Here you go!"
+
+        return .result(value: amount, dialog: dialog) {
             ShortcutBudgetView(amount: amount, type: Int(budgetType))
         }
     }

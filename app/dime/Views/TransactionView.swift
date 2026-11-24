@@ -145,7 +145,7 @@ struct TransactionView: View {
             return (transaction.currencyCode ?? currency).uppercased()
         }
 
-        return CurrencyPreferences.defaultCurrency(mainCurrency: currency, multipleCurrenciesEnabled: multipleCurrencies, recent: CurrencyPreferences.recentCurrencies(in: UserDefaults(suiteName: "group.com.rafaelsoh.dime")))
+        return dataController.currencyForNewTransaction()
     }
 
     var usesMainCurrency: Bool {
@@ -746,8 +746,9 @@ struct TransactionView: View {
 
         transaction.amount = price
 
+        transaction.currencyCode = chosenCurrency
+
         if storesCurrency {
-            transaction.currencyCode = CurrencyPreferences.isSameCurrency(chosenCurrency, as: nil, mainCurrency: currency) ? nil : chosenCurrency
             CurrencyPreferences.record(chosenCurrency, in: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
         }
 
@@ -771,7 +772,7 @@ struct TransactionView: View {
 
         dataController.save()
 
-        if transaction.currencyCode != nil {
+        if !CurrencyPreferences.isSameCurrency(chosenCurrency, as: nil, mainCurrency: currency) {
             dataController.refreshExchangeRates()
         }
 

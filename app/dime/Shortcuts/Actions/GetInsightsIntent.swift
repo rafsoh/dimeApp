@@ -65,9 +65,11 @@ struct GetInsightsIntent: AppIntent {
             typeInt = 3
         }
 
-        let result = dataController.getShortcutInsights(type: typeInt, timeframe: timeframe.rawValue, optionalIncome: optionalIncome, categories: categories)
+        let total = dataController.shortcutInsightsTotal(type: typeInt, timeframe: timeframe.rawValue, optionalIncome: optionalIncome, categories: categories)
+        let result = total.value
+        let dialog: IntentDialog = total.report.note.map { IntentDialog("Here you go! \($0)") } ?? "Here you go!"
 
-        return .result(value: result, dialog: "Here you go!") {
+        return .result(value: result, dialog: dialog) {
             ShortcutInsightsView(amount: result, type: type, timeframe: timeframe)
         }
     }

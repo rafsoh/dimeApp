@@ -31,6 +31,9 @@ struct NewTransactionIntent: AppIntent {
     @Parameter(title: "Note")
     var note: String?
 
+    @Parameter(title: "Currency", description: "A three-letter code such as EUR. Leave it empty to use the currency Dime picks for new transactions.")
+    var currencyCode: String?
+
     @Parameter(title: "Recurring Transaction", default: false)
     var recurringTransaction: Bool
 
@@ -81,6 +84,15 @@ struct NewTransactionIntent: AppIntent {
 
             let dataController = DataController.shared
             let repeatType: Int
+            var currency: String?
+
+            if let currencyCode, !currencyCode.trimmingCharacters(in: .whitespaces).isEmpty {
+                guard let code = Currency.knownCode(currencyCode) else {
+                    throw $currencyCode.needsValueError("Which currency? Use a three-letter code such as EUR.")
+                }
+
+                currency = code
+            }
 
             if !recurringTransaction {
                 repeatType = 0
@@ -99,7 +111,7 @@ struct NewTransactionIntent: AppIntent {
                 if let unwrappedExpenseCategory = expenseCategory {
                     let category = try dataController.findCategory(withId: unwrappedExpenseCategory.id)
 
-                    let transaction = dataController.newTransaction(note: note ?? "", category: category, income: false, amount: amount, date: Date.now, repeatType: repeatType, repeatCoefficient: 1, delay: false)
+                    let transaction = dataController.newTransaction(note: note ?? "", category: category, income: false, amount: amount, currencyCode: currency, date: Date.now, repeatType: repeatType, repeatCoefficient: 1, delay: false)
 
                     return .result(dialog: "Expense successfully logged.") {
                         ShortcutTransactionView(transaction: transaction)
@@ -111,7 +123,7 @@ struct NewTransactionIntent: AppIntent {
                 if let unwrappedIncomeCategory = incomeCategory {
                     let category = try dataController.findCategory(withId: unwrappedIncomeCategory.id)
 
-                    let transaction = dataController.newTransaction(note: note ?? "", category: category, income: true, amount: amount, date: Date.now, repeatType: repeatType, repeatCoefficient: 1, delay: false)
+                    let transaction = dataController.newTransaction(note: note ?? "", category: category, income: true, amount: amount, currencyCode: currency, date: Date.now, repeatType: repeatType, repeatCoefficient: 1, delay: false)
 
                     return .result(dialog: "Income successfully logged.") {
                         ShortcutTransactionView(transaction: transaction)
@@ -129,12 +141,14 @@ struct NewTransactionIntent: AppIntent {
                 When(\NewTransactionIntent.$recurringTransaction, .equalTo, true, {
                     Summary("Log an \(\.$income) of \(\.$amount) under \(\.$expenseCategory)") {
                         \.$note
+                        \.$currencyCode
                         \.$recurringTransaction
                         \.$recurringType
                     }
                 }, otherwise: {
                     Summary("Log an \(\.$income) of \(\.$amount) under \(\.$expenseCategory)") {
                         \.$note
+                        \.$currencyCode
                         \.$recurringTransaction
                     }
                 })
@@ -143,12 +157,14 @@ struct NewTransactionIntent: AppIntent {
                 When(\NewTransactionIntent.$recurringTransaction, .equalTo, true, {
                     Summary("Log an \(\.$income) of \(\.$amount) under \(\.$incomeCategory)") {
                         \.$note
+                        \.$currencyCode
                         \.$recurringTransaction
                         \.$recurringType
                     }
                 }, otherwise: {
                     Summary("Log an \(\.$income) of \(\.$amount) under \(\.$incomeCategory)") {
                         \.$note
+                        \.$currencyCode
                         \.$recurringTransaction
                     }
                 })
@@ -156,6 +172,7 @@ struct NewTransactionIntent: AppIntent {
             DefaultCase {
                 Summary("Log an \(\.$income) of \(\.$amount)") {
                     \.$note
+                    \.$currencyCode
                 }
             }
         }
@@ -207,6 +224,10 @@ struct ShortcutTransactionView: View {
     @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
 
     var transactionAmountString: String {
+        if let code = transaction.currencyCode, code.uppercased() != currency.uppercased() {
+            return MoneyFormatter.string(transaction.amount, currencyCode: code, showCents: showCents)
+        }
+
         let numberFormatter = NumberFormatter()
         numberFormatter.numberStyle = .currency
         numberFormatter.currencyCode = currency
