@@ -344,6 +344,16 @@ class DataController: ObservableObject {
 
         container.persistentStoreDescriptions = [description]
 
+        if !usesDemoData, let storeURL = description.url {
+            do {
+                if let snapshot = try StoreSnapshot.snapshotIfMigrationNeeded(storeAt: storeURL, to: container.managedObjectModel, in: StoreSnapshot.directory(forStoreAt: storeURL)) {
+                    logger.notice("Saved the store before migrating it to \(snapshot.path, privacy: .public)")
+                }
+            } catch {
+                logger.error("Saving the store before migrating it failed: \(String(describing: error), privacy: .public)")
+            }
+        }
+
         container.loadPersistentStores { description, error in
 
             if let error = error as NSError? {
