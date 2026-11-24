@@ -229,7 +229,7 @@ final class BackupRoundTripTests: XCTestCase {
         salary.order = 1
         salary.dateCreated = start
 
-        let rows: [(Double, String?, Category, String?)] = [(0.1 + 0.2, "Café ☕️", food, "EUR"), (5_000, "Pay", salary, nil), (1_200, nil, food, "JPY")]
+        let rows: [(Double, String?, dime.Category, String?)] = [(0.1 + 0.2, "Café ☕️", food, "EUR"), (5_000, "Pay", salary, nil), (1_200, nil, food, "JPY")]
 
         for (index, (amount, note, category, currencyCode)) in rows.enumerated() {
             let transaction = Transaction(context: context)
