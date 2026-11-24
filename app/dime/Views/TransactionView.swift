@@ -47,8 +47,6 @@ struct TransactionView: View {
     @State var toastImage = ""
 
     // shaking category error
-    @State var categoryError = false
-    @State var shake: Bool = false
 
     @ObservedObject var keyboardHeightHelper = KeyboardHeightHelper()
 
@@ -435,7 +433,7 @@ struct TransactionView: View {
             }
         }
         .sheet(isPresented: $showCategorySheet) {
-            CategoryPickerSheet(category: $category, income: income)
+            CategoryPickerSheet(category: $category, income: income, allowsNone: true)
         }
         .sheet(isPresented: $showPicker) {
             if #available(iOS 16.0, *) {
@@ -585,7 +583,7 @@ struct TransactionView: View {
     }
 
     var categoryToken: some View {
-        CategoryToken(category: category, isError: categoryError, shake: shake) {
+        CategoryToken(category: category, isError: false, shake: false) {
             UIApplication.shared.endEditing()
             showCategorySheet = true
         }
@@ -615,54 +613,13 @@ struct TransactionView: View {
         date.formatted(date: .omitted, time: .shortened)
     }
 
-    func toggleFieldColors() {
-        if categoryError {
-            withAnimation(.linear) {
-                categoryError = false
-            }
-        } else {
-            withAnimation(.easeOut(duration: 1.0)) {
-                categoryError = true
-            }
-            withAnimation(.easeInOut(duration: 0.1).repeatCount(5)) {
-                shake = true
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                withAnimation(.easeInOut(duration: 0.1)) {
-                    shake = false
-                }
-                withAnimation(.easeOut(duration: 0.6)) {
-                    categoryError = false
-                }
-            }
-        }
-    }
-
     func submit() {
         let generator = UINotificationFeedbackGenerator()
 
-        if price == 0 && category == nil {
-            toastImage = "questionmark.app"
-            toastTitle = "Incomplete Entry"
-            showToast = true
-            toggleFieldColors()
-
-            generator.notificationOccurred(.error)
-
-            return
-        } else if price == 0 {
+        if price == 0 {
             toastImage = "centsign.circle"
             toastTitle = "Missing Amount"
             showToast = true
-            generator.notificationOccurred(.error)
-            return
-        } else if category == nil {
-            toastImage = "tray"
-            toastTitle = "Missing Category"
-            showToast = true
-
-            toggleFieldColors()
-
             generator.notificationOccurred(.error)
             return
         }
@@ -673,14 +630,13 @@ struct TransactionView: View {
 
         if let editedTransaction = toEdit {
             if note.trimmingCharacters(in: .whitespacesAndNewlines) == "" {
-                editedTransaction.note = category!.wrappedName
+                editedTransaction.note = category?.wrappedName ?? Uncategorised.name
             } else {
                 editedTransaction.note = note.trimmingCharacters(in: .whitespaces)
             }
 
-            if let unwrappedCategory = category {
-                editedTransaction.category = unwrappedCategory
-            }
+            // Assigned even when nil, so an edit can remove the category.
+            editedTransaction.category = category
 
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 withAnimation(.easeInOut(duration: 0.5)) {
@@ -730,7 +686,7 @@ struct TransactionView: View {
         let transaction = Transaction(context: moc)
 
         if note.trimmingCharacters(in: .whitespacesAndNewlines) == "" {
-            transaction.note = category?.wrappedName ?? ""
+            transaction.note = category?.wrappedName ?? Uncategorised.name
         } else {
             transaction.note = note.trimmingCharacters(in: .whitespaces)
         }

@@ -143,7 +143,7 @@ struct InsightsView: View {
             } else {
                 let expenses = insightsTransactions(dataController, from: period.start, to: period.queryEnd, income: false)
                 if let top = InsightsCategoryTotal.make(from: expenses).first {
-                    route = .category(top.category)
+                    route = .category(top.slice)
                 }
             }
         }
@@ -344,34 +344,81 @@ struct InsightsBucket: Identifiable {
     }
 }
 
+/// One category's transactions, or those without a category.
+enum CategorySlice: Hashable {
+    case categorised(Category)
+    case uncategorised(income: Bool)
+
+    init(_ transaction: Transaction) {
+        if let category = transaction.category {
+            self = .categorised(category)
+        } else {
+            self = .uncategorised(income: transaction.income)
+        }
+    }
+
+    var category: Category? {
+        if case let .categorised(category) = self { return category }
+        return nil
+    }
+
+    var income: Bool {
+        switch self {
+        case let .categorised(category): return category.income
+        case let .uncategorised(income): return income
+        }
+    }
+
+    var id: String {
+        switch self {
+        case let .categorised(category): return category.objectID.uriRepresentation().absoluteString
+        case let .uncategorised(income): return income ? "uncategorised-income" : "uncategorised"
+        }
+    }
+
+    var name: String {
+        category?.wrappedName ?? Uncategorised.name
+    }
+
+    var tokenColour: Color {
+        category?.tokenColour ?? Color(hex: Uncategorised.colour)
+    }
+
+    var predicate: NSPredicate {
+        if let category {
+            return NSPredicate(format: "%K == %@", #keyPath(Transaction.category), category)
+        }
+        return NSPredicate(format: "%K == nil AND income = %d", #keyPath(Transaction.category), income)
+    }
+}
+
 struct InsightsCategoryTotal: Identifiable {
-    let category: Category
+    let slice: CategorySlice
     let amount: Double
     let share: Double
 
-    var id: NSManagedObjectID { category.objectID }
+    var id: String { slice.id }
 
     static func make(from transactions: [Transaction], using converter: CurrencyConverter = .current()) -> [InsightsCategoryTotal] {
-        var totals = [Category: Double]()
+        var totals = [CategorySlice: Double]()
 
         for transaction in transactions {
-            guard let category = transaction.category else { continue }
-            totals[category, default: 0] += converter.amountInBreakdown(of: transaction.money)
+            totals[CategorySlice(transaction), default: 0] += converter.amountInBreakdown(of: transaction.money)
         }
 
         let total = totals.values.reduce(0, +)
 
         return totals
-            .map { InsightsCategoryTotal(category: $0.key, amount: $0.value, share: total > 0 ? $0.value / total : 0) }
+            .map { InsightsCategoryTotal(slice: $0.key, amount: $0.value, share: total > 0 ? $0.value / total : 0) }
             .sorted { $0.amount > $1.amount }
     }
 }
 
 // A period still in progress is measured against the same stretch of the previous one, not all of it.
-func insightsCategoryChange(_ dataController: DataController, period: InsightsPeriod, category: Category, amount: Double) -> Int? {
+func insightsCategoryChange(_ dataController: DataController, period: InsightsPeriod, slice: CategorySlice, amount: Double) -> Int? {
     let previous = period.shifted(by: -1)
     let cutoff = period.isCurrent ? previous.start.addingTimeInterval(Date.now.timeIntervalSince(period.start)) : period.start
-    let base = insightsTransactions(dataController, from: previous.start, to: cutoff, income: category.income, category: category).total(using: .current()).value
+    let base = insightsTransactions(dataController, from: previous.start, to: cutoff, income: slice.income, slice: slice).total(using: .current()).value
 
     guard base > 0, amount > 0 else { return nil }
 
@@ -634,7 +681,7 @@ func insightsLargestFirst(_ transactions: [Transaction]) -> [Transaction] {
     return transactions.sorted { (amounts[$0.objectID] ?? -.infinity) > (amounts[$1.objectID] ?? -.infinity) }
 }
 
-func insightsTransactions(_ dataController: DataController, from start: Date, to end: Date, income: Bool?, category: Category? = nil) -> [Transaction] {
+func insightsTransactions(_ dataController: DataController, from start: Date, to end: Date, income: Bool?, slice: CategorySlice? = nil) -> [Transaction] {
     let request: NSFetchRequest<Transaction> = Transaction.fetchRequest()
 
     var predicates = [
@@ -646,8 +693,8 @@ func insightsTransactions(_ dataController: DataController, from start: Date, to
         predicates.append(NSPredicate(format: "income = %d", income))
     }
 
-    if let category {
-        predicates.append(NSPredicate(format: "%K == %@", #keyPath(Transaction.category), category))
+    if let slice {
+        predicates.append(slice.predicate)
     }
 
     request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
@@ -861,7 +908,7 @@ struct InsightsDashboard: View {
 
                 ForEach(categories.prefix(3)) { total in
                     InsightsCategoryRow(total: total, formatter: formatter) {
-                        onSelect(.category(total.category))
+                        onSelect(.category(total.slice))
                     }
                 }
             }
@@ -1010,11 +1057,11 @@ struct InsightsTappableCard<Content: View>: View {
 }
 
 struct InsightsCategoryTile: View {
-    let category: Category?
+    let slice: CategorySlice
     var large = false
 
     var body: some View {
-        EmojiLogView(emoji: category?.wrappedEmoji ?? "", colour: category?.wrappedColour ?? "#FFFFFF", future: false, huge: large)
+        EmojiLogView(category: slice.category, income: slice.income, future: false, huge: large)
             .fixedSize(horizontal: true, vertical: true)
             .accessibilityHidden(true)
     }
@@ -1058,7 +1105,7 @@ struct InsightsCategoryRing: View {
     let categories: [InsightsCategoryTotal]
     let formatter: InsightsFormatter
     let caption: Text
-    let onSelect: (Category) -> Void
+    let onSelect: (CategorySlice) -> Void
 
     var body: some View {
         let shown = categories.filter { $0.share >= 0.01 }
@@ -1067,12 +1114,12 @@ struct InsightsCategoryRing: View {
         let segments: [ArcRingSegment] = shownTotal > 0 ? shown.map { total in
             let start = cursor
             cursor += total.share / shownTotal
-            return ArcRingSegment(id: total.category.objectID.uriRepresentation().absoluteString, start: start, end: cursor, colour: total.category.tokenColour, label: "\(total.category.wrappedName), \(formatter.string(total.amount))")
+            return ArcRingSegment(id: total.id, start: start, end: cursor, colour: total.slice.tokenColour, label: "\(total.slice.name), \(formatter.string(total.amount))")
         } : []
 
         ArcRing(segments: segments, onSelect: { id in
-            if let total = shown.first(where: { $0.category.objectID.uriRepresentation().absoluteString == id }) {
-                onSelect(total.category)
+            if let total = shown.first(where: { $0.id == id }) {
+                onSelect(total.slice)
             }
         }) {
             InsightsAmountText(amount: categories.reduce(0) { $0 + $1.amount }, formatter: formatter, font: .system(.title, design: .rounded).weight(.semibold))
@@ -1205,7 +1252,7 @@ struct InsightsShareBar: View {
             HStack(spacing: spacing) {
                 ForEach(shown) { total in
                     Rectangle()
-                        .fill(total.category.tokenColour)
+                        .fill(total.slice.tokenColour)
                         .frame(width: max(6, available * total.share / max(shownTotal, 0.0001)))
                 }
             }
@@ -1237,16 +1284,16 @@ struct InsightsCategoryRow: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(total.category.wrappedName), \(formatter.string(total.amount)), \(share) percent of spending")
+        .accessibilityLabel("\(total.slice.name), \(formatter.string(total.amount)), \(share) percent of spending")
         .accessibilityAddTraits(action != nil ? .isButton : [])
     }
 
     var content: some View {
         HStack(spacing: 12) {
-            InsightsCategoryTile(category: total.category)
+            InsightsCategoryTile(slice: total.slice)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(total.category.wrappedName)
+                Text(total.slice.name)
                     .font(.system(.body, design: .rounded).weight(.medium))
                     .foregroundColor(Color.PrimaryText)
                     .lineLimit(1)
@@ -1570,8 +1617,8 @@ struct InsightsCashFlowChart: View {
 
 enum InsightsRoute: Identifiable, Hashable {
     case bucket(Date)
-    case categoryBucket(Category, Date)
-    case category(Category)
+    case categoryBucket(CategorySlice, Date)
+    case category(CategorySlice)
     case allCategories
     case largest
     case cashFlow
@@ -1581,10 +1628,10 @@ enum InsightsRoute: Identifiable, Hashable {
         switch self {
         case let .bucket(date):
             return "bucket-\(date.timeIntervalSince1970)"
-        case let .categoryBucket(category, date):
-            return "categoryBucket-\(category.objectID.uriRepresentation().absoluteString)-\(date.timeIntervalSince1970)"
-        case let .category(category):
-            return "category-\(category.objectID.uriRepresentation().absoluteString)"
+        case let .categoryBucket(slice, date):
+            return "categoryBucket-\(slice.id)-\(date.timeIntervalSince1970)"
+        case let .category(slice):
+            return "category-\(slice.id)"
         case .allCategories:
             return "allCategories"
         case .largest:
@@ -1666,8 +1713,8 @@ struct InsightsDetailSheet: View {
             let dateFormatter = DateFormatter()
             dateFormatter.dateFormat = period.bucketDateFormat
             return Text(dateFormatter.string(from: date))
-        case let .category(category):
-            return Text(category.wrappedName)
+        case let .category(slice):
+            return Text(slice.name)
         case .allCategories:
             return Text("Categories")
         case .largest:
@@ -1684,10 +1731,10 @@ struct InsightsDetailSheet: View {
         switch route {
         case let .bucket(date):
             bucketContent(date)
-        case let .categoryBucket(category, date):
-            bucketContent(date, category: category)
-        case let .category(category):
-            categoryContent(category)
+        case let .categoryBucket(slice, date):
+            bucketContent(date, slice: slice)
+        case let .category(slice):
+            categoryContent(slice)
         case .allCategories:
             allCategoriesContent
         case .largest:
@@ -1699,13 +1746,13 @@ struct InsightsDetailSheet: View {
         }
     }
 
-    func bucketContent(_ date: Date, category: Category? = nil) -> some View {
+    func bucketContent(_ date: Date, slice: CategorySlice? = nil) -> some View {
         let end = period.bucketEnd(for: date)
-        let income = category?.income ?? false
-        let items = insightsTransactions(dataController, from: date, to: end, income: income, category: category).sorted { $0.wrappedDate > $1.wrappedDate }
+        let income = slice?.income ?? false
+        let items = insightsTransactions(dataController, from: date, to: end, income: income, slice: slice).sorted { $0.wrappedDate > $1.wrappedDate }
         let converter = CurrencyConverter.current()
         let total = items.total(using: converter).value
-        let periodItems = insightsTransactions(dataController, from: period.start, to: period.queryEnd, income: income, category: category)
+        let periodItems = insightsTransactions(dataController, from: period.start, to: period.queryEnd, income: income, slice: slice)
         let spent = periodItems.total(using: converter).value
         let average = spent / Double(insightsAverageSpan(dataController, period: period, firstDay: firstDay))
         let ratio = average > 0 ? total / average : 0
@@ -1726,14 +1773,14 @@ struct InsightsDetailSheet: View {
         return Text(" · ") + (Text(Image(systemName: change > 0 ? "arrow.up" : "arrow.down")).fontWeight(.semibold) + Text(" \(abs(change))%")).foregroundColor(tint)
     }
 
-    func categoryContent(_ category: Category) -> some View {
-        let items = insightsTransactions(dataController, from: period.start, to: period.queryEnd, income: category.income, category: category)
+    func categoryContent(_ slice: CategorySlice) -> some View {
+        let items = insightsTransactions(dataController, from: period.start, to: period.queryEnd, income: slice.income, slice: slice)
         let converter = CurrencyConverter.current()
         let total = items.total(using: converter).value
-        let allTotal = insightsTransactions(dataController, from: period.start, to: period.queryEnd, income: category.income).total(using: converter).value
+        let allTotal = insightsTransactions(dataController, from: period.start, to: period.queryEnd, income: slice.income).total(using: converter).value
         let share = allTotal > 0 ? Int((total / allTotal * 100).rounded()) : 0
 
-        let dates = dataController.getInsights(type: period.type, date: period.start, income: category.income).dates
+        let dates = dataController.getInsights(type: period.type, date: period.start, income: slice.income).dates
         var values = [Date: Double]()
         for (index, bucketStart) in dates.enumerated() {
             let bucketEnd = index + 1 < dates.count ? dates[index + 1] : period.end
@@ -1741,23 +1788,23 @@ struct InsightsDetailSheet: View {
         }
         let buckets = InsightsBucket.make(dates: dates, values: values, type: period.type)
         let average = total / Double(insightsAverageSpan(dataController, period: period, firstDay: firstDay))
-        let change = insightsCategoryChange(dataController, period: period, category: category, amount: total)
+        let change = insightsCategoryChange(dataController, period: period, slice: slice, amount: total)
 
         return VStack(spacing: 24) {
             VStack(spacing: 12) {
-                InsightsCategoryTile(category: category, large: true)
+                InsightsCategoryTile(slice: slice, large: true)
 
-                InsightsSheetSummary(amount: total, formatter: formatter, caption: Text("\(share)%") + Text(" ") + Text(category.income ? "of income" : "of spending") + changeCaption(change, increaseIsGood: category.income))
+                InsightsSheetSummary(amount: total, formatter: formatter, caption: Text("\(share)%") + Text(" ") + Text(slice.income ? "of income" : "of spending") + changeCaption(change, increaseIsGood: slice.income))
             }
 
-            InsightsBarChart(buckets: buckets, average: average, colour: category.tokenColour, formatter: formatter) { bucket in
+            InsightsBarChart(buckets: buckets, average: average, colour: slice.tokenColour, formatter: formatter) { bucket in
                 withAnimation(.easeInOut(duration: 0.2)) {
-                    path.append(.categoryBucket(category, bucket.date))
+                    path.append(.categoryBucket(slice, bucket.date))
                 }
             }
             .padding(.horizontal, 20)
 
-            InsightsTallyList(title: period.title, items: items.sorted { $0.wrappedDate > $1.wrappedDate }, formatter: formatter, sign: category.income ? "+" : "")
+            InsightsTallyList(title: period.title, items: items.sorted { $0.wrappedDate > $1.wrappedDate }, formatter: formatter, sign: slice.income ? "+" : "")
         }
     }
 
@@ -1771,9 +1818,9 @@ struct InsightsDetailSheet: View {
                 .fillsScrollViewport()
         } else {
             VStack(spacing: 20) {
-                InsightsCategoryRing(categories: categories, formatter: formatter, caption: Text("\(categories.count) ") + Text(categories.count == 1 ? "category" : "categories")) { category in
+                InsightsCategoryRing(categories: categories, formatter: formatter, caption: Text("\(categories.count) ") + Text(categories.count == 1 ? "category" : "categories")) { slice in
                     withAnimation(.easeInOut(duration: 0.2)) {
-                        path.append(.category(category))
+                        path.append(.category(slice))
                     }
                 }
 
@@ -1789,7 +1836,7 @@ struct InsightsDetailSheet: View {
                 ForEach(categories) { total in
                     InsightsCategoryRow(total: total, formatter: formatter) {
                         withAnimation(.easeInOut(duration: 0.2)) {
-                            path.append(.category(total.category))
+                            path.append(.category(total.slice))
                         }
                     }
                 }

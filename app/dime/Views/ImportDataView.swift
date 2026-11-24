@@ -21,6 +21,8 @@ private enum ImportStep: Int, Comparable {
 private enum ImportCategoryChoice: Hashable {
     case create
     case existing(Category)
+    /// Imported without a category.
+    case uncategorised
 }
 
 struct ImportDataView: View {
@@ -399,7 +401,7 @@ struct ImportDataView: View {
 
         return HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(key.name)
+                Text(key.name.isEmpty ? Uncategorised.name : key.name)
                     .font(.system(.body, design: .rounded).weight(.medium))
                     .foregroundColor(Color.PrimaryText)
                     .lineLimit(1)
@@ -437,13 +439,25 @@ struct ImportDataView: View {
             Spacer(minLength: 8)
 
             Menu {
+                if !key.name.isEmpty {
+                    Button {
+                        choices[key] = .create
+                    } label: {
+                        if current == .create {
+                            Label("New Category", systemImage: "checkmark")
+                        } else {
+                            Label("New Category", systemImage: "plus")
+                        }
+                    }
+                }
+
                 Button {
-                    choices[key] = .create
+                    choices[key] = .uncategorised
                 } label: {
-                    if current == .create {
-                        Label("New Category", systemImage: "checkmark")
+                    if current == .uncategorised {
+                        Label("No Category", systemImage: "checkmark")
                     } else {
-                        Label("New Category", systemImage: "plus")
+                        Label("No Category", systemImage: Uncategorised.symbol(income: income))
                     }
                 }
 
@@ -708,10 +722,17 @@ struct ImportDataView: View {
         switch choices[key] {
         case let .existing(category) where category.income == income:
             return .existing(category)
-        case .create:
+        case .create where !key.name.isEmpty:
             return .create
-        case .existing, nil:
+        case .uncategorised:
+            return .uncategorised
+        case .existing, .create, nil:
             break
+        }
+
+        // A row without a category name can't name a new category.
+        if key.name.isEmpty {
+            return .uncategorised
         }
 
         if let match = categories.first(where: { $0.income == income && $0.wrappedName.compare(key.name, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame }) {
@@ -755,7 +776,8 @@ struct ImportDataView: View {
         var duplicates = Set<Int>()
         for (index, row) in parsed.rows.enumerated() {
             // Notes left empty are saved as the category's name.
-            let key = duplicateKey(date: row.date, amount: row.amount, note: row.note.isEmpty ? row.categoryName : row.note, income: income(for: row), currencyCode: row.currencyCode)
+            let savedNote = row.note.isEmpty ? (row.categoryName.isEmpty ? Uncategorised.name : row.categoryName) : row.note
+            let key = duplicateKey(date: row.date, amount: row.amount, note: savedNote, income: income(for: row), currencyCode: row.currencyCode)
             if let count = existing[key], count > 0 {
                 existing[key] = count - 1
                 duplicates.insert(index)
@@ -785,11 +807,13 @@ struct ImportDataView: View {
             for row in rows {
                 let key = ImportCategoryKey(name: row.categoryName, income: row.income)
                 let income = income(for: key)
-                let category: Category
+                let category: Category?
 
                 switch choice(for: key) {
                 case let .existing(existing):
                     category = existing
+                case .uncategorised:
+                    category = nil
                 case .create:
                     let createdKey = "\(row.categoryName.lowercased())|\(income)"
                     if let match = created[createdKey] {
@@ -1020,6 +1044,14 @@ private struct CategoryChip: View {
                     .font(.system(.footnote, design: .rounded))
 
                 Text("New")
+                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .foregroundColor(Color.PrimaryText)
+            case .uncategorised:
+                Image(systemName: Uncategorised.symbol(income: income))
+                    .font(.system(.footnote, design: .rounded).weight(.bold))
+                    .foregroundColor(Color(hex: Uncategorised.colour))
+
+                Text("None")
                     .font(.system(.subheadline, design: .rounded).weight(.semibold))
                     .foregroundColor(Color.PrimaryText)
             }

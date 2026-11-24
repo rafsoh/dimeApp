@@ -60,6 +60,7 @@ struct CategoryPickerSheet: View {
     @Binding var category: Category?
     let income: Bool
     let allowsEditing: Bool
+    private var allowsNone = false
     private var title: LocalizedStringKey?
     private var overall: Binding<Bool>?
 
@@ -85,7 +86,7 @@ struct CategoryPickerSheet: View {
     private var estimatedBodyHeight: CGFloat {
         guard showsGrid else { return 160 }
 
-        let tileCount = categories.count + (overall == nil ? 0 : 1)
+        let tileCount = categories.count + (overall == nil ? 0 : 1) + (allowsNone ? 1 : 0)
         let rows = CGFloat((tileCount + columns.count - 1) / columns.count)
         return 12 + rows * 84 + (rows - 1) * 10 + 16
     }
@@ -155,7 +156,7 @@ struct CategoryPickerSheet: View {
 
     var categoryList: some View {
         ScrollView(showsIndicators: false) {
-            CategoryTileGrid(categories: categories, category: $category, overall: overall) {
+            CategoryTileGrid(categories: categories, category: $category, overall: overall, noneIncome: allowsNone ? income : nil) {
                 dismiss()
             }
             .padding(.horizontal, 20)
@@ -186,10 +187,12 @@ struct CategoryPickerSheet: View {
         .frame(maxHeight: .infinity)
     }
 
-    init(category: Binding<Category?>, income: Bool, allowsEditing: Bool = true) {
+    /// `allowsNone` adds a No Category tile, for transactions that can be left uncategorised.
+    init(category: Binding<Category?>, income: Bool, allowsEditing: Bool = true, allowsNone: Bool = false) {
         _category = category
         self.income = income
         self.allowsEditing = allowsEditing
+        self.allowsNone = allowsNone
         _categories = FetchRequest<Category>(
             sortDescriptors: [SortDescriptor(\.order)],
             predicate: NSPredicate(format: "income = %d", income)
@@ -251,11 +254,14 @@ struct NewCategoryCapsule: View {
 }
 
 /// The 3-column grid of tinted category tiles, or a horizontally scrolling grid of `rows` rows of the same tiles.
-/// Passing `overall` adds a leading Everything tile; passing `onAdd` adds a trailing New Category tile.
+/// Passing `overall` adds a leading Everything tile; passing `noneIncome` adds a leading No Category tile;
+/// passing `onAdd` adds a trailing New Category tile.
 struct CategoryTileGrid<Categories: RandomAccessCollection>: View where Categories.Element == Category {
     let categories: Categories
     @Binding var category: Category?
     var overall: Binding<Bool>?
+    /// Whether the No Category tile is for income, or nil for no such tile.
+    var noneIncome: Bool?
     var rows: Int?
     var onAdd: (() -> Void)?
     let onSelect: () -> Void
@@ -280,10 +286,11 @@ struct CategoryTileGrid<Categories: RandomAccessCollection>: View where Categori
     private let columns = Array(repeating: GridItem(.flexible(), spacing: CategoryTileGrid.spacing), count: 3)
     private let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
 
-    init(categories: Categories, category: Binding<Category?>, overall: Binding<Bool>? = nil, rows: Int? = nil, onAdd: (() -> Void)? = nil, onSelect: @escaping () -> Void) {
+    init(categories: Categories, category: Binding<Category?>, overall: Binding<Bool>? = nil, noneIncome: Bool? = nil, rows: Int? = nil, onAdd: (() -> Void)? = nil, onSelect: @escaping () -> Void) {
         self.categories = categories
         _category = category
         self.overall = overall
+        self.noneIncome = noneIncome
         self.rows = rows
         self.onAdd = onAdd
         self.onSelect = onSelect
@@ -307,6 +314,10 @@ struct CategoryTileGrid<Categories: RandomAccessCollection>: View where Categori
     @ViewBuilder var tiles: some View {
         if let overall {
             everythingTile(overall)
+        }
+
+        if let noneIncome {
+            noneTile(income: noneIncome)
         }
 
         ForEach(categories) { item in
@@ -387,6 +398,42 @@ struct CategoryTileGrid<Categories: RandomAccessCollection>: View where Categori
         .buttonStyle(BouncyButton(duration: 0.15, scale: 0.96))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Everything, overall budget")
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
+    }
+
+    func noneTile(income: Bool) -> some View {
+        let isSelected = category == nil
+        let tint = Color(hex: Uncategorised.colour)
+
+        return Button {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            category = nil
+            onSelect()
+        } label: {
+            VStack(spacing: 6) {
+                Image(systemName: Uncategorised.symbol(income: income))
+                    .font(.system(.title2, design: .rounded).weight(.semibold))
+                    .foregroundColor(Color.PrimaryText)
+
+                Text("No Category")
+                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .foregroundColor(Color.PrimaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+            .padding(.horizontal, 8)
+            .frame(maxWidth: .infinity, minHeight: Self.tileHeight)
+            .background(shape.fill(tint.opacity(isSelected ? 0.45 : 0.25)))
+            .overlay {
+                if isSelected {
+                    shape.strokeBorder(tint, lineWidth: 2)
+                }
+            }
+            .contentShape(shape)
+        }
+        .buttonStyle(BouncyButton(duration: 0.15, scale: 0.96))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("No Category")
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     }
 

@@ -62,7 +62,7 @@ struct LogView: View {
     @State var filter = FilterType.all
 
     // filters
-    @State var categoryFilter: Category?
+    @State var categoryFilter: CategorySlice?
     @State var dateFilter = Date.now
     @State var weekFilter = Date.now
     @State var monthFilter = Date.now
@@ -414,7 +414,7 @@ struct NumberView: AnimatableModifier {
 /// SwiftUI never sees as unchanged, so recreating it redraws every visible row.
 struct LogListContent: View, Equatable {
     let filter: FilterType
-    let category: Category?
+    let category: CategorySlice?
     let date: Date
     let week: Date
     let month: Date
@@ -814,7 +814,7 @@ struct FilterPickerView: View {
 
 struct TransactionsList: View {
     var filter: FilterType
-    var category: Category?
+    var category: CategorySlice?
     var date: Date
     var week: Date
     var month: Date
@@ -1191,8 +1191,7 @@ struct SingleTransactionView: View {
                 .accessibilityHidden(true)
 
             HStack(spacing: 12) {
-                EmojiLogView(emoji: (transaction.category?.wrappedEmoji ?? ""),
-                             colour: (transaction.category?.wrappedColour ?? "#FFFFFF"), future: future)
+                EmojiLogView(transaction: transaction, future: future)
                     .fixedSize(horizontal: true, vertical: true)
                     .overlay(alignment: .bottomTrailing) {
                         if transaction.recurringType > 0 {
@@ -1288,7 +1287,7 @@ struct SingleTransactionView: View {
             }
             .offset(x: offset)
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("\(transaction.wrappedNote), \(accessibilityAmount), Transaction Category: \(transaction.category?.wrappedName ?? "Unknown"), Transaction made at \(timeConverterAccessibilityLabel(date: transaction.wrappedDate))")
+            .accessibilityLabel("\(transaction.wrappedNote), \(accessibilityAmount), Transaction Category: \(transaction.wrappedCategoryName), Transaction made at \(timeConverterAccessibilityLabel(date: transaction.wrappedDate))")
         }
         .background {
             GeometryReader { proxy in
@@ -1443,6 +1442,8 @@ struct EmojiLogView: View {
     let colour: String
     let future: Bool
     let huge: Bool
+    /// An SF Symbol shown in place of the emoji, for transactions without a category.
+    var symbol: String?
 
     var body: some View {
         ZStack {
@@ -1454,11 +1455,26 @@ struct EmojiLogView: View {
                     .fill(Color(hex: colour).opacity(0.25))
             }
 
-            Text(emoji)
-                .font(.system(huge ? .title : .title3))
-                // future ? .caption :
-                .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-                .padding(8)
+            if let symbol {
+                // A hidden emoji keeps the tile the same size as a categorised one.
+                Text("😄")
+                    .font(.system(huge ? .title : .title3))
+                    .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+                    .padding(8)
+                    .hidden()
+                    .overlay {
+                        Image(systemName: symbol)
+                            .font(.system(huge ? .title2 : .body, design: .rounded).weight(.bold))
+                            .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+                            .foregroundColor(Color(hex: colour))
+                    }
+            } else {
+                Text(emoji)
+                    .font(.system(huge ? .title : .title3))
+                    // future ? .caption :
+                    .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+                    .padding(8)
+            }
 //                .font(.system(size: huge ? 45 : future ? 16: 20))
         }
         .opacity(future ? 0.6 : 1)
@@ -1469,6 +1485,20 @@ struct EmojiLogView: View {
         self.colour = colour
         self.future = future
         self.huge = huge
+    }
+
+    /// The transaction's category, or a grey arrow when it has none.
+    init(transaction: Transaction, future: Bool, huge: Bool = false) {
+        self.init(category: transaction.category, income: transaction.income, future: future, huge: huge)
+    }
+
+    init(category: Category?, income: Bool, future: Bool, huge: Bool = false) {
+        if let category {
+            self.init(emoji: category.wrappedEmoji, colour: category.wrappedColour, future: future, huge: huge)
+        } else {
+            self.init(emoji: "", colour: Uncategorised.colour, future: future, huge: huge)
+            symbol = Uncategorised.symbol(income: income)
+        }
     }
 }
 
@@ -1591,7 +1621,7 @@ struct FilteredTypeView: View {
 struct FilteredCategoryView: View {
     @SectionedFetchRequest<Date?, Transaction> private var transactions: SectionedFetchResults<Date?, Transaction>
 
-    var category: Category?
+    var category: CategorySlice?
 
     var body: some View {
         if transactions.isEmpty || category == nil {
@@ -1602,9 +1632,9 @@ struct FilteredCategoryView: View {
         }
     }
 
-    init(category: Category?) {
-        if let unwrappedCategory = category {
-            let categoryPredicate = NSPredicate(format: "%K == %@", #keyPath(Transaction.category), unwrappedCategory)
+    init(category: CategorySlice?) {
+        if let category {
+            let categoryPredicate = category.predicate
             let datePredicate = NSPredicate(format: "%K <= %@", #keyPath(Transaction.date), Date.now as CVarArg)
 
             let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [categoryPredicate, datePredicate])
@@ -1669,7 +1699,7 @@ struct FilteredDateView: View {
 }
 
 struct CategoryStepperView: View {
-    @Binding var categoryFilter: Category?
+    @Binding var categoryFilter: CategorySlice?
     @EnvironmentObject var dataController: DataController
     @AppStorage("incomeTracking", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var incomeTracking: Bool = true
     @State var income = false
@@ -1681,14 +1711,23 @@ struct CategoryStepperView: View {
         } set: { newValue in
             guard newValue != income else { return }
 
-            let holding = dataController.results(for: dataController.fetchRequestForCategories(income: newValue))
+            income = newValue
+            categoryFilter = firstSlice(income: newValue)
+        }
+    }
 
-            if holding.isEmpty {
-                return
-            } else {
-                income = newValue
-                categoryFilter = holding[0]
-            }
+    /// The first category of a type, or No Category when there are none.
+    func firstSlice(income: Bool) -> CategorySlice {
+        let holding = dataController.results(for: dataController.fetchRequestForCategories(income: income))
+        return holding.first.map { .categorised($0) } ?? .uncategorised(income: income)
+    }
+
+    /// The picker works in categories; picking No Category there filters to transactions without one.
+    var pickerSelection: Binding<Category?> {
+        Binding {
+            categoryFilter?.category
+        } set: { newValue in
+            categoryFilter = newValue.map { .categorised($0) } ?? .uncategorised(income: income)
         }
     }
 
@@ -1703,8 +1742,13 @@ struct CategoryStepperView: View {
             } label: {
                 HStack(spacing: 6) {
                     if let categoryFilter {
-                        Text(categoryFilter.wrappedEmoji)
-                        Text(categoryFilter.wrappedName)
+                        if let category = categoryFilter.category {
+                            Text(category.wrappedEmoji)
+                        } else {
+                            Image(systemName: Uncategorised.symbol(income: income))
+                                .foregroundColor(Color(hex: Uncategorised.colour))
+                        }
+                        Text(categoryFilter.name)
                             .foregroundColor(Color.PrimaryText)
                             .lineLimit(1)
                     } else {
@@ -1726,16 +1770,15 @@ struct CategoryStepperView: View {
             .glassBackground(in: Capsule(), tint: capsuleColour.opacity(0.25), fallback: capsuleColour.opacity(0.23))
             .disabled(categoryFilter == nil)
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(Text("Category filter") + Text(", ") + Text(categoryFilter?.wrappedName ?? ""))
+            .accessibilityLabel(Text("Category filter") + Text(", ") + Text(categoryFilter?.name ?? ""))
             .accessibilityAddTraits(.isButton)
         }
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .sheet(isPresented: $showPicker) {
-            CategoryPickerSheet(category: $categoryFilter, income: income, allowsEditing: false)
+            CategoryPickerSheet(category: pickerSelection, income: income, allowsEditing: false, allowsNone: true)
         }
         .onAppear {
-            let holding = dataController.results(for: dataController.fetchRequestForCategories(income: income))
-            categoryFilter = holding.first
+            categoryFilter = firstSlice(income: income)
         }
     }
 
@@ -1743,7 +1786,7 @@ struct CategoryStepperView: View {
         categoryFilter?.tokenColour ?? Color.SubtitleText
     }
 
-    init(categoryFilter: Binding<Category?>?) {
+    init(categoryFilter: Binding<CategorySlice?>?) {
         _categoryFilter = categoryFilter ?? Binding.constant(nil)
     }
 }

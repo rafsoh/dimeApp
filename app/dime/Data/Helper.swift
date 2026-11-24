@@ -7,6 +7,16 @@
 
 import Foundation
 
+/// How a transaction without a category is shown.
+enum Uncategorised {
+    static let colour = "#8E8E93"
+    static var name: String { String(localized: "No Category") }
+
+    static func symbol(income: Bool) -> String {
+        income ? "arrow.down.left" : "arrow.up.right"
+    }
+}
+
 extension Transaction {
     var wrappedAmount: Double {
         amount
@@ -25,11 +35,11 @@ extension Transaction {
     }
 
     var wrappedCategoryName: String {
-        category?.wrappedName ?? ""
+        category?.wrappedName ?? Uncategorised.name
     }
 
     var wrappedColour: String {
-        category?.wrappedColour ?? ""
+        category?.wrappedColour ?? Uncategorised.colour
     }
 
     var nextTransactionDate: Date {
@@ -72,7 +82,7 @@ extension TemplateTransaction {
     }
 
     var wrappedColour: String {
-        category?.wrappedColour ?? ""
+        category?.wrappedColour ?? Uncategorised.colour
     }
 }
 

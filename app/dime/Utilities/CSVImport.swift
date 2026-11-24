@@ -162,8 +162,8 @@ enum ImportField: CaseIterable, Hashable {
 
     var isRequired: Bool {
         switch self {
-        case .date, .amount, .category: return true
-        case .note, .type, .currency: return false
+        case .date, .amount: return true
+        case .category, .note, .type, .currency: return false
         }
     }
 
@@ -460,13 +460,12 @@ struct ColumnMapping: Equatable {
 }
 
 enum ImportSkipReason: CaseIterable, Hashable {
-    case date, amount, category, currency
+    case date, amount, currency
 
     var description: String {
         switch self {
         case .date: return "without a readable date"
         case .amount: return "without a readable amount"
-        case .category: return "without a category"
         case .currency: return "with an unknown currency"
         }
     }
@@ -477,6 +476,7 @@ struct ImportedRow {
     /// Always positive; whether it's income comes from `income` or the category.
     let amount: Double
     let note: String
+    /// Empty when the row has no category.
     let categoryName: String
     /// Set when the file says whether the row is income, through a type column or signed amounts.
     let income: Bool?
@@ -501,7 +501,7 @@ struct ImportParseResult {
     var skippedCount: Int { skipped.values.reduce(0, +) }
 
     static func build(table: CSVTable, mapping: ColumnMapping, dateFormat: String) -> ImportParseResult {
-        guard let dateColumn = mapping[.date], let amountColumn = mapping[.amount], let categoryColumn = mapping[.category] else {
+        guard let dateColumn = mapping[.date], let amountColumn = mapping[.amount] else {
             return ImportParseResult(rows: [], skipped: [:])
         }
 
@@ -521,11 +521,8 @@ struct ImportParseResult {
                 skipped[.amount, default: 0] += 1
                 continue
             }
-            let categoryName = row[categoryColumn].trimmingCharacters(in: .whitespaces)
-            guard !categoryName.isEmpty else {
-                skipped[.category, default: 0] += 1
-                continue
-            }
+            // Rows without a category are imported without one.
+            let categoryName = mapping[.category].map { row[$0].trimmingCharacters(in: .whitespaces) } ?? ""
 
             // An unrecognised code is skipped rather than read as the main currency.
             var currencyCode: String?

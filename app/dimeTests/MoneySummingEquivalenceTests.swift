@@ -90,6 +90,19 @@ final class MoneySummingEquivalenceTests: XCTestCase {
         }
     }
 
+    // Half the fixtures have no category; the breakdown must still account for every one of them.
+    func testCategoryBreakdownIncludesUncategorised() {
+        let converter = CurrencyConverter.current()
+        let expenses = inserted.compactMap { $0 as? Transaction }.filter { !$0.income }
+        let totals = InsightsCategoryTotal.make(from: expenses, using: converter)
+        let uncategorised = totals.first { $0.slice == .uncategorised(income: false) }
+
+        XCTAssertNotNil(uncategorised)
+        XCTAssertEqual(uncategorised?.slice.name, Uncategorised.name)
+        XCTAssertEqual(totals.reduce(0) { $0 + $1.amount }, expenses.total(using: converter).value, accuracy: 0.01)
+        XCTAssertEqual(totals.reduce(0) { $0 + $1.share }, 1, accuracy: 0.0001)
+    }
+
     func testLineGraphsAreUnchanged() {
         for type in 1 ... 4 {
             XCTAssertEqual(dataController.getLineGraphDataNet(type: type), dataController.legacyGetLineGraphDataNet(type: type))

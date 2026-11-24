@@ -301,13 +301,23 @@ struct WidgetEmojiTile: View {
     let emoji: String
     let colour: String
     let size: CGFloat
+    /// An SF Symbol shown in place of the emoji, for transactions without a category.
+    var symbol: String?
 
     var body: some View {
-        Text(emoji)
-            .font(.system(size: size * 0.5))
-            .frame(width: size, height: size)
-            .background(Color(hex: colour).opacity(0.25), in: RoundedRectangle(cornerRadius: size * 0.32, style: .continuous))
-            .accessibilityHidden(true)
+        Group {
+            if let symbol {
+                Image(systemName: symbol)
+                    .font(.system(size: size * 0.42, weight: .bold, design: .rounded))
+                    .foregroundColor(Color(hex: colour))
+            } else {
+                Text(emoji)
+                    .font(.system(size: size * 0.5))
+            }
+        }
+        .frame(width: size, height: size)
+        .background(Color(hex: colour).opacity(0.25), in: RoundedRectangle(cornerRadius: size * 0.32, style: .continuous))
+        .accessibilityHidden(true)
     }
 }
 
