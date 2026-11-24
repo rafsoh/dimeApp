@@ -815,60 +815,48 @@ private enum Phrase {
     case thisWeekend, lastWeekend, nextWeekend
 }
 
-/// The whole search text as an amount, after currency symbols and grouping
-/// separators are removed. The locale's decimal separator is the one that
-/// stays. `$100`, `100.00` and `1,000` match when those characters are the
-/// locale's symbol, decimal mark or thousands mark.
+/// The search text read as an amount the way the log shows it, so `$1,250.50`,
+/// `-16.80` and `SGD 100` all match. Amounts are stored unsigned, so a leading
+/// sign is dropped. The locale's decimal separator is the one that stays.
 enum TransactionAmountSearch {
-    static func value(in query: String, locale: Locale = .current, extraSymbols: [String]? = nil) -> Double? {
+    static func value(in query: String, currencyCode: String? = appCurrencyCode(), locale: Locale = .current) -> Double? {
         var text = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty else { return nil }
+
+        if let currencyCode, !currencyCode.isEmpty {
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .currency
+            formatter.locale = locale
+            formatter.currencyCode = currencyCode
+            // Longest first, so "S$" goes before a bare "$" could leave the "S" behind.
+            let names = [formatter.currencySymbol, formatter.internationalCurrencySymbol, currencyCode]
+                .compactMap { $0?.trimmingCharacters(in: .whitespaces) }
+                .filter { !$0.isEmpty }
+                .sorted { $0.count > $1.count }
+            for name in names {
+                text = text.replacingOccurrences(of: name, with: "", options: .caseInsensitive)
+            }
+        }
 
         let decimal = locale.decimalSeparator ?? "."
         let grouping = locale.groupingSeparator ?? ","
-        let symbols = (extraSymbols ?? appCurrencySymbols(locale: locale))
-            .filter { isSafeSymbol($0, decimal: decimal, grouping: grouping) }
-            .sorted { $0.count > $1.count }
-
-        for symbol in symbols {
-            text = text.replacingOccurrences(of: symbol, with: "", options: .caseInsensitive)
-        }
-        text = text.trimmingCharacters(in: .whitespacesAndNewlines)
-
         if grouping != decimal {
             text = text.replacingOccurrences(of: grouping, with: "")
         }
-        for space in [" ", "\u{00a0}", "\u{202f}", "\u{2009}"] where space != decimal && space != grouping {
-            text = text.replacingOccurrences(of: space, with: "")
+        text = String(String.UnicodeScalarView(text.unicodeScalars.filter {
+            $0.properties.generalCategory != .currencySymbol && !$0.properties.isWhitespace
+        }))
+        if let sign = text.first, sign == "-" || sign == "+" || sign == "−" {
+            text.removeFirst()
         }
         if decimal != "." {
             text = text.replacingOccurrences(of: decimal, with: ".")
         }
 
-        guard text.range(of: #"^-?\d+(\.\d+)?$"#, options: .regularExpression) != nil else { return nil }
+        guard text.range(of: #"^(\d+(\.\d*)?|\.\d+)$"#, options: .regularExpression) != nil else { return nil }
         return Double(text)
     }
 
-    static func appCurrencySymbols(locale: Locale) -> [String] {
-        var symbols = ["$", "€", "£", "¥", "₩", "₹", "₽", "₺", "₫", "₱", "฿", "₴", "₦", "R$", "US$", "A$", "C$", "HK$", "NT$", "S$", "NZ$"]
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.locale = locale
-        if let symbol = formatter.currencySymbol { symbols.append(symbol) }
-        if let code = formatter.currencyCode { symbols.append(code) }
-        if let international = formatter.internationalCurrencySymbol { symbols.append(international) }
-
-        if let code = UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.string(forKey: "currency"), !code.isEmpty {
-            symbols.append(code)
-            formatter.currencyCode = code
-            if let symbol = formatter.currencySymbol { symbols.append(symbol) }
-        }
-        return symbols
-    }
-
-    private static func isSafeSymbol(_ symbol: String, decimal: String, grouping: String) -> Bool {
-        let trimmed = symbol.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard trimmed.count > 0, trimmed != decimal, trimmed != grouping else { return false }
-        return trimmed.contains { !$0.isNumber && $0 != "." && $0 != "," }
+    static func appCurrencyCode() -> String? {
+        UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.string(forKey: "currency") ?? Locale.current.currencyCode
     }
 }

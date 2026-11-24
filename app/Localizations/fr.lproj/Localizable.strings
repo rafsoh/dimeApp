@@ -89,6 +89,7 @@
 "Your Log is Empty" = "Votre registre est vide";
 "Press the plus button to add your first entry" = "Appuyez sur le bouton + pour ajouter votre première entrée";
 "Search entry by note" = "Recherche d'une saisie par note";
+"Search" = "Rechercher";
 "Search by note, category, amount or date" = "Recherchez par note, catégorie, montant ou date";
 "all entries" = "toutes les entrées";
 "by type" = "par type";
@@ -352,5 +353,4 @@
 "Not Now" = "Plus tard";
 "Export" = "Exporter";
 "All time" = "Depuis le début";
-"Nothing selected" = "Aucune sélection";
 "No transactions to export" = "Aucune transaction à exporter";

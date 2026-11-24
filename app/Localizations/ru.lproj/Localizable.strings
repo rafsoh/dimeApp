@@ -87,6 +87,7 @@
 "Your Log is Empty" = "Ваш лог пуст";
 "Press the plus button to add your first entry" = "Нажмите на + чтобы добавить Вашу первую запись";
 "Search entry by note" = "Поиск записи по Примечанию";
+"Search" = "Поиск";
 "Search by note, category, amount or date" = "Поиск по заметке, категории, сумме или дате";
 "all entries" = "все записи";
 "by type" = "по типу";
@@ -352,5 +353,4 @@
 "Not Now" = "Не сейчас";
 "Export" = "Экспорт";
 "All time" = "За всё время";
-"Nothing selected" = "Ничего не выбрано";
 "No transactions to export" = "Нет транзакций для экспорта";
