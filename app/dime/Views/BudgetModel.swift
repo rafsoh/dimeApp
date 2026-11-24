@@ -446,13 +446,15 @@ func budgetPredicate(from start: Date, to end: Date, category: Category?) -> NSP
 /// Budgeted categories in their own colour, largest first, then everything else as one grey segment.
 func budgetStripSegments(_ transactions: [Transaction], denominator: Double) -> [BudgetMeterSegment] {
     guard denominator > 0 else { return [] }
+    let converter = CurrencyConverter.current()
     var budgeted = [NSManagedObjectID: (category: Category, amount: Double)]()
     var rest = 0.0
     for transaction in transactions {
+        let amount = converter.amountInBreakdown(of: transaction.money)
         if let category = transaction.category, category.budget != nil {
-            budgeted[category.objectID, default: (category, 0)].amount += transaction.wrappedAmount
+            budgeted[category.objectID, default: (category, 0)].amount += amount
         } else {
-            rest += transaction.wrappedAmount
+            rest += amount
         }
     }
     let own = budgeted.values.sorted { $0.amount > $1.amount }.map {

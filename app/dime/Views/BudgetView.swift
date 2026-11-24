@@ -184,7 +184,7 @@ struct BudgetOverallCard: View {
         if budget.isGone {
             EmptyView()
         } else {
-            let snapshot = BudgetSnapshot(amount: budget.amount, spent: transactions.reduce(0) { $0 + $1.wrappedAmount }, period: period)
+            let snapshot = BudgetSnapshot(amount: budget.amount, spent: transactions.total(using: .current()).value, period: period)
 
             InsightsCard {
                 VStack(alignment: .leading, spacing: 0) {
@@ -245,7 +245,7 @@ struct BudgetCategoryTile: View {
         if budget.isGone {
             EmptyView()
         } else {
-            let snapshot = BudgetSnapshot(amount: budget.amount, spent: transactions.reduce(0) { $0 + $1.wrappedAmount }, period: period)
+            let snapshot = BudgetSnapshot(amount: budget.amount, spent: transactions.total(using: .current()).value, period: period)
 
             InsightsCard {
                 VStack(alignment: .leading, spacing: 0) {
@@ -561,7 +561,7 @@ struct BudgetDetailContent: View {
 
     var body: some View {
         let transactions = Array(periodTransactions)
-        let snapshot = BudgetSnapshot(amount: route.amount, spent: transactions.reduce(0) { $0 + $1.wrappedAmount }, period: period)
+        let snapshot = BudgetSnapshot(amount: route.amount, spent: transactions.total(using: .current()).value, period: period)
 
         VStack(alignment: .leading, spacing: 32) {
             hero(snapshot, transactions: transactions)
@@ -631,12 +631,13 @@ struct BudgetDetailContent: View {
     func spendingChart(_ snapshot: BudgetSnapshot, transactions: [Transaction]) -> some View {
         let ends = period.bucketEnds
         let starts = [period.start] + ends.dropLast()
+        let converter = CurrencyConverter.current()
         var values = [Date: Double]()
         var index = 0
         for (start, end) in zip(starts, ends) {
             var total = 0.0
             while index < transactions.count && transactions[index].wrappedDate < end {
-                total += transactions[index].wrappedAmount
+                total += converter.amountInBreakdown(of: transactions[index].money)
                 index += 1
             }
             values[start] = total

@@ -351,12 +351,12 @@ struct InsightsCategoryTotal: Identifiable {
 
     var id: NSManagedObjectID { category.objectID }
 
-    static func make(from transactions: [Transaction]) -> [InsightsCategoryTotal] {
+    static func make(from transactions: [Transaction], using converter: CurrencyConverter = .current()) -> [InsightsCategoryTotal] {
         var totals = [Category: Double]()
 
         for transaction in transactions {
             guard let category = transaction.category else { continue }
-            totals[category, default: 0] += transaction.amount
+            totals[category, default: 0] += converter.amountInBreakdown(of: transaction.money)
         }
 
         let total = totals.values.reduce(0, +)
@@ -371,7 +371,7 @@ struct InsightsCategoryTotal: Identifiable {
 func insightsCategoryChange(_ dataController: DataController, period: InsightsPeriod, category: Category, amount: Double) -> Int? {
     let previous = period.shifted(by: -1)
     let cutoff = period.isCurrent ? previous.start.addingTimeInterval(Date.now.timeIntervalSince(period.start)) : period.start
-    let base = insightsTransactions(dataController, from: previous.start, to: cutoff, income: category.income, category: category).reduce(0) { $0 + $1.amount }
+    let base = insightsTransactions(dataController, from: previous.start, to: cutoff, income: category.income, category: category).total(using: .current()).value
 
     guard base > 0, amount > 0 else { return nil }
 
@@ -395,8 +395,9 @@ struct InsightsProjection {
         guard elapsed > 2, let tomorrow = calendar.date(byAdding: .day, value: 1, to: today) else { return nil }
 
         let remaining = max(0, calendar.dateComponents([.day], from: tomorrow, to: period.end).day ?? 0)
-        let spent = expenses.reduce(0) { $0 + $1.amount }
-        let discretionary = expenses.filter { !$0.onceRecurring }.reduce(0) { $0 + $1.amount }
+        let converter = CurrencyConverter.current()
+        let spent = expenses.total(using: converter).value
+        let discretionary = expenses.filter { !$0.onceRecurring }.total(using: converter).value
         let scheduled = recurring.reduce(0) { $0 + $1.total(from: period.start, to: period.end) }
         let amount = spent + discretionary / Double(elapsed) * Double(remaining) + scheduled
 
@@ -430,6 +431,7 @@ struct InsightsCashFlow {
     let usesPeriods: Bool
     let income: Double
     let spent: Double
+    let report: ConversionReport
 
     // The chart always has `count` slots. Whole periods are compared once tracking covers nearly all of them;
     // before that it steps down to days, weeks or months, and slots without data show as empty tracks.
@@ -441,30 +443,33 @@ struct InsightsCashFlow {
 
         let from = min(points.first?.start ?? period.start, period.start)
         let transactions = insightsTransactions(dataController, from: from, to: period.queryEnd, income: nil)
+        let converter = CurrencyConverter.current()
+        var report = ConversionReport()
         var income = 0.0
         var spent = 0.0
 
         for transaction in transactions {
             let date = transaction.wrappedDate
+            let amount = converter.amount(of: transaction.money, report: &report)
 
             if let index = points.firstIndex(where: { date >= $0.start && date < $0.end }) {
                 if transaction.income {
-                    points[index].income += transaction.amount
+                    points[index].income += amount
                 } else {
-                    points[index].spent += transaction.amount
+                    points[index].spent += amount
                 }
             }
 
             if date >= period.start {
                 if transaction.income {
-                    income += transaction.amount
+                    income += amount
                 } else {
-                    spent += transaction.amount
+                    spent += amount
                 }
             }
         }
 
-        return InsightsCashFlow(period: period, points: points, usesPeriods: usesPeriods, income: income, spent: spent)
+        return InsightsCashFlow(period: period, points: points, usesPeriods: usesPeriods, income: income, spent: spent, report: report)
     }
 
     static func periods(endingAt period: InsightsPeriod, count: Int) -> [InsightsCashFlowPoint] {
@@ -519,16 +524,22 @@ struct InsightsRecurringCharge: Identifiable {
 
     var id: NSManagedObjectID { transaction.objectID }
 
+    // In the main currency at the latest rate known for the next charge, or nil without one.
+    var amount: Double? {
+        CurrencyConverter.current().convert(transaction.amount, from: transaction.currencyCode, on: next)
+    }
+
     // A month averages 365.25 / 12 days.
     var monthly: Double {
         let interval = Double(max(1, Int(transaction.recurringCoefficient)))
+        let amount = self.amount ?? 0
 
         if transaction.recurringType == 1 {
-            return transaction.amount * 30.4375 / interval
+            return amount * 30.4375 / interval
         } else if transaction.recurringType == 2 {
-            return transaction.amount * 30.4375 / 7 / interval
+            return amount * 30.4375 / 7 / interval
         } else if transaction.recurringType == 3 {
-            return transaction.amount / interval
+            return amount / interval
         } else {
             return 0
         }
@@ -570,12 +581,13 @@ struct InsightsRecurringCharge: Identifiable {
 
     // Charges not logged yet; logged ones are already in the period's transactions.
     func total(from start: Date, to end: Date) -> Double {
+        let amount = self.amount ?? 0
         var total = 0.0
         var date: Date? = next
 
         while let current = date, current < end {
             if current >= start {
-                total += transaction.amount
+                total += amount
             }
             date = transaction.recurrenceDate(after: current)
         }
@@ -595,8 +607,16 @@ struct InsightsRecurringCharge: Identifiable {
                 return seen.insert(id).inserted
             }
             .map { InsightsRecurringCharge(transaction: $0, next: $0.wrappedDate > now ? $0.wrappedDate : $0.nextTransactionDate) }
-            .sorted { $0.next == $1.next ? $0.transaction.amount > $1.transaction.amount : $0.next < $1.next }
+            .sorted { $0.next == $1.next ? ($0.amount ?? 0) > ($1.amount ?? 0) : $0.next < $1.next }
     }
+}
+
+// Compared in the main currency; amounts without a rate sort last.
+func insightsLargestFirst(_ transactions: [Transaction]) -> [Transaction] {
+    let converter = CurrencyConverter.current()
+    let amounts = Dictionary(transactions.map { ($0.objectID, converter.convert($0.amount, from: $0.currencyCode, on: $0.wrappedDate) ?? -.infinity) }, uniquingKeysWith: { first, _ in first })
+
+    return transactions.sorted { (amounts[$0.objectID] ?? -.infinity) > (amounts[$1.objectID] ?? -.infinity) }
 }
 
 func insightsTransactions(_ dataController: DataController, from start: Date, to end: Date, income: Bool?, category: Category? = nil) -> [Transaction] {
@@ -907,7 +927,7 @@ struct InsightsDashboard: View {
 
         let expenses = insightsTransactions(dataController, from: period.start, to: period.queryEnd, income: false)
         categories = InsightsCategoryTotal.make(from: expenses)
-        largest = Array(expenses.sorted { $0.amount > $1.amount }.prefix(3))
+        largest = Array(insightsLargestFirst(expenses).prefix(3))
 
         cashFlow = incomeTracking ? InsightsCashFlow.make(dataController, period: period, count: 6, firstDay: firstDay) : nil
         income = cashFlow?.income ?? 0
@@ -1270,7 +1290,7 @@ struct InsightsTallyList: View {
 
                         Spacer()
 
-                        Text(sign + formatter.string(items.reduce(0) { $0 + $1.amount }))
+                        Text(sign + formatter.string(items.total(using: .current()).value))
                             .layoutPriority(1)
                     }
                     .font(.system(.callout, design: .rounded).weight(.semibold))
@@ -1657,9 +1677,10 @@ struct InsightsDetailSheet: View {
         let end = period.bucketEnd(for: date)
         let income = category?.income ?? false
         let items = insightsTransactions(dataController, from: date, to: end, income: income, category: category).sorted { $0.wrappedDate > $1.wrappedDate }
-        let total = items.reduce(0) { $0 + $1.amount }
+        let converter = CurrencyConverter.current()
+        let total = items.total(using: converter).value
         let periodItems = insightsTransactions(dataController, from: period.start, to: period.queryEnd, income: income, category: category)
-        let spent = periodItems.reduce(0) { $0 + $1.amount }
+        let spent = periodItems.total(using: converter).value
         let average = spent / Double(insightsAverageSpan(dataController, period: period, firstDay: firstDay))
         let ratio = average > 0 ? total / average : 0
         let dateFormatter = DateFormatter()
@@ -1681,15 +1702,16 @@ struct InsightsDetailSheet: View {
 
     func categoryContent(_ category: Category) -> some View {
         let items = insightsTransactions(dataController, from: period.start, to: period.queryEnd, income: category.income, category: category)
-        let total = items.reduce(0) { $0 + $1.amount }
-        let allTotal = insightsTransactions(dataController, from: period.start, to: period.queryEnd, income: category.income).reduce(0) { $0 + $1.amount }
+        let converter = CurrencyConverter.current()
+        let total = items.total(using: converter).value
+        let allTotal = insightsTransactions(dataController, from: period.start, to: period.queryEnd, income: category.income).total(using: converter).value
         let share = allTotal > 0 ? Int((total / allTotal * 100).rounded()) : 0
 
         let dates = dataController.getInsights(type: period.type, date: period.start, income: category.income).dates
         var values = [Date: Double]()
         for (index, bucketStart) in dates.enumerated() {
             let bucketEnd = index + 1 < dates.count ? dates[index + 1] : period.end
-            values[bucketStart] = items.filter { $0.wrappedDate >= bucketStart && $0.wrappedDate < bucketEnd }.reduce(0) { $0 + $1.amount }
+            values[bucketStart] = items.filter { $0.wrappedDate >= bucketStart && $0.wrappedDate < bucketEnd }.total(using: converter).value
         }
         let buckets = InsightsBucket.make(dates: dates, values: values, type: period.type)
         let average = total / Double(insightsAverageSpan(dataController, period: period, firstDay: firstDay))
@@ -1748,7 +1770,7 @@ struct InsightsDetailSheet: View {
 
     @ViewBuilder
     var largestContent: some View {
-        let items = Array(insightsTransactions(dataController, from: period.start, to: period.queryEnd, income: false).sorted { $0.amount > $1.amount }.prefix(25))
+        let items = Array(insightsLargestFirst(insightsTransactions(dataController, from: period.start, to: period.queryEnd, income: false)).prefix(25))
 
         if items.isEmpty {
             EmptyStateView(systemImage: "tray", title: "No transactions")

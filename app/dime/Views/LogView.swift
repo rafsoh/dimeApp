@@ -1009,15 +1009,7 @@ struct FutureListView: View {
             numberFormatter.maximumFractionDigits = 0
         }
 
-        var total = 0.0
-
-        transactions.forEach { transaction in
-            if transaction.income {
-                total += transaction.amount
-            } else {
-                total -= transaction.amount
-            }
-        }
+        let total = transactions.total(using: .current(), signed: true).value
 
         if total >= 0 {
             return "+" + (numberFormatter.string(from: NSNumber(value: total)) ?? "$0")
@@ -1961,17 +1953,7 @@ func timeConverterAccessibilityLabel(date: Date) -> String {
 }
 
 func dayTotal(dayTransaction: [Transaction]) -> Double {
-    var total = 0.0
-
-    dayTransaction.forEach { transaction in
-        if transaction.income {
-            total += transaction.amount
-        } else {
-            total -= transaction.amount
-        }
-    }
-
-    return total
+    dayTransaction.total(using: .current(), signed: true).value
 }
 
 /// Swipe-to-delete on a row. On iOS 18+ a UIKit pan that only begins on a clear leftward swipe,
