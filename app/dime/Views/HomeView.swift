@@ -155,6 +155,7 @@ struct HomeView: View {
                 .environmentObject(toastPresenter)
                 .environmentObject(transactionManager)
                 .environment(\.tabBarTop, usesVerticalBar || tabBarManager.hideTab ? nil : tabBarTop)
+                .environment(\.usesVerticalBar, usesVerticalBar)
                 .addTransactionSheet(isPresented: $addTransaction, counter: $counter, launchAdd: launchAdd)
 
             if !usesVerticalBar {

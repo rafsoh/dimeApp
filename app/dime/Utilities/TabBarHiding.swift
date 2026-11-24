@@ -60,6 +60,18 @@ enum VerticalBar {
     }
 }
 
+private struct UsesVerticalBarKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+extension EnvironmentValues {
+    /// Whether the tabs sit in a vertical bar (iPhone Duo), where navigation buttons belong in that bar too.
+    var usesVerticalBar: Bool {
+        get { self[UsesVerticalBarKey.self] }
+        set { self[UsesVerticalBarKey.self] = newValue }
+    }
+}
+
 private struct VerticalBarReader: UIViewRepresentable {
     @Binding var usesVerticalBar: Bool
 

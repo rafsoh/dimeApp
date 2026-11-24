@@ -385,3 +385,22 @@
 "Export" = "Экспорт";
 "All time" = "За всё время";
 "No transactions to export" = "Нет транзакций для экспорта";
+
+/* Feature tips */
+"Log in Any Currency" = "Записи в любой валюте";
+"Tap the symbol to change this transaction's currency." = "Коснитесь символа, чтобы сменить валюту этой транзакции.";
+
+/* What's New 3.0.1 */
+"Version %@" = "Версия %@";
+"Multiple Currencies" = "Несколько валют";
+"Tap the currency symbol to log in any currency. Totals are converted to your primary currency at each day's rate." = "Коснитесь символа валюты, чтобы записать сумму в любой валюте. Итоги пересчитываются в основную валюту по курсу каждого дня.";
+"Start Your Week Any Day" = "Неделя с любого дня";
+"Weeks can now begin on any weekday. Pick yours in Settings." = "Теперь неделя может начинаться с любого дня. Выберите его в настройках.";
+"Export a Period" = "Экспорт за период";
+"Choose the dates to include before exporting your transactions." = "Выберите даты, которые нужно включить, перед экспортом транзакций.";
+"Unlimited Categories" = "Сколько угодно категорий";
+"Add as many expense categories as you like, shown in the order you set." = "Добавляйте сколько угодно категорий расходов — они отображаются в заданном вами порядке.";
+"Search by Amount" = "Поиск по сумме";
+"Find a transaction by its amount, even with a currency symbol or separators." = "Находите транзакцию по сумме, даже с символом валюты или разделителями.";
+"Français and Русский" = "Français и Русский";
+"Dime is now available in French and Russian." = "Dime теперь доступен на французском и русском языках.";

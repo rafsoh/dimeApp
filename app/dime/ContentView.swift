@@ -31,6 +31,7 @@ struct ContentView: View {
     @State var showIntro: Bool = false
     @State var showWhatsNew: Bool = false
     @State var whatsNewPending: Bool = false
+    @State var whatsNewReleases: [WhatsNewRelease] = []
 
     var center = UNUserNotificationCenter.current()
 
@@ -49,7 +50,7 @@ struct ContentView: View {
                     WelcomeSheetView()
                 }
                 .sheet(isPresented: $showWhatsNew) {
-                    WhatsNewSheet()
+                    WhatsNewSheet(releases: whatsNewReleases)
                 }
                 .onAppear {
                     savedTopEdge = topEdge
@@ -157,7 +158,8 @@ struct ContentView: View {
                 dataMigration2 = false
             }
 
-            whatsNewPending = WhatsNew.hasUnseenRelease
+            whatsNewReleases = WhatsNew.unseenReleases
+            whatsNewPending = !whatsNewReleases.isEmpty
             presentWhatsNewIfReady()
 
             center.getNotificationSettings { settings in

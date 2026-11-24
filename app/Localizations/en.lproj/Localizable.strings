@@ -384,3 +384,22 @@
 "Export" = "Export";
 "All time" = "All time";
 "No transactions to export" = "No transactions to export";
+
+/* Feature tips */
+"Log in Any Currency" = "Log in Any Currency";
+"Tap the symbol to change this transaction's currency." = "Tap the symbol to change this transaction's currency.";
+
+/* What's New 3.0.1 */
+"Version %@" = "Version %@";
+"Multiple Currencies" = "Multiple Currencies";
+"Tap the currency symbol to log in any currency. Totals are converted to your primary currency at each day's rate." = "Tap the currency symbol to log in any currency. Totals are converted to your primary currency at each day's rate.";
+"Start Your Week Any Day" = "Start Your Week Any Day";
+"Weeks can now begin on any weekday. Pick yours in Settings." = "Weeks can now begin on any weekday. Pick yours in Settings.";
+"Export a Period" = "Export a Period";
+"Choose the dates to include before exporting your transactions." = "Choose the dates to include before exporting your transactions.";
+"Unlimited Categories" = "Unlimited Categories";
+"Add as many expense categories as you like, shown in the order you set." = "Add as many expense categories as you like, shown in the order you set.";
+"Search by Amount" = "Search by Amount";
+"Find a transaction by its amount, even with a currency symbol or separators." = "Find a transaction by its amount, even with a currency symbol or separators.";
+"Français and Русский" = "Français and Русский";
+"Dime is now available in French and Russian." = "Dime is now available in French and Russian.";

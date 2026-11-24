@@ -361,11 +361,14 @@ final class ScrollViewportProbeView: UIView {
 struct GlassSheetHeader: View {
     let title: Text
     var showsBack: Bool = false
+    var showsButton: Bool = true
     let action: () -> Void
 
     var body: some View {
         HStack {
-            GlassIconButton(systemName: showsBack ? "chevron.left" : "xmark", accessibilityLabel: showsBack ? "Back" : "Close", action: action)
+            if showsButton {
+                GlassIconButton(systemName: showsBack ? "chevron.left" : "xmark", accessibilityLabel: showsBack ? "Back" : "Close", action: action)
+            }
 
             Spacer()
         }
