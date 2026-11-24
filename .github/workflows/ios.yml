@@ -44,7 +44,7 @@ jobs:
 
       - name: Pick an iPhone simulator
         run: |
-          # Newest available iOS runtime, first iPhone on it. Avoids hardcoding device names
+          # Newest available iOS runtime, a standard iPhone on it. Avoids hardcoding device names
           # that change whenever GitHub updates the runner image.
           UDID=$(xcrun simctl list devices available --json | python3 -c '
           import json, re, sys
@@ -56,6 +56,8 @@ jobs:
           ios = sorted((k for k in data if version(k)), key=version)
           for runtime in reversed(ios):
               phones = [d for d in data[runtime] if d["name"].startswith("iPhone")]
+              # Prefer a standard single-screen iPhone (e.g. "iPhone 18 Pro") over foldables.
+              phones.sort(key=lambda d: not re.fullmatch(r"iPhone \d+( Pro)?", d["name"]))
               if phones:
                   print(phones[0]["udid"]); break
           ')
