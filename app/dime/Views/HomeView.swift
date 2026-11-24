@@ -87,6 +87,7 @@ struct HomeView: View {
         content()
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .readsVerticalBar($usesVerticalBar)
+            .instantTabSwitching()
     }
 
     private func legacyTab<Content: View>(_ name: String, @ViewBuilder content: () -> Content) -> some View {

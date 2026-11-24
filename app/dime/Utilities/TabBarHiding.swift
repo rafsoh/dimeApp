@@ -148,3 +148,87 @@ extension View {
         background(VerticalBarReader(usesVerticalBar: usesVerticalBar).frame(width: 0, height: 0))
     }
 }
+
+/// Replaces the tab bar controller's switch transition, which scales and fades the page on iOS 26, with an instant one.
+/// SwiftUI drives `TabView` through the controller's delegate, so every other delegate call is passed on to it.
+private final class InstantTabTransition: NSObject, UITabBarControllerDelegate, UIViewControllerAnimatedTransitioning {
+    weak var forwarded: UITabBarControllerDelegate?
+
+    override func responds(to selector: Selector!) -> Bool {
+        super.responds(to: selector) || (forwarded?.responds(to: selector) ?? false)
+    }
+
+    override func forwardingTarget(for selector: Selector!) -> Any? {
+        forwarded?.responds(to: selector) == true ? forwarded : nil
+    }
+
+    func tabBarController(_: UITabBarController, animationControllerForTransitionFrom _: UIViewController, to _: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+        self
+    }
+
+    func transitionDuration(using _: UIViewControllerContextTransitioning?) -> TimeInterval {
+        0
+    }
+
+    func animateTransition(using context: UIViewControllerContextTransitioning) {
+        if let toView = context.view(forKey: .to), let toController = context.viewController(forKey: .to) {
+            toView.frame = context.finalFrame(for: toController)
+            context.containerView.addSubview(toView)
+        }
+        context.view(forKey: .from)?.removeFromSuperview()
+        context.completeTransition(!context.transitionWasCancelled)
+    }
+}
+
+private struct InstantTabSwitching: UIViewRepresentable {
+    func makeUIView(context _: Context) -> InstantTabSwitchingProbeView {
+        InstantTabSwitchingProbeView()
+    }
+
+    func updateUIView(_: InstantTabSwitchingProbeView, context _: Context) {}
+}
+
+private final class InstantTabSwitchingProbeView: UIView {
+    private static let transition = InstantTabTransition()
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        isUserInteractionEnabled = false
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        install()
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        install()
+    }
+
+    /// SwiftUI can replace the delegate when it updates the `TabView`, so this re-wraps whatever delegate is current.
+    private func install() {
+        var responder: UIResponder? = self
+        while let current = responder, !(current is UITabBarController) {
+            responder = current.next
+        }
+        guard let tabBarController = responder as? UITabBarController else { return }
+
+        let transition = Self.transition
+        guard tabBarController.delegate !== transition else { return }
+        transition.forwarded = tabBarController.delegate
+        tabBarController.delegate = transition
+    }
+}
+
+extension View {
+    /// Switches tabs without the system's transition. Apply to a view inside a `TabView` tab.
+    func instantTabSwitching() -> some View {
+        background(InstantTabSwitching().frame(width: 0, height: 0))
+    }
+}

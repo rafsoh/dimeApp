@@ -114,7 +114,14 @@ struct CategoryPickerSheet: View {
     }
 
     var content: some View {
-        VStack(spacing: 0) {
+        Group {
+            if showsGrid {
+                categoryList
+            } else {
+                emptyState
+            }
+        }
+        .tabHeader {
             HStack {
                 GlassIconButton(systemName: "xmark", accessibilityLabel: "Close") {
                     dismiss()
@@ -134,12 +141,6 @@ struct CategoryPickerSheet: View {
             }
             .padding(.horizontal, 20)
             .padding(.top, 20)
-
-            if showsGrid {
-                categoryList
-            } else {
-                emptyState
-            }
         }
         .frame(maxHeight: .infinity, alignment: .top)
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)

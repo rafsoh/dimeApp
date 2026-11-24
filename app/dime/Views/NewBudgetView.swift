@@ -97,39 +97,43 @@ struct BrandNewBudgetView: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: 0) {
+        GeometryReader { proxy in
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 16) {
+                    sentence
+
+                    if let perDayHint {
+                        Text(perDayHint)
+                            .font(.system(.body, design: .rounded).weight(.medium))
+                            .foregroundColor(Color.SubtitleText)
+                            .transition(.opacity)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, 20)
+                .frame(minHeight: proxy.size.height)
+                .padding(.horizontal, 20)
+            }
+            .budgetScrollBounceBasedOnSize()
+        }
+        .tabHeader {
             header
                 .padding(.top, 20)
-
-            GeometryReader { proxy in
-                ScrollView(showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: 16) {
-                        sentence
-
-                        if let perDayHint {
-                            Text(perDayHint)
-                                .font(.system(.body, design: .rounded).weight(.medium))
-                                .foregroundColor(Color.SubtitleText)
-                                .transition(.opacity)
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.vertical, 20)
-                    .frame(minHeight: proxy.size.height)
-                }
-                .budgetScrollBounceBasedOnSize()
-            }
-
-            if let activeEditor {
-                editor(activeEditor)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-            } else {
-                primaryButton
-                    .padding(.bottom, 8)
-                    .transition(.opacity)
-            }
+                .padding(.horizontal, 20)
         }
-        .padding(.horizontal, 20)
+        .bottomBar {
+            Group {
+                if let activeEditor {
+                    editor(activeEditor)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                } else {
+                    primaryButton
+                        .padding(.bottom, 8)
+                        .transition(.opacity)
+                }
+            }
+            .padding(.horizontal, 20)
+        }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .background(Color.PrimaryBackground)

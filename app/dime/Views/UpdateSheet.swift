@@ -65,8 +65,7 @@ struct WhatsNewSheet: View {
     }
 
     var content: some View {
-        VStack(spacing: 0) {
-            ScrollView(showsIndicators: false) {
+        ScrollView(showsIndicators: false) {
                 VStack(spacing: 36) {
                     VStack(spacing: 4) {
                         Image("AppIcon1_EG")
@@ -101,8 +100,9 @@ struct WhatsNewSheet: View {
                 }
                 .padding(.top, 48)
                 .padding(.bottom, 24)
-            }
-
+                .padding(.horizontal, 28)
+        }
+        .bottomBar {
             Button {
                 dismiss()
             } label: {
@@ -116,8 +116,8 @@ struct WhatsNewSheet: View {
             .whiteGlassButtonStyle()
             .padding(.top, 12)
             .padding(.bottom, 16)
+            .padding(.horizontal, 28)
         }
-        .padding(.horizontal, 28)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .sheetBackground()

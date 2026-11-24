@@ -28,7 +28,8 @@ class UnlockManager: NSObject, ObservableObject, SKPaymentTransactionObserver, S
     @Published var failedTransaction = false
 
     private let dataController: DataController
-    private let request: SKProductsRequest
+    private let productIDs: Set<String> = ["com.rafaelsoh.dime.smalltip", "com.rafaelsoh.dime.mediumtip", "com.rafaelsoh.dime.largetip"]
+    private var request: SKProductsRequest?
 
     var loadedProducts = [SKProduct]()
 
@@ -55,22 +56,33 @@ class UnlockManager: NSObject, ObservableObject, SKPaymentTransactionObserver, S
 
     func productsRequest(_: SKProductsRequest, didReceive response: SKProductsResponse) {
         DispatchQueue.main.async {
-            // Store the returned products for later, if we need them.
+            self.request = nil
             self.loadedProducts = response.products
-
-            guard !self.loadedProducts.isEmpty else {
-                self.requestState = .failed
-                return
-            }
 
             if response.invalidProductIdentifiers.isEmpty == false {
                 print("ALERT: Received invalid product identifiers: \(response.invalidProductIdentifiers)")
-                self.requestState = .failed
-                return
             }
 
-            self.requestState = .loaded
+            self.requestState = self.loadedProducts.isEmpty ? .failed : .loaded
         }
+    }
+
+    func request(_: SKRequest, didFailWithError error: Error) {
+        DispatchQueue.main.async {
+            print("ALERT: Failed to load products: \(error.localizedDescription)")
+            self.request = nil
+            self.requestState = .failed
+        }
+    }
+
+    func loadProductsIfNeeded() {
+        guard requestState != .loaded, request == nil else { return }
+
+        requestState = .loading
+        let request = SKProductsRequest(productIdentifiers: productIDs)
+        request.delegate = self
+        self.request = request
+        request.start()
     }
 
     func buy(product: SKProduct) {
@@ -92,10 +104,6 @@ class UnlockManager: NSObject, ObservableObject, SKPaymentTransactionObserver, S
         // Store the data controller we were sent.
         self.dataController = dataController
 
-        // Prepare to look for our unlock product.
-        let productIDs = Set(["com.rafaelsoh.dime.smalltip", "com.rafaelsoh.dime.mediumtip", "com.rafaelsoh.dime.largetip"])
-        request = SKProductsRequest(productIdentifiers: productIDs)
-
         // This is required because we inherit from NSObject.
         purchaseCount = dataController.tipCounter
 
@@ -104,11 +112,7 @@ class UnlockManager: NSObject, ObservableObject, SKPaymentTransactionObserver, S
         // Start watching the payment queue.
         SKPaymentQueue.default().add(self)
 
-        // Set ourselves up to be notified when the product request completes.
-        request.delegate = self
-
-        // Start the request
-        request.start()
+        loadProductsIfNeeded()
     }
 
     deinit {
