@@ -53,13 +53,14 @@ jobs:
               # e.g. com.apple.CoreSimulator.SimRuntime.iOS-27-2 (some images add suffixes)
               m = re.search(r"\.iOS-(\d+)-(\d+)", key)
               return (int(m.group(1)), int(m.group(2))) if m else None
-          ios = sorted((k for k in data if version(k)), key=version)
-          for runtime in reversed(ios):
-              phones = [d for d in data[runtime] if d["name"].startswith("iPhone")]
-              # Prefer a standard single-screen iPhone (e.g. "iPhone 18 Pro") over foldables.
-              phones.sort(key=lambda d: not re.fullmatch(r"iPhone \d+( Pro)?", d["name"]))
-              if phones:
-                  print(phones[0]["udid"]); break
+          versions = [version(k) for k in data if version(k)]
+          newest = max(versions) if versions else None
+          phones = [d for k in data if version(k) == newest for d in data[k]
+                    if d["name"].startswith("iPhone")]
+          # Prefer a standard single-screen iPhone (e.g. "iPhone 18 Pro") over foldables.
+          phones.sort(key=lambda d: not re.fullmatch(r"iPhone \d+( Pro)?", d["name"]))
+          if phones:
+              print(phones[0]["udid"])
           ')
           if [ -z "$UDID" ]; then echo "No iPhone simulator found"; exit 1; fi
           xcrun simctl list devices | grep "$UDID"
@@ -94,10 +95,15 @@ jobs:
           xcrun simctl install "$SIM_UDID" "$APP"
           xcrun simctl launch "$SIM_UDID" "$BUNDLE_ID"
           sleep 8
-          xcrun simctl io "$SIM_UDID" screenshot screenshots/1-launch.png
+          shot() {
+            # Foldable simulators have two displays; fall back to the primary one.
+            xcrun simctl io "$SIM_UDID" screenshot "$1" 2>/dev/null \
+              || xcrun simctl io "$SIM_UDID" screenshot --display=1 "$1"
+          }
+          shot screenshots/1-launch.png
           xcrun simctl openurl "$SIM_UDID" "dimeapp://newExpense"
           sleep 4
-          xcrun simctl io "$SIM_UDID" screenshot screenshots/2-new-expense.png
+          shot screenshots/2-new-expense.png
 
       - name: Upload screenshots
         if: always()
