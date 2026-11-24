@@ -349,3 +349,7 @@
 "Some of your data may be missing" = "Certaines de vos données semblent manquer";
 "Backup from %@: %lld transactions. On this device now: %lld. Restore what's missing? Nothing you have now will be removed or changed." = "Sauvegarde du %@ : %lld transactions. Sur cet appareil actuellement : %lld. Restaurer ce qui manque ? Rien de ce que vous avez actuellement ne sera supprimé ni modifié.";
 "Not Now" = "Plus tard";
+"Export" = "Exporter";
+"All time" = "Depuis le début";
+"Nothing selected" = "Aucune sélection";
+"No transactions to export" = "Aucune transaction à exporter";

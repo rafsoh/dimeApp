@@ -349,3 +349,7 @@
 "Some of your data may be missing" = "Похоже, часть данных пропала";
 "Backup from %@: %lld transactions. On this device now: %lld. Restore what's missing? Nothing you have now will be removed or changed." = "Резервная копия от %@: транзакций — %lld. Сейчас на устройстве: %lld. Восстановить недостающее? Текущие данные не будут удалены или изменены.";
 "Not Now" = "Не сейчас";
+"Export" = "Экспорт";
+"All time" = "За всё время";
+"Nothing selected" = "Ничего не выбрано";
+"No transactions to export" = "Нет транзакций для экспорта";

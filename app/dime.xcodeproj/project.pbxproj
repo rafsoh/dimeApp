@@ -144,6 +144,7 @@
 		53D6BDCA2AF73B7A00F5728E /* SettingsAppIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53D6BDC92AF73B7A00F5728E /* SettingsAppIconView.swift */; };
 		53D6BDCC2AF73BC800F5728E /* SettingsCurrencyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53D6BDCB2AF73BC800F5728E /* SettingsCurrencyView.swift */; };
 		53D6BDCE2AF73BDA00F5728E /* SettingsWeekStartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53D6BDCD2AF73BDA00F5728E /* SettingsWeekStartView.swift */; };
+		E4B0A0022B11000100C8C001 /* ExportPeriodSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4B0A0012B11000100C8C001 /* ExportPeriodSheet.swift */; };
 		53D6BDD02AF73C4300F5728E /* SettingsNumberEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53D6BDCF2AF73C4300F5728E /* SettingsNumberEntryView.swift */; };
 		53D6BDD22AF73C5D00F5728E /* SettingsNotificationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53D6BDD12AF73C5D00F5728E /* SettingsNotificationView.swift */; };
 		53D6BDD42AF73CA100F5728E /* SettingsFeatureLabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53D6BDD32AF73CA100F5728E /* SettingsFeatureLabView.swift */; };
@@ -330,6 +331,7 @@
 		53D6BDC92AF73B7A00F5728E /* SettingsAppIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsAppIconView.swift; sourceTree = "<group>"; };
 		53D6BDCB2AF73BC800F5728E /* SettingsCurrencyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsCurrencyView.swift; sourceTree = "<group>"; };
 		53D6BDCD2AF73BDA00F5728E /* SettingsWeekStartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWeekStartView.swift; sourceTree = "<group>"; };
+		E4B0A0012B11000100C8C001 /* ExportPeriodSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportPeriodSheet.swift; sourceTree = "<group>"; };
 		53D6BDCF2AF73C4300F5728E /* SettingsNumberEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsNumberEntryView.swift; sourceTree = "<group>"; };
 		53D6BDD12AF73C5D00F5728E /* SettingsNotificationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsNotificationView.swift; sourceTree = "<group>"; };
 		53D6BDD32AF73CA100F5728E /* SettingsFeatureLabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsFeatureLabView.swift; sourceTree = "<group>"; };
@@ -655,6 +657,7 @@
 				53D6BDCF2AF73C4300F5728E /* SettingsNumberEntryView.swift */,
 				53D6BDC92AF73B7A00F5728E /* SettingsAppIconView.swift */,
 				53D6BDCD2AF73BDA00F5728E /* SettingsWeekStartView.swift */,
+				E4B0A0012B11000100C8C001 /* ExportPeriodSheet.swift */,
 				53D6BDD12AF73C5D00F5728E /* SettingsNotificationView.swift */,
 				53D6BDD32AF73CA100F5728E /* SettingsFeatureLabView.swift */,
 				53D6BDD52AF73CE400F5728E /* SettingsUpcomingView.swift */,
@@ -936,6 +939,7 @@
 				536A2A152A59C47400D81E02 /* Wiggle.swift in Sources */,
 				AEADEF742AE94DC3006EB614 /* ToolbarButton.swift in Sources */,
 				53D6BDCE2AF73BDA00F5728E /* SettingsWeekStartView.swift in Sources */,
+				E4B0A0022B11000100C8C001 /* ExportPeriodSheet.swift in Sources */,
 				53D6BDCA2AF73B7A00F5728E /* SettingsAppIconView.swift in Sources */,
 				5327D2DA287C6B5F00F76ADF /* TestView.swift in Sources */,
 				538A32AA2A505AC6008AEF8C /* BottomSheet.swift in Sources */,

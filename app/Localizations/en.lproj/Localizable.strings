@@ -350,3 +350,7 @@
 "Some of your data may be missing" = "Some of your data may be missing";
 "Backup from %@: %lld transactions. On this device now: %lld. Restore what's missing? Nothing you have now will be removed or changed." = "Backup from %@: %lld transactions. On this device now: %lld. Restore what's missing? Nothing you have now will be removed or changed.";
 "Not Now" = "Not Now";
+"Export" = "Export";
+"All time" = "All time";
+"Nothing selected" = "Nothing selected";
+"No transactions to export" = "No transactions to export";
