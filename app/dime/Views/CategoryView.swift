@@ -352,7 +352,8 @@ struct CategoryListView: View {
                     .padding(.top, 8)
             }
         }
-        .navigationTitle("Categories")
+        // In Settings the page header shows the title, and the bar only appears on the iPhone Duo for its back button.
+        .navigationTitle(mode == .settings ? Text(verbatim: "") : Text("Categories"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbarContent }
         .tint(Color.PrimaryText)
