@@ -46,8 +46,10 @@ struct CurrencyPickerSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button {
                         dismiss()
+                    } label: {
+                        Label("Close", systemImage: "xmark")
                     }
                 }
             }

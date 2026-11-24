@@ -41,22 +41,21 @@ struct SettingsExchangeRatesView: View {
             Button {
                 refresh()
             } label: {
-                HStack {
-                    Text("Refresh Rates")
-                        .font(.system(.body, design: .rounded))
-                        .foregroundColor(Color.PrimaryText)
-
-                    Spacer()
-
-                    if isRefreshing {
-                        ProgressView()
-                    }
-                }
-                .frame(minHeight: .settingsRowHeight)
-                .contentShape(Rectangle())
+                Text("Refresh Rates")
+                    .font(.system(.body, design: .rounded))
+                    .foregroundColor(Color.PrimaryText)
+                    .frame(maxWidth: .infinity, minHeight: .settingsRowHeight, alignment: .leading)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .disabled(isRefreshing)
+            .overlay(alignment: .trailing) {
+                if isRefreshing {
+                    ProgressView()
+                        .transition(.opacity)
+                }
+            }
+            .animation(.easeOut(duration: 0.2), value: isRefreshing)
             .settingsSectionRows()
 
             if let lastResult, lastResult.failedRequests > 0 {
@@ -92,7 +91,10 @@ struct SettingsExchangeRatesView: View {
         let dates = dataController.foreignCurrencyDates()
 
         Task {
+            // A refresh can finish almost instantly, which would only flash the spinner.
+            async let minimumSpin: Void? = try? Task.sleep(nanoseconds: 2_000_000_000)
             let result = await ExchangeRateStore.shared.refresh(dates: dates, force: true)
+            _ = await minimumSpin
 
             await MainActor.run {
                 lastResult = result

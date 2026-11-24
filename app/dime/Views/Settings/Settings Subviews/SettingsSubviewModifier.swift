@@ -55,19 +55,21 @@ struct SettingsSubviewModifier: ViewModifier {
 
 /// A pushed Settings page's header. Settings never shows the system navigation bar: when it appears for a pushed page,
 /// it takes over the top scroll edge effect of the page beneath, which drops out while popping back to the root.
+/// The exception is the iPhone Duo, where the system bar runs down the side and holds the back button.
 struct SettingsPageHeader: ViewModifier {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.usesVerticalBar) private var usesVerticalBar
 
     let title: LocalizedStringKey
 
     func body(content: Content) -> some View {
         content
             .tabHeader {
-                GlassSheetHeader(title: Text(title), showsBack: true) {
+                GlassSheetHeader(title: Text(title), showsBack: true, showsButton: !usesVerticalBar) {
                     dismiss()
                 }
             }
-            .settingsNavigationBar(hidden: true)
+            .settingsNavigationBar(hidden: !usesVerticalBar)
     }
 }
 

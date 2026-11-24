@@ -180,6 +180,7 @@
 		AECE7F9E2AED1A6800B57267 /* SuggestedTransactions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AECE7F9D2AED1A6800B57267 /* SuggestedTransactions.swift */; };
 		B4EF73711724134F6E848D2A /* CurrencyConverterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1427F27CEB06BEEEB431857A /* CurrencyConverterTests.swift */; };
 		BB04121AF21CE02F5DC51D57 /* ConversionNote.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E9D77F9F42B9754C0943C8 /* ConversionNote.swift */; };
+		F7A1B2C3D4E5F60718293A4C /* FeatureTips.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7A1B2C3D4E5F60718293A4B /* FeatureTips.swift */; };
 		C77227271BCECB2A986F2682 /* CurrencyConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8AA3384CBE3F80582BE7112 /* CurrencyConverter.swift */; };
 		C78D9F181AC734A65F6401E1 /* ConversionNote.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E9D77F9F42B9754C0943C8 /* ConversionNote.swift */; };
 		CFF3458851630E5DDD45BF0C /* StoreMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 726F48F68CFB577527C9FD9B /* StoreMigrationTests.swift */; };
@@ -394,6 +395,7 @@
 		AEADEF722AE94DC3006EB614 /* ToolbarButton.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ToolbarButton.swift; sourceTree = "<group>"; };
 		AEADEF732AE94DC3006EB614 /* Toolbar.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Toolbar.swift; sourceTree = "<group>"; };
 		AECE7F9D2AED1A6800B57267 /* SuggestedTransactions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestedTransactions.swift; sourceTree = "<group>"; };
+		F7A1B2C3D4E5F60718293A4B /* FeatureTips.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FeatureTips.swift; sourceTree = "<group>"; };
 		B4E9D77F9F42B9754C0943C8 /* ConversionNote.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConversionNote.swift; sourceTree = "<group>"; };
 		B836338BBA573E260BA57B8E /* ExchangeRateStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExchangeRateStore.swift; sourceTree = "<group>"; };
 		B951DE42184DFACEAECA4504 /* SettingsExchangeRatesView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SettingsExchangeRatesView.swift; sourceTree = "<group>"; };
@@ -750,6 +752,7 @@
 				AECE7F9A2AED1A4600B57267 /* Transactions */,
 				AE30A1532AE7D95F00E516B3 /* Toolbar */,
 				B4E9D77F9F42B9754C0943C8 /* ConversionNote.swift */,
+				F7A1B2C3D4E5F60718293A4B /* FeatureTips.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -1189,6 +1192,7 @@
 				51A71F840E847168DD33D0D2 /* ExchangeRateStore.swift in Sources */,
 				09C6994AECA68B95CABE5AAB /* CurrencyPreferences.swift in Sources */,
 				BB04121AF21CE02F5DC51D57 /* ConversionNote.swift in Sources */,
+				F7A1B2C3D4E5F60718293A4C /* FeatureTips.swift in Sources */,
 				2AA59634FD028A159DEAEFD9 /* CurrencyPicker.swift in Sources */,
 				06140E274FB53425F119BF72 /* SettingsExchangeRatesView.swift in Sources */,
 				DEC168A344241E42E2BB3A81 /* MainCurrencyChange.swift in Sources */,
@@ -1324,7 +1328,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = BudgetIntent/BudgetIntent.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 5UNNTHMF44;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BudgetIntent/Info.plist;
@@ -1356,7 +1360,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = BudgetIntent/BudgetIntent.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 5UNNTHMF44;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BudgetIntent/Info.plist;
@@ -1387,7 +1391,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = BudgetIntentUI/BudgetIntentUI.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 5UNNTHMF44;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BudgetIntentUI/Info.plist;
@@ -1414,7 +1418,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = BudgetIntentUI/BudgetIntentUI.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 5UNNTHMF44;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BudgetIntentUI/Info.plist;
@@ -1562,7 +1566,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = dime/dime.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "\"dime/Preview Content\"";
 				DEVELOPMENT_TEAM = 5UNNTHMF44;
 				ENABLE_PREVIEWS = YES;
@@ -1603,7 +1607,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = dime/dime.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "\"dime/Preview Content\"";
 				DEVELOPMENT_TEAM = 5UNNTHMF44;
 				ENABLE_PREVIEWS = YES;
@@ -1643,7 +1647,7 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CODE_SIGN_ENTITLEMENTS = ExpenditureWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 5UNNTHMF44;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ExpenditureWidget/Info.plist;
@@ -1674,7 +1678,7 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CODE_SIGN_ENTITLEMENTS = ExpenditureWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 5UNNTHMF44;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ExpenditureWidget/Info.plist;

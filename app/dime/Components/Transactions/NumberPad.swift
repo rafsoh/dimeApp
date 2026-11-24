@@ -329,10 +329,14 @@ struct NumberPadTextView: View {
     var body: some View {
         HStack(alignment: .lastTextBaseline, spacing: 0) {
             if let onCurrencyTap {
-                Button(action: onCurrencyTap) {
+                Button {
+                    FeatureTip.currencySymbol.markUsed()
+                    onCurrencyTap()
+                } label: {
                     symbolText
                 }
                 .buttonStyle(.plain)
+                .featureTip(.currencySymbol)
                 .accessibilityLabel(Text("Currency, \(currencyCode ?? currency)"))
                 .accessibilityHint(Text("Changes the currency of this transaction"))
             } else {

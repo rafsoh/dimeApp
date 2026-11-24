@@ -293,6 +293,7 @@ struct TransactionView: View {
                         }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .featureTipHost()
 
                     if showingNotePicker {
                         ScrollView(.horizontal, showsIndicators: false) {
