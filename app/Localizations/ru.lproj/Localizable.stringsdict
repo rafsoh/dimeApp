@@ -13,174 +13,190 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>lld</string>
 			<key>zero</key>
-			<string>Empty</string>
+			<string>Пусто</string>
 			<key>one</key>
-			<string>осталось 1 день</string>
-            <key>few</key>
-            <string>осталось %lld дня</string>
-            <key>many</key>
-            <string>осталось %lld дней</string>
+			<string>остался 1 день</string>
+			<key>few</key>
+			<string>осталось %lld дня</string>
+			<key>many</key>
+			<string>осталось %lld дней</string>
+			<key>other</key>
+			<string>осталось %lld дней</string>
 		</dict>
 	</dict>
-    <key>%lld hours left</key>
-    <dict>
-        <key>NSStringLocalizedFormatKey</key>
-        <string>%#@VARIABLE@</string>
-        <key>VARIABLE</key>
-        <dict>
-            <key>NSStringFormatSpecTypeKey</key>
-            <string>NSStringPluralRuleType</string>
-            <key>NSStringFormatValueTypeKey</key>
-            <string>lld</string>
-            <key>zero</key>
-            <string>Empty</string>
-            <key>one</key>
-            <string>осталось 1 час</string>
-            <key>few</key>
-            <string>осталось %lld часа</string>
-            <key>many</key>
-            <string>осталось %lld часов</string>
-        </dict>
-    </dict>
-    <key>%lld days</key>
-    <dict>
-        <key>NSStringLocalizedFormatKey</key>
-        <string>%#@VARIABLE@</string>
-        <key>VARIABLE</key>
-        <dict>
-            <key>NSStringFormatSpecTypeKey</key>
-            <string>NSStringPluralRuleType</string>
-            <key>NSStringFormatValueTypeKey</key>
-            <string>lld</string>
-            <key>zero</key>
-            <string>days</string>
-            <key>one</key>
-            <string>день</string>
-            <key>few</key>
-            <string>дня</string>
-            <key>many</key>
-            <string>дней</string>
-        </dict>
-    </dict>
-    <key>%lld weeks</key>
-    <dict>
-        <key>NSStringLocalizedFormatKey</key>
-        <string>%#@VARIABLE@</string>
-        <key>VARIABLE</key>
-        <dict>
-            <key>NSStringFormatSpecTypeKey</key>
-            <string>NSStringPluralRuleType</string>
-            <key>NSStringFormatValueTypeKey</key>
-            <string>lld</string>
-            <key>zero</key>
-            <string>weeks</string>
-            <key>one</key>
-            <string>неделю</string>
-            <key>few</key>
-            <string>недели</string>
-            <key>many</key>
-            <string>недель</string>
-        </dict>
-    </dict>
-    <key>%lld months</key>
-    <dict>
-        <key>NSStringLocalizedFormatKey</key>
-        <string>%#@VARIABLE@</string>
-        <key>VARIABLE</key>
-        <dict>
-            <key>NSStringFormatSpecTypeKey</key>
-            <string>NSStringPluralRuleType</string>
-            <key>NSStringFormatValueTypeKey</key>
-            <string>lld</string>
-            <key>zero</key>
-            <string>months</string>
-            <key>one</key>
-            <string>месяц</string>
-            <key>few</key>
-            <string>месяца</string>
-            <key>many</key>
-            <string>месяцев</string>
-        </dict>
-    </dict>
-    <key>%lld weeks ago</key>
-    <dict>
-        <key>NSStringLocalizedFormatKey</key>
-        <string>%#@VARIABLE@</string>
-        <key>VARIABLE</key>
-        <dict>
-            <key>NSStringFormatSpecTypeKey</key>
-            <string>NSStringPluralRuleType</string>
-            <key>NSStringFormatValueTypeKey</key>
-            <string>lld</string>
-            <key>zero</key>
-            <string>weeks</string>
-            <key>one</key>
-            <string>%lld неделю назад</string>
-            <key>few</key>
-            <string>%lld недели назад</string>
-            <key>many</key>
-            <string>%lld недель назад</string>
-        </dict>
-    </dict>
-    <key>%lld months ago</key>
-    <dict>
-        <key>NSStringLocalizedFormatKey</key>
-        <string>%#@VARIABLE@</string>
-        <key>VARIABLE</key>
-        <dict>
-            <key>NSStringFormatSpecTypeKey</key>
-            <string>NSStringPluralRuleType</string>
-            <key>NSStringFormatValueTypeKey</key>
-            <string>lld</string>
-            <key>zero</key>
-            <string>months</string>
-            <key>one</key>
-            <string>%lld месяц назад</string>
-            <key>few</key>
-            <string>%lld месяца назад</string>
-            <key>many</key>
-            <string>%lld месяцев назад</string>
-        </dict>
-    </dict>
-    <key>%lld years ago</key>
-    <dict>
-        <key>NSStringLocalizedFormatKey</key>
-        <string>%#@VARIABLE@</string>
-        <key>VARIABLE</key>
-        <dict>
-            <key>NSStringFormatSpecTypeKey</key>
-            <string>NSStringPluralRuleType</string>
-            <key>NSStringFormatValueTypeKey</key>
-            <string>lld</string>
-            <key>zero</key>
-            <string>years</string>
-            <key>one</key>
-            <string>%lld год назад</string>
-            <key>few</key>
-            <string>%lld года назад</string>
-            <key>many</key>
-            <string>%lld лет назад</string>
-        </dict>
-    </dict>
-    <key>%lld transactions</key>
-    <dict>
-        <key>NSStringLocalizedFormatKey</key>
-        <string>%#@VARIABLE@</string>
-        <key>VARIABLE</key>
-        <dict>
-            <key>NSStringFormatSpecTypeKey</key>
-            <string>NSStringPluralRuleType</string>
-            <key>NSStringFormatValueTypeKey</key>
-            <string>lld</string>
-            <key>one</key>
-            <string>%lld транзакция</string>
-            <key>few</key>
-            <string>%lld транзакции</string>
-            <key>many</key>
-            <string>%lld транзакций</string>
-            <key>other</key>
-            <string>%lld транзакции</string>
-        </dict>
-    </dict>
+	<key>%lld hours left</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@VARIABLE@</string>
+		<key>VARIABLE</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>zero</key>
+			<string>Пусто</string>
+			<key>one</key>
+			<string>остался 1 час</string>
+			<key>few</key>
+			<string>осталось %lld часа</string>
+			<key>many</key>
+			<string>осталось %lld часов</string>
+			<key>other</key>
+			<string>осталось %lld часов</string>
+		</dict>
+	</dict>
+	<key>%lld days</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@VARIABLE@</string>
+		<key>VARIABLE</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>zero</key>
+			<string>дней</string>
+			<key>one</key>
+			<string>день</string>
+			<key>few</key>
+			<string>дня</string>
+			<key>many</key>
+			<string>дней</string>
+			<key>other</key>
+			<string>дней</string>
+		</dict>
+	</dict>
+	<key>%lld weeks</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@VARIABLE@</string>
+		<key>VARIABLE</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>zero</key>
+			<string>недель</string>
+			<key>one</key>
+			<string>неделя</string>
+			<key>few</key>
+			<string>недели</string>
+			<key>many</key>
+			<string>недель</string>
+			<key>other</key>
+			<string>недель</string>
+		</dict>
+	</dict>
+	<key>%lld months</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@VARIABLE@</string>
+		<key>VARIABLE</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>zero</key>
+			<string>месяцев</string>
+			<key>one</key>
+			<string>месяц</string>
+			<key>few</key>
+			<string>месяца</string>
+			<key>many</key>
+			<string>месяцев</string>
+			<key>other</key>
+			<string>месяцев</string>
+		</dict>
+	</dict>
+	<key>%lld weeks ago</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@VARIABLE@</string>
+		<key>VARIABLE</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>zero</key>
+			<string>0 недель назад</string>
+			<key>one</key>
+			<string>%lld неделю назад</string>
+			<key>few</key>
+			<string>%lld недели назад</string>
+			<key>many</key>
+			<string>%lld недель назад</string>
+			<key>other</key>
+			<string>%lld недель назад</string>
+		</dict>
+	</dict>
+	<key>%lld months ago</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@VARIABLE@</string>
+		<key>VARIABLE</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>zero</key>
+			<string>0 месяцев назад</string>
+			<key>one</key>
+			<string>%lld месяц назад</string>
+			<key>few</key>
+			<string>%lld месяца назад</string>
+			<key>many</key>
+			<string>%lld месяцев назад</string>
+			<key>other</key>
+			<string>%lld месяцев назад</string>
+		</dict>
+	</dict>
+	<key>%lld years ago</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@VARIABLE@</string>
+		<key>VARIABLE</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>zero</key>
+			<string>0 лет назад</string>
+			<key>one</key>
+			<string>%lld год назад</string>
+			<key>few</key>
+			<string>%lld года назад</string>
+			<key>many</key>
+			<string>%lld лет назад</string>
+			<key>other</key>
+			<string>%lld лет назад</string>
+		</dict>
+	</dict>
+	<key>%lld transactions</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@VARIABLE@</string>
+		<key>VARIABLE</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>one</key>
+			<string>%lld транзакция</string>
+			<key>few</key>
+			<string>%lld транзакции</string>
+			<key>many</key>
+			<string>%lld транзакций</string>
+			<key>other</key>
+			<string>%lld транзакций</string>
+		</dict>
+	</dict>
 </dict>
 </plist>

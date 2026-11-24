@@ -354,6 +354,10 @@
 		AECE7F9D2AED1A6800B57267 /* SuggestedTransactions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestedTransactions.swift; sourceTree = "<group>"; };
 		D63B20472D8728C300CAFB20 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = Localizations/en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		D63B20492D8728C300CAFB20 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = en; path = Localizations/en.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
+		E4B0A0112B11000100C8C001 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = Localizations/fr.lproj/Localizable.strings; sourceTree = "<group>"; };
+		E4B0A0122B11000100C8C001 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = Localizations/ru.lproj/Localizable.strings; sourceTree = "<group>"; };
+		E4B0A0132B11000100C8C001 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = fr; path = Localizations/fr.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
+		E4B0A0142B11000100C8C001 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = ru; path = Localizations/ru.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -814,6 +818,8 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				fr,
+				ru,
 				Base,
 			);
 			mainGroup = 5327D27A287C697400F76ADF;
@@ -1107,6 +1113,8 @@
 			isa = PBXVariantGroup;
 			children = (
 				D63B20472D8728C300CAFB20 /* en */,
+				E4B0A0112B11000100C8C001 /* fr */,
+				E4B0A0122B11000100C8C001 /* ru */,
 			);
 			name = Localizable.strings;
 			sourceTree = "<group>";
@@ -1115,6 +1123,8 @@
 			isa = PBXVariantGroup;
 			children = (
 				D63B20492D8728C300CAFB20 /* en */,
+				E4B0A0132B11000100C8C001 /* fr */,
+				E4B0A0142B11000100C8C001 /* ru */,
 			);
 			name = Localizable.stringsdict;
 			sourceTree = "<group>";

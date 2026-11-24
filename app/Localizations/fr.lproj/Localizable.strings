@@ -62,7 +62,7 @@
 "Allowance" = "Allocation";
 "Part-Time" = "Temps partiel";
 "Investments" = "Investissements";
-"Tips" = "Pourboire(s)";
+"Tips" = "Pourboires";
 "Successfully Added" = "Ajouté avec succès";
 
 // new transaction page
@@ -100,10 +100,11 @@
 "filter-tag-type" = "par type";
 "filter-tag-day" = "par jour";
 "filter-tag-category" = "par catégorie";
-"filter-tag-week" = "par semaines";
+"filter-tag-week" = "par semaine";
 "filter-tag-month" = "par mois";
 "filter-tag-recurring" = "récurrentes";
 "filter-picker-income" = "Revenu";
+"filter-tag-upcoming" = "à venir";
 "Total Spent" = "Total des dépenses";
 "Total Income" = "Revenu total";
 "Net Total" = "Total net";
@@ -213,7 +214,7 @@
 "Authentication" = "Authentification";
 "Income Tracking" = "Suivi des revenus";
 "Display Cents" = "Afficher les centimes";
-"iCloud Sync" = "iCloud Sync";
+"iCloud Sync" = "Synchronisation iCloud";
 "Export Data" = "Exporter les données";
 "Erase Data" = "Effacer les données";
 "Animated Charts" = "Graphiques animés";
@@ -267,10 +268,10 @@
 "Thanks a million, %@ Rafael" = "Merci beaucoup, %@ Rafael";
 "Have a great day ahead!" = "En vous souhaitant une excellente journée!";
 "Version %@ (%@)" = "Version %@ (%@)";
-"Made with ❤️ by %@ from 🇸🇬" = "Fabriqué avec amour par Rafael, du Singapour 🇸🇬";
-"☕ Coffee-Sized Tip" = "☕  1 Pourboire Pour Un Café";
-"🌮 Taco-Sized Tip" = "🌮 1 Pourboire Pour Un Tacos";
-"🍕 Pizza-Sized Tip" = "🍕 1 Pourboire Pour Un Pizza";
+"Made with ❤️ by %@ from 🇸🇬" = "Fabriqué avec amour par Rafael, de Singapour 🇸🇬";
+"☕ Coffee-Sized Tip" = "☕ Pourboire de la taille d'un café";
+"🌮 Taco-Sized Tip" = "🌮 Pourboire de la taille d'un taco";
+"🍕 Pizza-Sized Tip" = "🍕 Pourboire de la taille d'une pizza";
 
 // Widgets
 
