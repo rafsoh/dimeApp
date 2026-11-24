@@ -71,67 +71,44 @@ struct NewTransactionIntent: AppIntent {
 
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
-        if expenseCategory == nil && incomeCategory == nil {
-            if income == .expense {
-                throw $expenseCategory.needsValueError()
-            } else {
-                throw $incomeCategory.needsValueError()
+        if amount == 0 {
+            throw $amount.needsValueError()
+        }
+
+        let dataController = DataController.shared
+        let repeatType: Int
+        var currency: String?
+
+        if let currencyCode, !currencyCode.trimmingCharacters(in: .whitespaces).isEmpty {
+            guard let code = Currency.knownCode(currencyCode) else {
+                throw $currencyCode.needsValueError("Which currency? Use a three-letter code such as EUR.")
             }
+
+            currency = code
+        }
+
+        if !recurringTransaction {
+            repeatType = 0
         } else {
-            if amount == 0 {
-                throw $amount.needsValueError()
+            switch recurringType {
+            case .daily:
+                repeatType = 1
+            case .weekly:
+                repeatType = 2
+            case .monthly:
+                repeatType = 3
             }
+        }
 
-            let dataController = DataController.shared
-            let repeatType: Int
-            var currency: String?
+        let isIncome = income == .income
+        // A category is optional: leaving it out logs the transaction without one.
+        let categoryId = isIncome ? incomeCategory?.id : expenseCategory?.id
+        let category = try categoryId.map { try dataController.findCategory(withId: $0) }
 
-            if let currencyCode, !currencyCode.trimmingCharacters(in: .whitespaces).isEmpty {
-                guard let code = Currency.knownCode(currencyCode) else {
-                    throw $currencyCode.needsValueError("Which currency? Use a three-letter code such as EUR.")
-                }
+        let transaction = dataController.newTransaction(note: note ?? "", category: category, income: isIncome, amount: amount, currencyCode: currency, date: Date.now, repeatType: repeatType, repeatCoefficient: 1, delay: false)
 
-                currency = code
-            }
-
-            if !recurringTransaction {
-                repeatType = 0
-            } else {
-                switch recurringType {
-                case .daily:
-                    repeatType = 1
-                case .weekly:
-                    repeatType = 2
-                case .monthly:
-                    repeatType = 3
-                }
-            }
-
-            if income == .expense {
-                if let unwrappedExpenseCategory = expenseCategory {
-                    let category = try dataController.findCategory(withId: unwrappedExpenseCategory.id)
-
-                    let transaction = dataController.newTransaction(note: note ?? "", category: category, income: false, amount: amount, currencyCode: currency, date: Date.now, repeatType: repeatType, repeatCoefficient: 1, delay: false)
-
-                    return .result(dialog: "Expense successfully logged.") {
-                        ShortcutTransactionView(transaction: transaction)
-                    }
-                } else {
-                    throw $expenseCategory.needsValueError()
-                }
-            } else {
-                if let unwrappedIncomeCategory = incomeCategory {
-                    let category = try dataController.findCategory(withId: unwrappedIncomeCategory.id)
-
-                    let transaction = dataController.newTransaction(note: note ?? "", category: category, income: true, amount: amount, currencyCode: currency, date: Date.now, repeatType: repeatType, repeatCoefficient: 1, delay: false)
-
-                    return .result(dialog: "Income successfully logged.") {
-                        ShortcutTransactionView(transaction: transaction)
-                    }
-                } else {
-                    throw $incomeCategory.needsValueError()
-                }
-            }
+        return .result(dialog: isIncome ? "Income successfully logged." : "Expense successfully logged.") {
+            ShortcutTransactionView(transaction: transaction)
         }
     }
 
@@ -243,8 +220,7 @@ struct ShortcutTransactionView: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            EmojiLogView(emoji: (transaction.category?.wrappedEmoji ?? ""),
-                         colour: (transaction.category?.wrappedColour ?? ""), future: false)
+            EmojiLogView(transaction: transaction, future: false)
                 .frame(width: 35, height: 35, alignment: .center)
                 .overlay(alignment: .bottomTrailing) {
                     if transaction.recurringType > 0 {

@@ -96,4 +96,32 @@ final class CSVCurrencyTests: XCTestCase {
         XCTAssertEqual(entry.currencyCode, "EUR")
         XCTAssertEqual(CurrencyConverter(mainCurrency: "USD").total(of: [entry]).report.excludedCount, 1)
     }
+
+    func testRowsWithoutACategoryAreImportedWithoutOne() throws {
+        let text = """
+        Date,Note,Amount,Category,Type
+        2025-03-01 12:00:00 +0000,Lunch,12.50,Food,Expense
+        2025-03-02 09:30:00 +0000,Cash,20.00,,Expense
+
+        """
+        let (_, result) = try build(text)
+
+        XCTAssertEqual(result.skippedCount, 0)
+        XCTAssertEqual(result.rows.map(\.categoryName), ["Food", ""])
+    }
+
+    func testFilesWithoutACategoryColumnImport() throws {
+        let text = """
+        Date,Amount
+        2025-03-01 12:00:00 +0000,12.50
+        2025-03-02 09:30:00 +0000,20.00
+
+        """
+        let (mapping, result) = try build(text)
+
+        XCTAssertNil(mapping[.category])
+        XCTAssertFalse(ImportField.category.isRequired)
+        XCTAssertEqual(result.rows.count, 2)
+        XCTAssertEqual(result.rows.map(\.categoryName), ["", ""])
+    }
 }

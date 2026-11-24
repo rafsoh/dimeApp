@@ -75,8 +75,7 @@ struct SingleTransactionPhotoView: View {
 
     var body: some View {
         HStack(spacing: 25) {
-            EmojiLogView(emoji: (transaction.category?.wrappedEmoji ?? ""),
-                         colour: (transaction.category?.wrappedColour ?? "#FFFFFF"), future: future, huge: true)
+            EmojiLogView(transaction: transaction, future: future, huge: true)
                 .frame(width: 100, height: 100, alignment: .center)
                 .overlay(alignment: .bottomTrailing) {
                     if transaction.recurringType > 0 {

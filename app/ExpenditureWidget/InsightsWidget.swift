@@ -127,6 +127,12 @@ struct InsightsProvider: IntentTimelineProvider {
                 holdingCat.append(newCategory)
             }
 
+            let uncategorisedTotal = transactions.filter { $0.category == nil }.reduce(0.0) { $0 + converter.amountInBreakdown(of: $1.money) }
+
+            if uncategorisedTotal != 0 {
+                holdingCat.append(HoldingCategory(colour: Uncategorised.colour, emoji: "", name: Uncategorised.name, percent: uncategorisedTotal / totalForWeek, uncategorised: true))
+            }
+
             holdingCat.sort(by: { lhs, rhs in
                 lhs.percent > rhs.percent
             })
@@ -191,6 +197,12 @@ struct InsightsProvider: IntentTimelineProvider {
                 holdingCat.append(newCategory)
             }
 
+            let uncategorisedTotal = transactions.filter { $0.category == nil }.reduce(0.0) { $0 + converter.amountInBreakdown(of: $1.money) }
+
+            if uncategorisedTotal != 0 {
+                holdingCat.append(HoldingCategory(colour: Uncategorised.colour, emoji: "", name: Uncategorised.name, percent: uncategorisedTotal / totalForMonth, uncategorised: true))
+            }
+
             holdingCat.sort(by: { lhs, rhs in
                 lhs.percent > rhs.percent
             })
@@ -253,6 +265,12 @@ struct InsightsProvider: IntentTimelineProvider {
                 let newCategory = HoldingCategory(colour: category.wrappedColour, emoji: category.wrappedEmoji, name: category.wrappedName, percent: total / totalForYear)
 
                 holdingCat.append(newCategory)
+            }
+
+            let uncategorisedTotal = transactions.filter { $0.category == nil }.reduce(0.0) { $0 + converter.amountInBreakdown(of: $1.money) }
+
+            if uncategorisedTotal != 0 {
+                holdingCat.append(HoldingCategory(colour: Uncategorised.colour, emoji: "", name: Uncategorised.name, percent: uncategorisedTotal / totalForYear, uncategorised: true))
             }
 
             holdingCat.sort(by: { lhs, rhs in
@@ -342,6 +360,7 @@ struct HoldingCategory: Hashable {
     let emoji: String
     let name: String
     let percent: Double
+    var uncategorised = false
 }
 
 struct WidgetChartBucket: Identifiable {
@@ -476,7 +495,8 @@ struct InsightsWidgetCategories: View {
     }
 
     func colour(for category: HoldingCategory) -> String {
-        income ? Color.colorArray[(categories.firstIndex(of: category) ?? 0) % Color.colorArray.count] : category.colour
+        guard !category.uncategorised else { return category.colour }
+        return income ? Color.colorArray[(categories.firstIndex(of: category) ?? 0) % Color.colorArray.count] : category.colour
     }
 
     var body: some View {
@@ -493,7 +513,7 @@ struct InsightsWidgetCategories: View {
                 VStack(alignment: .leading, spacing: 5) {
                     ForEach(top, id: \.self) { category in
                         HStack(spacing: 6) {
-                            WidgetEmojiTile(emoji: category.emoji, colour: colour(for: category), size: 20)
+                            WidgetEmojiTile(emoji: category.emoji, colour: colour(for: category), size: 20, symbol: category.uncategorised ? Uncategorised.symbol(income: income) : nil)
 
                             Text(category.name)
                                 .font(.system(.footnote, design: .rounded).weight(.medium))

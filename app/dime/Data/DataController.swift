@@ -686,16 +686,13 @@ class DataController: ObservableObject {
         let transaction = Transaction(context: container.viewContext)
 
         if note.trimmingCharacters(in: .whitespacesAndNewlines) == "" {
-            transaction.note = category?.wrappedName ?? ""
+            transaction.note = category?.wrappedName ?? Uncategorised.name
         } else {
             transaction.note = note.trimmingCharacters(in: .whitespaces)
         }
 
         transaction.income = income
-
-        if let unwrappedCategory = category {
-            transaction.category = unwrappedCategory
-        }
+        transaction.category = category
 
         transaction.amount = amount
         transaction.currencyCode = currencyCode ?? currencyForNewTransaction()
@@ -722,12 +719,10 @@ class DataController: ObservableObject {
 
     func newTemplateTransaction(order: Int) {
         if let match = getTemplateTransaction(order: order) {
-            if let unwrappedCategory = match.category {
-                // Templates have no currency and were made in the main currency.
-                _ = newTransaction(note: match.note ?? "", category: unwrappedCategory, income: match.income, amount: match.amount, currencyCode: currencyConverter.mainCurrency, date: Date.now, repeatType: Int(match.recurringType), repeatCoefficient: Int(match.recurringCoefficient), delay: false)
+            // Templates have no currency and were made in the main currency.
+            _ = newTransaction(note: match.note ?? "", category: match.category, income: match.income, amount: match.amount, currencyCode: currencyConverter.mainCurrency, date: Date.now, repeatType: Int(match.recurringType), repeatCoefficient: Int(match.recurringCoefficient), delay: false)
 
-                addedTransaction = true
-            }
+            addedTransaction = true
         }
     }
 

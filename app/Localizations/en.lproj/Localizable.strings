@@ -83,6 +83,7 @@
 "Delete Expense?" = "Delete Expense?";
 "Missing Amount" = "Missing Amount";
 "Missing Category" = "Missing Category";
+"No Category" = "No Category";
 "transaction-view-income-picker" = "Income";
 
 // log view

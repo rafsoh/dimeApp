@@ -81,6 +81,7 @@
 "Delete Expense?" = "Удалить расход?";
 "Missing Amount" = "Нет суммы";
 "Missing Category" = "Нет категории";
+"No Category" = "Без категории";
 "transaction-view-income-picker" = "Доход";
 
 // log view

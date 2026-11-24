@@ -102,7 +102,7 @@ struct NumberPad: View {
                             if #available(iOS 17.0, *) {
                                 Image(systemName: "checkmark")
                                     .font(.system(size: 28, weight: .semibold, design: .rounded))
-                                    .symbolEffect(.bounce.up.byLayer, value: price != 0 && category != nil)
+                                    .symbolEffect(.bounce.up.byLayer, value: price != 0)
                             } else {
                                 Image(systemName: "checkmark")
                                     .font(.system(size: 28, weight: .semibold, design: .rounded))

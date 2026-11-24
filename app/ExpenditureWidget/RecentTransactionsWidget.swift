@@ -138,7 +138,7 @@ struct Provider: IntentTimelineProvider {
         var sending = [HoldingTransaction]()
 
         holding.forEach { transaction in
-            let t = HoldingTransaction(colour: transaction.category?.wrappedColour ?? "", emoji: transaction.category?.wrappedEmoji ?? "", note: transaction.wrappedNote, amount: transaction.wrappedAmount, income: transaction.income, currencyCode: transaction.currencyCode)
+            let t = HoldingTransaction(colour: transaction.wrappedColour, emoji: transaction.category?.wrappedEmoji ?? "", note: transaction.wrappedNote, amount: transaction.wrappedAmount, income: transaction.income, currencyCode: transaction.currencyCode, uncategorised: transaction.category == nil)
 
             sending.append(t)
         }
@@ -163,6 +163,7 @@ struct HoldingTransaction: Hashable {
     let amount: Double
     let income: Bool
     var currencyCode: String?
+    var uncategorised = false
 }
 
 struct ExpenditureWidgetEntryView: View {
@@ -310,7 +311,7 @@ struct ExpenditureWidgetEntryView: View {
     /// A log row: the category's emoji tile, the note, and the amount in green for income.
     func row(_ transaction: HoldingTransaction, tileSize: CGFloat, font: Font) -> some View {
         HStack(spacing: 8) {
-            WidgetEmojiTile(emoji: transaction.emoji, colour: transaction.colour, size: tileSize)
+            WidgetEmojiTile(emoji: transaction.emoji, colour: transaction.colour, size: tileSize, symbol: transaction.uncategorised ? Uncategorised.symbol(income: transaction.income) : nil)
 
             Text(transaction.note)
                 .foregroundColor(Color.PrimaryText)

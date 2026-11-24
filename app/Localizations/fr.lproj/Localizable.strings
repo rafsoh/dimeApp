@@ -83,6 +83,7 @@
 "Delete Expense?" = "Supprimer une dépense?";
 "Missing Amount" = "Montant manquant";
 "Missing Category" = "Catégorie manquante";
+"No Category" = "Sans catégorie";
 "transaction-view-income-picker" = "Revenu";
 
 // log view

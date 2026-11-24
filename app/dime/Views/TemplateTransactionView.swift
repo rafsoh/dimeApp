@@ -312,7 +312,7 @@ struct TemplateTransactionView: View {
                                     if #available(iOS 17.0, *) {
                                         Image(systemName: "checkmark.square.fill")
                                             .font(.system(size: 30, weight: .medium, design: .rounded))
-                                            .symbolEffect(.bounce.up.byLayer, value: transactionValue != 0 && category != nil)
+                                            .symbolEffect(.bounce.up.byLayer, value: transactionValue != 0)
 //                                            .symbolEffectsRemoved()
                                     } else {
                                         Image(systemName: "checkmark.square.fill")
@@ -394,7 +394,7 @@ struct TemplateTransactionView: View {
             }
         }
         .sheet(isPresented: $showCategorySheet) {
-            CategoryPickerSheet(category: $category, income: income)
+            CategoryPickerSheet(category: $category, income: income, allowsNone: true)
         }
         .sheet(isPresented: $showPicker) {
             if #available(iOS 16.0, *) {
@@ -463,22 +463,9 @@ struct TemplateTransactionView: View {
     func submit() {
         let generator = UINotificationFeedbackGenerator()
 
-        if transactionValue == 0 && category == nil {
-            toastImage = "questionmark.app"
-            toastTitle = "Incomplete Entry"
-            showToast = true
-            generator.notificationOccurred(.error)
-
-            return
-        } else if transactionValue == 0 {
+        if transactionValue == 0 {
             toastImage = "centsign.circle"
             toastTitle = "Missing Amount"
-            showToast = true
-            generator.notificationOccurred(.error)
-            return
-        } else if category == nil {
-            toastImage = "tray"
-            toastTitle = "Missing Category"
             showToast = true
             generator.notificationOccurred(.error)
             return
@@ -488,14 +475,13 @@ struct TemplateTransactionView: View {
 
         if let editedTransaction = toEdit {
             if note.trimmingCharacters(in: .whitespacesAndNewlines) == "" {
-                editedTransaction.note = category!.wrappedName
+                editedTransaction.note = category?.wrappedName ?? Uncategorised.name
             } else {
                 editedTransaction.note = note.trimmingCharacters(in: .whitespaces)
             }
 
-            if let unwrappedCategory = category {
-                editedTransaction.category = unwrappedCategory
-            }
+            // Assigned even when nil, so an edit can remove the category.
+            editedTransaction.category = category
 
             editedTransaction.amount = transactionValue
             editedTransaction.income = income
@@ -510,7 +496,7 @@ struct TemplateTransactionView: View {
         } else {
             let transaction = TemplateTransaction(context: moc)
             if note.trimmingCharacters(in: .whitespacesAndNewlines) == "" {
-                transaction.note = category?.wrappedName ?? ""
+                transaction.note = category?.wrappedName ?? Uncategorised.name
             } else {
                 transaction.note = note.trimmingCharacters(in: .whitespaces)
             }
@@ -733,7 +719,7 @@ struct SingleTemplateButton: View {
     }
 
     var transactionColor: Color {
-        if transaction.category?.income ?? false {
+        if transaction.category?.income ?? transaction.income {
             return Color.IncomeGreen
         } else {
             return Color(hex: transaction.wrappedColour)
@@ -742,10 +728,18 @@ struct SingleTemplateButton: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: -2) {
-            Text(transaction.wrappedEmoji)
-                .font(.system(size: 14, weight: .semibold, design: .rounded))
-                .padding(5)
-                .background(blend(over: transactionColor, withAlpha: 0.3), in: RoundedRectangle(cornerRadius: 8))
+            Group {
+                if transaction.category == nil {
+                    Image(systemName: Uncategorised.symbol(income: transaction.income))
+                        .foregroundColor(Color.PrimaryText)
+                        .frame(width: 18, height: 18)
+                } else {
+                    Text(transaction.wrappedEmoji)
+                }
+            }
+            .font(.system(size: 14, weight: .semibold, design: .rounded))
+            .padding(5)
+            .background(blend(over: transactionColor, withAlpha: 0.3), in: RoundedRectangle(cornerRadius: 8))
 
             Spacer()
 
