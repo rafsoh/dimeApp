@@ -14,7 +14,7 @@ jobs:
   build-and-test:
     name: Build, test & screenshot
     # macOS runners are free for public repositories.
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 45
 
     env:
@@ -26,8 +26,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Show Xcode version
-        run: xcodebuild -version
+      - name: Select newest Xcode
+        # The app uses iOS 26 SDK APIs, so it needs Xcode 26 or later.
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_*.app | grep -v -i beta | sort -V | tail -1)
+          echo "Using $XCODE"
+          sudo xcode-select -s "$XCODE/Contents/Developer"
+          xcodebuild -version
 
       - name: Cache Swift packages
         uses: actions/cache@v4
