@@ -187,7 +187,7 @@ final class ExchangeRateStore: ExchangeRateProviding {
         return cache.latestDay.flatMap { cache.days[$0]?.source }
     }
 
-    /// The exact day, then the nearest earlier day that has the currency, then the latest rates.
+    /// The exact day, then the nearest earlier day that has the currency, then a later day within a month.
     func unitsPerDollar(of currencyCode: String, on date: Date) -> Double? {
         let code = currencyCode.uppercased()
         let key = RateDay(date: date, calendar: calendar).string
@@ -210,11 +210,31 @@ final class ExchangeRateStore: ExchangeRateProviding {
             }
         }
 
-        if let latestDay = cache.latestDay, let value = cache.days[latestDay]?.unitsPerDollar[code] {
-            return value
+        // A later day's rate stands in only for a recent gap. Years-old amounts in a currency without history
+        // would be badly wrong at today's rate, so they're left out instead.
+        for later in sortedDays[insertionIndex(of: key)...] {
+            guard let distance = daysBetween(key, later), distance <= Self.maximumDaysToLaterRate else {
+                break
+            }
+
+            if let value = cache.days[later]?.unitsPerDollar[code] {
+                return value
+            }
         }
 
         return nil
+    }
+
+    static let maximumDaysToLaterRate = 31
+
+    private func daysBetween(_ earlier: String, _ later: String) -> Int? {
+        guard let start = RateDay(string: earlier).flatMap({ calendar.date(from: DateComponents(year: $0.year, month: $0.month, day: $0.day)) }),
+              let end = RateDay(string: later).flatMap({ calendar.date(from: DateComponents(year: $0.year, month: $0.month, day: $0.day)) })
+        else {
+            return nil
+        }
+
+        return calendar.dateComponents([.day], from: start, to: end).day
     }
 
     /// Another process (the app, for a widget) may have written the file since it was read.
@@ -517,8 +537,16 @@ final class ExchangeRateStore: ExchangeRateProviding {
     /// `dates` that aren't cached, up to `maximumRequestsPerRefresh` requests. Safe to call often.
     @discardableResult
     func refresh(dates: [Date], force: Bool = false, now: Date = Date()) async -> RefreshResult {
-        guard beginRefreshing() else {
-            return RefreshResult()
+        var waits = 0
+
+        // Skipping is fine for automatic refreshes; one the user asked for waits for the running one.
+        while !beginRefreshing() {
+            guard force, waits < 120 else {
+                return RefreshResult()
+            }
+
+            try? await Task.sleep(nanoseconds: 500_000_000)
+            waits += 1
         }
 
         defer {

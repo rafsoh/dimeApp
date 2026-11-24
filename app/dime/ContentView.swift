@@ -116,8 +116,9 @@ struct ContentView: View {
                 if let holdingCurrency = NSUbiquitousKeyValueStore.default.string(forKey: "currency") {
                     currency = holdingCurrency
                 } else {
-                    currency = Locale.current.currencyCode!
-                    NSUbiquitousKeyValueStore.default.set(Locale.current.currencyCode!, forKey: "currency")
+                    // Before iCloud's copy arrives, keep this device's currency rather than the locale's:
+                    // transactions name their currency, so a silent switch would make them all foreign.
+                    NSUbiquitousKeyValueStore.default.set(currency, forKey: "currency")
                 }
             }
 
