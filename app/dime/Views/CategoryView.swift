@@ -30,10 +30,6 @@ struct CategoryView: View {
     @State var toastImage = ""
     @State var positive = false
 
-    var disabled: Bool {
-        income == false && expenseCategories.count >= 24
-    }
-
     var body: some View {
         switch mode {
         case .settings:
@@ -63,14 +59,7 @@ struct CategoryView: View {
                     Spacer(minLength: 0)
 
                     Button {
-                        if disabled {
-                            showToast = true
-                            toastImage = "exclamationmark.triangle.fill"
-                            toastTitle = "Limit Exceeded"
-                            positive = false
-                        } else {
-                            newCategory = true
-                        }
+                        newCategory = true
                     } label: {
                         Label("New", systemImage: "plus")
                             .font(.system(.body, design: .rounded).weight(.semibold))
@@ -83,7 +72,6 @@ struct CategoryView: View {
                     }
                     .buttonStyle(.plain)
                     .glassBackground(in: Capsule(), tint: .glassTint)
-                    .opacity(disabled ? 0.5 : 1)
                 }
                 .padding(.horizontal, .settingsPageInset)
                 .padding(.top, 8)
@@ -517,8 +505,6 @@ struct NewCategoryAlert: View {
             .overlay {
                 if showToast {
                     GlassToast(title: toastTitle, systemImage: toastImage, color: toastColor)
-                } else if expenseCategories.count == 24 {
-                    CategoryEditorTitle(title: "Income Category")
                 } else if budgetMode {
                     CategoryEditorTitle(title: "Expense Category")
                 } else if !incomeTracking {
@@ -602,11 +588,6 @@ struct NewCategoryAlert: View {
         .frame(maxHeight: .infinity, alignment: .top)
         .sheetBackground()
         .animation(.easeOut(duration: 0.2), value: showToast)
-        .onChange(of: expenseCategories.count) { _ in
-            if expenseCategories.count == 24 {
-                dismiss()
-            }
-        }
         .onChange(of: showToast) { newValue in
             if newValue {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
@@ -619,10 +600,6 @@ struct NewCategoryAlert: View {
         }
         .colorPickerSheet(isPresented: $showNativePicker, selection: $customSelectedColor, supportsAlpha: false, title: "")
         .onAppear {
-            if expenseCategories.count == 24 {
-                income = true
-            }
-
             if !income {
                 expenseCategories.forEach { category in
                     if availableColours.contains(category.wrappedColour) {
@@ -631,7 +608,7 @@ struct NewCategoryAlert: View {
                 }
 
                 if availableColours.isEmpty {
-                    selectedColour = "#FFFFFF"
+                    selectedColour = Color.nextExpenseColour(used: expenseCategories.map(\.wrappedColour))
                 } else {
                     selectedColour = availableColours[0]
                 }
@@ -725,7 +702,7 @@ struct NewCategoryAlert: View {
                 }
 
                 if availableColours.isEmpty {
-                    selectedColour = "#FFFFFF"
+                    selectedColour = Color.nextExpenseColour(used: expenseCategories.map(\.wrappedColour))
                 } else {
                     selectedColour = availableColours[0]
                 }
@@ -953,11 +930,6 @@ struct EditCategoryAlert: View {
         }) { category in
             DeleteCategoryAlert(toDelete: category, deleted: $deleteMode)
         }
-        .onChange(of: expenseCategories.count) { _ in
-            if expenseCategories.count == 24 {
-                dismiss()
-            }
-        }
         .onChange(of: customSelectedColor) { _ in
             print("changed")
             selectedColour = customSelectedColor.toHex() ?? "#FFFFFF"
@@ -1142,7 +1114,7 @@ struct SuggestedCategoriesView: View {
                     }
 
                     if availableColours.isEmpty {
-                        selectedColour = "#FFFFFF"
+                        selectedColour = Color.nextExpenseColour(used: categories.map(\.wrappedColour))
                     } else {
                         selectedColour = availableColours[0]
                     }
@@ -1231,7 +1203,7 @@ struct SuggestedCategoriesView: View {
                             }
 
                             if availableColours.isEmpty {
-                                selectedColour = "#FFFFFF"
+                                selectedColour = Color.nextExpenseColour(used: categories.map(\.wrappedColour))
                             } else {
                                 selectedColour = availableColours[0]
                             }
@@ -1432,6 +1404,10 @@ struct ColourPickerView: View {
         (colourScheme == 0 && systemColorScheme == .dark) || colourScheme == 2
     }
 
+    var canReuseColours: Bool {
+        Set(Color.colorArray).isSubset(of: Set(selectedColours))
+    }
+
     var body: some View {
         LazyVGrid(columns: columns, spacing: 6) {
             ForEach(Color.colorArray, id: \.self) { suggestedColor in
@@ -1467,9 +1443,9 @@ struct ColourPickerView: View {
                     Circle()
                         .fill(Color(hex: suggestedColor))
                         .frame(height: 40)
-                        .opacity(selectedColours.contains(suggestedColor) ? 0.2 : 1)
+                        .opacity(canReuseColours || !selectedColours.contains(suggestedColor) ? 1 : 0.2)
                         .onTapGesture {
-                            if !selectedColours.contains(suggestedColor) {
+                            if canReuseColours || !selectedColours.contains(suggestedColor) {
                                 withAnimation {
                                     selectedColour = suggestedColor
                                     customMode = false
