@@ -45,11 +45,7 @@ struct SettingsView: View {
   @AppStorage("firstWeekday", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
   var firstWeekday: Int = 1
   var firstWeekdayString: String {
-    if firstWeekday == 1 {
-      return String(localized: "Sunday")
-    } else {
-      return String(localized: "Monday")
-    }
+    dimeWeekdaySymbol(firstWeekday)
   }
 
   @AppStorage("showNotifications", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
@@ -152,10 +148,10 @@ struct SettingsView: View {
   @State var showTipJarMenu = false
   @State var showImportGuide = false
   @State var showUpdate: Bool = false
+  @State var showExportSheet = false
+  @State var exportFile: URL?
 
   @EnvironmentObject var tabBarManager: TabBarManager
-
-  @EnvironmentObject var dataController: DataController
 
   var body: some View {
     if #available(iOS 16.0, *) {
@@ -352,7 +348,7 @@ struct SettingsView: View {
               }
 
               Button {
-                exportData()
+                showExportSheet = true
               } label: {
                 SettingsRowView(
                   systemImage: "square.and.arrow.up.fill", title: "Export Data", colour: 113)
@@ -477,6 +473,11 @@ struct SettingsView: View {
       .tabHeader {
         TabHeader("Settings")
       }
+      .sheet(isPresented: $showExportSheet, onDismiss: shareExportIfNeeded) {
+        ExportPeriodSheet { url in
+          exportFile = url
+        }
+      }
     }
     .settingsNavigationBar(hidden: true)
     .background(Color.PrimaryBackground)
@@ -489,6 +490,12 @@ struct SettingsView: View {
     .sheet(isPresented: $showImportGuide) {
       ImportDataView()
     }
+  }
+
+  func shareExportIfNeeded() {
+    guard let exportFile else { return }
+    self.exportFile = nil
+    shareSheet(url: exportFile)
   }
 
   @ViewBuilder
@@ -524,8 +531,12 @@ struct SettingsView: View {
   }
 
   func shareSheet(url: String) {
-    let url = URL(string: url)
-    let activityView = UIActivityViewController(activityItems: [url!], applicationActivities: nil)
+    guard let url = URL(string: url) else { return }
+    shareSheet(url: url)
+  }
+
+  func shareSheet(url: URL) {
+    let activityView = UIActivityViewController(activityItems: [url], applicationActivities: nil)
 
     let allScenes = UIApplication.shared.connectedScenes
     let scene = allScenes.first { $0.activationState == .foregroundActive }
@@ -536,48 +547,6 @@ struct SettingsView: View {
     }
   }
 
-  func exportData() {
-    let fetchRequest = dataController.fetchRequestForExport()
-    let transactions = dataController.results(for: fetchRequest)
-
-    let fileName = "export.csv"
-    let path = NSURL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(fileName)
-    var csvText = "Date,Note,Amount,Category,Type\n"
-
-    for transaction in transactions {
-      var string = transaction.wrappedNote
-      let type: String
-
-      if transaction.income {
-        type = "Income"
-      } else {
-        type = "Expense"
-      }
-
-      string.removeAll(where: { $0 == "," })
-
-      csvText +=
-        "\(transaction.wrappedDate),\(string),\(String(format: "%.2f", transaction.wrappedAmount)),\(transaction.category?.wrappedName ?? ""),\(type)\n"
-    }
-
-    do {
-      try csvText.write(to: path!, atomically: true, encoding: String.Encoding.utf8)
-    } catch {
-      print("\(error)")
-    }
-
-    var filesToShare = [Any]()
-    filesToShare.append(path!)
-
-    let av = UIActivityViewController(activityItems: filesToShare, applicationActivities: nil)
-
-    let allScenes = UIApplication.shared.connectedScenes
-    let scene = allScenes.first { $0.activationState == .foregroundActive }
-
-    if let windowScene = scene as? UIWindowScene {
-      windowScene.keyWindow?.rootViewController?.present(av, animated: true, completion: nil)
-    }
-  }
 }
 
 struct TipJarSheet: View {

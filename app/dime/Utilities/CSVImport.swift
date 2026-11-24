@@ -180,13 +180,23 @@ enum ImportParsing {
     private static var formatters: [String: DateFormatter] = [:]
 
     static func formatter(for format: String) -> DateFormatter {
-        if let formatter = formatters[format] {
+        // The built-in patterns are English, so they stay on a POSIX calendar.
+        // A format typed by hand that names a month or weekday follows the device locale.
+        let named = !dateFormats.contains(format) && (format.contains("MMM") || format.contains("E"))
+        let key = (named ? "local:" : "posix:") + format
+        if let formatter = formatters[key] {
             return formatter
         }
         let formatter = DateFormatter()
-        formatter.locale = posix
+        if named {
+            formatter.locale = .current
+        } else {
+            formatter.locale = posix
+            formatter.calendar = Calendar(identifier: .gregorian)
+            formatter.isLenient = false
+        }
         formatter.dateFormat = format
-        formatters[format] = formatter
+        formatters[key] = formatter
         return formatter
     }
 

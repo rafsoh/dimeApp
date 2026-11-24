@@ -37,6 +37,16 @@ extension Color {
         "24": "#D46D7F"
     ]
 
+    /// The next palette colour that is not already used. Once every colour is
+    /// in use, colours repeat from the start of the palette.
+    static func nextExpenseColour(used: [String]) -> String {
+        guard !colorArray.isEmpty else { return "#FFFFFF" }
+        if let unused = colorArray.first(where: { !used.contains($0) }) {
+            return unused
+        }
+        return colorArray[used.count % colorArray.count]
+    }
+
     static let colorArray: [String] = [
         "#279AF4",
         "#EC7A58",

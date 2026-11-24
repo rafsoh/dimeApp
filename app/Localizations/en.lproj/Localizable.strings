@@ -369,3 +369,6 @@
 "Some rates couldn't be downloaded. Dime will try again later, and amounts without a rate are left out of totals until then." = "Some rates couldn't be downloaded. Dime will try again later, and amounts without a rate are left out of totals until then.";
 "Multiple Currencies" = "Multiple Currencies";
 "Log transactions in other currencies. Totals, insights, budgets and widgets convert them to your main currency at the rate on each transaction's date, marked with ≈. Converted amounts are never saved to your data." = "Log transactions in other currencies. Totals, insights, budgets and widgets convert them to your main currency at the rate on each transaction's date, marked with ≈. Converted amounts are never saved to your data.";
+"Export" = "Export";
+"All time" = "All time";
+"No transactions to export" = "No transactions to export";
