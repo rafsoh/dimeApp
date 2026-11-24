@@ -20,6 +20,10 @@ extension Transaction {
         note ?? ""
     }
 
+    var money: MoneyEntry {
+        MoneyEntry(id: id, amount: amount, currencyCode: currencyCode, date: wrappedDate, income: income)
+    }
+
     var wrappedCategoryName: String {
         category?.wrappedName ?? ""
     }
@@ -45,6 +49,12 @@ extension Transaction {
         }
 
         return nil
+    }
+}
+
+extension Sequence where Element == Transaction {
+    func total(using converter: CurrencyConverter, signed: Bool = false) -> MoneyTotal {
+        converter.total(of: lazy.map(\.money), signed: signed)
     }
 }
 

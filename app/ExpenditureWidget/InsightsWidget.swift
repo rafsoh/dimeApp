@@ -50,7 +50,7 @@ struct InsightsProvider: IntentTimelineProvider {
         completion(timeline)
     }
 
-    func loadData(type: InsightsTimePeriod, income: Bool) -> (amount: Double, maximum: Double, average: Double, numberOfDays: Int, dates: [Date], dateDictionary: [Date: Double], categories: [HoldingCategory]) {
+    func loadData(type: InsightsTimePeriod, income: Bool) -> (amount: Double, maximum: Double, average: Double, numberOfDays: Int, dates: [Date], dateDictionary: [Date: Double], categories: [HoldingCategory], report: ConversionReport) {
 //        let dataController = DataController()
         let dataController = DataController.shared
         let itemRequest = dataController.fetchRequestForWidgetInsights(type: type, income: income)
@@ -58,11 +58,13 @@ struct InsightsProvider: IntentTimelineProvider {
 
         let categories = dataController.results(for: categoryRequest)
         let transactions = dataController.results(for: itemRequest.fetchRequest)
+        let converter = dataController.currencyConverter
+        var report = ConversionReport()
         var iterativeDate = itemRequest.date
 
         switch type {
         case .unknown:
-            return (0, 0, 0, 0, [Date](), [Date: Double](), [HoldingCategory]())
+            return (0, 0, 0, 0, [Date](), [Date: Double](), [HoldingCategory](), report)
         case .week:
             var dates = [Date]()
             var nextDate = iterativeDate
@@ -85,11 +87,9 @@ struct InsightsProvider: IntentTimelineProvider {
                     $0.wrappedDate >= iterativeDate && $0.wrappedDate < nextDate
                 }
 
-                var total = 0.0
-
-                holding.forEach { transaction in
-                    total += transaction.wrappedAmount
-                }
+                let holdingTotal = holding.total(using: converter)
+                let total = holdingTotal.value
+                report.merge(holdingTotal.report)
 
                 totalForWeek += total
 
@@ -116,11 +116,7 @@ struct InsightsProvider: IntentTimelineProvider {
                     $0.category == category
                 }
 
-                var total = 0.0
-
-                holding.forEach { transaction in
-                    total += transaction.wrappedAmount
-                }
+                let total = holding.reduce(0.0) { $0 + converter.amountInBreakdown(of: $1.money) }
 
                 if total == 0 {
                     continue
@@ -135,7 +131,7 @@ struct InsightsProvider: IntentTimelineProvider {
                 lhs.percent > rhs.percent
             })
 
-            return (totalForWeek, maximum, totalForWeek / Double((numberOfDaysPast.day! + 1)), numberOfDays, dates, dictionary, holdingCat)
+            return (totalForWeek, maximum, totalForWeek / Double((numberOfDaysPast.day! + 1)), numberOfDays, dates, dictionary, holdingCat, report)
         case .month:
             var dates = [Date]()
             var nextDate = iterativeDate
@@ -155,11 +151,9 @@ struct InsightsProvider: IntentTimelineProvider {
                     $0.wrappedDate >= iterativeDate && $0.wrappedDate < nextDate
                 }
 
-                var total = 0.0
-
-                holding.forEach { transaction in
-                    total += transaction.wrappedAmount
-                }
+                let holdingTotal = holding.total(using: converter)
+                let total = holdingTotal.value
+                report.merge(holdingTotal.report)
 
                 totalForMonth += total
 
@@ -186,11 +180,7 @@ struct InsightsProvider: IntentTimelineProvider {
                     $0.category == category
                 }
 
-                var total = 0.0
-
-                holding.forEach { transaction in
-                    total += transaction.wrappedAmount
-                }
+                let total = holding.reduce(0.0) { $0 + converter.amountInBreakdown(of: $1.money) }
 
                 if total == 0 {
                     continue
@@ -205,7 +195,7 @@ struct InsightsProvider: IntentTimelineProvider {
                 lhs.percent > rhs.percent
             })
 
-            return (totalForMonth, maximum, totalForMonth / Double((numDays.day! + 1)), numberOfDays, dates, dictionary, holdingCat)
+            return (totalForMonth, maximum, totalForMonth / Double((numDays.day! + 1)), numberOfDays, dates, dictionary, holdingCat, report)
         case .year:
             // trackin dates
             var dates = [Date]()
@@ -225,11 +215,9 @@ struct InsightsProvider: IntentTimelineProvider {
                     $0.wrappedDate >= iterativeDate && $0.wrappedDate < nextDate
                 }
 
-                var total = 0.0
-
-                holding.forEach { transaction in
-                    total += transaction.wrappedAmount
-                }
+                let holdingTotal = holding.total(using: converter)
+                let total = holdingTotal.value
+                report.merge(holdingTotal.report)
 
                 totalForYear += total
 
@@ -256,11 +244,7 @@ struct InsightsProvider: IntentTimelineProvider {
                     $0.category == category
                 }
 
-                var total = 0.0
-
-                holding.forEach { transaction in
-                    total += transaction.wrappedAmount
-                }
+                let total = holding.reduce(0.0) { $0 + converter.amountInBreakdown(of: $1.money) }
 
                 if total == 0 {
                     continue
@@ -275,7 +259,7 @@ struct InsightsProvider: IntentTimelineProvider {
                 lhs.percent > rhs.percent
             })
 
-            return (totalForYear, maximum, totalForYear / Double((numDays.month! + 1)), numberOfDays, dates, dictionary, holdingCat)
+            return (totalForYear, maximum, totalForYear / Double((numDays.month! + 1)), numberOfDays, dates, dictionary, holdingCat, report)
         }
     }
 }

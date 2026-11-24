@@ -109,7 +109,7 @@ struct BudgetWidgetData {
         else { return nil }
 
         let period = BudgetPeriod(type: Int(budget.type), start: budget.wrappedDate).current
-        let spent = transactions(in: period, category: budget.category).reduce(0) { $0 + $1.wrappedAmount }
+        let spent = transactions(in: period, category: budget.category).total(using: dataController.currencyConverter).value
         let snapshot = BudgetSnapshot(amount: budget.amount, spent: spent, period: period)
 
         return BudgetWidgetData(name: budget.wrappedName, emoji: budget.wrappedEmoji, snapshot: snapshot,
@@ -123,7 +123,7 @@ struct BudgetWidgetData {
 
         let period = BudgetPeriod(type: Int(budget.type), start: budget.wrappedDate).current
         let transactions = transactions(in: period, category: nil)
-        let spent = transactions.reduce(0) { $0 + $1.wrappedAmount }
+        let spent = transactions.total(using: dataController.currencyConverter).value
         let snapshot = BudgetSnapshot(amount: budget.amount, spent: spent, period: period)
 
         return BudgetWidgetData(name: String(localized: "Overall"), emoji: nil, snapshot: snapshot,

@@ -1172,72 +1172,38 @@ class DataController: ObservableObject {
 
     }
 
+    var currencyConverter: CurrencyConverter {
+        .current()
+    }
+
     func getShortcutInsights(type: Int, timeframe: Int, optionalIncome: Bool?, categories: [Category]) -> Double {
+        shortcutInsightsTotal(type: type, timeframe: timeframe, optionalIncome: optionalIncome, categories: categories).value
+    }
+
+    func shortcutInsightsTotal(type: Int, timeframe: Int, optionalIncome: Bool?, categories: [Category]) -> MoneyTotal {
         let fetchRequest = fetchRequestForLogView(type: timeframe, optionalIncome: optionalIncome, categoryFilters: categories)
         let allTransactions = results(for: fetchRequest)
 
-        if type == 1 {
-            var total = 0.0
-
-            allTransactions.forEach { transaction in
-                if transaction.income {
-                    total += transaction.amount
-                } else {
-                    total -= transaction.amount
-                }
-            }
-
-            return total
-        } else {
-            var total = 0.0
-
-            allTransactions.forEach { transaction in
-                total += transaction.amount
-            }
-
-            return total
-        }
+        return allTransactions.total(using: currencyConverter, signed: type == 1)
     }
 
     func getLogViewTotalSpent(type: Int) -> Double {
-        let fetchRequest = fetchRequestForLogView(type: type, optionalIncome: false)
-        let allTransactions = results(for: fetchRequest)
-
-        var total = 0.0
-
-        allTransactions.forEach { transaction in
-            total += transaction.amount
-        }
-
-        return total
+        logViewTotal(type: type, income: false).value
     }
 
     func getLogViewTotalIncome(type: Int) -> Double {
-        let fetchRequest = fetchRequestForLogView(type: type, optionalIncome: true)
+        logViewTotal(type: type, income: true).value
+    }
+
+    func logViewTotal(type: Int, income: Bool) -> MoneyTotal {
+        let fetchRequest = fetchRequestForLogView(type: type, optionalIncome: income)
         let allTransactions = results(for: fetchRequest)
 
-        var total = 0.0
-
-        allTransactions.forEach { transaction in
-            total += transaction.amount
-        }
-
-        return total
+        return allTransactions.total(using: currencyConverter)
     }
 
     func getLogViewTotalNet(type: Int) -> (value: Double, positive: Bool) {
-        let fetchRequest = fetchRequestForLogView(type: type, optionalIncome: nil)
-        let allTransactions = results(for: fetchRequest)
-
-        var total = 0.0
-
-        allTransactions.forEach { transaction in
-            if transaction.income {
-                total += transaction.amount
-            } else {
-                total -= transaction.amount
-            }
-        }
+        let total = logViewNetTotal(type: type).value
 
         if total >= 0 {
             return (total, true)
@@ -1246,12 +1212,25 @@ class DataController: ObservableObject {
         }
     }
 
+    func logViewNetTotal(type: Int) -> MoneyTotal {
+        let fetchRequest = fetchRequestForLogView(type: type, optionalIncome: nil)
+        let allTransactions = results(for: fetchRequest)
+
+        return allTransactions.total(using: currencyConverter, signed: true)
+    }
+
     func getLineGraphDataNet(type: Int) -> [LineGraphDataPoint] {
+        lineGraphNet(type: type).points
+    }
+
+    func lineGraphNet(type: Int) -> (points: [LineGraphDataPoint], report: ConversionReport) {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date.now)
 
         let fetchRequest = fetchRequestForLineGraph(optionalIncome: nil)
         let transactions = results(for: fetchRequest)
+        let converter = currencyConverter
+        var report = ConversionReport()
 
         var holdingDataPoints = [LineGraphDataPoint]()
         var totalForDay = 0.0
@@ -1261,11 +1240,13 @@ class DataController: ObservableObject {
             var changingDate = Calendar.current.date(byAdding: .second, value: 86399, to: lastWeek)!
 
             for transaction in transactions {
+                let amount = converter.amount(of: transaction.money, report: &report)
+
                 if transaction.wrappedDate < changingDate {
                     if transaction.income {
-                        totalForDay += transaction.amount
+                        totalForDay += amount
                     } else {
-                        totalForDay -= transaction.amount
+                        totalForDay -= amount
                     }
                 } else {
                     let newData = LineGraphDataPoint(date: changingDate, amount: totalForDay)
@@ -1279,9 +1260,9 @@ class DataController: ObservableObject {
                     }
 
                     if transaction.income {
-                        totalForDay += transaction.amount
+                        totalForDay += amount
                     } else {
-                        totalForDay -= transaction.amount
+                        totalForDay -= amount
                     }
                 }
             }
@@ -1306,11 +1287,13 @@ class DataController: ObservableObject {
             var changingDate = Calendar.current.date(byAdding: .second, value: 86399, to: lastMonth)!
 
             for transaction in transactions {
+                let amount = converter.amount(of: transaction.money, report: &report)
+
                 if transaction.wrappedDate < changingDate {
                     if transaction.income {
-                        totalForDay += transaction.amount
+                        totalForDay += amount
                     } else {
-                        totalForDay -= transaction.amount
+                        totalForDay -= amount
                     }
                 } else {
                     let newData = LineGraphDataPoint(date: changingDate, amount: totalForDay)
@@ -1324,9 +1307,9 @@ class DataController: ObservableObject {
                     }
 
                     if transaction.income {
-                        totalForDay += transaction.amount
+                        totalForDay += amount
                     } else {
-                        totalForDay -= transaction.amount
+                        totalForDay -= amount
                     }
                 }
             }
@@ -1353,11 +1336,13 @@ class DataController: ObservableObject {
             var changingDate = calendar.date(byAdding: .year, value: -1, to: nextMonth)!
 
             for transaction in transactions {
+                let amount = converter.amount(of: transaction.money, report: &report)
+
                 if transaction.wrappedDate < changingDate {
                     if transaction.income {
-                        totalForDay += transaction.amount
+                        totalForDay += amount
                     } else {
-                        totalForDay -= transaction.amount
+                        totalForDay -= amount
                     }
                 } else {
                     let dataDate = calendar.date(byAdding: .day, value: -1, to: changingDate)!
@@ -1373,9 +1358,9 @@ class DataController: ObservableObject {
                     }
 
                     if transaction.income {
-                        totalForDay += transaction.amount
+                        totalForDay += amount
                     } else {
-                        totalForDay -= transaction.amount
+                        totalForDay -= amount
                     }
                 }
             }
@@ -1399,15 +1384,21 @@ class DataController: ObservableObject {
             }
         }
 
-        return holdingDataPoints
+        return (holdingDataPoints, report)
     }
 
     func getLineGraphData(income: Bool, type: Int) -> [LineGraphDataPoint] {
+        lineGraph(income: income, type: type).points
+    }
+
+    func lineGraph(income: Bool, type: Int) -> (points: [LineGraphDataPoint], report: ConversionReport) {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date.now)
 
         let fetchRequest = fetchRequestForLineGraph(optionalIncome: income)
         let transactions = results(for: fetchRequest)
+        let converter = currencyConverter
+        var report = ConversionReport()
 
         var holdingDataPoints = [LineGraphDataPoint]()
         var totalForDay = 0.0
@@ -1418,8 +1409,10 @@ class DataController: ObservableObject {
 
             for transaction in transactions {
                 if transaction.wrappedDate > lastWeek {
+                    let amount = converter.amount(of: transaction.money, report: &report)
+
                     if transaction.wrappedDate < changingDate {
-                        totalForDay += transaction.wrappedAmount
+                        totalForDay += amount
                     } else {
                         let newData = LineGraphDataPoint(date: changingDate, amount: totalForDay)
                         holdingDataPoints.append(newData)
@@ -1432,7 +1425,7 @@ class DataController: ObservableObject {
                             changingDate = Calendar.current.date(byAdding: .day, value: 1, to: changingDate)!
                         }
 
-                        totalForDay += transaction.wrappedAmount
+                        totalForDay += amount
                     }
                 }
             }
@@ -1459,8 +1452,10 @@ class DataController: ObservableObject {
 
             for transaction in transactions {
                 if transaction.wrappedDate > lastMonth {
+                    let amount = converter.amount(of: transaction.money, report: &report)
+
                     if transaction.wrappedDate < changingDate {
-                        totalForDay += transaction.wrappedAmount
+                        totalForDay += amount
                     } else {
                         let newData = LineGraphDataPoint(date: changingDate, amount: totalForDay)
                         holdingDataPoints.append(newData)
@@ -1473,7 +1468,7 @@ class DataController: ObservableObject {
                             changingDate = Calendar.current.date(byAdding: .day, value: 1, to: changingDate)!
                         }
 
-                        totalForDay += transaction.wrappedAmount
+                        totalForDay += amount
                     }
                 }
             }
@@ -1502,8 +1497,10 @@ class DataController: ObservableObject {
 
             for transaction in transactions {
                 if transaction.wrappedDate > thisMonthLastYear {
+                    let amount = converter.amount(of: transaction.money, report: &report)
+
                     if transaction.wrappedDate < changingDate {
-                        totalForDay += transaction.wrappedAmount
+                        totalForDay += amount
                     } else {
                         let dataDate = calendar.date(byAdding: .day, value: -1, to: changingDate)!
                         let newData = LineGraphDataPoint(date: dataDate, amount: totalForDay)
@@ -1518,7 +1515,7 @@ class DataController: ObservableObject {
                             changingDate = Calendar.current.date(byAdding: .month, value: 1, to: changingDate)!
                         }
 
-                        totalForDay += transaction.wrappedAmount
+                        totalForDay += amount
                     }
                 }
             }
@@ -1542,10 +1539,15 @@ class DataController: ObservableObject {
             }
         }
 
-        return holdingDataPoints
+        return (holdingDataPoints, report)
     }
 
     func getBudgetLeftover(budget: Budget? = nil, overallBudget: MainBudget? = nil) -> Double {
+        budgetLeftover(budget: budget, overallBudget: overallBudget).value
+    }
+
+    // Budgets are in the main currency; spending against them is converted to it.
+    func budgetLeftover(budget: Budget? = nil, overallBudget: MainBudget? = nil) -> MoneyTotal {
         let itemRequest: NSFetchRequest<Transaction>
         let budgetAmount: Double
 
@@ -1562,13 +1564,10 @@ class DataController: ObservableObject {
 
         let transactions = results(for: itemRequest)
 
-        var totalSpent = 0.0
+        var leftover = transactions.total(using: currencyConverter)
+        leftover.value = budgetAmount - leftover.value
 
-        transactions.forEach { transaction in
-            totalSpent += transaction.wrappedAmount
-        }
-
-        return budgetAmount - totalSpent
+        return leftover
     }
 
     func fetchRequestForMainBudgetTransactions(budget: MainBudget) -> NSFetchRequest<Transaction> {
@@ -1618,9 +1617,11 @@ class DataController: ObservableObject {
         return itemRequest
     }
 
-    func getInsights(type: Int, date: Date, income: Bool) -> (amount: Double, maximum: Double, average: Double, numberOfDays: Int, dates: [Date], dateDictionary: [Date: Double]) {
+    func getInsights(type: Int, date: Date, income: Bool) -> (amount: Double, maximum: Double, average: Double, numberOfDays: Int, dates: [Date], dateDictionary: [Date: Double], report: ConversionReport) {
         let currentItemRequest: NSFetchRequest<Transaction> = fetchRequestForInsights(type: type, date: date, income: income)
         let currentTransactions = results(for: currentItemRequest)
+        let converter = currencyConverter
+        var report = ConversionReport()
 
         var iterativeDate = date
 
@@ -1648,11 +1649,9 @@ class DataController: ObservableObject {
                     $0.wrappedDate >= iterativeDate && $0.wrappedDate < nextDate
                 }
 
-                var total = 0.0
-
-                holding.forEach { transaction in
-                    total += transaction.wrappedAmount
-                }
+                let holdingTotal = holding.total(using: converter)
+                let total = holdingTotal.value
+                report.merge(holdingTotal.report)
 
                 totalForWeek += total
 
@@ -1684,7 +1683,7 @@ class DataController: ObservableObject {
                 weekAverage = totalForWeek / 7
             }
 
-            return (totalForWeek, maximum, weekAverage, numberOfDays, dates, dictionary)
+            return (totalForWeek, maximum, weekAverage, numberOfDays, dates, dictionary, report)
         } else if type == 2 {
             // tracking dates
             var dates = [Date]()
@@ -1706,11 +1705,9 @@ class DataController: ObservableObject {
                     $0.wrappedDate >= iterativeDate && $0.wrappedDate < nextDate
                 }
 
-                var total = 0.0
-
-                holding.forEach { transaction in
-                    total += transaction.wrappedAmount
-                }
+                let holdingTotal = holding.total(using: converter)
+                let total = holdingTotal.value
+                report.merge(holdingTotal.report)
 
                 totalForMonth += total
 
@@ -1738,7 +1735,7 @@ class DataController: ObservableObject {
                 monthAverage = totalForMonth / Double(range.count)
             }
 
-            return (totalForMonth, maximum, monthAverage, numberOfDays, dates, dictionary)
+            return (totalForMonth, maximum, monthAverage, numberOfDays, dates, dictionary, report)
         } else if type == 3 {
             // trackin dates
             var dates = [Date]()
@@ -1759,11 +1756,9 @@ class DataController: ObservableObject {
                     $0.wrappedDate >= iterativeDate && $0.wrappedDate < nextDate
                 }
 
-                var total = 0.0
-
-                holding.forEach { transaction in
-                    total += transaction.wrappedAmount
-                }
+                let holdingTotal = holding.total(using: converter)
+                let total = holdingTotal.value
+                report.merge(holdingTotal.report)
 
                 totalForYear += total
 
@@ -1795,9 +1790,9 @@ class DataController: ObservableObject {
                 monthAverage = totalForYear / 12
             }
 
-            return (totalForYear, maximum, monthAverage, numberOfDays, dates, dictionary)
+            return (totalForYear, maximum, monthAverage, numberOfDays, dates, dictionary, report)
         } else {
-            return (0, 0, 0, 0, [Date](), [Date: Double]())
+            return (0, 0, 0, 0, [Date](), [Date: Double](), report)
         }
     }
 
@@ -1864,17 +1859,10 @@ class DataController: ObservableObject {
     func getInsightsSummary(type: Int, date: Date) -> (spent: Double, income: Double, net: Double, positive: Bool, average: Double) {
         let itemRequest: NSFetchRequest<Transaction> = fetchRequestForInsights(type: type, date: date)
         let currentTransactions = results(for: itemRequest)
+        let converter = currencyConverter
 
-        var holdingSpent = 0.0
-        var holdingIncome = 0.0
-
-        currentTransactions.forEach { transaction in
-            if transaction.income {
-                holdingIncome += transaction.amount
-            } else {
-                holdingSpent += transaction.amount
-            }
-        }
+        let holdingSpent = currentTransactions.filter { !$0.income }.total(using: converter).value
+        let holdingIncome = currentTransactions.filter(\.income).total(using: converter).value
 
         let net = holdingIncome - holdingSpent
         let absoluteNet: Double
@@ -2069,10 +2057,7 @@ class DataController: ObservableObject {
 //
             let transactions = results(for: itemRequest)
 
-            var holdingTotal = 0.0
-            transactions.forEach { transaction in
-                holdingTotal += transaction.wrappedAmount
-            }
+            let holdingTotal = transactions.total(using: currencyConverter).value
 
             let percentageOfDays: Double
 
@@ -2351,7 +2336,7 @@ extension DataController {
                 predicates.append(NSPredicate(format: "category == %@", category))
             }
             request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
-            return ((try? context.fetch(request)) ?? []).reduce(0) { $0 + $1.amount }
+            return ((try? context.fetch(request)) ?? []).total(using: currencyConverter).value
         }
 
         func elapsed(since start: Date, component: Calendar.Component, value: Int) -> Double {
