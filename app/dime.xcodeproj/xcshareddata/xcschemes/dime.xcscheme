@@ -41,7 +41,11 @@
       </Testables>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-demoData minimal"
+            argument = "-demoData"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "minimal"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

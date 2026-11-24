@@ -301,7 +301,9 @@ class DataController: ObservableObject {
 
     init() {
         #if DEBUG
-        let demoDataset = DemoDataset(arguments: ProcessInfo.processInfo.arguments)
+        // Unit tests run inside the app, and must never open the simulator's real store.
+        let isRunningTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+        let demoDataset = DemoDataset(arguments: ProcessInfo.processInfo.arguments) ?? (isRunningTests ? .minimal : nil)
         let usesDemoData = demoDataset != nil
         #else
         let usesDemoData = false

@@ -37,6 +37,12 @@ final class StoreMigrationTests: XCTestCase {
         try? FileManager.default.removeItem(at: directory)
     }
 
+    func testTestsNeverOpenTheRealStore() {
+        let urls = DataController.shared.container.persistentStoreCoordinator.persistentStores.map(\.url?.path)
+
+        XCTAssertEqual(urls, ["/dev/null"])
+    }
+
     func testEveryEarlierModelVersionMigratesWithoutLosingData() throws {
         XCTAssertFalse(earlierModels.isEmpty)
 
