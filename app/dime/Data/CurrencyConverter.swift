@@ -77,7 +77,8 @@ struct CurrencyConverter {
     }
 
     static func current() -> CurrencyConverter {
-        CurrencyConverter(mainCurrency: mainCurrency(in: UserDefaults(suiteName: appGroup)))
+        ExchangeRateStore.shared.reloadIfChanged()
+        return CurrencyConverter(mainCurrency: mainCurrency(in: UserDefaults(suiteName: appGroup)), rates: ExchangeRateStore.shared)
     }
 
     func isMainCurrency(_ currencyCode: String?) -> Bool {

@@ -120,6 +120,8 @@ struct ContentView: View {
                 }
             }
 
+            dataController.refreshExchangeRates()
+
             if dataMigration1 {
                 let categoryFetch = dataController.fetchRequestForCategoriesMigration(income: false)
                 let categories = dataController.results(for: categoryFetch)
@@ -189,6 +191,8 @@ struct ContentView: View {
                     appLockVM.isAppUnLocked = false
                 }
             } else if newPhase == .active {
+                dataController.refreshExchangeRates()
+
                 center.getNotificationSettings { settings in
                     if settings.authorizationStatus == .authorized {
                         if !showNotifications && notificationsEnabled == false {
