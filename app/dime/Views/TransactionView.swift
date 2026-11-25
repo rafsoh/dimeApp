@@ -763,8 +763,12 @@ struct TransactionView: View {
             NavigationStack {
                 content()
                     .ignoresSafeArea(.container, edges: .vertical)
+                    // The page's own keyboard setting doesn't reach inside the stack, so repeat it here.
+                    // Without this the page shrinks for the note keyboard instead of letting it cover the number pad.
+                    .ignoresSafeArea(.keyboard, edges: .all)
                     .toolbar { sideBarItems }
             }
+            .ignoresSafeArea(.keyboard, edges: .all)
         } else {
             content()
         }
