@@ -86,16 +86,24 @@ jobs:
         continue-on-error: true
         run: |
           mkdir -p screenshots
+          # Newer simulator images have more than one display; take whichever ones simctl lists then.
+          snap() {
+            if ! err=$(xcrun simctl io "$SIM_UDID" screenshot "$1" 2>&1); then
+              for d in $(echo "$err" | grep -o -- '--display=[0-9]*' | cut -d= -f2); do
+                xcrun simctl io "$SIM_UDID" screenshot --display="$d" "${1%.png}-display$d.png" || true
+              done
+            fi
+          }
           APP=$(find "$DERIVED_DATA/Build/Products" -maxdepth 2 -name "*.app" -path "*iphonesimulator*" | head -1)
           echo "App: $APP"
           xcrun simctl bootstatus "$SIM_UDID" -b
           xcrun simctl install "$SIM_UDID" "$APP"
           xcrun simctl launch "$SIM_UDID" "$BUNDLE_ID"
           sleep 8
-          xcrun simctl io "$SIM_UDID" screenshot screenshots/1-launch.png
+          snap screenshots/1-launch.png
           xcrun simctl openurl "$SIM_UDID" "dimeapp://newExpense"
           sleep 4
-          xcrun simctl io "$SIM_UDID" screenshot screenshots/2-new-expense.png
+          snap screenshots/2-new-expense.png
 
       - name: Take budget rollover screenshots
         # Relaunches against the seeded `-demoData varied` store (in memory, so every launch starts
@@ -103,6 +111,14 @@ jobs:
         continue-on-error: true
         run: |
           mkdir -p screenshots
+          # Newer simulator images have more than one display; take whichever ones simctl lists then.
+          snap() {
+            if ! err=$(xcrun simctl io "$SIM_UDID" screenshot "$1" 2>&1); then
+              for d in $(echo "$err" | grep -o -- '--display=[0-9]*' | cut -d= -f2); do
+                xcrun simctl io "$SIM_UDID" screenshot --display="$d" "${1%.png}-display$d.png" || true
+              done
+            fi
+          }
           shot() {
             name=$1; shift
             xcrun simctl terminate "$SIM_UDID" "$BUNDLE_ID" 2>/dev/null || true
@@ -110,7 +126,7 @@ jobs:
             sleep 6
             xcrun simctl openurl "$SIM_UDID" "dimeapp://budget"
             sleep 5
-            xcrun simctl io "$SIM_UDID" screenshot "screenshots/$name.png"
+            snap "screenshots/$name.png"
           }
           shot 3-budgets
           shot 4-rollover-detail-surplus -budgetSheet Food
