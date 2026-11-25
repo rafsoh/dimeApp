@@ -3,11 +3,11 @@
 //  dime
 //
 //  Quick Add templates: up to four transactions the Quick Add widget logs with one tap.
-//  The list works like Categories: swipe to edit or delete, and Reorder to drag templates around.
 //
 
 import CoreData
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct SettingsQuickAddView: View {
   @EnvironmentObject private var dataController: DataController
@@ -18,8 +18,8 @@ struct SettingsQuickAddView: View {
 
   /// The template the editor is open for; `.new` adds one.
   @State private var editing: EditorItem?
-  @State private var toDelete: TemplateTransaction?
-  @State private var isReordering = false
+  /// The template being dragged to a new spot.
+  @State private var dragging: TemplateTransaction?
 
   private struct EditorItem: Identifiable {
     let target: TransactionView.TemplateTarget
@@ -61,194 +61,219 @@ struct SettingsQuickAddView: View {
   }
 
   var body: some View {
-    List {
-      Section(header: templatesHeader, footer: footer) {
-        ForEach(templates) { template in
-          QuickAddRow(title: template.displayTitle, category: template.category, income: template.income, amount: template.amount, currencyCode: template.currencyCode)
-            .foregroundColor(toDelete == template ? Color.AlertRed : Color.PrimaryText)
-            .settingsListRow()
-            .onTapGesture {
-              editing = EditorItem(target: .existing(template))
-            }
-            .swipeActions(edge: .trailing) {
-              Button {
-                toDelete = template
-              } label: {
-                Image(systemName: "trash.fill")
+    VStack(spacing: 0) {
+      SettingsSectionHeader("Templates") {
+        Text("\(templates.count)/\(TemplateTransaction.quickAddLimit)")
+          .font(.system(.subheadline, design: .rounded).weight(.semibold))
+          .foregroundColor(Color.SubtitleText)
+          .accessibilityLabel(Text("\(templates.count) of \(TemplateTransaction.quickAddLimit) templates"))
+      }
+
+      // The templates laid out as the medium Quick Add widget shows them.
+      LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
+        ForEach(Array(templates.enumerated()), id: \.element.objectID) { index, template in
+          Button {
+            editing = EditorItem(target: .existing(template))
+          } label: {
+            QuickAddTile(template: template)
+          }
+          .buttonStyle(.plain)
+          .opacity(dragging == template ? 0.4 : 1)
+          .contextMenu {
+            Button(role: .destructive) {
+              withAnimation {
+                dataController.deleteQuickAddTemplate(template)
               }
-              .tint(Color.AlertRed)
+            } label: {
+              Label("Delete", systemImage: "trash")
             }
-            .swipeActions(edge: .leading) {
-              Button {
-                editing = EditorItem(target: .existing(template))
-              } label: {
-                Image(systemName: "pencil")
-              }
-              .tint(Color("Yellow"))
-            }
-            .accessibilityAddTraits(.isButton)
-        }
-        .onMove { source, destination in
-          dataController.moveQuickAddTemplates(fromOffsets: source, toOffset: destination)
+          }
+          .onDrag {
+            dragging = template
+            return NSItemProvider(object: template.objectID.uriRepresentation().absoluteString as NSString)
+          }
+          .onDrop(of: [UTType.text], delegate: QuickAddDropDelegate(target: template, templates: Array(templates), dragging: $dragging, dataController: dataController))
+          .accessibilityAction(named: Text("Move Earlier")) {
+            move(index, by: -1)
+          }
+          .accessibilityAction(named: Text("Move Later")) {
+            move(index, by: 1)
+          }
         }
 
-        if !isReordering {
+        ForEach(min(templates.count, TemplateTransaction.quickAddLimit) ..< TemplateTransaction.quickAddLimit, id: \.self) { _ in
           Button {
             editing = EditorItem(target: .new)
           } label: {
-            HStack(spacing: 10) {
-              Image(systemName: "plus")
-                .font(.system(.body, design: .rounded).weight(.semibold))
-
-              (canAdd ? Text("New Template") : Text("You can have up to 4 templates"))
-                .font(.system(.body, design: .rounded))
-
-              Spacer()
-            }
-            .foregroundColor(canAdd ? Color.PrimaryText : Color.SubtitleText)
-            .contentShape(Rectangle())
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+              .strokeBorder(Color.SubtitleText.opacity(0.3), style: StrokeStyle(lineWidth: 1.5, dash: [4, 4]))
+              .overlay {
+                Image(systemName: "plus")
+                  .font(.system(.body, design: .rounded).weight(.semibold))
+                  .foregroundColor(Color.SubtitleText)
+              }
+              .frame(height: QuickAddTile.height)
+              .contentShape(Rectangle())
           }
           .buttonStyle(.plain)
-          .disabled(!canAdd)
-          .settingsListRow()
+          .accessibilityLabel(Text("New Template"))
         }
       }
+      .padding(12)
+      .frame(maxWidth: .infinity)
+      .settingsSectionBackground()
 
-      if canAdd && !isReordering && !suggestions.isEmpty {
-        Section(header: sectionHeader(Text("Add From Recent"))) {
+      SettingsSectionFooter("Tap a template to edit it, or hold and drag it to a new spot. The Quick Add widget logs each one with one tap, without opening Dime, and editing or deleting a template never changes what you've logged.")
+
+      if canAdd && !suggestions.isEmpty {
+        SettingsSectionHeader("Add From Recent")
+          .padding(.top, .settingsHeaderSpacing)
+
+        VStack(spacing: 0) {
           ForEach(suggestions) { transaction in
-            QuickAddRow(title: transaction.displayTitle, category: transaction.category, income: transaction.income, amount: transaction.amount, currencyCode: transaction.currencyCode, showsAdd: true)
-              .settingsListRow()
-              .onTapGesture {
-                withAnimation {
-                  _ = dataController.addQuickAddTemplate(from: transaction)
-                }
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            Button {
+              withAnimation {
+                _ = dataController.addQuickAddTemplate(from: transaction)
               }
-              .accessibilityAddTraits(.isButton)
-              .accessibilityHint(Text("Adds a template"))
+              UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            } label: {
+              QuickAddRow(title: transaction.displayTitle, category: transaction.category, income: transaction.income, amount: transaction.amount, currencyCode: transaction.currencyCode, accessory: "plus.circle.fill")
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint(Text("Adds a template"))
+
+            if transaction != suggestions.last {
+              Divider()
+            }
           }
         }
+        .settingsSectionRows()
       }
     }
-    .modifier(HiddenListBackground())
-    .environment(\.editMode, .constant(isReordering ? EditMode.active : EditMode.inactive))
-    .environment(\.defaultMinListRowHeight, .settingsRowHeight)
-    .settingsListMargins()
-    .tabBarClearance()
-    .background(Color.PrimaryBackground.ignoresSafeArea())
-    .modifier(SettingsPageHeader(title: "Quick Add"))
-    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-    .onChange(of: templates.count) { count in
-      if count < 2 {
-        isReordering = false
-      }
-    }
-    .confirmationSheet(
-      item: $toDelete,
-      title: { _ in "Delete Template?" },
-      message: { _ in "Transactions you've logged with it stay as they are." }
-    ) { template in
-      withAnimation {
-        dataController.deleteQuickAddTemplate(template)
-      }
-    }
+    .animation(.easeInOut(duration: 0.2), value: templates.count)
+    .modifier(SettingsSubviewModifier(title: "Quick Add"))
     .sheet(item: $editing) { item in
       TransactionView(template: item.target)
     }
   }
 
-  private var templatesHeader: some View {
-    sectionHeader(Text("Templates")) {
-      Text("\(templates.count)/\(TemplateTransaction.quickAddLimit)")
-        .accessibilityLabel(Text("\(templates.count) of \(TemplateTransaction.quickAddLimit) templates"))
+  /// Moves a template one spot earlier or later, for VoiceOver.
+  private func move(_ index: Int, by offset: Int) {
+    let destination = index + offset
+    guard templates.indices.contains(destination) else { return }
 
-      if templates.count > 1 {
-        SectionHeaderButton(
-          title: isReordering ? "Done" : "Reorder",
-          systemImage: isReordering ? "checkmark" : "arrow.up.arrow.down",
-          color: isReordering ? Color.IncomeGreen : Color.SubtitleText
-        ) {
-          withAnimation {
-            isReordering.toggle()
-          }
+    withAnimation {
+      dataController.moveQuickAddTemplates(fromOffsets: IndexSet(integer: index), toOffset: offset > 0 ? destination + 1 : destination)
+    }
+  }
+}
+
+/// A template as the Quick Add widget shows it: tinted with its category, with its emoji, name and amount.
+private struct QuickAddTile: View {
+  static let height: CGFloat = 64
+
+  let template: TemplateTransaction
+
+  @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var currency: String = Locale.current.currencyCode!
+  @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var showCents: Bool = true
+
+  init(template: TemplateTransaction) {
+    self.template = template
+  }
+
+  private var amountText: String {
+    (template.income ? "+" : "") + MoneyFormatter.string(template.amount, currencyCode: template.currencyCode ?? currency, showCents: showCents)
+  }
+
+  var body: some View {
+    HStack(spacing: 8) {
+      Group {
+        if template.category == nil {
+          Image(systemName: Uncategorised.symbol(income: template.income))
+            .font(.system(.subheadline, design: .rounded).weight(.bold))
+            .foregroundColor(Color(hex: Uncategorised.colour))
+        } else {
+          Text(template.wrappedEmoji)
+            .font(.system(.title3))
         }
       }
+      .frame(width: 28)
+
+      VStack(alignment: .leading, spacing: 0) {
+        Text(template.displayTitle)
+          .font(.system(.subheadline, design: .rounded).weight(.semibold))
+          .foregroundColor(Color.PrimaryText)
+          .lineLimit(1)
+
+        Text(amountText)
+          .font(.system(.footnote, design: .rounded).weight(.medium))
+          .foregroundColor(template.income ? Color.IncomeGreen : Color.SubtitleText)
+          .lineLimit(1)
+          .minimumScaleFactor(0.7)
+      }
+
+      Spacer(minLength: 0)
     }
-  }
-
-  private var footer: some View {
-    Text("Log a template with one tap from the Quick Add widget, without opening Dime. Each one becomes its own transaction, so editing or deleting a template never changes what you've logged.")
-      .font(.system(.footnote, design: .rounded).weight(.medium))
-      .foregroundColor(Color.SubtitleText)
-      .fixedSize(horizontal: false, vertical: true)
-      .padding(.top, 4)
-      .listRowInsets(EdgeInsets(top: 0, leading: .settingsRowInset, bottom: 0, trailing: .settingsRowInset))
-  }
-
-  /// A section header in the Categories list's style, with optional trailing content.
-  private func sectionHeader<Trailing: View>(_ title: Text, @ViewBuilder trailing: () -> Trailing) -> some View {
-    HStack(spacing: 8) {
-      title
-
-      Spacer()
-
-      trailing()
-    }
-    .font(.system(.subheadline, design: .rounded).weight(.semibold))
-    .frame(height: 32)
-    .foregroundColor(Color.SubtitleText)
-    .textCase(.uppercase)
-    .listRowInsets(EdgeInsets(top: 0, leading: .settingsRowInset, bottom: 0, trailing: .settingsRowInset))
-  }
-
-  private func sectionHeader(_ title: Text) -> some View {
-    sectionHeader(title) { EmptyView() }
+    .padding(.horizontal, 10)
+    .frame(maxWidth: .infinity, minHeight: Self.height, maxHeight: Self.height, alignment: .leading)
+    .background(Color(hex: template.wrappedColour).opacity(0.18), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    .contentShape(.dragPreview, RoundedRectangle(cornerRadius: 16, style: .continuous))
+    .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+    .dynamicTypeSize(...DynamicTypeSize.xLarge)
+    .accessibilityElement(children: .combine)
+    .accessibilityHint(Text("Edits the template"))
   }
 }
 
-private struct HiddenListBackground: ViewModifier {
-  func body(content: Content) -> some View {
-    if #available(iOS 16.0, *) {
-      content
-        .scrollContentBackground(.hidden)
-        .scrollIndicators(.hidden)
-    } else {
-      content
+/// Moves the dragged template into the spot it's dragged over, so the grid reorders as the finger moves.
+private struct QuickAddDropDelegate: DropDelegate {
+  let target: TemplateTransaction
+  let templates: [TemplateTransaction]
+  @Binding var dragging: TemplateTransaction?
+  let dataController: DataController
+
+  func dropEntered(info _: DropInfo) {
+    guard let dragging, dragging != target,
+          let from = templates.firstIndex(of: dragging),
+          let to = templates.firstIndex(of: target)
+    else {
+      return
+    }
+
+    withAnimation(.easeInOut(duration: 0.2)) {
+      dataController.moveQuickAddTemplates(fromOffsets: IndexSet(integer: from), toOffset: to > from ? to + 1 : to)
     }
   }
-}
 
-private extension View {
-  /// A row on a settings section's background, as in the Categories list.
-  func settingsListRow() -> some View {
-    frame(minHeight: .settingsRowHeight)
-      .contentShape(Rectangle())
-      .listRowInsets(EdgeInsets(top: 0, leading: .settingsRowInset, bottom: 0, trailing: .settingsRowInset))
-      .listRowBackground(Rectangle().fill(Color.SettingsBackground))
-      .listRowSeparatorTint(Color.Outline)
+  func dropUpdated(info _: DropInfo) -> DropProposal? {
+    DropProposal(operation: .move)
+  }
+
+  func performDrop(info _: DropInfo) -> Bool {
+    dragging = nil
+    return true
   }
 }
 
-/// A template or transaction as it appears on the Quick Add page: its category tile, name and amount.
+/// A transaction as it appears on the Quick Add page: its category tile, name and amount.
 private struct QuickAddRow: View {
   let title: String
   let category: Category?
   let income: Bool
   let amount: Double
   let currencyCode: String?
-  let showsAdd: Bool
+  let accessory: String
 
   @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var currency: String = Locale.current.currencyCode!
   @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var showCents: Bool = true
 
-  init(title: String, category: Category?, income: Bool, amount: Double, currencyCode: String?, showsAdd: Bool = false) {
+  init(title: String, category: Category?, income: Bool, amount: Double, currencyCode: String?, accessory: String = "chevron.forward") {
     self.title = title
     self.category = category
     self.income = income
     self.amount = amount
     self.currencyCode = currencyCode
-    self.showsAdd = showsAdd
+    self.accessory = accessory
   }
 
   private var amountText: String {
@@ -256,13 +281,14 @@ private struct QuickAddRow: View {
   }
 
   var body: some View {
-    HStack(spacing: 10) {
+    HStack(spacing: 12) {
       EmojiLogView(category: category, income: income, future: false)
         .fixedSize(horizontal: true, vertical: true)
 
       VStack(alignment: .leading, spacing: 1) {
         Text(title)
-          .font(.system(.body, design: .rounded))
+          .font(.system(.body, design: .rounded).weight(.medium))
+          .foregroundColor(Color.PrimaryText)
           .lineLimit(1)
 
         Text(category?.wrappedName ?? Uncategorised.name)
@@ -279,14 +305,13 @@ private struct QuickAddRow: View {
         .lineLimit(1)
         .layoutPriority(1)
 
-      if showsAdd {
-        Image(systemName: "plus")
-          .font(.system(.body, design: .rounded).weight(.semibold))
-          .foregroundColor(Color.SubtitleText)
-          .accessibilityHidden(true)
-      }
+      Image(systemName: accessory)
+        .font(.system(.subheadline, design: .rounded).weight(accessory == "chevron.forward" ? .regular : .semibold))
+        .foregroundColor(accessory == "chevron.forward" ? .DarkIcon.opacity(0.6) : Color.SubtitleText)
     }
-    .padding(.vertical, 6)
+    .padding(.vertical, 8)
+    .frame(minHeight: .settingsRowHeight)
+    .contentShape(Rectangle())
     .accessibilityElement(children: .combine)
   }
 }

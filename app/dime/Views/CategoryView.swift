@@ -1509,7 +1509,7 @@ struct OpenAICompletionsOptions: Decodable {
     let text: String
 }
 
-extension View {
+private extension View {
     /// A List uses a side safe area, like the iPhone Duo's vertical bar, in place of its margin rather than adding
     /// to it, so its sections run up to the bar. Widen the safe area by the page inset so they clear it like other pages.
     @ViewBuilder func settingsListMargins() -> some View {

@@ -458,6 +458,12 @@
 "Category for an income. Choose No Category to log it without one." = "Категория дохода. Выберите «Без категории», чтобы добавить его без категории.";
 "Category for an expense. Choose No Category to log it without one." = "Категория расхода. Выберите «Без категории», чтобы добавить его без категории.";
 
+// quick add grid
+"Tap a template to edit it, or hold and drag it to a new spot. The Quick Add widget logs each one with one tap, without opening Dime, and editing or deleting a template never changes what you've logged." = "Коснитесь шаблона, чтобы изменить его, или удерживайте и перетащите, чтобы переместить. Виджет «Быстрое добавление» добавляет каждый одним касанием, не открывая Dime, а изменение или удаление шаблона не меняет уже добавленное.";
+"Move Earlier" = "Переместить раньше";
+"Move Later" = "Переместить позже";
+"Edits the template" = "Изменяет шаблон";
+
 // budget rollover
 "+%@ rolled over" = "+%@ перенесено";
 "−%@ overspend rolled over" = "−%@ перерасхода перенесено";
