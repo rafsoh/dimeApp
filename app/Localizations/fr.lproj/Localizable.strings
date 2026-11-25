@@ -453,3 +453,7 @@
 "%@ will be added to your log today." = "%@ sera ajouté à votre journal aujourd’hui.";
 "%@ will be added to your log tomorrow." = "%@ sera ajouté à votre journal demain.";
 "%@ will be added to your log on %@." = "%@ sera ajouté à votre journal le %@.";
+
+// shortcuts
+"Category for an income. Choose No Category to log it without one." = "Catégorie d’un revenu. Choisissez Sans catégorie pour l’enregistrer sans catégorie.";
+"Category for an expense. Choose No Category to log it without one." = "Catégorie d’une dépense. Choisissez Sans catégorie pour l’enregistrer sans catégorie.";

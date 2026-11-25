@@ -72,8 +72,12 @@ struct BudgetIntent: AppIntent {
             Case(ShortcutsBudgetsType.overall) {
                 Summary("Calculate leftover amount for the \(\.$type)")
             }
+            // Used when the type is asked each time. The budget must be listed: since iOS 18 a parameter missing
+            // from the summary can't be asked for, so choosing Category ended the shortcut.
             DefaultCase {
-                Summary("Calculate leftover amount for the \(\.$type)")
+                Summary("Calculate leftover amount for the \(\.$type)") {
+                    \.$budget
+                }
             }
         }
     }
