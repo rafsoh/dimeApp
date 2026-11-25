@@ -415,7 +415,7 @@ struct CategoryTileGrid<Categories: RandomAccessCollection>: View where Categori
                     .font(.system(.title2, design: .rounded).weight(.semibold))
                     .foregroundColor(Color.PrimaryText)
 
-                Text("No Category")
+                Text("category-picker-none")
                     .font(.system(.subheadline, design: .rounded).weight(.semibold))
                     .foregroundColor(Color.PrimaryText)
                     .lineLimit(1)
