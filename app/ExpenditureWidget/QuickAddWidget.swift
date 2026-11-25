@@ -290,7 +290,7 @@ private struct QuickAddTile: View {
                 .foregroundColor(Color.IncomeGreen)
                 .frame(width: size, height: size)
         } else {
-            WidgetEmojiTile(emoji: item.emoji, colour: item.colour, size: size, symbol: item.uncategorised ? Uncategorised.symbol(income: item.income) : nil)
+            WidgetEmojiTile(emoji: item.emoji, colour: item.colour, size: size, symbol: item.uncategorised ? Uncategorised.symbol(income: item.income) : nil, showsBackground: false)
         }
     }
 }
