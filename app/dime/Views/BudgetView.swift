@@ -216,7 +216,12 @@ struct BudgetOverallCard: View {
             InsightsCard {
                 VStack(alignment: .leading, spacing: 0) {
                     HStack(alignment: .firstTextBaseline, spacing: 6) {
-                        InsightsCardTitle("Overall")
+                        // Styled like the category tiles' names, so the rollover icon sits the same way beside it.
+                        Text("Overall")
+                            .font(.system(.body, design: .rounded).weight(.semibold))
+                            .foregroundColor(Color.PrimaryText)
+                            .lineLimit(1)
+                            .accessibilityAddTraits(.isHeader)
                         if rollover != nil {
                             BudgetRolloverIcon()
                         }
@@ -660,14 +665,9 @@ struct BudgetDetailContent: View {
         ArcRing(segments: ringSegments(snapshot, transactions: transactions), showsTrack: true, tick: snapshot.showsTick ? period.elapsed : nil) {
             BudgetAmountText(amount: snapshot.difference, font: .system(.title, design: .rounded).weight(.semibold), formatter: formatter)
 
-            HStack(spacing: 4) {
-                if snapshot.isOver {
-                    BudgetOverIcon()
-                }
-                Text(snapshot.overallAmountWord(formatter))
-                    .font(.system(.subheadline, design: .rounded).weight(.medium))
-                    .foregroundColor(Color.SubtitleText)
-            }
+            Text(snapshot.overallAmountWord(formatter))
+                .font(.system(.subheadline, design: .rounded).weight(.medium))
+                .foregroundColor(Color.SubtitleText)
 
             // Inside the ring, so it stays in view when the sheet is at half height.
             BudgetRolloverChip(snapshot: snapshot, formatter: formatter)
