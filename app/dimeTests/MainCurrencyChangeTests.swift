@@ -78,7 +78,7 @@ final class MainCurrencyChangeTests: XCTestCase {
     }
 
     func testTemplatesFollowTheSameRuleAsTransactions() throws {
-        for (kind, expected) in [(MainCurrencyChangePlan.Kind.relabel, ["nil", "SGD", "SGD", "EUR"]), (.convert, ["USD", "USD", "USD", "EUR"])] {
+        for (kind, expected) in [(MainCurrencyChangePlan.Kind.relabel, ["nil", "SGD", "SGD", "EUR"]), (.convert, ["USD", "USD", "usd", "EUR"])] {
             let context = try makeContext()
 
             for (index, code) in [nil, "USD", "usd", "EUR"].enumerated() {

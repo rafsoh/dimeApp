@@ -303,6 +303,8 @@ struct WidgetEmojiTile: View {
     let size: CGFloat
     /// An SF Symbol shown in place of the emoji, for transactions without a category.
     var symbol: String?
+    /// The tinted square behind the emoji. Quick Add tiles are already tinted, so they leave it out.
+    var showsBackground = true
 
     var body: some View {
         Group {
@@ -316,7 +318,7 @@ struct WidgetEmojiTile: View {
             }
         }
         .frame(width: size, height: size)
-        .background(Color(hex: colour).opacity(0.25), in: RoundedRectangle(cornerRadius: size * 0.32, style: .continuous))
+        .background(Color(hex: colour).opacity(showsBackground ? 0.25 : 0), in: RoundedRectangle(cornerRadius: size * 0.32, style: .continuous))
         .accessibilityHidden(true)
     }
 }

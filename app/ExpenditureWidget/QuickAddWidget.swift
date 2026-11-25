@@ -20,7 +20,7 @@ struct QuickAddWidget: Widget {
         }
         .configurationDisplayName("Quick Add")
         .description("Log your templates with one tap, without opening Dime.")
-        .supportedFamilies([.systemSmall, .systemMedium])
+        .supportedFamilies([.systemMedium, .systemLarge])
     }
 }
 
@@ -150,7 +150,9 @@ struct QuickAddWidgetView: View {
     @Environment(\.widgetFamily) private var family
     let entry: QuickAddEntry
 
-    private let spacing: CGFloat = 8
+    private var spacing: CGFloat {
+        family == .systemLarge ? 10 : 8
+    }
 
     var body: some View {
         Group {
@@ -167,8 +169,6 @@ struct QuickAddWidgetView: View {
                         slot(3)
                     }
                 }
-                // Small widgets ignore links on their parts, so an empty slot opens this instead.
-                .widgetURL(URL(string: "dimeapp://quickAdd"))
             }
         }
         .dynamicTypeSize(...DynamicTypeSize.large)
@@ -181,7 +181,7 @@ struct QuickAddWidgetView: View {
             let item = entry.items[index]
 
             Button(intent: LogQuickAddIntent(templateURI: item.uri)) {
-                QuickAddTile(item: item, compact: family == .systemSmall, logged: entry.loggedURI == item.uri)
+                QuickAddTile(item: item, large: family == .systemLarge, logged: entry.loggedURI == item.uri)
             }
             .buttonStyle(.plain)
             .invalidatableContent()
@@ -223,10 +223,10 @@ struct QuickAddWidgetView: View {
     }
 }
 
-/// One template's button: its category tile and amount, and its name when there's room.
+/// One template's button: its category tile, name and amount. Large widgets stack them in a taller tile.
 private struct QuickAddTile: View {
     let item: QuickAddItem
-    let compact: Bool
+    let large: Bool
     let logged: Bool
 
     private var tint: Color {
@@ -235,13 +235,20 @@ private struct QuickAddTile: View {
 
     var body: some View {
         Group {
-            if compact {
-                VStack(alignment: .leading, spacing: 0) {
-                    icon(size: 22)
-                    Spacer(minLength: 2)
+            if large {
+                VStack(alignment: .leading, spacing: 2) {
+                    icon(size: 36)
+
+                    Spacer(minLength: 4)
+
+                    Text(item.title)
+                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                        .foregroundColor(Color.PrimaryText)
+                        .lineLimit(2)
+
                     amount
                 }
-                .padding(9)
+                .padding(12)
             } else {
                 HStack(spacing: 8) {
                     icon(size: 26)
@@ -261,16 +268,16 @@ private struct QuickAddTile: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-        .background(tint.opacity(0.18), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background(tint.opacity(0.18), in: RoundedRectangle(cornerRadius: large ? 20 : 16, style: .continuous))
+        .contentShape(RoundedRectangle(cornerRadius: large ? 20 : 16, style: .continuous))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(logged ? Text("Logged \(item.title), \(item.amountText)") : Text("Log \(item.title), \(item.amountText)"))
     }
 
     private var amount: some View {
         Text(item.amountText)
-            .font(.system(compact ? .subheadline : .footnote, design: .rounded).weight(compact ? .semibold : .medium))
-            .foregroundColor(item.income ? Color.IncomeGreen : (compact ? Color.PrimaryText : Color.SubtitleText))
+            .font(.system(large ? .subheadline : .footnote, design: .rounded).weight(.medium))
+            .foregroundColor(item.income ? Color.IncomeGreen : Color.SubtitleText)
             .lineLimit(1)
             .minimumScaleFactor(0.7)
     }
@@ -283,7 +290,7 @@ private struct QuickAddTile: View {
                 .foregroundColor(Color.IncomeGreen)
                 .frame(width: size, height: size)
         } else {
-            WidgetEmojiTile(emoji: item.emoji, colour: item.colour, size: size, symbol: item.uncategorised ? Uncategorised.symbol(income: item.income) : nil)
+            WidgetEmojiTile(emoji: item.emoji, colour: item.colour, size: size, symbol: item.uncategorised ? Uncategorised.symbol(income: item.income) : nil, showsBackground: false)
         }
     }
 }
