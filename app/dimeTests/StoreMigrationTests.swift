@@ -63,6 +63,12 @@ final class StoreMigrationTests: XCTestCase {
 
             let context = try openStore(at: storeURL, model: currentModel)
             XCTAssertEqual(try context.count(for: NSFetchRequest(entityName: "Category")), 3)
+
+            // Every migrated transaction is in Main, and none is a transfer.
+            let moved = NSFetchRequest<NSManagedObject>(entityName: "Transaction")
+            moved.predicate = NSPredicate(format: "account != nil OR transferID != nil")
+            XCTAssertEqual(try context.count(for: moved), 0)
+            XCTAssertEqual(try context.count(for: NSFetchRequest(entityName: "Account")), 0)
             let budgets = try context.fetch(NSFetchRequest<NSManagedObject>(entityName: "Budget"))
             XCTAssertEqual(budgets.count, 1)
             XCTAssertEqual(budgets.first?.value(forKey: "amount") as? Double, 420.5)
@@ -85,6 +91,10 @@ final class StoreMigrationTests: XCTestCase {
         earlierModels.first { $0.entitiesByName["TemplateTransaction"]?.attributesByName["currencyCode"] != nil && $0.entitiesByName["Budget"]?.attributesByName["rolloverEnabled"] == nil }
     }
 
+    private var modelFive: NSManagedObjectModel? {
+        earlierModels.first { $0.entitiesByName["Budget"]?.attributesByName["rolloverEnabled"] != nil && $0.entitiesByName["Account"] == nil }
+    }
+
     func testModelThreeOnlyAddsAnOptionalCurrencyToTransactions() throws {
         try assertOnlyAddsOptionalCurrency(from: XCTUnwrap(modelTwo), to: XCTUnwrap(modelThree), on: "Transaction")
     }
@@ -94,17 +104,18 @@ final class StoreMigrationTests: XCTestCase {
     }
 
     /// CloudKit only accepts optional or defaulted additions, and older app versions keep syncing the other fields untouched.
-    func testCurrentModelOnlyAddsOptionalRolloverToBudgets() throws {
+    func testModelFiveOnlyAddsOptionalRolloverToBudgets() throws {
         let previous = try XCTUnwrap(modelFour)
+        let model = try XCTUnwrap(modelFive)
         let added: Set<String> = ["rolloverEnabled", "rolloverAnchor", "rolloverBalance"]
-        XCTAssertEqual(Set(currentModel.entitiesByName.keys), Set(previous.entitiesByName.keys))
+        XCTAssertEqual(Set(model.entitiesByName.keys), Set(previous.entitiesByName.keys))
 
-        for (name, entity) in currentModel.entitiesByName where name != "Budget" && name != "MainBudget" {
+        for (name, entity) in model.entitiesByName where name != "Budget" && name != "MainBudget" {
             XCTAssertEqual(entity.versionHash, previous.entitiesByName[name]?.versionHash, "\(name) changed")
         }
 
         for entityName in ["Budget", "MainBudget"] {
-            let entity = try XCTUnwrap(currentModel.entitiesByName[entityName])
+            let entity = try XCTUnwrap(model.entitiesByName[entityName])
             let previousEntity = try XCTUnwrap(previous.entitiesByName[entityName])
             XCTAssertEqual(Set(entity.propertiesByName.keys), Set(previousEntity.propertiesByName.keys).union(added))
 
@@ -117,6 +128,53 @@ final class StoreMigrationTests: XCTestCase {
             }
             XCTAssertEqual(entity.attributesByName["rolloverEnabled"]?.defaultValue as? Bool, false)
             XCTAssertEqual(entity.attributesByName["rolloverBalance"]?.defaultValue as? Double, 0)
+        }
+    }
+
+    /// Model 6 adds accounts and transfers. Older app versions keep syncing every field they know, a transaction
+    /// they write has no account (so it's in Main), and nothing about accounts can ever delete a transaction.
+    func testCurrentModelOnlyAddsAccountsAndTransfers() throws {
+        let previous = try XCTUnwrap(modelFive)
+        let added: [String: Set<String>] = [
+            "Transaction": ["account", "transferID"],
+            "TemplateTransaction": ["account"],
+            "Budget": ["accountScope"],
+            "MainBudget": ["accountScope"]
+        ]
+
+        XCTAssertEqual(Set(currentModel.entitiesByName.keys), Set(previous.entitiesByName.keys).union(["Account"]))
+
+        for (name, entity) in currentModel.entitiesByName where name != "Account" {
+            let previousEntity = try XCTUnwrap(previous.entitiesByName[name])
+            let newProperties = added[name] ?? []
+            XCTAssertEqual(Set(entity.propertiesByName.keys), Set(previousEntity.propertiesByName.keys).union(newProperties), "\(name)")
+
+            for (property, description) in previousEntity.propertiesByName {
+                XCTAssertEqual(entity.propertiesByName[property]?.versionHash, description.versionHash, "\(name).\(property) changed")
+            }
+
+            for property in newProperties {
+                XCTAssertTrue(try XCTUnwrap(entity.propertiesByName[property]).isOptional, "\(name).\(property) isn't optional")
+            }
+
+            if newProperties.isEmpty {
+                XCTAssertEqual(entity.versionHash, previousEntity.versionHash, "\(name) changed")
+            }
+        }
+
+        let account = try XCTUnwrap(currentModel.entitiesByName["Account"])
+        XCTAssertTrue(account.properties.allSatisfy(\.isOptional))
+
+        // Deleting an account moves its transactions and templates to Main; it never deletes them.
+        for relationship in account.relationshipsByName.values {
+            XCTAssertEqual(relationship.deleteRule, .nullifyDeleteRule, "Account.\(relationship.name)")
+            XCTAssertNotNil(relationship.inverseRelationship)
+        }
+
+        for entityName in ["Transaction", "TemplateTransaction"] {
+            let relationship = try XCTUnwrap(currentModel.entitiesByName[entityName]?.relationshipsByName["account"])
+            XCTAssertEqual(relationship.deleteRule, .nullifyDeleteRule)
+            XCTAssertFalse(relationship.isToMany)
         }
     }
 

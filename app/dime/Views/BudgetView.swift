@@ -201,8 +201,9 @@ struct BudgetOverallCard: View {
         self.budget = budget
         period = BudgetPeriod(type: Int(budget.type), start: budget.wrappedDate)
         rollover = BudgetRollover(budget)
-        _transactions = FetchRequest(sortDescriptors: [], predicate: budgetPredicate(from: period.start, to: period.end, category: nil))
-        _rolloverTransactions = FetchRequest(sortDescriptors: [], predicate: BudgetRollover.spendingPredicate(rollover, before: period.start, category: nil))
+        let accounts = budget.accountPredicate
+        _transactions = FetchRequest(sortDescriptors: [], predicate: budgetPredicate(from: period.start, to: period.end, category: nil, accounts: accounts))
+        _rolloverTransactions = FetchRequest(sortDescriptors: [], predicate: BudgetRollover.spendingPredicate(rollover, before: period.start, category: nil, accounts: accounts))
     }
 
     var body: some View {
@@ -279,8 +280,9 @@ struct BudgetCategoryTile: View {
         self.budget = budget
         period = BudgetPeriod(type: Int(budget.type), start: budget.wrappedDate)
         rollover = BudgetRollover(budget)
-        _transactions = FetchRequest(sortDescriptors: [], predicate: budgetPredicate(from: period.start, to: period.end, category: budget.category))
-        _rolloverTransactions = FetchRequest(sortDescriptors: [], predicate: BudgetRollover.spendingPredicate(rollover, before: period.start, category: budget.category))
+        let accounts = budget.accountPredicate
+        _transactions = FetchRequest(sortDescriptors: [], predicate: budgetPredicate(from: period.start, to: period.end, category: budget.category, accounts: accounts))
+        _rolloverTransactions = FetchRequest(sortDescriptors: [], predicate: BudgetRollover.spendingPredicate(rollover, before: period.start, category: budget.category, accounts: accounts))
     }
 
     var body: some View {
@@ -379,6 +381,19 @@ enum BudgetDetailRoute: Identifiable {
         case let .category(budget):
             return budget.amount
         }
+    }
+
+    var budget: RolloverBudget {
+        switch self {
+        case let .overall(budget):
+            return budget
+        case let .category(budget):
+            return budget
+        }
+    }
+
+    var accountPredicate: NSPredicate? {
+        budget.accountPredicate
     }
 
     var rollover: BudgetRollover? {
@@ -614,12 +629,13 @@ struct BudgetDetailContent: View {
         self.route = route
         self.period = period
         rollover = route.rollover
-        _rolloverTransactions = FetchRequest(sortDescriptors: [], predicate: BudgetRollover.spendingPredicate(rollover, before: period.start, category: route.category))
-        _periodTransactions = FetchRequest(sortDescriptors: [SortDescriptor(\.date)], predicate: budgetPredicate(from: period.start, to: period.end, category: route.category))
+        let accounts = route.accountPredicate
+        _rolloverTransactions = FetchRequest(sortDescriptors: [], predicate: BudgetRollover.spendingPredicate(rollover, before: period.start, category: route.category, accounts: accounts))
+        _periodTransactions = FetchRequest(sortDescriptors: [SortDescriptor(\.date)], predicate: budgetPredicate(from: period.start, to: period.end, category: route.category, accounts: accounts))
         _list = SectionedFetchRequest(sectionIdentifier: \.day, sortDescriptors: [
             SortDescriptor(\.day, order: .reverse),
             SortDescriptor(\.date, order: .reverse)
-        ], predicate: budgetPredicate(from: period.start, to: period.end, category: route.category))
+        ], predicate: budgetPredicate(from: period.start, to: period.end, category: route.category, accounts: accounts))
     }
 
     var body: some View {

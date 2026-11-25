@@ -54,7 +54,8 @@ struct SettingsQuickAddView: View {
 
   init() {
     let request: NSFetchRequest<Transaction> = Transaction.fetchRequest()
-    request.predicate = NSPredicate(format: "%K <= %@", #keyPath(Transaction.date), Date.now as NSDate)
+    // A Quick Add template is an expense or income, so transfers can't become one.
+    request.predicate = TransferPredicate.excluding(NSPredicate(format: "%K <= %@", #keyPath(Transaction.date), Date.now as NSDate))
     request.sortDescriptors = [NSSortDescriptor(key: "date", ascending: false)]
     request.fetchLimit = 60
     _recentTransactions = FetchRequest(fetchRequest: request)

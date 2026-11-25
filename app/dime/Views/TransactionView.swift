@@ -964,7 +964,7 @@ struct FilteredSearchNewTransactionView: View {
                 format: "%K == %@", #keyPath(Transaction.category), unwrappedCategory)
 
             let andPredicate = NSCompoundPredicate(
-                type: .and, subpredicates: [compound, categoryPredicate])
+                type: .and, subpredicates: [compound, categoryPredicate, TransferPredicate.excluded])
 
             _transactions = FetchRequest<Transaction>(
                 sortDescriptors: [
@@ -974,7 +974,7 @@ struct FilteredSearchNewTransactionView: View {
             _transactions = FetchRequest<Transaction>(
                 sortDescriptors: [
                     SortDescriptor(\.date, order: .reverse)
-                ], predicate: compound)
+                ], predicate: TransferPredicate.excluding(compound))
         }
 
         self.searchQuery = searchQuery

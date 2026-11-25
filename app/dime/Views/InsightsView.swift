@@ -165,6 +165,31 @@ struct InsightsView: View {
     }
 }
 
+// MARK: - Account
+
+/// The account Insights shows, kept between launches like its time frame. Nothing saved means every account.
+enum InsightsAccountFilter {
+    static let key = "insightsAccount"
+
+    static var selection: String {
+        UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.string(forKey: key) ?? ""
+    }
+
+    /// The selected account, or nil for every account, including when the selected one was deleted.
+    static func choice(among choices: [AccountChoice]) -> AccountChoice? {
+        let key = selection
+        guard !key.isEmpty else { return nil }
+        return choices.first { $0.key == key }
+    }
+
+    /// Matches the selected account's transactions, or nil for every account.
+    static func predicate(in dataController: DataController) -> NSPredicate? {
+        let key = selection
+        guard !key.isEmpty else { return nil }
+        return AccountScope(keys: [key]).predicate(in: dataController.container.viewContext)
+    }
+}
+
 // MARK: - Period
 
 struct InsightsPeriod: Equatable {
@@ -388,7 +413,8 @@ enum CategorySlice: Hashable {
         if let category {
             return NSPredicate(format: "%K == %@", #keyPath(Transaction.category), category)
         }
-        return NSPredicate(format: "%K == nil AND income = %d", #keyPath(Transaction.category), income)
+        // Transfers have no category either, but they're neither spending nor income.
+        return NSPredicate(format: "%K == nil AND income = %d AND %K == nil", #keyPath(Transaction.category), income, #keyPath(Transaction.transferID))
     }
 }
 
@@ -662,7 +688,13 @@ struct InsightsRecurringCharge: Identifiable {
         let now = Date.now
         var seen = Set<UUID>()
 
-        return dataController.results(for: dataController.fetchRequestForRecurringTransactions())
+        let request = dataController.fetchRequestForRecurringTransactions()
+
+        if let accounts = InsightsAccountFilter.predicate(in: dataController) {
+            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [request.predicate, accounts].compactMap { $0 })
+        }
+
+        return dataController.results(for: request)
             .filter { transaction in
                 guard !transaction.income, (1 ... 3).contains(transaction.recurringType) else { return false }
                 guard let id = transaction.id else { return true }
@@ -681,13 +713,19 @@ func insightsLargestFirst(_ transactions: [Transaction]) -> [Transaction] {
     return transactions.sorted { (amounts[$0.objectID] ?? -.infinity) > (amounts[$1.objectID] ?? -.infinity) }
 }
 
+/// Spending or income in a period, in the account Insights shows. Transfers are neither.
 func insightsTransactions(_ dataController: DataController, from start: Date, to end: Date, income: Bool?, slice: CategorySlice? = nil) -> [Transaction] {
     let request: NSFetchRequest<Transaction> = Transaction.fetchRequest()
 
     var predicates = [
         NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), start as CVarArg),
-        NSPredicate(format: "%K < %@", #keyPath(Transaction.date), end as CVarArg)
+        NSPredicate(format: "%K < %@", #keyPath(Transaction.date), end as CVarArg),
+        TransferPredicate.excluded
     ]
+
+    if let accounts = InsightsAccountFilter.predicate(in: dataController) {
+        predicates.append(accounts)
+    }
 
     if let income {
         predicates.append(NSPredicate(format: "income = %d", income))
@@ -707,8 +745,9 @@ func insightsFirstTransactionDate(_ dataController: DataController, from start: 
     let request: NSFetchRequest<Transaction> = Transaction.fetchRequest()
     request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
         NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), start as CVarArg),
-        NSPredicate(format: "%K < %@", #keyPath(Transaction.date), end as CVarArg)
-    ])
+        NSPredicate(format: "%K < %@", #keyPath(Transaction.date), end as CVarArg),
+        TransferPredicate.excluded
+    ] + [InsightsAccountFilter.predicate(in: dataController)].compactMap { $0 })
     request.sortDescriptors = [NSSortDescriptor(key: "date", ascending: true)]
     request.fetchLimit = 1
 
@@ -984,13 +1023,14 @@ struct InsightsDashboard: View {
         self.incomeTracking = incomeTracking
         self.formatter = formatter
         self.onSelect = onSelect
-        let spentInsights = dataController.getInsights(type: period.type, date: period.start, income: false)
+        let accounts = InsightsAccountFilter.predicate(in: dataController)
+        let spentInsights = dataController.getInsights(type: period.type, date: period.start, income: false, accounts: accounts)
         buckets = InsightsBucket.make(dates: spentInsights.dates, values: spentInsights.dateDictionary, type: period.type)
         spent = spentInsights.amount
         spentReport = spentInsights.report
         average = spentInsights.amount / Double(insightsAverageSpan(dataController, period: period, firstDay: firstDay))
 
-        let previous = dataController.getInsights(type: period.type, date: period.shifted(by: -1).start, income: false).amount
+        let previous = dataController.getInsights(type: period.type, date: period.shifted(by: -1).start, income: false, accounts: accounts).amount
         change = previous > 0 && spentInsights.amount > 0 ? (spentInsights.amount - previous) / previous : nil
 
         let expenses = insightsTransactions(dataController, from: period.start, to: period.queryEnd, income: false)
@@ -1780,7 +1820,7 @@ struct InsightsDetailSheet: View {
         let allTotal = insightsTransactions(dataController, from: period.start, to: period.queryEnd, income: slice.income).total(using: converter).value
         let share = allTotal > 0 ? Int((total / allTotal * 100).rounded()) : 0
 
-        let dates = dataController.getInsights(type: period.type, date: period.start, income: slice.income).dates
+        let dates = dataController.getInsights(type: period.type, date: period.start, income: slice.income, accounts: InsightsAccountFilter.predicate(in: dataController)).dates
         var values = [Date: Double]()
         for (index, bucketStart) in dates.enumerated() {
             let bucketEnd = index + 1 < dates.count ? dates[index + 1] : period.end
@@ -2053,10 +2093,10 @@ struct FilteredInsightsView: View {
 
         if let unwrappedIncome = income {
             let incomePredicate = NSPredicate(format: "income = %d", unwrappedIncome)
-            andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate, incomePredicate])
+            andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate, incomePredicate, TransferPredicate.excluded])
 
         } else {
-            andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate])
+            andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate, TransferPredicate.oneLegPerTransfer])
         }
 
         _transactions = SectionedFetchRequest<Date?, Transaction>(sectionIdentifier: \.day, sortDescriptors: [

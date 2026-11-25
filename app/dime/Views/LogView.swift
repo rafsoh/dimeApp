@@ -708,7 +708,7 @@ struct FilteredSearchView: View {
         _transactions = SectionedFetchRequest<Date?, Transaction>(sectionIdentifier: \.day, sortDescriptors: [
             SortDescriptor(\.day, order: .reverse),
             SortDescriptor(\.date, order: .reverse)
-        ], predicate: query.predicate)
+        ], predicate: NSCompoundPredicate(andPredicateWithSubpredicates: [query.predicate, TransferPredicate.oneLegPerTransfer]))
 
         self.searchQuery = query.text
     }
@@ -736,7 +736,12 @@ struct FilteredSearchView: View {
         let begins = NSPredicate(format: "%K BEGINSWITH[cd] %@", #keyPath(Transaction.note), query)
         let contains = NSPredicate(format: "%K CONTAINS[cd] %@", #keyPath(Transaction.note), query)
         let category = NSPredicate(format: "%K CONTAINS[cd] %@", #keyPath(Transaction.category.name), query)
-        var parts = [begins, contains, category]
+        let account = NSPredicate(format: "%K CONTAINS[cd] %@", "account.name", query)
+        var parts = [begins, contains, category, account]
+        // Main has no account object, so its name matches transactions without one.
+        if MainAccount.name.range(of: query, options: [.caseInsensitive, .diacriticInsensitive]) != nil {
+            parts.append(NSPredicate(format: "%K == nil", #keyPath(Transaction.account)))
+        }
         if let amount = TransactionAmountSearch.value(in: query) {
             // Stored amounts are binary doubles, so match to the cent rather than exactly.
             parts.append(NSPredicate(format: "amount >= %@ AND amount < %@", NSNumber(value: amount - 0.005), NSNumber(value: amount + 0.005)))
@@ -829,7 +834,10 @@ struct TransactionsList: View {
         SortDescriptor(\.day, order: .reverse),
         SortDescriptor(\.date, order: .reverse),
         SortDescriptor(\.note)
-    ], predicate: NSPredicate(format: "%K <= %@", #keyPath(Transaction.date), Date.now as CVarArg)) private var transactions: SectionedFetchResults<Date?, Transaction>
+    ], predicate: NSCompoundPredicate(andPredicateWithSubpredicates: [
+        NSPredicate(format: "%K <= %@", #keyPath(Transaction.date), Date.now as CVarArg),
+        TransferPredicate.oneLegPerTransfer
+    ])) private var transactions: SectionedFetchResults<Date?, Transaction>
 
     var body: some View {
         VStack {
@@ -1074,7 +1082,8 @@ struct FutureListView: View {
         let recurringPredicate = NSPredicate(format: "%K > %i", #keyPath(Transaction.recurringType), 0)
         let futurePredicate = NSPredicate(format: "%K > %@", #keyPath(Transaction.date), Date.now as CVarArg)
 
-        let andPredicate = NSCompoundPredicate(type: .or, subpredicates: [recurringPredicate, futurePredicate])
+        let upcomingPredicate = NSCompoundPredicate(type: .or, subpredicates: [recurringPredicate, futurePredicate])
+        let andPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: [upcomingPredicate, TransferPredicate.oneLegPerTransfer])
 
         _fetchedResults = FetchRequest<Transaction>(sortDescriptors: [], predicate: andPredicate)
 
@@ -1579,7 +1588,7 @@ struct FilteredRecurringView: View {
         let recurringPredicate = NSPredicate(format: "%K = %d", #keyPath(Transaction.onceRecurring), true)
         let datePredicate = NSPredicate(format: "%K <= %@", #keyPath(Transaction.date), Date.now as CVarArg)
 
-        let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [recurringPredicate, datePredicate])
+        let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [recurringPredicate, datePredicate, TransferPredicate.excluded])
 
         _transactions = SectionedFetchRequest<Date?, Transaction>(sectionIdentifier: \.day, sortDescriptors: [
             SortDescriptor(\.day, order: .reverse),
@@ -1607,7 +1616,8 @@ struct FilteredTypeView: View {
         let incomePredicate = NSPredicate(format: "income = %d", income)
         let datePredicate = NSPredicate(format: "%K <= %@", #keyPath(Transaction.date), Date.now as CVarArg)
 
-        let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [incomePredicate, datePredicate])
+        // Transfers are neither expenses nor income.
+        let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [incomePredicate, datePredicate, TransferPredicate.excluded])
 
         _transactions = SectionedFetchRequest<Date?, Transaction>(sectionIdentifier: \.day, sortDescriptors: [
             SortDescriptor(\.day, order: .reverse),
@@ -1688,7 +1698,7 @@ struct FilteredDateView: View {
         let datePredicate = NSPredicate(format: "%K == %@", #keyPath(Transaction.day), date as CVarArg)
         let futurePredicate = NSPredicate(format: "%K <= %@", #keyPath(Transaction.date), Date.now as CVarArg)
 
-        let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [futurePredicate, datePredicate])
+        let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [futurePredicate, datePredicate, TransferPredicate.oneLegPerTransfer])
 
         _transactions = FetchRequest<Transaction>(sortDescriptors: [
             SortDescriptor(\.date, order: .reverse)

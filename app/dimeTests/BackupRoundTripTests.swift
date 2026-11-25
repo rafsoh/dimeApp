@@ -146,7 +146,7 @@ final class BackupRoundTripTests: XCTestCase {
         let backup = try store.write(from: source, mainCurrency: nil)
 
         let json = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: backup.url)) as? [String: Any])
-        XCTAssertEqual(json["version"] as? Int, 2)
+        XCTAssertEqual(json["version"] as? Int, 3)
         let codes = try XCTUnwrap(json["transactions"] as? [[String: Any]]).map { $0["currencyCode"] as? String }
         XCTAssertEqual(codes.compactMap { $0 }.sorted(), ["EUR", "JPY"])
 
@@ -207,7 +207,7 @@ final class BackupRoundTripTests: XCTestCase {
 
     func testBackupFromANewerFormatIsNotRestored() throws {
         let json = """
-        {"version": 3, "createdAt": 700000000, "categories": [], "transactions": [{"amount": 1, "income": false, "onceRecurring": false, "recurringType": 0, "recurringCoefficient": 1}], "budgets": [], "mainBudgets": [], "templates": []}
+        {"version": 4, "createdAt": 700000000, "categories": [], "transactions": [{"amount": 1, "income": false, "onceRecurring": false, "recurringType": 0, "recurringCoefficient": 1}], "budgets": [], "mainBudgets": [], "templates": []}
         """
         let url = directory.appendingPathComponent("backup-700000000-1.json")
         try Data(json.utf8).write(to: url)
@@ -216,6 +216,120 @@ final class BackupRoundTripTests: XCTestCase {
         let target = try makeContext()
         XCTAssertThrowsError(try BackupStore(directory: directory).restore(backup, into: target))
         XCTAssertFalse(target.hasChanges)
+    }
+
+    func testAccountsTransfersAndBudgetScopesRoundTrip() throws {
+        let source = try makeContext()
+        try populate(source)
+
+        let card = Account(context: source)
+        card.id = UUID()
+        card.name = "Card"
+        card.order = 0
+        let savings = Account(context: source)
+        savings.id = UUID()
+        savings.name = "Savings"
+        savings.order = 1
+
+        let spend = try XCTUnwrap(all(Transaction.self, in: source).first { $0.note == "Café ☕️" })
+        spend.account = card
+
+        let transferID = UUID()
+        for (income, account) in [(false, nil), (true, savings)] as [(Bool, Account?)] {
+            let leg = Transaction(context: source)
+            leg.id = UUID()
+            leg.amount = 400
+            leg.income = income
+            leg.date = Date(timeIntervalSinceReferenceDate: 700_100_000)
+            leg.day = leg.date
+            leg.month = leg.date
+            leg.transferID = transferID
+            leg.account = account
+        }
+
+        let mainBudget = try XCTUnwrap(all(MainBudget.self, in: source).first)
+        mainBudget.countedAccounts = AccountScope([.main, .account(card)])
+        try XCTUnwrap(all(TemplateTransaction.self, in: source).first).account = savings
+        try source.save()
+
+        let store = BackupStore(directory: directory)
+        let backup = try store.write(from: source, mainCurrency: nil)
+
+        let target = try makeContext()
+        let result = try store.restore(backup, into: target)
+        try target.save()
+
+        XCTAssertEqual(result.accounts, 2)
+        XCTAssertEqual(try transactionValues(in: target), try transactionValues(in: source))
+        XCTAssertEqual(Set(try all(Account.self, in: target).compactMap(\.name)), ["Card", "Savings"])
+
+        let legs = try all(Transaction.self, in: target).filter { $0.transferID == transferID }
+        XCTAssertEqual(legs.count, 2)
+        XCTAssertNil(legs.first { !$0.income }?.account)
+        XCTAssertEqual(legs.first { $0.income }?.account?.name, "Savings")
+
+        let restoredCard = try XCTUnwrap(all(Account.self, in: target).first { $0.name == "Card" })
+        XCTAssertEqual(try XCTUnwrap(all(MainBudget.self, in: target).first).countedAccounts, AccountScope([.main, .account(restoredCard)]))
+        XCTAssertEqual(try XCTUnwrap(all(TemplateTransaction.self, in: target).first).account?.name, "Savings")
+        XCTAssertEqual(try store.restore(backup, into: target).total, 0)
+    }
+
+    // A store that lost its accounts but kept one by name reuses it, and the budget scope follows the new id.
+    func testRestoreMatchesAccountsByNameAndRemapsScopes() throws {
+        let source = try makeContext()
+        try populate(source)
+        let card = Account(context: source)
+        card.id = UUID()
+        card.name = "Card"
+        try XCTUnwrap(all(Budget.self, in: source).first).countedAccounts = AccountScope([.account(card)])
+        try source.save()
+
+        let store = BackupStore(directory: directory)
+        let backup = try store.write(from: source)
+
+        let target = try makeContext()
+        let recreated = Account(context: target)
+        recreated.id = UUID()
+        recreated.name = "card"
+        try target.save()
+
+        let result = try store.restore(backup, into: target)
+        try target.save()
+
+        XCTAssertEqual(result.accounts, 0)
+        XCTAssertEqual(try all(Account.self, in: target).count, 1)
+        XCTAssertEqual(try XCTUnwrap(all(Budget.self, in: target).first).countedAccounts, AccountScope([.account(recreated)]))
+    }
+
+    // Backups from before accounts put everything in Main.
+    func testVersionTwoBackupRestoresIntoMain() throws {
+        let json = """
+        {
+          "version": 2,
+          "createdAt": 700000000,
+          "categories": [],
+          "transactions": [
+            {"id": "A1B2C3D4-0000-0000-0000-000000000009", "note": "Taxi", "amount": 3.5, "date": 700000100, "income": false, "onceRecurring": false, "recurringType": 0, "recurringCoefficient": 1, "currencyCode": "EUR"}
+          ],
+          "budgets": [],
+          "mainBudgets": [{"amount": 900, "green": false, "type": 3}],
+          "templates": []
+        }
+        """
+        let url = directory.appendingPathComponent("backup-700000000-1.json")
+        try Data(json.utf8).write(to: url)
+        let backup = BackupSummary(url: url, createdAt: Date(timeIntervalSince1970: 700_000_000), transactionCount: 1)
+
+        let target = try makeContext()
+        let result = try BackupStore(directory: directory).restore(backup, into: target)
+        try target.save()
+
+        XCTAssertEqual(result.transactions, 1)
+        XCTAssertEqual(result.accounts, 0)
+        let taxi = try XCTUnwrap(all(Transaction.self, in: target).first)
+        XCTAssertNil(taxi.account)
+        XCTAssertNil(taxi.transferID)
+        XCTAssertTrue(try XCTUnwrap(all(MainBudget.self, in: target).first).countedAccounts.isAll)
     }
 
     // MARK: - Helpers
@@ -301,7 +415,7 @@ final class BackupRoundTripTests: XCTestCase {
 
     private func transactionValues(in context: NSManagedObjectContext) throws -> [String] {
         try all(Transaction.self, in: context).map {
-            "\($0.id!)|\($0.amount)|\($0.note ?? "nil")|\($0.date!.timeIntervalSinceReferenceDate)|\($0.day!.timeIntervalSinceReferenceDate)|\($0.month!.timeIntervalSinceReferenceDate)|\($0.income)|\($0.onceRecurring)|\($0.recurringType)|\($0.recurringCoefficient)|\($0.category?.name ?? "nil")|\($0.currencyCode ?? "nil")"
+            "\($0.id!)|\($0.amount)|\($0.note ?? "nil")|\($0.date!.timeIntervalSinceReferenceDate)|\($0.day!.timeIntervalSinceReferenceDate)|\($0.month!.timeIntervalSinceReferenceDate)|\($0.income)|\($0.onceRecurring)|\($0.recurringType)|\($0.recurringCoefficient)|\($0.category?.name ?? "nil")|\($0.currencyCode ?? "nil")|\($0.account?.name ?? "main")|\($0.transferID?.uuidString ?? "nil")"
         }.sorted()
     }
 

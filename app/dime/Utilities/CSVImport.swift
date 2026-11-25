@@ -6,8 +6,13 @@
 import Foundation
 
 enum CSVExport {
-    // Currency was added last, so the earlier columns stay where older exports had them.
-    static let header = "Date,Note,Amount,Category,Type,Currency\n"
+    // Columns added later go last, so the earlier ones stay where older exports had them.
+    static let header = "Date,Note,Amount,Category,Type,Currency,Account\n"
+
+    /// A transfer's legs have their own types, so importing an export recreates the transfer rather than
+    /// counting it as an expense and an income.
+    static let transferOutType = "Transfer Out"
+    static let transferInType = "Transfer In"
 
     /// Two decimals as before, or three for currencies like KWD so no digit is lost.
     static func amount(_ amount: Double, currencyCode: String) -> String {
@@ -136,7 +141,7 @@ struct CSVTable {
 }
 
 enum ImportField: CaseIterable, Hashable {
-    case date, amount, category, note, type, currency
+    case date, amount, category, note, type, currency, account
 
     var title: String {
         switch self {
@@ -146,6 +151,7 @@ enum ImportField: CaseIterable, Hashable {
         case .note: return "Note"
         case .type: return "Type"
         case .currency: return "Currency"
+        case .account: return "Account"
         }
     }
 
@@ -157,13 +163,14 @@ enum ImportField: CaseIterable, Hashable {
         case .note: return "doc.plaintext.fill"
         case .type: return "plusminus"
         case .currency: return "coloncurrencysign.circle.fill"
+        case .account: return "creditcard.fill"
         }
     }
 
     var isRequired: Bool {
         switch self {
         case .date, .amount: return true
-        case .category, .note, .type, .currency: return false
+        case .category, .note, .type, .currency, .account: return false
         }
     }
 
@@ -175,6 +182,7 @@ enum ImportField: CaseIterable, Hashable {
         case .note: return ["note", "description", "memo", "title", "name", "payee", "merchant", "details", "subtitle"]
         case .type: return ["type", "kind", "direction", "income/expense", "flow"]
         case .currency: return ["currency", "ccy", "currency code", "iso currency"]
+        case .account: return ["account", "wallet", "account name"]
         }
     }
 }
@@ -342,8 +350,14 @@ enum ImportParsing {
         return negative ? -number : number
     }
 
-    private static let incomeWords: Set<String> = ["income", "credit", "cr", "in", "deposit", "revenue", "earning", "earnings", "+"]
-    private static let expenseWords: Set<String> = ["expense", "expenses", "debit", "dr", "out", "withdrawal", "payment", "spending", "-"]
+    private static let incomeWords: Set<String> = ["income", "credit", "cr", "in", "deposit", "revenue", "earning", "earnings", "+", "transfer in"]
+    private static let expenseWords: Set<String> = ["expense", "expenses", "debit", "dr", "out", "withdrawal", "payment", "spending", "-", "transfer out"]
+
+    /// True for the two legs of a transfer, as Dime exports them.
+    static func isTransfer(_ raw: String) -> Bool {
+        let value = raw.trimmingCharacters(in: .whitespaces).lowercased()
+        return value == CSVExport.transferOutType.lowercased() || value == CSVExport.transferInType.lowercased()
+    }
 
     /// True for income, false for an expense, nil when the value says neither.
     static func isIncome(_ raw: String) -> Bool? {
@@ -396,7 +410,7 @@ struct ColumnMapping: Equatable {
         }
 
         if table.hasHeaderRow {
-            for field in [ImportField.type, .category, .amount, .date, .note] {
+            for field in [ImportField.type, .category, .account, .amount, .date, .note] {
                 let candidates = free.sorted()
                 let header = { (column: Int) in table.headers[column].lowercased().trimmingCharacters(in: .whitespaces) }
                 let match = candidates.first { field.headerKeywords.contains(header($0)) }
@@ -482,9 +496,34 @@ struct ImportedRow {
     let income: Bool?
     /// From the file's currency column; nil means the main currency.
     var currencyCode: String?
+    /// From the file's account column; empty means Main.
+    var accountName = ""
+    /// A leg of a transfer Dime exported. Legs with a matching other leg are imported as a transfer.
+    var isTransferLeg = false
 
     func money(income: Bool) -> MoneyEntry {
         MoneyEntry(id: nil, amount: amount, currencyCode: currencyCode, date: date, income: income)
+    }
+
+    /// The transfers in an import, as indices of their outgoing and incoming legs. Each outgoing leg pairs with
+    /// the first unpaired incoming leg of the same date, amount and currency.
+    static func transferPairs(in rows: [ImportedRow]) -> [(outgoing: Int, incoming: Int)] {
+        let legs = rows.indices.filter { rows[$0].isTransferLeg }
+        var paired = Set<Int>()
+        var pairs: [(outgoing: Int, incoming: Int)] = []
+
+        for outIndex in legs where rows[outIndex].income == false {
+            let out = rows[outIndex]
+            guard let inIndex = legs.first(where: { index in
+                !paired.contains(index) && rows[index].income == true && rows[index].date == out.date
+                    && rows[index].amount == out.amount && rows[index].currencyCode == out.currencyCode
+            }) else { continue }
+
+            paired.insert(inIndex)
+            pairs.append((outIndex, inIndex))
+        }
+
+        return pairs
     }
 }
 
@@ -545,7 +584,9 @@ struct ImportParseResult {
                 note: mapping[.note].map { row[$0] } ?? "",
                 categoryName: categoryName,
                 income: income,
-                currencyCode: currencyCode
+                currencyCode: currencyCode,
+                accountName: mapping[.account].map { row[$0].trimmingCharacters(in: .whitespaces) } ?? "",
+                isTransferLeg: mapping[.type].map { ImportParsing.isTransfer(row[$0]) } ?? false
             ))
         }
 

@@ -804,7 +804,47 @@ struct ImportDataView: View {
             ]
             var unusedColours = Color.colorArray.filter { colour in !categories.contains { $0.wrappedColour == colour } }
 
-            for row in rows {
+            // Accounts are matched by name, Main included; a name the store doesn't have becomes a new account.
+            var accountsByName: [String: AccountChoice] = [:]
+            for choice in dataController.accountChoices() {
+                accountsByName[choice.name.lowercased()] = choice
+            }
+            var nextAccountOrder = (dataController.accounts().map(\.order).max() ?? -1) + 1
+
+            func account(named name: String) -> Account? {
+                let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !trimmed.isEmpty else { return nil }
+
+                if let match = accountsByName[trimmed.lowercased()] {
+                    return match.account
+                }
+
+                let new = Account(context: dataController.container.viewContext)
+                new.id = UUID()
+                new.name = trimmed
+                new.dateCreated = Date.now
+                new.order = nextAccountOrder
+                nextAccountOrder += 1
+                accountsByName[trimmed.lowercased()] = .account(new)
+                return new
+            }
+
+            // A leg without its other half is imported as an ordinary expense or income, so nothing is dropped.
+            var pairedIndices = Set<Int>()
+
+            for (outIndex, inIndex) in ImportedRow.transferPairs(in: rows) {
+                pairedIndices.insert(outIndex)
+                pairedIndices.insert(inIndex)
+
+                let transferID = UUID()
+                for (index, isIncome) in [(outIndex, false), (inIndex, true)] {
+                    let leg = rows[index]
+                    let transaction = dataController.insertTransaction(note: leg.note, category: nil, income: isIncome, amount: leg.amount, currencyCode: leg.currencyCode ?? currency.uppercased(), account: account(named: leg.accountName), date: leg.date)
+                    transaction.transferID = transferID
+                }
+            }
+
+            for (index, row) in rows.enumerated() where !pairedIndices.contains(index) {
                 let key = ImportCategoryKey(name: row.categoryName, income: row.income)
                 let income = income(for: key)
                 let category: Category?
@@ -837,7 +877,7 @@ struct ImportDataView: View {
                     }
                 }
 
-                _ = dataController.insertTransaction(note: row.note, category: category, income: income, amount: row.amount, currencyCode: row.currencyCode ?? currency.uppercased(), date: row.date)
+                _ = dataController.insertTransaction(note: row.note, category: category, income: income, amount: row.amount, currencyCode: row.currencyCode ?? currency.uppercased(), account: account(named: row.accountName), date: row.date)
             }
 
             dataController.save()
