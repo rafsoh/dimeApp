@@ -90,12 +90,16 @@ jobs:
         continue-on-error: true
         run: |
           mkdir -p screenshots
-          # Newer simulator images have more than one display; take whichever ones simctl lists then.
+          # Newer simulator images list more than one display, and only one of them shows the app;
+          # take each and keep the largest file, since the others are blank.
           snap() {
             if ! err=$(xcrun simctl io "$SIM_UDID" screenshot "$1" 2>&1); then
               for d in $(echo "$err" | grep -o -- '--display=[0-9]*' | cut -d= -f2); do
                 xcrun simctl io "$SIM_UDID" screenshot --display="$d" "${1%.png}-display$d.png" || true
               done
+              best=$(ls -S "${1%.png}"-display*.png 2>/dev/null | head -1)
+              if [ -n "$best" ]; then mv "$best" "$1"; fi
+              rm -f "${1%.png}"-display*.png
             fi
           }
           APP=$(find "$DERIVED_DATA/Build/Products" -maxdepth 2 -name "*.app" -path "*iphonesimulator*" | head -1)
@@ -115,24 +119,27 @@ jobs:
         continue-on-error: true
         run: |
           mkdir -p screenshots
-          # Newer simulator images have more than one display; take whichever ones simctl lists then.
+          # Newer simulator images list more than one display, and only one of them shows the app;
+          # take each and keep the largest file, since the others are blank.
           snap() {
             if ! err=$(xcrun simctl io "$SIM_UDID" screenshot "$1" 2>&1); then
               for d in $(echo "$err" | grep -o -- '--display=[0-9]*' | cut -d= -f2); do
                 xcrun simctl io "$SIM_UDID" screenshot --display="$d" "${1%.png}-display$d.png" || true
               done
+              best=$(ls -S "${1%.png}"-display*.png 2>/dev/null | head -1)
+              if [ -n "$best" ]; then mv "$best" "$1"; fi
+              rm -f "${1%.png}"-display*.png
             fi
           }
           shot() {
             name=$1; shift
             xcrun simctl terminate "$SIM_UDID" "$BUNDLE_ID" 2>/dev/null || true
+            # The budget arguments start on the Budget tab; dimeapp:// links would stop at an "Open in Dime?" prompt.
             xcrun simctl launch "$SIM_UDID" "$BUNDLE_ID" -demoData varied "$@"
-            sleep 6
-            xcrun simctl openurl "$SIM_UDID" "dimeapp://budget"
-            sleep 5
+            sleep 9
             snap "screenshots/$name.png"
           }
-          shot 3-budgets
+          shot 3-budgets -budgetTab
           shot 4-rollover-detail-surplus -budgetSheet Food
           shot 5-rollover-detail-overspend -budgetSheet Coffee
           shot 6-rollover-detail-overall -budgetSheet overall

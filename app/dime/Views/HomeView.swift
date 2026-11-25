@@ -243,6 +243,15 @@ struct HomeView: View {
                 currentTab = "Settings"
             }
         }
+        #if DEBUG
+        .onAppear {
+            // `-budgetTab`, `-budgetSheet` and `-budgetEdit` (see BudgetView) start on the Budget tab, for screenshots.
+            let arguments = ProcessInfo.processInfo.arguments
+            if arguments.contains("-budgetTab") || arguments.contains("-budgetSheet") || arguments.contains("-budgetEdit") {
+                currentTab = "Budget"
+            }
+        }
+        #endif
     }
 }
 
