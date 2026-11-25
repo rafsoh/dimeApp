@@ -88,6 +88,21 @@ enum MainCurrencyChanger {
 
         return changed
     }
+
+    /// Quick Add templates follow the same rule, so they log in the currency their transactions would have.
+    /// There are only a few, so they change in one save. Call on the context's queue.
+    static func applyToTemplates(_ plan: MainCurrencyChangePlan, in context: NSManagedObjectContext) throws {
+        let request: NSFetchRequest<TemplateTransaction> = TemplateTransaction.fetchRequest()
+        request.predicate = plan.predicate
+
+        for template in try context.fetch(request) {
+            template.currencyCode = plan.target
+        }
+
+        if context.hasChanges {
+            try context.save()
+        }
+    }
 }
 
 final class MainCurrencyChangeManager: ObservableObject {
@@ -187,6 +202,8 @@ final class MainCurrencyChangeManager: ObservableObject {
             // must not move on while any are left.
             let result = Result { () throws -> Int in
                 var changed = 0
+
+                try MainCurrencyChanger.applyToTemplates(plan, in: context)
 
                 for _ in 0 ..< 3 {
                     changed += try MainCurrencyChanger.apply(plan, in: context)

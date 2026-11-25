@@ -71,36 +71,46 @@ final class StoreMigrationTests: XCTestCase {
         }
     }
 
-    // Model 2 is the only earlier version with MainBudget.
-    private var previousModel: NSManagedObjectModel? {
-        earlierModels.first { $0.entitiesByName["MainBudget"] != nil }
+    // Models 2 onward have MainBudget; model 3 added a currency to transactions, and model 4 one to templates.
+    private var modelTwo: NSManagedObjectModel? {
+        earlierModels.first { $0.entitiesByName["MainBudget"] != nil && $0.entitiesByName["Transaction"]?.attributesByName["currencyCode"] == nil }
     }
 
-    func testCurrentModelOnlyAddsAnOptionalCurrencyToTransactions() throws {
-        let previous = try XCTUnwrap(previousModel)
+    private var modelThree: NSManagedObjectModel? {
+        earlierModels.first { $0.entitiesByName["Transaction"]?.attributesByName["currencyCode"] != nil }
+    }
 
-        XCTAssertEqual(Set(currentModel.entitiesByName.keys), Set(previous.entitiesByName.keys))
+    func testModelThreeOnlyAddsAnOptionalCurrencyToTransactions() throws {
+        try assertOnlyAddsOptionalCurrency(from: XCTUnwrap(modelTwo), to: XCTUnwrap(modelThree), on: "Transaction")
+    }
 
-        for (name, entity) in currentModel.entitiesByName where name != "Transaction" {
+    func testCurrentModelOnlyAddsAnOptionalCurrencyToTemplates() throws {
+        try assertOnlyAddsOptionalCurrency(from: XCTUnwrap(modelThree), to: currentModel, on: "TemplateTransaction")
+    }
+
+    private func assertOnlyAddsOptionalCurrency(from previous: NSManagedObjectModel, to model: NSManagedObjectModel, on entityName: String) throws {
+        XCTAssertEqual(Set(model.entitiesByName.keys), Set(previous.entitiesByName.keys))
+
+        for (name, entity) in model.entitiesByName where name != entityName {
             XCTAssertEqual(entity.versionHash, previous.entitiesByName[name]?.versionHash, "\(name) changed")
         }
 
-        let transaction = try XCTUnwrap(currentModel.entitiesByName["Transaction"])
-        let previousTransaction = try XCTUnwrap(previous.entitiesByName["Transaction"])
-        XCTAssertEqual(Set(transaction.propertiesByName.keys), Set(previousTransaction.propertiesByName.keys).union(["currencyCode"]))
+        let entity = try XCTUnwrap(model.entitiesByName[entityName])
+        let previousEntity = try XCTUnwrap(previous.entitiesByName[entityName])
+        XCTAssertEqual(Set(entity.propertiesByName.keys), Set(previousEntity.propertiesByName.keys).union(["currencyCode"]))
 
-        for (name, property) in previousTransaction.propertiesByName {
-            XCTAssertEqual(transaction.propertiesByName[name]?.versionHash, property.versionHash, "Transaction.\(name) changed")
+        for (name, property) in previousEntity.propertiesByName {
+            XCTAssertEqual(entity.propertiesByName[name]?.versionHash, property.versionHash, "\(entityName).\(name) changed")
         }
 
-        let currency = try XCTUnwrap(transaction.attributesByName["currencyCode"])
+        let currency = try XCTUnwrap(entity.attributesByName["currencyCode"])
         XCTAssertEqual(currency.attributeType, .stringAttributeType)
         XCTAssertTrue(currency.isOptional)
         XCTAssertNil(currency.defaultValue)
     }
 
     func testModelTwoStoreMigratesWithNoCurrencyOnAnyTransaction() throws {
-        let previous = try XCTUnwrap(previousModel)
+        let previous = try XCTUnwrap(modelTwo)
         let storeURL = directory.appendingPathComponent("Main.sqlite")
         let expected = try writeFixture(to: storeURL, model: previous)
 

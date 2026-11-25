@@ -49,6 +49,7 @@ struct HomeView: View {
     @State var fromURL2: Bool = false
     @State var fromURL3: Bool = false
     @State var fromURL4: Bool = false
+    @State var fromURL5: Bool = false
 
     @State var launchAdd: Bool = false
     @State var launchSearch: Bool = false
@@ -184,6 +185,8 @@ struct HomeView: View {
                             fromURL3 = true
                         } else if url.host == "budget" {
                             fromURL4 = true
+                        } else if url.host == "quickAdd" {
+                            fromURL5 = true
                         }
                     }
             }
@@ -223,6 +226,11 @@ struct HomeView: View {
             if appLockVM.isAppLockEnabled && fromURL4 {
                 currentTab = "Budget"
             }
+
+            if appLockVM.isAppLockEnabled && fromURL5 {
+                currentTab = "Settings"
+                fromURL5 = false
+            }
         }
         .onOpenURL { url in
             if url.host == "search" {
@@ -231,6 +239,8 @@ struct HomeView: View {
                 currentTab = "Insights"
             } else if url.host == "budget" {
                 currentTab = "Budget"
+            } else if url.host == "quickAdd" {
+                currentTab = "Settings"
             }
         }
     }

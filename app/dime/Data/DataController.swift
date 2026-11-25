@@ -368,6 +368,8 @@ class DataController: ObservableObject {
         // NSErrorMergePolicy the first overlapping change makes this and every later save fail.
         container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
 
+        observeExtensionWrites(isAppExtension: isAppExtension)
+
         if isCloudKitSyncEnabled {
             observeCloudKitSync()
         }
@@ -455,7 +457,55 @@ class DataController: ObservableObject {
         scheduleRecurringFallback()
     }
 
+    // MARK: Writes from extensions
+
+    /// Marks saves made by the widget extension, such as Quick Add, so the app can find them in persistent history.
+    private static let extensionAuthor = "extension"
+    private var extensionHistoryToken: NSPersistentHistoryToken?
+
+    /// The app's view context only merges its own coordinator's saves by itself. Saves from the widget extension
+    /// reach the same file through the app group, so the app reads them from persistent history instead.
+    private func observeExtensionWrites(isAppExtension: Bool) {
+        if isAppExtension {
+            container.viewContext.transactionAuthor = Self.extensionAuthor
+            return
+        }
+
+        extensionHistoryToken = container.persistentStoreCoordinator.currentPersistentHistoryToken(fromStores: nil)
+
+        NotificationCenter.default.addObserver(forName: .NSPersistentStoreRemoteChange, object: container.persistentStoreCoordinator, queue: .main) { [weak self] _ in
+            self?.mergeExtensionWrites()
+        }
+    }
+
+    private func mergeExtensionWrites() {
+        guard extensionHistoryToken != nil else {
+            return
+        }
+
+        let request = NSPersistentHistoryChangeRequest.fetchHistory(after: extensionHistoryToken)
+
+        if let fetchRequest = NSPersistentHistoryTransaction.fetchRequest {
+            fetchRequest.predicate = NSPredicate(format: "%K == %@", #keyPath(NSPersistentHistoryTransaction.author), Self.extensionAuthor)
+            request.fetchRequest = fetchRequest
+        }
+
+        do {
+            let result = try container.viewContext.execute(request) as? NSPersistentHistoryResult
+            let transactions = result?.result as? [NSPersistentHistoryTransaction] ?? []
+
+            for transaction in transactions {
+                container.viewContext.mergeChanges(fromContextDidSave: transaction.objectIDNotification())
+                extensionHistoryToken = transaction.token
+            }
+        } catch {
+            logger.error("Reading changes from extensions failed: \(String(describing: error), privacy: .public)")
+        }
+    }
+
     func applicationWillEnterForeground() {
+        mergeExtensionWrites()
+
         if isCloudKitSyncEnabled {
             recurringGate.needsFreshImport()
             scheduleRecurringFallback()
@@ -717,13 +767,78 @@ class DataController: ObservableObject {
         return transaction
     }
 
-    func newTemplateTransaction(order: Int) {
-        if let match = getTemplateTransaction(order: order) {
-            // Templates have no currency and were made in the main currency.
-            _ = newTransaction(note: match.note ?? "", category: match.category, income: match.income, amount: match.amount, currencyCode: currencyConverter.mainCurrency, date: Date.now, repeatType: Int(match.recurringType), repeatCoefficient: Int(match.recurringCoefficient), delay: false)
+    // MARK: Quick Add templates
 
-            addedTransaction = true
+    /// Templates in the order Settings and the widgets show them.
+    func quickAddTemplates() -> [TemplateTransaction] {
+        let request: NSFetchRequest<TemplateTransaction> = TemplateTransaction.fetchRequest()
+        // The widget extension holds on to its context, and the app edits templates from another process.
+        request.shouldRefreshRefetchedObjects = true
+
+        // Several devices can sync templates with the same order, so the id breaks ties the same way on each.
+        return results(for: request).sorted {
+            ($0.order, $0.id?.uuidString ?? "") < ($1.order, $1.id?.uuidString ?? "")
         }
+    }
+
+    /// The template a widget button names, read fresh from the store. Nil when it has since been deleted.
+    func quickAddTemplate(withURI uri: URL) -> TemplateTransaction? {
+        guard let objectID = container.persistentStoreCoordinator.managedObjectID(forURIRepresentation: uri) else {
+            return nil
+        }
+
+        let request: NSFetchRequest<TemplateTransaction> = TemplateTransaction.fetchRequest()
+        request.predicate = NSPredicate(format: "self == %@", objectID)
+        request.shouldRefreshRefetchedObjects = true
+        request.fetchLimit = 1
+
+        return results(for: request).first
+    }
+
+    var canAddQuickAddTemplate: Bool {
+        quickAddTemplates().count < TemplateTransaction.quickAddLimit
+    }
+
+    var nextQuickAddOrder: Int16 {
+        (quickAddTemplates().map(\.order).max() ?? -1) + 1
+    }
+
+    /// Adds a template with a transaction's details. They aren't linked: changing or deleting one never touches the other.
+    @discardableResult
+    func addQuickAddTemplate(from transaction: Transaction) -> TemplateTransaction? {
+        guard canAddQuickAddTemplate else {
+            return nil
+        }
+
+        let template = TemplateTransaction(context: container.viewContext)
+        template.id = UUID()
+        template.order = nextQuickAddOrder
+        template.note = transaction.note
+        template.amount = transaction.amount
+        template.income = transaction.income
+        template.category = transaction.category
+        template.currencyCode = transaction.currencyCode
+
+        save()
+
+        return template
+    }
+
+    func deleteQuickAddTemplate(_ template: TemplateTransaction) {
+        container.viewContext.delete(template)
+
+        // Number the rest from 0 again, so new templates always go at the end.
+        for (index, remaining) in quickAddTemplates().filter({ $0 != template }).enumerated() where remaining.order != Int16(index) {
+            remaining.order = Int16(index)
+        }
+
+        save()
+    }
+
+    /// Logs a transaction now with the template's details. It keeps no link to the template.
+    @discardableResult
+    func logQuickAddTemplate(_ template: TemplateTransaction) -> Transaction {
+        newTransaction(note: template.wrappedNote, category: template.category, income: template.income, amount: template.amount, currencyCode: template.currencyCode ?? currencyConverter.mainCurrency, date: Date.now, repeatType: 0, repeatCoefficient: 1, delay: false)
     }
 
     // fetching
@@ -732,21 +847,6 @@ class DataController: ObservableObject {
         let itemRequest: NSFetchRequest<Transaction> = Transaction.fetchRequest()
         itemRequest.predicate = NSPredicate(format: "%K > %i", #keyPath(Transaction.recurringType), 0)
         return itemRequest
-    }
-
-    func getTemplateTransaction(order: Int) -> TemplateTransaction? {
-        let itemRequest: NSFetchRequest<TemplateTransaction> = TemplateTransaction.fetchRequest()
-
-        itemRequest.predicate = NSPredicate(format: "order == %d", order)
-        // Several devices can sync a template with the same order. Resolve to the same template on every
-        // device and never delete the others here, or each device deletes a different copy.
-        return results(for: itemRequest).min { ($0.id?.uuidString ?? "") < ($1.id?.uuidString ?? "") }
-    }
-
-    func getAllTemplateTransactions() -> [TemplateTransaction] {
-        let itemRequest: NSFetchRequest<TemplateTransaction> = TemplateTransaction.fetchRequest()
-
-        return results(for: itemRequest)
     }
 
     func fetchRequestForRecentTransactions(type: TimePeriod) -> NSFetchRequest<Transaction> {
