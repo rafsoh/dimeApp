@@ -85,6 +85,10 @@ private struct BudgetRecord: Codable {
     var startDate: Date?
     var type: Int16
     var categoryRef: String?
+    // Rollover, added later: optional so older backups still decode.
+    var rolloverEnabled: Bool?
+    var rolloverAnchor: Date?
+    var rolloverBalance: Double?
 }
 
 private struct MainBudgetRecord: Codable {
@@ -93,6 +97,9 @@ private struct MainBudgetRecord: Codable {
     var green: Bool
     var startDate: Date?
     var type: Int16
+    var rolloverEnabled: Bool?
+    var rolloverAnchor: Date?
+    var rolloverBalance: Double?
 }
 
 private struct TemplateRecord: Codable {
@@ -171,10 +178,10 @@ struct BackupStore {
                 TransactionRecord(id: $0.id, note: $0.note, amount: $0.amount, date: $0.date, day: $0.day, month: $0.month, income: $0.income, onceRecurring: $0.onceRecurring, recurringType: $0.recurringType, recurringCoefficient: $0.recurringCoefficient, categoryRef: $0.category.map(Self.reference(for:)), currencyCode: $0.currencyCode)
             },
             budgets: budgets.map {
-                BudgetRecord(id: $0.id, amount: $0.amount, dateCreated: $0.dateCreated, green: $0.green, startDate: $0.startDate, type: $0.type, categoryRef: $0.category.map(Self.reference(for:)))
+                BudgetRecord(id: $0.id, amount: $0.amount, dateCreated: $0.dateCreated, green: $0.green, startDate: $0.startDate, type: $0.type, categoryRef: $0.category.map(Self.reference(for:)), rolloverEnabled: $0.rolloverEnabled, rolloverAnchor: $0.rolloverAnchor, rolloverBalance: $0.rolloverBalance)
             },
             mainBudgets: mainBudgets.map {
-                MainBudgetRecord(amount: $0.amount, dateCreated: $0.dateCreated, green: $0.green, startDate: $0.startDate, type: $0.type)
+                MainBudgetRecord(amount: $0.amount, dateCreated: $0.dateCreated, green: $0.green, startDate: $0.startDate, type: $0.type, rolloverEnabled: $0.rolloverEnabled, rolloverAnchor: $0.rolloverAnchor, rolloverBalance: $0.rolloverBalance)
             },
             templates: templates.map {
                 TemplateRecord(id: $0.id, amount: $0.amount, income: $0.income, note: $0.note, order: $0.order, recurringCoefficient: $0.recurringCoefficient, recurringType: $0.recurringType, categoryRef: $0.category.map(Self.reference(for:)), currencyCode: $0.currencyCode)
@@ -291,6 +298,9 @@ struct BackupStore {
             budget.startDate = record.startDate
             budget.type = record.type
             budget.category = category
+            budget.rolloverEnabled = record.rolloverEnabled ?? false
+            budget.rolloverAnchor = record.rolloverAnchor
+            budget.rolloverBalance = record.rolloverBalance ?? 0
             budgetIDs.insert(id)
             result.budgets += 1
         }
@@ -304,6 +314,9 @@ struct BackupStore {
             mainBudget.green = record.green
             mainBudget.startDate = record.startDate
             mainBudget.type = record.type
+            mainBudget.rolloverEnabled = record.rolloverEnabled ?? false
+            mainBudget.rolloverAnchor = record.rolloverAnchor
+            mainBudget.rolloverBalance = record.rolloverBalance ?? 0
             result.budgets += 1
         }
 

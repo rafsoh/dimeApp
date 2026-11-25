@@ -457,3 +457,32 @@
 // shortcuts
 "Category for an income. Choose No Category to log it without one." = "Категория дохода. Выберите «Без категории», чтобы добавить его без категории.";
 "Category for an expense. Choose No Category to log it without one." = "Категория расхода. Выберите «Без категории», чтобы добавить его без категории.";
+
+// budget rollover
+"+%@ rolled over" = "+%@ перенесено";
+"−%@ overspend rolled over" = "−%@ перерасхода перенесено";
+"Leftover rolls over %@" = "Остаток перенесётся: %@";
+"Nothing rolled over" = "Ничего не перенесено";
+"Rolls over" = "С переносом";
+"%@ budget %@ %@ = %@" = "Бюджет %@ %@ %@ = %@";
+"Rollover" = "Перенос";
+"Whether what's left, or overspent, carries into the next period" = "Переносится ли остаток или перерасход на следующий период";
+"%@ overspend" = "перерасход %@";
+"%@ left over" = "остаток %@";
+"Rollover starts this period" = "Перенос начнётся с этого периода";
+"What's left at the end of this period, or overspent, carries into the next one. Earlier periods aren't counted." = "Остаток или перерасход в конце этого периода перейдёт в следующий. Прошлые периоды не учитываются.";
+"Turn On Rollover" = "Включить перенос";
+"Turn off rollover?" = "Выключить перенос?";
+"The %@ carried into this period will be cleared. Turning rollover back on starts fresh." = "Перенесённый в этот период %@ будет сброшен. Если снова включить перенос, он начнётся заново.";
+"Leftovers will stop carrying over. Turning rollover back on starts fresh." = "Остаток больше не будет переноситься. Если снова включить перенос, он начнётся заново.";
+"Turn Off" = "Выключить";
+"Reset rollover?" = "Сбросить перенос?";
+"Changing how often this budget repeats clears the %@ carried over. Rollover starts again from this period." = "Изменение периодичности бюджета сбросит перенесённый %@. Перенос начнётся заново с этого периода.";
+"Changing the category clears the %@ carried over. Rollover starts again from this period." = "Изменение категории сбросит перенесённый %@. Перенос начнётся заново с этого периода.";
+"Changing how often this budget repeats restarts rollover from this period." = "Изменение периодичности бюджета перезапустит перенос с этого периода.";
+"Changing the category restarts rollover from this period." = "Изменение категории перезапустит перенос с этого периода.";
+"Apply from this period?" = "Применить с этого периода?";
+"Your changes apply from this period on, and earlier periods keep their old settings." = "Изменения применятся с этого периода, а прошлые периоды сохранят прежние настройки.";
+"The new amount applies from this period on, and earlier periods keep the old one." = "Новая сумма применится с этого периода, а прошлые периоды сохранят прежнюю.";
+"The new reset day applies from this period on, and earlier periods keep the old one." = "Новый день начала применится с этого периода, а прошлые периоды сохранят прежний.";
+"The %@ carried over so far is kept." = "Уже перенесённый %@ сохранится.";

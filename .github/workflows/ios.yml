@@ -97,6 +97,32 @@ jobs:
           sleep 4
           xcrun simctl io "$SIM_UDID" screenshot screenshots/2-new-expense.png
 
+      - name: Take budget rollover screenshots
+        # Relaunches against the seeded `-demoData varied` store (in memory, so every launch starts
+        # from the same data): Overall and Food roll over a surplus, Coffee an overspend, Groceries doesn't roll over.
+        continue-on-error: true
+        run: |
+          mkdir -p screenshots
+          shot() {
+            name=$1; shift
+            xcrun simctl terminate "$SIM_UDID" "$BUNDLE_ID" 2>/dev/null || true
+            xcrun simctl launch "$SIM_UDID" "$BUNDLE_ID" -demoData varied "$@"
+            sleep 6
+            xcrun simctl openurl "$SIM_UDID" "dimeapp://budget"
+            sleep 5
+            xcrun simctl io "$SIM_UDID" screenshot "screenshots/$name.png"
+          }
+          shot 3-budgets
+          shot 4-rollover-detail-surplus -budgetSheet Food
+          shot 5-rollover-detail-overspend -budgetSheet Coffee
+          shot 6-rollover-detail-overall -budgetSheet overall
+          shot 7-rollover-edit-sentence -budgetEdit Food
+          shot 8-rollover-edit-menu -budgetEdit Food -budgetEditStep rolloverMenu
+          shot 9-rollover-alert-turn-on -budgetEdit Groceries -budgetEditStep enableRollover
+          shot 10-rollover-alert-turn-off -budgetEdit Food -budgetEditStep disableRollover
+          shot 11-rollover-alert-reset -budgetEdit Food -budgetEditStep changeFrequency
+          shot 12-rollover-new-budget -budgetEdit new
+
       - name: Upload screenshots
         if: always()
         uses: actions/upload-artifact@v4

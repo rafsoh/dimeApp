@@ -457,3 +457,32 @@
 // shortcuts
 "Category for an income. Choose No Category to log it without one." = "Catégorie d’un revenu. Choisissez Sans catégorie pour l’enregistrer sans catégorie.";
 "Category for an expense. Choose No Category to log it without one." = "Catégorie d’une dépense. Choisissez Sans catégorie pour l’enregistrer sans catégorie.";
+
+// budget rollover
+"+%@ rolled over" = "+%@ reportés";
+"−%@ overspend rolled over" = "−%@ de dépassement reportés";
+"Leftover rolls over %@" = "Le reste est reporté %@";
+"Nothing rolled over" = "Rien de reporté";
+"Rolls over" = "Report activé";
+"%@ budget %@ %@ = %@" = "Budget de %@ %@ %@ = %@";
+"Rollover" = "Report";
+"Whether what's left, or overspent, carries into the next period" = "Indique si le reste, ou le dépassement, est reporté sur la période suivante";
+"%@ overspend" = "dépassement de %@";
+"%@ left over" = "reste de %@";
+"Rollover starts this period" = "Le report commence cette période";
+"What's left at the end of this period, or overspent, carries into the next one. Earlier periods aren't counted." = "Ce qui reste à la fin de cette période, ou le dépassement, est reporté sur la suivante. Les périodes précédentes ne sont pas prises en compte.";
+"Turn On Rollover" = "Activer le report";
+"Turn off rollover?" = "Désactiver le report ?";
+"The %@ carried into this period will be cleared. Turning rollover back on starts fresh." = "Le %@ reporté sur cette période sera effacé. Réactiver le report repartira de zéro.";
+"Leftovers will stop carrying over. Turning rollover back on starts fresh." = "Le reste ne sera plus reporté. Réactiver le report repartira de zéro.";
+"Turn Off" = "Désactiver";
+"Reset rollover?" = "Réinitialiser le report ?";
+"Changing how often this budget repeats clears the %@ carried over. Rollover starts again from this period." = "Changer la fréquence de ce budget efface le %@ reporté. Le report recommence à partir de cette période.";
+"Changing the category clears the %@ carried over. Rollover starts again from this period." = "Changer la catégorie efface le %@ reporté. Le report recommence à partir de cette période.";
+"Changing how often this budget repeats restarts rollover from this period." = "Changer la fréquence de ce budget fait repartir le report de cette période.";
+"Changing the category restarts rollover from this period." = "Changer la catégorie fait repartir le report de cette période.";
+"Apply from this period?" = "Appliquer à partir de cette période ?";
+"Your changes apply from this period on, and earlier periods keep their old settings." = "Vos modifications s'appliquent à partir de cette période ; les périodes précédentes gardent leurs anciens réglages.";
+"The new amount applies from this period on, and earlier periods keep the old one." = "Le nouveau montant s'applique à partir de cette période ; les périodes précédentes gardent l'ancien.";
+"The new reset day applies from this period on, and earlier periods keep the old one." = "Le nouveau jour de début s'applique à partir de cette période ; les périodes précédentes gardent l'ancien.";
+"The %@ carried over so far is kept." = "Le %@ reporté jusqu'ici est conservé.";

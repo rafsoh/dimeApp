@@ -111,7 +111,8 @@ struct BudgetWidgetData {
 
         let period = BudgetPeriod(type: Int(budget.type), start: budget.wrappedDate).current
         let spending = transactions(in: period, category: budget.category).total(using: dataController.currencyConverter)
-        let snapshot = BudgetSnapshot(amount: budget.amount, spent: spending.value, period: period)
+        let carry = dataController.rolloverCarryIn(for: budget, category: budget.category, at: period.start)
+        let snapshot = BudgetSnapshot(amount: budget.amount, spent: spending.value, period: period, carryIn: carry)
 
         return BudgetWidgetData(name: budget.wrappedName, emoji: budget.wrappedEmoji, snapshot: snapshot,
                             segments: [BudgetMeterSegment(id: "fill", share: snapshot.share, colour: Color(hex: budget.wrappedColour))],
@@ -126,7 +127,8 @@ struct BudgetWidgetData {
         let period = BudgetPeriod(type: Int(budget.type), start: budget.wrappedDate).current
         let transactions = transactions(in: period, category: nil)
         let spending = transactions.total(using: dataController.currencyConverter)
-        let snapshot = BudgetSnapshot(amount: budget.amount, spent: spending.value, period: period)
+        let carry = dataController.rolloverCarryIn(for: budget, category: nil, at: period.start)
+        let snapshot = BudgetSnapshot(amount: budget.amount, spent: spending.value, period: period, carryIn: carry)
 
         return BudgetWidgetData(name: String(localized: "Overall"), emoji: nil, snapshot: snapshot,
                             segments: budgetStripSegments(transactions, denominator: max(snapshot.amount, snapshot.spent)),

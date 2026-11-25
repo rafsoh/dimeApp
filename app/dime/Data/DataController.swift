@@ -1727,7 +1727,21 @@ class DataController: ObservableObject {
         var leftover = transactions.total(using: currencyConverter)
         leftover.value = budgetAmount - leftover.value
 
+        let rolling: RolloverBudget? = overallBudget.map { $0 as RolloverBudget } ?? budget
+        if let rolling, let carry = rolloverCarryIn(for: rolling, category: budget?.category, at: rolling.startDate ?? Date.now) {
+            leftover.value += carry
+        }
+
         return leftover
+    }
+
+    /// What rolls into the period starting at `start`, or nil when the budget doesn't roll over or the period starts before rollover did.
+    func rolloverCarryIn(for budget: RolloverBudget, category: Category?, at start: Date) -> Double? {
+        guard let rollover = BudgetRollover(budget), rollover.periods(until: start) != nil else { return nil }
+        let request: NSFetchRequest<Transaction> = Transaction.fetchRequest()
+        request.predicate = BudgetRollover.spendingPredicate(rollover, before: start, category: category)
+        let spent = results(for: request).total(using: currencyConverter).value
+        return rollover.carryIn(at: start, spentSinceAnchor: spent)
     }
 
     func fetchRequestForMainBudgetTransactions(budget: MainBudget) -> NSFetchRequest<Transaction> {
@@ -2474,6 +2488,7 @@ extension DataController {
     /// Budgets sized from the seeded spending so each lands in a known state: overall and Food on track,
     /// Groceries close to its limit, a weekly Coffee budget over, a yearly Shopping budget and an untouched Health budget.
     /// `-demoBudgets none` seeds no budgets; `-demoBudgets over` puts the overall budget over.
+    /// Overall and Food roll over from earlier months, and Coffee carries a small overspend from last week.
     private func seedDemoBudgets(food: Category, groceries: Category, coffee: Category, shopping: Category, health: Category) {
         let arguments = ProcessInfo.processInfo.arguments
         let mode = arguments.firstIndex(of: "-demoBudgets").flatMap { $0 + 1 < arguments.count ? arguments[$0 + 1] : nil }
@@ -2514,8 +2529,12 @@ extension DataController {
         overall.startDate = month
         overall.type = 3
         overall.amount = mode == "over" ? rounded(spent(nil, since: month) * 0.85) : rounded(spent(nil, since: month) / monthElapsed * 1.12)
+        overall.rolloverEnabled = true
+        overall.rolloverAnchor = calendar.date(byAdding: .month, value: -1, to: month)
+        overall.rolloverBalance = 0
 
-        func budget(_ category: Category, type: Int16, start: Date, amount: Double, order: Int) {
+        @discardableResult
+        func budget(_ category: Category, type: Int16, start: Date, amount: Double, order: Int) -> Budget {
             let budget = Budget(context: context)
             budget.id = UUID()
             budget.category = category
@@ -2523,11 +2542,17 @@ extension DataController {
             budget.startDate = start
             budget.amount = amount
             budget.dateCreated = now.addingTimeInterval(Double(order))
+            return budget
         }
 
-        budget(food, type: 3, start: month, amount: rounded(spent(food, since: month) / monthElapsed * 1.2), order: 0)
+        let foodBudget = budget(food, type: 3, start: month, amount: rounded(spent(food, since: month) / monthElapsed * 1.2), order: 0)
         budget(groceries, type: 3, start: month, amount: rounded(spent(groceries, since: month) / 0.92), order: 1)
-        budget(coffee, type: 2, start: week, amount: max(5, (spent(coffee, since: week) * 0.75).rounded()), order: 2)
+        foodBudget.rolloverEnabled = true
+        foodBudget.rolloverAnchor = calendar.date(byAdding: .month, value: -2, to: month)
+        let coffeeBudget = budget(coffee, type: 2, start: week, amount: max(5, (spent(coffee, since: week) * 0.75).rounded()), order: 2)
+        coffeeBudget.rolloverEnabled = true
+        coffeeBudget.rolloverAnchor = week
+        coffeeBudget.rolloverBalance = -6
         budget(shopping, type: 4, start: year, amount: rounded(spent(shopping, since: year) / elapsed(since: year, component: .year, value: 1) * 1.3), order: 3)
         if spent(health, since: month) == 0 {
             budget(health, type: 3, start: month, amount: 60, order: 4)

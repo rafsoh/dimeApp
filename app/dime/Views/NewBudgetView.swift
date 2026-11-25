@@ -15,7 +15,17 @@ struct InstructionHeadings {
 }
 
 private enum BudgetSentenceToken: Hashable {
-    case amount, category, period, start
+    case amount, category, period, start, rollover
+}
+
+/// The alert shown before saving an edit that starts, stops or changes a budget's rollover.
+private struct RolloverNotice: Identifiable {
+    let id = UUID()
+    let change: RolloverChange
+    let title: String
+    let message: String
+    let confirm: String
+    let isDestructive: Bool
 }
 
 private enum BudgetEditor: Hashable {
@@ -50,6 +60,10 @@ struct BrandNewBudgetView: View {
     @State private var showPeriodMenu = false
     @State private var showWeekdayMenu = false
     @State private var showStartDateSheet = false
+    @State private var showRolloverMenu = false
+
+    @State private var rollover: Bool
+    @State private var rolloverNotice: RolloverNotice?
 
     @State private var showToast = false
     @State private var toastTitle = ""
@@ -151,6 +165,17 @@ struct BrandNewBudgetView: View {
         .sheet(isPresented: $showStartDateSheet) {
             BudgetStartDateSheet(date: $chosenDayYear, range: oneYearAgo ... Date.now)
         }
+        .alert(rolloverNotice?.title ?? "", isPresented: Binding(get: { rolloverNotice != nil }, set: { if !$0 { rolloverNotice = nil } }), presenting: rolloverNotice) { notice in
+            Button(notice.confirm, role: notice.isDestructive ? ButtonRole.destructive : nil) {
+                save(rolloverChange: notice.change)
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: { notice in
+            Text(notice.message)
+        }
+        #if DEBUG
+        .onAppear(perform: runScreenshotStep)
+        #endif
     }
 
     var header: some View {
@@ -264,22 +289,27 @@ struct BrandNewBudgetView: View {
                     categoryToken
 
                     lead("every").layoutValue(key: KeepWithNext.self, value: true)
-                    periodClauseEnd
+                    periodToken
 
                     if timeFrame != .day {
                         lead("starting").layoutValue(key: KeepWithNext.self, value: true)
-                        endOfSentence(startToken)
+                        startToken
                     }
+
+                    lead("with").layoutValue(key: KeepWithNext.self, value: true)
+                    endOfSentence(rolloverToken)
                 }
             } else {
                 VStack(alignment: .leading, spacing: 6) {
                     clause("Spend at most") { amountToken }
                     clause("on") { categoryToken }
-                    clause("every") { periodClauseEnd }
+                    clause("every") { periodToken }
 
                     if timeFrame != .day {
-                        clause("starting") { endOfSentence(startToken) }
+                        clause("starting") { startToken }
                     }
+
+                    clause("with") { endOfSentence(rolloverToken) }
                 }
             }
         }
@@ -309,14 +339,6 @@ struct BrandNewBudgetView: View {
                 .font(sentenceFont)
                 .foregroundColor(Color.PrimaryText)
                 .accessibilityHidden(true)
-        }
-    }
-
-    @ViewBuilder var periodClauseEnd: some View {
-        if timeFrame == .day {
-            endOfSentence(periodToken)
-        } else {
-            periodToken
         }
     }
 
@@ -423,6 +445,37 @@ struct BrandNewBudgetView: View {
                 }
             }
         }
+    }
+
+    var rolloverToken: some View {
+        SentenceTokenButton(
+            text: rolloverText(rollover),
+            font: sentenceFont,
+            foreground: rollover ? Color.PrimaryText : Color.SubtitleText,
+            tint: nil,
+            isFocused: false,
+            isError: false,
+            shake: false,
+            accessibilityLabel: Text("Rollover") + Text(", ") + Text(rolloverText(rollover))
+        ) {
+            closeEditor {
+                showRolloverMenu = true
+            }
+        }
+        .accessibilityHint("Whether what's left, or overspent, carries into the next period")
+        .popover(present: $showRolloverMenu, attributes: popoverAttributes) {
+            GlassPopoverMenu {
+                ForEach([false, true], id: \.self) { value in
+                    GlassPopoverRow(LocalizedStringKey(rolloverText(value)), isSelected: value == rollover) {
+                        selectRollover(value)
+                    }
+                }
+            }
+        }
+    }
+
+    func rolloverText(_ value: Bool) -> String {
+        value ? String(localized: "rollover") : String(localized: "no rollover")
     }
 
     func popoverAttributes(_ attributes: inout Popover.Attributes) {
@@ -608,6 +661,20 @@ struct BrandNewBudgetView: View {
         }
     }
 
+    func selectRollover(_ value: Bool) {
+        guard value != rollover else {
+            showRolloverMenu = false
+            return
+        }
+
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        rollover = value
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            showRolloverMenu = false
+        }
+    }
+
     func finishStartEditor() {
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         withAnimation(editorAnimation) {
@@ -673,20 +740,156 @@ struct BrandNewBudgetView: View {
             }
             return
         }
+
+        let change = pendingRolloverChange
+        if let notice = notice(for: change) {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            rolloverNotice = notice
+            return
+        }
+
+        save(rolloverChange: change)
+    }
+
+    /// The budget being edited, if any.
+    var editedBudget: RolloverBudget? {
+        if let toEditBudget {
+            return toEditBudget
+        }
+        return toEditMainBudget
+    }
+
+    /// The first day of the period the edited budget is in now, before any changes.
+    var originalCurrentStart: Date? {
+        guard let budget = editedBudget else { return nil }
+        return BudgetPeriod(type: Int(budget.type), start: budget.startDate ?? Date.now).current.start
+    }
+
+    /// The first day of the current period with the chosen settings.
+    var newCurrentStart: Date {
+        BudgetPeriod(type: budgetTypeInteger(timeFrame), start: computedStartDate()).current.start
+    }
+
+    private var pendingRolloverChange: RolloverChange {
+        guard let budget = editedBudget else {
+            return rollover ? .start : .unchanged
+        }
+
+        return RolloverChange.make(
+            wasEnabled: budget.rolloverEnabled,
+            isEnabled: rollover,
+            isNew: false,
+            typeChanged: Int(budget.type) != budgetTypeInteger(timeFrame),
+            categoryChanged: toEditBudget != nil && toEditBudget?.category != selectedCategory,
+            amountChanged: budget.amount != price,
+            startChanged: originalCurrentStart != newCurrentStart
+        )
+    }
+
+    /// What has rolled into the edited budget's current period so far, under its saved settings.
+    var currentCarry: Double {
+        guard let budget = editedBudget, let start = originalCurrentStart else { return 0 }
+        return dataController.rolloverCarryIn(for: budget, category: toEditBudget?.category, at: start) ?? 0
+    }
+
+    /// "$42 left over" or "$18 overspend".
+    func carryPhrase(_ carry: Double) -> String {
+        let money = BudgetFormatter.current.money(carry)
+        return carry < 0 ? String(localized: "\(money) overspend") : String(localized: "\(money) left over")
+    }
+
+    /// New budgets need no alert; edits explain what will happen to rollover, unless nothing carried would be lost or moved.
+    private func notice(for change: RolloverChange) -> RolloverNotice? {
+        guard let budget = editedBudget else { return nil }
+        let carry = currentCarry
+        let hasCarry = abs(carry) >= 0.005
+        // Rollover that began this period has nothing earlier to keep or lose.
+        let startedThisPeriod = (budget.rolloverAnchor ?? .distantPast) >= (originalCurrentStart ?? .distantFuture)
+
+        switch change {
+        case .unchanged:
+            return nil
+        case .start:
+            return RolloverNotice(
+                change: change,
+                title: String(localized: "Rollover starts this period"),
+                message: String(localized: "What's left at the end of this period, or overspent, carries into the next one. Earlier periods aren't counted."),
+                confirm: String(localized: "Turn On Rollover"),
+                isDestructive: false
+            )
+        case .stop:
+            return RolloverNotice(
+                change: change,
+                title: String(localized: "Turn off rollover?"),
+                message: hasCarry
+                    ? String(localized: "The \(carryPhrase(carry)) carried into this period will be cleared. Turning rollover back on starts fresh.")
+                    : String(localized: "Leftovers will stop carrying over. Turning rollover back on starts fresh."),
+                confirm: String(localized: "Turn Off"),
+                isDestructive: true
+            )
+        case .reset:
+            guard hasCarry || !startedThisPeriod else { return nil }
+            let typeChanged = Int(budget.type) != budgetTypeInteger(timeFrame)
+            let message: String
+            if hasCarry {
+                message = typeChanged
+                    ? String(localized: "Changing how often this budget repeats clears the \(carryPhrase(carry)) carried over. Rollover starts again from this period.")
+                    : String(localized: "Changing the category clears the \(carryPhrase(carry)) carried over. Rollover starts again from this period.")
+            } else {
+                message = typeChanged
+                    ? String(localized: "Changing how often this budget repeats restarts rollover from this period.")
+                    : String(localized: "Changing the category restarts rollover from this period.")
+            }
+            return RolloverNotice(
+                change: change,
+                title: String(localized: "Reset rollover?"),
+                message: message,
+                confirm: String(localized: "Save"),
+                isDestructive: true
+            )
+        case .lockIn:
+            guard hasCarry || !startedThisPeriod else { return nil }
+            let amountChanged = budget.amount != price
+            let startChanged = originalCurrentStart != newCurrentStart
+            let first: String
+            if amountChanged && startChanged {
+                first = String(localized: "Your changes apply from this period on, and earlier periods keep their old settings.")
+            } else if amountChanged {
+                first = String(localized: "The new amount applies from this period on, and earlier periods keep the old one.")
+            } else {
+                first = String(localized: "The new reset day applies from this period on, and earlier periods keep the old one.")
+            }
+            let second = hasCarry ? " " + String(localized: "The \(carryPhrase(carry)) carried over so far is kept.") : ""
+            return RolloverNotice(
+                change: change,
+                title: String(localized: "Apply from this period?"),
+                message: first + second,
+                confirm: String(localized: "Save"),
+                isDestructive: false
+            )
+        }
+    }
+
+    func save(rolloverChange change: RolloverChange) {
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
 
+        // Worked out under the saved settings, before they change.
+        let carry = change == .lockIn ? currentCarry : 0
         let budgetType = Int16(budgetTypeInteger(timeFrame))
         let startDate = computedStartDate()
+        let currentStart = newCurrentStart
 
         if let budget = toEditBudget {
             budget.category = selectedCategory
             budget.startDate = startDate
             budget.amount = price
             budget.type = budgetType
+            change.apply(to: budget, currentStart: currentStart, carry: carry)
         } else if let budget = toEditMainBudget {
             budget.startDate = startDate
             budget.amount = price
             budget.type = budgetType
+            change.apply(to: budget, currentStart: currentStart, carry: carry)
         } else if isOverall {
             guard !overallBudgetCreated else {
                 dismiss()
@@ -697,6 +900,7 @@ struct BrandNewBudgetView: View {
             budget.startDate = startDate
             budget.amount = price
             budget.type = budgetType
+            change.apply(to: budget, currentStart: currentStart, carry: 0)
         } else if let category = selectedCategory, category.budget == nil {
             let budget = Budget(context: moc)
             budget.category = category
@@ -705,6 +909,7 @@ struct BrandNewBudgetView: View {
             budget.dateCreated = Date.now
             budget.type = budgetType
             budget.id = UUID()
+            change.apply(to: budget, currentStart: currentStart, carry: 0)
         }
 
         dataController.save()
@@ -817,7 +1022,35 @@ struct BrandNewBudgetView: View {
         _chosenDayMonth = State(initialValue: monthDay)
         _chosenDayYear = State(initialValue: yearDate)
         _activeEditor = State(initialValue: toEditBudget == nil && toEditMainBudget == nil ? .amount : nil)
+        _rollover = State(initialValue: toEditBudget?.rolloverEnabled ?? toEditMainBudget?.rolloverEnabled ?? false)
     }
+
+    #if DEBUG
+    /// `-budgetEditStep rolloverMenu|enableRollover|disableRollover|changeFrequency` puts the sheet in a state worth a screenshot.
+    func runScreenshotStep() {
+        let arguments = ProcessInfo.processInfo.arguments
+        guard let index = arguments.firstIndex(of: "-budgetEditStep"), index + 1 < arguments.count else { return }
+        let step = arguments[index + 1]
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+            switch step {
+            case "rolloverMenu":
+                showRolloverMenu = true
+            case "enableRollover":
+                rollover = true
+                submit()
+            case "disableRollover":
+                rollover = false
+                submit()
+            case "changeFrequency":
+                timeFrame = timeFrame == .week ? .month : .week
+                submit()
+            default:
+                break
+            }
+        }
+    }
+    #endif
 }
 
 // MARK: - Sentence token

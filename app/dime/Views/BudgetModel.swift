@@ -161,9 +161,24 @@ enum BudgetStatus {
 }
 
 struct BudgetSnapshot {
+    /// What can be spent this period: the budget plus anything rolled over.
     let amount: Double
     let spent: Double
     let period: BudgetPeriod
+    /// What rolled in from earlier periods, or nil when the budget doesn't roll over into this period.
+    let carryIn: Double?
+
+    init(amount: Double, spent: Double, period: BudgetPeriod, carryIn: Double? = nil) {
+        self.amount = amount + (carryIn ?? 0)
+        self.spent = spent
+        self.period = period
+        self.carryIn = carryIn
+    }
+
+    /// The budget's own amount, without rollover.
+    var base: Double {
+        amount - (carryIn ?? 0)
+    }
 
     var isOver: Bool {
         spent > amount
@@ -173,8 +188,9 @@ struct BudgetSnapshot {
         abs(amount - spent)
     }
 
+    /// An overspend carried in can leave nothing (or less than nothing) to spend, which reads as a full bar.
     var share: Double {
-        amount > 0 ? min(spent / amount, 1) : (spent > 0 ? 1 : 0)
+        amount > 0 ? min(spent / amount, 1) : (spent > 0 || amount < 0 ? 1 : 0)
     }
 
     var projected: Double {
@@ -309,6 +325,18 @@ extension BudgetSnapshot {
         return Text(String(localized: "Spent \(f.money(spent)) of \(f.whole(amount)) · resets \(period.resetText)"))
     }
 
+    /// The detail sheet's rollover line, e.g. "+$42 rolled over" or "Leftover rolls over Monday".
+    func rolloverText(_ f: BudgetFormatter) -> String? {
+        guard let carryIn else { return nil }
+        if carryIn >= 0.005 {
+            return String(localized: "+\(f.money(carryIn)) rolled over")
+        }
+        if carryIn <= -0.005 {
+            return String(localized: "−\(f.money(carryIn)) overspend rolled over")
+        }
+        return period.isCurrent ? String(localized: "Leftover rolls over \(period.resetText)") : String(localized: "Nothing rolled over")
+    }
+
     /// The pace chart's top leading label: what's left to spend per day, or when an overspent budget resets.
     func chartLabel(_ f: BudgetFormatter) -> String? {
         switch status {
@@ -333,6 +361,42 @@ struct BudgetOverIcon: View {
             .foregroundStyle(Color.white, Color.AlertRed)
             .font(.system(.body, design: .rounded).weight(.semibold))
             .accessibilityLabel("Over budget")
+    }
+}
+
+/// Marks a budget that rolls over, beside its name on the budgets tab.
+struct BudgetRolloverIcon: View {
+    var body: some View {
+        Image(systemName: "arrow.uturn.forward")
+            .font(.system(.caption, design: .rounded).weight(.bold))
+            .foregroundColor(Color.SubtitleText)
+            .accessibilityLabel("Rolls over")
+    }
+}
+
+/// The detail sheet's line about what rolled in, tinted green for a surplus and red for an overspend.
+struct BudgetRolloverChip: View {
+    let snapshot: BudgetSnapshot
+    let formatter: BudgetFormatter
+
+    var body: some View {
+        if let text = snapshot.rolloverText(formatter), let carry = snapshot.carryIn {
+            let tint: Color = carry >= 0.005 ? Color.IncomeGreen : (carry <= -0.005 ? Color.AlertRed : Color.SubtitleText)
+
+            HStack(spacing: 6) {
+                Image(systemName: "arrow.uturn.forward")
+                    .font(.system(.footnote, design: .rounded).weight(.bold))
+                Text(text)
+                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+            .foregroundColor(tint)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 7)
+            .background(tint.opacity(0.12), in: Capsule())
+            .accessibilityElement(children: .combine)
+        }
     }
 }
 

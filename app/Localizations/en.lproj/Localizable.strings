@@ -456,3 +456,35 @@
 // shortcuts
 "Category for an income. Choose No Category to log it without one." = "Category for an income. Choose No Category to log it without one.";
 "Category for an expense. Choose No Category to log it without one." = "Category for an expense. Choose No Category to log it without one.";
+
+// budget rollover
+"with" = "with";
+"rollover" = "rollover";
+"no rollover" = "no rollover";
+"+%@ rolled over" = "+%@ rolled over";
+"−%@ overspend rolled over" = "−%@ overspend rolled over";
+"Leftover rolls over %@" = "Leftover rolls over %@";
+"Nothing rolled over" = "Nothing rolled over";
+"Rolls over" = "Rolls over";
+"%@ budget %@ %@ = %@" = "%@ budget %@ %@ = %@";
+"Rollover" = "Rollover";
+"Whether what's left, or overspent, carries into the next period" = "Whether what's left, or overspent, carries into the next period";
+"%@ overspend" = "%@ overspend";
+"%@ left over" = "%@ left over";
+"Rollover starts this period" = "Rollover starts this period";
+"What's left at the end of this period, or overspent, carries into the next one. Earlier periods aren't counted." = "What's left at the end of this period, or overspent, carries into the next one. Earlier periods aren't counted.";
+"Turn On Rollover" = "Turn On Rollover";
+"Turn off rollover?" = "Turn off rollover?";
+"The %@ carried into this period will be cleared. Turning rollover back on starts fresh." = "The %@ carried into this period will be cleared. Turning rollover back on starts fresh.";
+"Leftovers will stop carrying over. Turning rollover back on starts fresh." = "Leftovers will stop carrying over. Turning rollover back on starts fresh.";
+"Turn Off" = "Turn Off";
+"Reset rollover?" = "Reset rollover?";
+"Changing how often this budget repeats clears the %@ carried over. Rollover starts again from this period." = "Changing how often this budget repeats clears the %@ carried over. Rollover starts again from this period.";
+"Changing the category clears the %@ carried over. Rollover starts again from this period." = "Changing the category clears the %@ carried over. Rollover starts again from this period.";
+"Changing how often this budget repeats restarts rollover from this period." = "Changing how often this budget repeats restarts rollover from this period.";
+"Changing the category restarts rollover from this period." = "Changing the category restarts rollover from this period.";
+"Apply from this period?" = "Apply from this period?";
+"Your changes apply from this period on, and earlier periods keep their old settings." = "Your changes apply from this period on, and earlier periods keep their old settings.";
+"The new amount applies from this period on, and earlier periods keep the old one." = "The new amount applies from this period on, and earlier periods keep the old one.";
+"The new reset day applies from this period on, and earlier periods keep the old one." = "The new reset day applies from this period on, and earlier periods keep the old one.";
+"The %@ carried over so far is kept." = "The %@ carried over so far is kept.";

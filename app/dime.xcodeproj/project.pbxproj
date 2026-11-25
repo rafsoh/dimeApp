@@ -182,6 +182,7 @@
 		C77227271BCECB2A986F2682 /* CurrencyConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8AA3384CBE3F80582BE7112 /* CurrencyConverter.swift */; };
 		C78D9F181AC734A65F6401E1 /* ConversionNote.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E9D77F9F42B9754C0943C8 /* ConversionNote.swift */; };
 		CFF3458851630E5DDD45BF0C /* StoreMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 726F48F68CFB577527C9FD9B /* StoreMigrationTests.swift */; };
+		D7E1F2A12F30000200A1B2C3 /* BudgetRolloverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7E1F2A12F30000100A1B2C3 /* BudgetRolloverTests.swift */; };
 		D7C0E1A12F2C000700A1B2C3 /* QuickAddTemplateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7C0E1A12F2C000600A1B2C3 /* QuickAddTemplateTests.swift */; };
 		D63B204A2D8728C300CAFB20 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = D63B20462D8728C300CAFB20 /* Localizable.strings */; };
 		D63B204B2D8728C300CAFB20 /* Localizable.stringsdict in Resources */ = {isa = PBXBuildFile; fileRef = D63B20482D8728C300CAFB20 /* Localizable.stringsdict */; };
@@ -386,8 +387,10 @@
 		53EB931028A65F670026BE28 /* ExpenditureWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ExpenditureWidgetExtension.entitlements; sourceTree = "<group>"; };
 		55E30C4DCFF029D0E8F8975B /* MainModel 3.xcdatamodel */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = wrapper.xcdatamodel; path = "MainModel 3.xcdatamodel"; sourceTree = "<group>"; };
 		D7C0E1A12F2C000100A1B2C3 /* MainModel 4.xcdatamodel */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = wrapper.xcdatamodel; path = "MainModel 4.xcdatamodel"; sourceTree = "<group>"; };
+		D7C0E1A12F2C000500A1B2C3 /* MainModel 5.xcdatamodel */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = wrapper.xcdatamodel; path = "MainModel 5.xcdatamodel"; sourceTree = "<group>"; };
 		61FB059BE9B534C7CDD290CD /* CurrencyPreferencesTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CurrencyPreferencesTests.swift; sourceTree = "<group>"; };
 		726F48F68CFB577527C9FD9B /* StoreMigrationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StoreMigrationTests.swift; sourceTree = "<group>"; };
+		D7E1F2A12F30000100A1B2C3 /* BudgetRolloverTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BudgetRolloverTests.swift; sourceTree = "<group>"; };
 		D7C0E1A12F2C000600A1B2C3 /* QuickAddTemplateTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuickAddTemplateTests.swift; sourceTree = "<group>"; };
 		7C2F4C180CD6273FAE74092C /* StoreSnapshot.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StoreSnapshot.swift; sourceTree = "<group>"; };
 		86CFCBA6EAE7ED44DDE226DA /* SettingsBackupsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsBackupsView.swift; sourceTree = "<group>"; };
@@ -793,6 +796,7 @@
 			isa = PBXGroup;
 			children = (
 				726F48F68CFB577527C9FD9B /* StoreMigrationTests.swift */,
+				D7E1F2A12F30000100A1B2C3 /* BudgetRolloverTests.swift */,
 				D7C0E1A12F2C000600A1B2C3 /* QuickAddTemplateTests.swift */,
 				E796D802A7C21DDF8E956B94 /* BackupRoundTripTests.swift */,
 				1427F27CEB06BEEEB431857A /* CurrencyConverterTests.swift */,
@@ -1052,6 +1056,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				CFF3458851630E5DDD45BF0C /* StoreMigrationTests.swift in Sources */,
+				D7E1F2A12F30000200A1B2C3 /* BudgetRolloverTests.swift in Sources */,
 				D7C0E1A12F2C000700A1B2C3 /* QuickAddTemplateTests.swift in Sources */,
 				64280A271F13C3E06A801F74 /* BackupRoundTripTests.swift in Sources */,
 				B4EF73711724134F6E848D2A /* CurrencyConverterTests.swift in Sources */,
@@ -1902,8 +1907,9 @@
 				53BC2A412A8B21920019E4A8 /* MainModel.xcdatamodel */,
 				55E30C4DCFF029D0E8F8975B /* MainModel 3.xcdatamodel */,
 				D7C0E1A12F2C000100A1B2C3 /* MainModel 4.xcdatamodel */,
+				D7C0E1A12F2C000500A1B2C3 /* MainModel 5.xcdatamodel */,
 			);
-			currentVersion = D7C0E1A12F2C000100A1B2C3 /* MainModel 4.xcdatamodel */;
+			currentVersion = D7C0E1A12F2C000500A1B2C3 /* MainModel 5.xcdatamodel */;
 			path = MainModel.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;

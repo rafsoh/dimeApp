@@ -40,10 +40,15 @@ final class BackupRoundTripTests: XCTestCase {
         XCTAssertEqual(budget.amount, 250.75)
         XCTAssertEqual(budget.type, 2)
         XCTAssertEqual(budget.category?.name, "Food")
+        XCTAssertTrue(budget.rolloverEnabled)
+        XCTAssertEqual(budget.rolloverAnchor, Date(timeIntervalSinceReferenceDate: 700_000_000))
+        XCTAssertEqual(budget.rolloverBalance, -12.5)
 
         let mainBudget = try XCTUnwrap(all(MainBudget.self, in: target).first)
         XCTAssertEqual(mainBudget.amount, 1_800)
         XCTAssertEqual(mainBudget.type, 3)
+        XCTAssertFalse(mainBudget.rolloverEnabled)
+        XCTAssertNil(mainBudget.rolloverAnchor)
 
         let template = try XCTUnwrap(all(TemplateTransaction.self, in: target).first)
         XCTAssertEqual(template.amount, 12.5)
@@ -274,6 +279,9 @@ final class BackupRoundTripTests: XCTestCase {
         budget.startDate = start
         budget.dateCreated = start
         budget.category = food
+        budget.rolloverEnabled = true
+        budget.rolloverAnchor = Date(timeIntervalSinceReferenceDate: 700_000_000)
+        budget.rolloverBalance = -12.5
 
         let mainBudget = MainBudget(context: context)
         mainBudget.amount = 1_800
