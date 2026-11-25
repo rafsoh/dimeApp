@@ -98,6 +98,20 @@ final class QuickAddTemplateTests: XCTestCase {
         XCTAssertEqual(dataController.nextQuickAddOrder, 2)
     }
 
+    func testMovingTemplatesRenumbersThemInTheNewOrder() throws {
+        _ = try ["A", "B", "C", "D"].map { note in
+            try XCTUnwrap(dataController.addQuickAddTemplate(from: makeTransaction(note: note, amount: 1, currencyCode: nil)))
+        }
+
+        dataController.moveQuickAddTemplates(fromOffsets: IndexSet(integer: 3), toOffset: 0)
+        XCTAssertEqual(dataController.quickAddTemplates().map(\.wrappedNote), ["D", "A", "B", "C"])
+        XCTAssertEqual(dataController.quickAddTemplates().map(\.order), [0, 1, 2, 3])
+
+        dataController.moveQuickAddTemplates(fromOffsets: IndexSet(integer: 0), toOffset: 3)
+        XCTAssertEqual(dataController.quickAddTemplates().map(\.wrappedNote), ["A", "B", "D", "C"])
+        XCTAssertEqual(dataController.quickAddTemplates().map(\.order), [0, 1, 2, 3])
+    }
+
     func testAWidgetButtonFindsItsTemplateUntilItIsDeleted() throws {
         let template = try XCTUnwrap(dataController.addQuickAddTemplate(from: makeTransaction(note: "Bus", amount: 2.9, currencyCode: nil)))
         let uri = template.objectID.uriRepresentation()

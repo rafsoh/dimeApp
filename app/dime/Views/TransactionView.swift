@@ -820,9 +820,11 @@ struct TransactionView: View {
                 return
             }
 
+            // Worked out before inserting, or the new template counts itself.
+            let order = dataController.nextQuickAddOrder
             saved = TemplateTransaction(context: moc)
             saved.id = UUID()
-            saved.order = dataController.nextQuickAddOrder
+            saved.order = order
         }
 
         saved.note = note.trimmingCharacters(in: .whitespacesAndNewlines)

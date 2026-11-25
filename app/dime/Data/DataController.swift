@@ -810,9 +810,11 @@ class DataController: ObservableObject {
             return nil
         }
 
+        // Worked out before inserting, or the new template counts itself.
+        let order = nextQuickAddOrder
         let template = TemplateTransaction(context: container.viewContext)
         template.id = UUID()
-        template.order = nextQuickAddOrder
+        template.order = order
         template.note = transaction.note
         template.amount = transaction.amount
         template.income = transaction.income
@@ -830,6 +832,18 @@ class DataController: ObservableObject {
         // Number the rest from 0 again, so new templates always go at the end.
         for (index, remaining) in quickAddTemplates().filter({ $0 != template }).enumerated() where remaining.order != Int16(index) {
             remaining.order = Int16(index)
+        }
+
+        save()
+    }
+
+    /// Moves templates the way `List.onMove` describes, then numbers them all from 0.
+    func moveQuickAddTemplates(fromOffsets source: IndexSet, toOffset destination: Int) {
+        var templates = quickAddTemplates()
+        templates.move(fromOffsets: source, toOffset: destination)
+
+        for (index, template) in templates.enumerated() where template.order != Int16(index) {
+            template.order = Int16(index)
         }
 
         save()
