@@ -84,6 +84,7 @@
 "Missing Amount" = "Montant manquant";
 "Missing Category" = "Catégorie manquante";
 "No Category" = "Sans catégorie";
+"category-picker-none" = "Aucune";
 "transaction-view-income-picker" = "Revenu";
 
 // log view

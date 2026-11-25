@@ -82,6 +82,7 @@
 "Missing Amount" = "Нет суммы";
 "Missing Category" = "Нет категории";
 "No Category" = "Без категории";
+"category-picker-none" = "Нет";
 "transaction-view-income-picker" = "Доход";
 
 // log view
