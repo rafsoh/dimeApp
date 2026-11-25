@@ -429,3 +429,27 @@
 "Coffee" = "Кофе";
 "Lunch" = "Обед";
 "Bus" = "Автобус";
+
+/* Notifications */
+"Reminders" = "Напоминания";
+"Daily Check-in" = "Ежедневное напоминание";
+"A nudge to log the day's spending" = "Напомним записать траты за день";
+"Upcoming Charges" = "Предстоящие платежи";
+"A heads-up before a recurring expense is logged" = "Предупредим перед записью регулярного расхода";
+"Time" = "Время";
+"Remind Me" = "Напомнить";
+"On the day" = "В тот же день";
+"1 day before" = "За 1 день";
+"%lld days before" = "За %lld дн.";
+"Fewer days" = "Меньше дней";
+"More days" = "Больше дней";
+"Check-ins and charge reminders both arrive at this time." = "Ежедневные напоминания и напоминания о платежах приходят в это время.";
+"Your check-in arrives at this time every day." = "Ежедневное напоминание приходит в это время.";
+"Charge reminders arrive at this time." = "Напоминания о платежах приходят в это время.";
+"Covers recurring expenses. Reminders are planned a couple of months ahead and refresh whenever you open Dime." = "Касается регулярных расходов. Напоминания планируются примерно на два месяца вперёд и обновляются при каждом открытии Dime.";
+"Due today: %@" = "Сегодня: %@";
+"Due tomorrow: %@" = "Завтра: %@";
+"Due in %lld days: %@" = "Через %lld дн.: %@";
+"%@ will be added to your log today." = "%@ будет добавлено в журнал сегодня.";
+"%@ will be added to your log tomorrow." = "%@ будет добавлено в журнал завтра.";
+"%@ will be added to your log on %@." = "%@ будет добавлено в журнал %@.";

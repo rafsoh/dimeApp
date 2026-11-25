@@ -61,10 +61,7 @@ struct SettingsBackupsView: View {
 
       SettingsSectionFooter("Dime backs up your data on this device once a day and keeps the last 14 backups. Restoring adds back anything that's missing and never removes or changes what you have now. Backups are deleted if you delete Dime.")
 
-      if backupManager.backups.isEmpty {
-        EmptyStateView(systemImage: "clock.arrow.circlepath", title: "No backups yet")
-          .fillsScrollViewport()
-      } else {
+      if !backupManager.backups.isEmpty {
         VStack(spacing: 0) {
           ForEach(backupManager.backups) { backup in
             HStack(spacing: 12) {

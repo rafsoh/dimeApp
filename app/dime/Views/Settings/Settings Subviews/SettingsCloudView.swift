@@ -44,7 +44,7 @@ struct SyncStatusSection: View {
   @ObservedObject var status: CloudSyncStatus
 
   var body: some View {
-    HStack(alignment: .top, spacing: 12) {
+    HStack(alignment: .center, spacing: 12) {
       Image(systemName: symbolName)
         .font(.system(.body, design: .rounded).weight(.semibold))
         .foregroundColor(symbolColor)

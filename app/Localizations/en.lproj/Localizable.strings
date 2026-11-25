@@ -428,3 +428,27 @@
 "Coffee" = "Coffee";
 "Lunch" = "Lunch";
 "Bus" = "Bus";
+
+/* Notifications */
+"Reminders" = "Reminders";
+"Daily Check-in" = "Daily Check-in";
+"A nudge to log the day's spending" = "A nudge to log the day's spending";
+"Upcoming Charges" = "Upcoming Charges";
+"A heads-up before a recurring expense is logged" = "A heads-up before a recurring expense is logged";
+"Time" = "Time";
+"Remind Me" = "Remind Me";
+"On the day" = "On the day";
+"1 day before" = "1 day before";
+"%lld days before" = "%lld days before";
+"Fewer days" = "Fewer days";
+"More days" = "More days";
+"Check-ins and charge reminders both arrive at this time." = "Check-ins and charge reminders both arrive at this time.";
+"Your check-in arrives at this time every day." = "Your check-in arrives at this time every day.";
+"Charge reminders arrive at this time." = "Charge reminders arrive at this time.";
+"Covers recurring expenses. Reminders are planned a couple of months ahead and refresh whenever you open Dime." = "Covers recurring expenses. Reminders are planned a couple of months ahead and refresh whenever you open Dime.";
+"Due today: %@" = "Due today: %@";
+"Due tomorrow: %@" = "Due tomorrow: %@";
+"Due in %lld days: %@" = "Due in %lld days: %@";
+"%@ will be added to your log today." = "%@ will be added to your log today.";
+"%@ will be added to your log tomorrow." = "%@ will be added to your log tomorrow.";
+"%@ will be added to your log on %@." = "%@ will be added to your log on %@.";

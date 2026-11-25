@@ -167,7 +167,11 @@ struct ContentView: View {
                     if !showNotifications && notificationsEnabled == false {
                         showNotifications = true
                         notificationsEnabled = true
-                        newNotification()
+                    }
+
+                    // Upcoming charge reminders only look a couple of months ahead, so top them up on every launch.
+                    if showNotifications {
+                        NotificationScheduler.shared.reschedule()
                     }
                 } else if settings.authorizationStatus == .denied {
                     notificationsEnabled = false
@@ -207,7 +211,10 @@ struct ContentView: View {
                         if !showNotifications && notificationsEnabled == false {
                             showNotifications = true
                             notificationsEnabled = true
-                            newNotification()
+                        }
+
+                        if showNotifications {
+                            NotificationScheduler.shared.reschedule()
                         }
                     } else if settings.authorizationStatus == .denied {
                         notificationsEnabled = false
