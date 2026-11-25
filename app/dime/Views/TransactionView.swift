@@ -605,6 +605,20 @@ struct TransactionView: View {
     }
     #endif
 
+    /// Whether the edit changes what the transaction is filed under: its kind, category or accounts.
+    func filingChanged(from transaction: Transaction) -> Bool {
+        if isTransfer != transaction.isTransfer {
+            return true
+        }
+
+        if isTransfer {
+            let saved = transaction.transferAccounts
+            return account != saved?.from || transferTo != saved?.to
+        }
+
+        return category != transaction.category || income != transaction.income || account != transaction.accountChoice
+    }
+
     var hasUnsavedInput: Bool {
         if let editedTemplate {
             return price != editedTemplate.wrappedAmount
@@ -616,14 +630,10 @@ struct TransactionView: View {
         } else if let transaction = toEdit {
             return price != transaction.wrappedAmount
                 || note != transaction.wrappedNote
-                || category != transaction.category
-                || isTransfer != transaction.isTransfer
-                || (!isTransfer && account != transaction.accountChoice)
-                || (isTransfer && (account != transaction.transferAccounts?.from || transferTo != transaction.transferAccounts?.to))
-                || (!isTransfer && income != transaction.income)
                 || date != (transaction.date ?? date)
                 || repeatType != Int(transaction.recurringType)
                 || repeatCoefficient != Int(transaction.recurringCoefficient)
+                || filingChanged(from: transaction)
                 || !CurrencyPreferences.isSameCurrency(transaction.currencyCode, as: transactionCurrency, mainCurrency: currency)
         } else {
             return price > 0 || !note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
