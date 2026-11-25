@@ -429,3 +429,27 @@
 "Coffee" = "Café";
 "Lunch" = "Déjeuner";
 "Bus" = "Bus";
+
+/* Notifications */
+"Reminders" = "Rappels";
+"Daily Check-in" = "Rappel quotidien";
+"A nudge to log the day's spending" = "Un petit rappel pour noter les dépenses du jour";
+"Upcoming Charges" = "Prélèvements à venir";
+"A heads-up before a recurring expense is logged" = "Un avertissement avant l’enregistrement d’une dépense récurrente";
+"Time" = "Heure";
+"Remind Me" = "Me rappeler";
+"On the day" = "Le jour même";
+"1 day before" = "1 jour avant";
+"%lld days before" = "%lld jours avant";
+"Fewer days" = "Moins de jours";
+"More days" = "Plus de jours";
+"Check-ins and charge reminders both arrive at this time." = "Les rappels quotidiens et ceux des prélèvements arrivent à cette heure.";
+"Your check-in arrives at this time every day." = "Votre rappel quotidien arrive chaque jour à cette heure.";
+"Charge reminders arrive at this time." = "Les rappels de prélèvement arrivent à cette heure.";
+"Covers recurring expenses. Reminders are planned a couple of months ahead and refresh whenever you open Dime." = "Concerne les dépenses récurrentes. Les rappels sont planifiés environ deux mois à l’avance et mis à jour à chaque ouverture de Dime.";
+"Due today: %@" = "Aujourd’hui : %@";
+"Due tomorrow: %@" = "Demain : %@";
+"Due in %lld days: %@" = "Dans %lld jours : %@";
+"%@ will be added to your log today." = "%@ sera ajouté à votre journal aujourd’hui.";
+"%@ will be added to your log tomorrow." = "%@ sera ajouté à votre journal demain.";
+"%@ will be added to your log on %@." = "%@ sera ajouté à votre journal le %@.";
