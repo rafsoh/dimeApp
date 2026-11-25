@@ -983,8 +983,9 @@ class DataController: ObservableObject {
     }
 
     /// Moves accounts the way `List.onMove` describes, then numbers them all from 0. Main always stays first.
-    func moveAccounts(fromOffsets source: IndexSet, toOffset destination: Int) {
-        var ordered = accounts()
+    /// `displayed` is the list the offsets refer to; it defaults to `accounts()`.
+    func moveAccounts(_ displayed: [Account]? = nil, fromOffsets source: IndexSet, toOffset destination: Int) {
+        var ordered = displayed ?? accounts()
         ordered.move(fromOffsets: source, toOffset: destination)
 
         for (index, account) in ordered.enumerated() where account.order != Int64(index) {
@@ -2727,10 +2728,57 @@ extension DataController {
             streaming.recurringCoefficient = 1
             updateRecurringTransaction(transaction: streaming)
 
+            seedDemoAccounts(groceries: groceries, shopping: shopping, coffee: coffee, firstOfMonth: firstOfMonth)
             seedDemoBudgets(food: food, groceries: groceries, coffee: coffee, shopping: shopping, health: health)
         }
 
         save()
+    }
+
+    /// Groceries and shopping go on a card and coffee is paid in cash; the rest stays in Main. Savings is fed
+    /// by a transfer on the 2nd of each month, and cash was topped up this morning, so the log shows a transfer.
+    /// Transfers aren't spending, so the budgets below come out the same.
+    private func seedDemoAccounts(groceries: Category, shopping: Category, coffee: Category, firstOfMonth: Date) {
+        let context = container.viewContext
+        let calendar = Calendar.current
+        let now = Date.now
+
+        func account(_ name: String, order: Int64) -> Account {
+            let account = Account(context: context)
+            account.id = UUID()
+            account.name = name
+            account.order = order
+            account.dateCreated = now
+            return account
+        }
+
+        let card = account("Card", order: 0)
+        let cash = account("Cash", order: 1)
+        let savings = account("Savings", order: 2)
+
+        // Earlier seeding saved along the way, so the transactions are fetched rather than taken from the inserted objects.
+        for transaction in results(for: Transaction.fetchRequest() as NSFetchRequest<Transaction>) {
+            if transaction.category == groceries || transaction.category == shopping {
+                transaction.account = card
+            } else if transaction.category == coffee {
+                transaction.account = cash
+            }
+        }
+
+        let currencyCode = currencyConverter.mainCurrency
+
+        for monthsAgo in 0 ... 3 {
+            let month = calendar.date(byAdding: .month, value: -monthsAgo, to: firstOfMonth) ?? firstOfMonth
+            guard let second = calendar.date(byAdding: .day, value: 1, to: month),
+                  let date = calendar.date(bySettingHour: 9, minute: 30, second: 0, of: second),
+                  date < now
+            else { continue }
+
+            saveTransfer(from: .main, to: .account(savings), amount: 500, currencyCode: currencyCode, date: date, note: "")
+        }
+
+        let morning = min(calendar.date(bySettingHour: 8, minute: 5, second: 0, of: now) ?? now, now.addingTimeInterval(-300))
+        saveTransfer(from: .main, to: .account(cash), amount: 100, currencyCode: currencyCode, date: morning, note: "ATM")
     }
 
     /// Budgets sized from the seeded spending so each lands in a known state: overall and Food on track,

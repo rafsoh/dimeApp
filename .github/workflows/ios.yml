@@ -154,6 +154,43 @@ jobs:
           shot 11-rollover-alert-reset -budgetEdit Food -budgetEditStep changeFrequency
           shot 12-rollover-new-budget -budgetEdit new
 
+      - name: Take accounts screenshots
+        # The `-demoData varied` store has Card, Cash and Savings accounts, monthly transfers into Savings
+        # and a transfer into Cash this morning.
+        continue-on-error: true
+        run: |
+          mkdir -p screenshots
+          snap() {
+            if ! err=$(xcrun simctl io "$SIM_UDID" screenshot "$1" 2>&1); then
+              for d in $(echo "$err" | grep -o -- '--display=[0-9]*' | cut -d= -f2); do
+                xcrun simctl io "$SIM_UDID" screenshot --display="$d" "${1%.png}-display$d.png" || true
+              done
+              best=$(ls -S "${1%.png}"-display*.png 2>/dev/null | head -1)
+              if [ -n "$best" ]; then mv "$best" "$1"; fi
+              rm -f "${1%.png}"-display*.png
+            fi
+          }
+          shot() {
+            name=$1; shift
+            xcrun simctl terminate "$SIM_UDID" "$BUNDLE_ID" 2>/dev/null || true
+            xcrun simctl launch "$SIM_UDID" "$BUNDLE_ID" -demoData varied "$@"
+            sleep 9
+            snap "screenshots/$name.png"
+          }
+          shot 13-accounts-log
+          shot 14-accounts-log-card -logAccount Card
+          shot 15-accounts-log-savings -logAccount Savings
+          shot 16-accounts-entry -newEntry -entryKind expense
+          shot 17-accounts-entry-picker -newEntry -entryKind expense -entrySheet account
+          shot 18-accounts-entry-transfer -newEntry -entryKind transfer
+          shot 19-accounts-insights -insightsTab -insightsAccount all
+          shot 20-accounts-insights-breakdown -insightsTab -insightsAccount all -insightsScroll accounts
+          shot 21-accounts-insights-card -insightsAccount Card
+          shot 22-accounts-settings -accountsScreen settings
+          shot 23-accounts-onboarding -accountsScreen welcome
+          shot 24-accounts-budget-edit -budgetEdit overall
+          shot 25-accounts-budget-picker -budgetEdit overall -budgetEditStep accounts
+
       - name: Show screenshots on the pull request
         # Pushes the images to the ci-screenshots branch (one folder per pull request) and keeps one
         # comment on the pull request up to date with them. Skipped for forks, whose token can't write.

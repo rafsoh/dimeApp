@@ -495,6 +495,23 @@ extension NSManagedObject {
     }
 }
 
+/// "Only Card and Cash" for a budget limited to some accounts, or nil when it counts every account.
+func budgetAccountsSummary(_ budget: RolloverBudget) -> String? {
+    guard let context = budget.managedObjectContext else { return nil }
+
+    let request: NSFetchRequest<Account> = Account.fetchRequest()
+    let accounts = ((try? context.fetch(request)) ?? []).sorted { ($0.order, $0.key) < ($1.order, $1.key) }
+    let scope = budget.countedAccounts.resolved(existingAccountKeys: Set(accounts.map(\.key)))
+
+    guard let keys = scope.keys else { return nil }
+
+    let names = ([AccountChoice.main] + accounts.map(AccountChoice.account)).filter { keys.contains($0.key) }.map(\.name)
+
+    guard !names.isEmpty else { return nil }
+
+    return String(localized: "Only \(ListFormatter.localizedString(byJoining: names))")
+}
+
 /// A budget's spending in a period. Transfers are never spending; `accounts` limits it to the budget's accounts.
 func budgetPredicate(from start: Date, to end: Date, category: Category?, accounts: NSPredicate? = nil) -> NSPredicate {
     var predicates = [

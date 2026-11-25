@@ -30,6 +30,21 @@ struct InsightsView: View {
     @State private var route: InsightsRoute?
     @State private var refreshID = UUID()
 
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.order), SortDescriptor(\.dateCreated)]) private var accounts: FetchedResults<Account>
+    /// The account Insights shows; empty for every account.
+    @AppStorage(InsightsAccountFilter.key, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var insightsAccount = ""
+    @AppStorage(MainAccount.nameKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var mainAccountName = ""
+    @State private var showAccountPicker = false
+
+    var accountChoices: [AccountChoice] {
+        [.main] + accounts.map(AccountChoice.account)
+    }
+
+    /// The selected account, or nil for every account, including when the selected one was deleted.
+    var selectedAccount: AccountChoice? {
+        InsightsAccountFilter.choice(among: accountChoices)
+    }
+
     private var didSave = NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
 
     var chartTypeString: String {
@@ -71,13 +86,35 @@ struct InsightsView: View {
                 EmptyStateView(systemImage: "chart.bar", title: "No insights yet")
                     .tabBarClearance()
             } else {
-                ScrollView(showsIndicators: false) {
-                    InsightsDashboard(period: period, dataController: dataController, incomeTracking: incomeTracking, firstDay: firstDay, formatter: formatter) { selection in
-                        route = selection
+                ScrollViewReader { scroller in
+                    ScrollView(showsIndicators: false) {
+                        VStack(spacing: 12) {
+                            if !accounts.isEmpty {
+                                accountScopeChip
+                            }
+
+                            InsightsDashboard(period: period, dataController: dataController, incomeTracking: incomeTracking, firstDay: firstDay, formatter: formatter, breaksDownByAccount: !accounts.isEmpty && selectedAccount == nil, onSelectAccount: { choice in
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    insightsAccount = choice.key
+                                }
+                            }) { selection in
+                                route = selection
+                            }
+                            .id(refreshID)
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.top, 4)
                     }
-                    .id(refreshID)
-                    .padding(.horizontal, 16)
-                    .padding(.top, 4)
+                    #if DEBUG
+                    .onAppear {
+                        // `-insightsScroll accounts` brings the accounts card into view, for screenshots.
+                        if ProcessInfo.processInfo.arguments.contains("-insightsScroll") {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                                scroller.scrollTo(InsightsDashboard.accountsCardID, anchor: .center)
+                            }
+                        }
+                    }
+                    #endif
                 }
                 .tabBarClearance()
                 .floatingAboveTabBar {
@@ -127,10 +164,23 @@ struct InsightsView: View {
         .onChange(of: firstDayOfMonth) { _ in
             periodStart = nil
         }
+        .onChange(of: insightsAccount) { _ in
+            refreshID = UUID()
+        }
+        .sheet(isPresented: $showAccountPicker) {
+            AccountPickerSheet(title: "Account", selection: Binding(get: { selectedAccount }, set: { insightsAccount = $0?.key ?? "" }), allowsAll: true)
+                .environmentObject(dataController)
+        }
         #if DEBUG
         .onAppear {
             // `-insightsSheet category|categories|cashFlow|recurring` opens that sheet, for screenshots.
             let arguments = ProcessInfo.processInfo.arguments
+
+            // `-insightsAccount <name>` shows one account, and `-insightsAccount all` every account.
+            if let index = arguments.firstIndex(of: "-insightsAccount"), index + 1 < arguments.count {
+                insightsAccount = accounts.first { $0.wrappedName == arguments[index + 1] }?.key ?? ""
+            }
+
             guard let index = arguments.firstIndex(of: "-insightsSheet") else { return }
             let value = index + 1 < arguments.count ? arguments[index + 1] : "category"
 
@@ -153,6 +203,58 @@ struct InsightsView: View {
                 .environmentObject(dataController)
                 .environmentObject(toastPresenter)
         }
+    }
+
+    /// Which account the dashboard shows. Hidden until there's an account besides Main.
+    var accountScopeChip: some View {
+        HStack {
+            Button {
+                showAccountPicker = true
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "wallet.pass.fill")
+                        .foregroundColor(Color.SubtitleText)
+
+                    Text(selectedAccount?.name ?? String(localized: "All Accounts"))
+                        .foregroundColor(Color.PrimaryText)
+                        .lineLimit(1)
+
+                    Image(systemName: "chevron.down")
+                        .font(.system(.caption, design: .rounded).weight(.bold))
+                        .foregroundColor(Color.SubtitleText)
+                }
+                .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                .padding(.horizontal, 14)
+                .frame(height: 36)
+                .contentShape(Capsule())
+            }
+            .buttonStyle(.plain)
+            .glassBackground(in: Capsule(), tint: selectedAccount == nil ? .glassTint : Color.PrimaryText.opacity(0.16))
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text("Account") + Text(", ") + Text(selectedAccount?.name ?? String(localized: "All Accounts")))
+            .accessibilityAddTraits(.isButton)
+
+            if selectedAccount != nil {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        insightsAccount = ""
+                    }
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(.caption, design: .rounded).weight(.bold))
+                        .foregroundColor(Color.SubtitleText)
+                        .frame(width: 36, height: 36)
+                        .contentShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .glassBackground(in: Circle(), tint: .glassTint)
+                .accessibilityLabel("Show all accounts")
+                .transition(.scale.combined(with: .opacity))
+            }
+
+            Spacer(minLength: 0)
+        }
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     }
 
     func step(by value: Int) {
@@ -437,6 +539,30 @@ struct InsightsCategoryTotal: Identifiable {
         return totals
             .map { InsightsCategoryTotal(slice: $0.key, amount: $0.value, share: total > 0 ? $0.value / total : 0) }
             .sorted { $0.amount > $1.amount }
+    }
+}
+
+/// One account's share of a period's spending.
+struct InsightsAccountTotal: Identifiable {
+    let account: AccountChoice
+    let amount: Double
+    let share: Double
+
+    var id: String { account.key }
+
+    static func make(from transactions: [Transaction], using converter: CurrencyConverter = .current()) -> [InsightsAccountTotal] {
+        var totals = [AccountChoice: Double]()
+
+        for transaction in transactions {
+            totals[transaction.accountChoice, default: 0] += converter.amountInBreakdown(of: transaction.money)
+        }
+
+        let total = totals.values.reduce(0, +)
+
+        return totals
+            .filter { $0.value > 0 }
+            .map { InsightsAccountTotal(account: $0.key, amount: $0.value, share: total > 0 ? $0.value / total : 0) }
+            .sorted { $0.amount == $1.amount ? $0.account.key < $1.account.key : $0.amount > $1.amount }
     }
 }
 
@@ -789,6 +915,8 @@ struct InsightsDashboard: View {
     let largest: [Transaction]
     let cashFlow: InsightsCashFlow?
     let recurring: [InsightsRecurringCharge]
+    let accountTotals: [InsightsAccountTotal]
+    let onSelectAccount: ((AccountChoice) -> Void)?
 
     // Without income anywhere in the chart's window, income and net would only restate spending.
     var showsCashFlow: Bool {
@@ -815,6 +943,13 @@ struct InsightsDashboard: View {
 
             if !categories.isEmpty {
                 categoriesCard
+                    .transition(.opacity)
+            }
+
+            // Only worth a card once spending is spread over more than one account.
+            if accountTotals.count > 1 {
+                accountsCard
+                    .id(Self.accountsCardID)
                     .transition(.opacity)
             }
 
@@ -955,6 +1090,26 @@ struct InsightsDashboard: View {
         }
     }
 
+    static let accountsCardID = "accountsCard"
+
+    var accountsCard: some View {
+        InsightsCard {
+            VStack(alignment: .leading, spacing: 0) {
+                InsightsCardTitle("Spending by account")
+                    .padding(.horizontal, 16)
+                    .padding(.top, 16)
+                    .padding(.bottom, 8)
+
+                ForEach(accountTotals) { total in
+                    InsightsAccountRow(total: total, formatter: formatter) {
+                        onSelectAccount?(total.account)
+                    }
+                }
+            }
+            .padding(.bottom, 10)
+        }
+    }
+
     var largestCard: some View {
         InsightsTappableCard {
             onSelect(.largest)
@@ -1018,11 +1173,12 @@ struct InsightsDashboard: View {
         }
     }
 
-    init(period: InsightsPeriod, dataController: DataController, incomeTracking: Bool, firstDay: Date?, formatter: InsightsFormatter, onSelect: @escaping (InsightsRoute) -> Void) {
+    init(period: InsightsPeriod, dataController: DataController, incomeTracking: Bool, firstDay: Date?, formatter: InsightsFormatter, breaksDownByAccount: Bool = false, onSelectAccount: ((AccountChoice) -> Void)? = nil, onSelect: @escaping (InsightsRoute) -> Void) {
         self.period = period
         self.incomeTracking = incomeTracking
         self.formatter = formatter
         self.onSelect = onSelect
+        self.onSelectAccount = onSelectAccount
         let accounts = InsightsAccountFilter.predicate(in: dataController)
         let spentInsights = dataController.getInsights(type: period.type, date: period.start, income: false, accounts: accounts)
         buckets = InsightsBucket.make(dates: spentInsights.dates, values: spentInsights.dateDictionary, type: period.type)
@@ -1035,6 +1191,7 @@ struct InsightsDashboard: View {
 
         let expenses = insightsTransactions(dataController, from: period.start, to: period.queryEnd, income: false)
         categories = InsightsCategoryTotal.make(from: expenses)
+        accountTotals = breaksDownByAccount ? InsightsAccountTotal.make(from: expenses) : []
         largest = Array(insightsLargestFirst(expenses).prefix(3))
 
         cashFlow = incomeTracking ? InsightsCashFlow.make(dataController, period: period, count: 6, firstDay: firstDay) : nil
@@ -1300,6 +1457,60 @@ struct InsightsShareBar: View {
         .frame(height: height)
         .clipShape(RoundedRectangle(cornerRadius: height / 2, style: .continuous))
         .accessibilityHidden(true)
+    }
+}
+
+/// An account's spending with a bar for its share. Tapping it shows Insights for just that account.
+struct InsightsAccountRow: View {
+    let total: InsightsAccountTotal
+    let formatter: InsightsFormatter
+    let action: () -> Void
+
+    var share: Int {
+        Int((total.share * 100).rounded())
+    }
+
+    var body: some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(alignment: .firstTextBaseline, spacing: 12) {
+                    Text(total.account.name)
+                        .font(.system(.body, design: .rounded).weight(.medium))
+                        .foregroundColor(Color.PrimaryText)
+                        .lineLimit(1)
+
+                    Text("\(share)%")
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundColor(Color.SubtitleText)
+                        .lineLimit(1)
+
+                    Spacer(minLength: 8)
+
+                    InsightsAmountText(amount: total.amount, formatter: formatter, font: .system(.body, design: .rounded).weight(.medium))
+                        .layoutPriority(1)
+                }
+
+                GeometryReader { proxy in
+                    ZStack(alignment: .leading) {
+                        Capsule()
+                            .fill(Color.PrimaryText.opacity(0.08))
+
+                        Capsule()
+                            .fill(Color.PrimaryText.opacity(0.55))
+                            .frame(width: max(6, proxy.size.width * total.share))
+                    }
+                }
+                .frame(height: 6)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(total.account.name), \(formatter.string(total.amount)), \(share) percent of spending")
+        .accessibilityHint(Text("Shows insights for this account"))
+        .accessibilityAddTraits(.isButton)
     }
 }
 

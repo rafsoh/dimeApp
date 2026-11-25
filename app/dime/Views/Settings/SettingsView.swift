@@ -318,6 +318,22 @@ struct SettingsView: View {
                   systemImage: "rectangle.grid.2x2.fill", title: "Categories", colour: 110)
               }
 
+              NavigationLink(
+                destination: SettingsAccountsView()
+                  .onAppear {
+                    withAnimation(.easeOut.speed(1.5)) {
+                      tabBarManager.navigationHideTab()
+                    }
+                  }
+                  .onDisappear {
+                    withAnimation(.easeOut.speed(1.5)) {
+                      tabBarManager.navigationShowTab()
+                    }
+                  }
+              ) {
+                SettingsRowView(systemImage: "wallet.pass.fill", title: "Accounts", colour: 105)
+              }
+
               NavigationLink(destination: SettingsQuickAddView()) {
                 SettingsRowView(systemImage: "bolt.fill", title: "Quick Add", colour: 115)
               }

@@ -34,6 +34,24 @@ struct HomeView: View {
 
     @State var currentTab = "Log"
 
+    #if DEBUG
+    @State private var debugAccountsScreen: String?
+
+    private struct DebugScreen: Identifiable {
+        let id: String
+    }
+
+    @ViewBuilder
+    private func debugAccountsSheet(_ mode: String) -> some View {
+        if #available(iOS 16.0, *) {
+            NavigationStack {
+                AccountsView(mode: mode == "welcome" ? .welcome : .settings)
+            }
+            .environmentObject(dataController)
+        }
+    }
+    #endif
+
     @AppStorage("firstWeekday", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var firstWeekday: Int = 1
     @AppStorage("firstDayOfMonth", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var firstDayOfMonth: Int = 1
 
@@ -250,6 +268,17 @@ struct HomeView: View {
             if arguments.contains("-budgetTab") || arguments.contains("-budgetSheet") || arguments.contains("-budgetEdit") {
                 currentTab = "Budget"
             }
+            // `-insightsTab` and `-insightsAccount <name>` (see InsightsView) start on the Insights tab.
+            if arguments.contains("-insightsTab") || arguments.contains("-insightsSheet") || arguments.contains("-insightsAccount") {
+                currentTab = "Insights"
+            }
+            // `-accountsScreen settings|welcome` opens the accounts page as Settings or onboarding shows it.
+            if let index = arguments.firstIndex(of: "-accountsScreen"), index + 1 < arguments.count {
+                debugAccountsScreen = arguments[index + 1]
+            }
+        }
+        .sheet(item: Binding(get: { debugAccountsScreen.map(DebugScreen.init) }, set: { debugAccountsScreen = $0?.id })) { screen in
+            debugAccountsSheet(screen.id)
         }
         #endif
     }

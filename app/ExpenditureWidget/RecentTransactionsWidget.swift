@@ -138,7 +138,7 @@ struct Provider: IntentTimelineProvider {
         var sending = [HoldingTransaction]()
 
         holding.forEach { transaction in
-            let t = HoldingTransaction(colour: transaction.wrappedColour, emoji: transaction.category?.wrappedEmoji ?? "", note: transaction.displayTitle, amount: transaction.wrappedAmount, income: transaction.income, currencyCode: transaction.currencyCode, uncategorised: transaction.category == nil)
+            let t = HoldingTransaction(colour: transaction.wrappedColour, emoji: transaction.category?.wrappedEmoji ?? "", note: transaction.displayTitle, amount: transaction.wrappedAmount, income: transaction.income, currencyCode: transaction.currencyCode, uncategorised: transaction.category == nil, transfer: transaction.isTransfer)
 
             sending.append(t)
         }
@@ -164,6 +164,8 @@ struct HoldingTransaction: Hashable {
     let income: Bool
     var currencyCode: String?
     var uncategorised = false
+    /// Neither spending nor income, so shown without a sign or colour.
+    var transfer = false
 }
 
 struct ExpenditureWidgetEntryView: View {
@@ -218,7 +220,7 @@ struct ExpenditureWidgetEntryView: View {
     }
 
     func amountText(_ transaction: HoldingTransaction) -> String {
-        let sign = showExpenseOrIncomeSign ? (transaction.income ? "+" : "-") : ""
+        let sign = showExpenseOrIncomeSign && !transaction.transfer ? (transaction.income ? "+" : "-") : ""
 
         if let code = transaction.currencyCode, !CurrencyConverter.current().isMainCurrency(code) {
             return sign + MoneyFormatter.string(transaction.amount, currencyCode: code, showCents: formatter.showCents)
@@ -311,7 +313,7 @@ struct ExpenditureWidgetEntryView: View {
     /// A log row: the category's emoji tile, the note, and the amount in green for income.
     func row(_ transaction: HoldingTransaction, tileSize: CGFloat, font: Font) -> some View {
         HStack(spacing: 8) {
-            WidgetEmojiTile(emoji: transaction.emoji, colour: transaction.colour, size: tileSize, symbol: transaction.uncategorised ? Uncategorised.symbol(income: transaction.income) : nil)
+            WidgetEmojiTile(emoji: transaction.emoji, colour: transaction.colour, size: tileSize, symbol: transaction.transfer ? "arrow.left.arrow.right" : (transaction.uncategorised ? Uncategorised.symbol(income: transaction.income) : nil))
 
             Text(transaction.note)
                 .foregroundColor(Color.PrimaryText)

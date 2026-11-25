@@ -14,6 +14,7 @@ enum FilterType: String, CaseIterable {
     case week = "by week"
     case month = "by month"
     case category = "by category"
+    case account = "by account"
     case recurring
     case upcoming
 
@@ -24,6 +25,7 @@ enum FilterType: String, CaseIterable {
         .week: "w.square.fill",
         .month: "m.square.fill",
         .category: "circle.grid.2x2.fill",
+        .account: "wallet.pass.fill",
         .recurring: "repeat.circle.fill",
         .upcoming: "sun.min.fill"
     ]

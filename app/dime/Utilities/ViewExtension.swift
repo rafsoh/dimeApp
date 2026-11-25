@@ -1005,6 +1005,8 @@ struct SectionHeaderButton: View {
 struct GlassSegmentedPicker<Value: Hashable>: View {
     @Binding var selection: Value
     let options: [(value: Value, title: LocalizedStringKey)]
+    /// Each segment's side padding. Three segments use less, so they fit between a sheet's corner buttons.
+    var segmentPadding: CGFloat = 16
 
     @Namespace private var namespace
 
@@ -1023,8 +1025,9 @@ struct GlassSegmentedPicker<Value: Hashable>: View {
                         .font(.system(.body, design: .rounded).weight(.semibold))
                         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.8)
                         .foregroundColor(isSelected ? Color.PrimaryText : Color.SubtitleText)
-                        .padding(.horizontal, 16)
+                        .padding(.horizontal, segmentPadding)
                         .frame(height: 36)
                         .background {
                             if isSelected {

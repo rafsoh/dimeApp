@@ -116,6 +116,8 @@ struct WelcomeSheetView: View {
             } else {
                 CategoryView(mode: .welcome)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    // Categories, then accounts, close the sheet from inside its navigation stack.
+                    .environment(\.finishOnboarding, { dismiss() })
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

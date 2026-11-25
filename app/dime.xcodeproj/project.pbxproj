@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		607E2038F6BBEA27541C26AA /* AccountsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95CFEEC3EBA6255562875218 /* AccountsView.swift */; };
 		F4343515FBB246810EB3B0D6 /* AccountsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64D591C139E5526C2F17E652 /* AccountsTests.swift */; };
 		C5F98CF43670EABA55536902 /* Accounts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 823A3BD58AB1C6E3436CF9FC /* Accounts.swift */; };
 		0CDBCA47DBC8A9593159CFB1 /* Accounts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 823A3BD58AB1C6E3436CF9FC /* Accounts.swift */; };
@@ -272,6 +273,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		95CFEEC3EBA6255562875218 /* AccountsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountsView.swift; sourceTree = "<group>"; };
 		64D591C139E5526C2F17E652 /* AccountsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountsTests.swift; sourceTree = "<group>"; };
 		823A3BD58AB1C6E3436CF9FC /* Accounts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Accounts.swift; sourceTree = "<group>"; };
 		490ECA28C2F358F1275FEA4E /* MainModel 6.xcdatamodel */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = wrapper.xcdatamodel; path = "MainModel 6.xcdatamodel"; sourceTree = "<group>"; };
@@ -649,6 +651,7 @@
 		5327D298287C69B800F76ADF /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				95CFEEC3EBA6255562875218 /* AccountsView.swift */,
 				53D6BDC62AF73B1D00F5728E /* Settings */,
 				53B907972AE817D50001F496 /* Shapes */,
 				5327D2CD287C6B5E00F76ADF /* CategoryView.swift */,
@@ -1151,6 +1154,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				607E2038F6BBEA27541C26AA /* AccountsView.swift in Sources */,
 				4527BF8BB996382C06E6B358 /* Accounts.swift in Sources */,
 				D7C0E1A12F2B000200A1B2C3 /* OpenNewExpenseIntent.swift in Sources */,
 				D7A1B2C32E9F000200A1B2C3 /* BudgetModel.swift in Sources */,

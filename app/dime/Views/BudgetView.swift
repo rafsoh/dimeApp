@@ -655,6 +655,14 @@ struct BudgetDetailContent: View {
                 }
 
                 ConversionNote(report: spending.report)
+
+                if let accounts = budgetAccountsSummary(route.budget) {
+                    Label(accounts, systemImage: "wallet.pass")
+                        .font(.system(.footnote, design: .rounded).weight(.medium))
+                        .foregroundColor(Color.SubtitleText)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 6)
+                }
             }
             .padding(.horizontal, 24)
 
@@ -672,6 +680,7 @@ struct BudgetDetailContent: View {
                 EmptyStateView(systemImage: "tray", title: "No transactions")
             } else {
                 ListView(transactions: _list)
+                    .environment(\.showsAccountNames, DataController.shared.accountCount() > 0)
                     .padding(.horizontal, 14)
             }
         }
