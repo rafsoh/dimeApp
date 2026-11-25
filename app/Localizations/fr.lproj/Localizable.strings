@@ -457,3 +457,9 @@
 // shortcuts
 "Category for an income. Choose No Category to log it without one." = "Catégorie d’un revenu. Choisissez Sans catégorie pour l’enregistrer sans catégorie.";
 "Category for an expense. Choose No Category to log it without one." = "Catégorie d’une dépense. Choisissez Sans catégorie pour l’enregistrer sans catégorie.";
+
+// quick add grid
+"Tap a template to edit it, or hold and drag it to a new spot. The Quick Add widget logs each one with one tap, without opening Dime, and editing or deleting a template never changes what you've logged." = "Touchez un modèle pour le modifier, ou maintenez-le et faites-le glisser pour le déplacer. Le widget Ajout rapide enregistre chacun d’un seul geste, sans ouvrir Dime, et modifier ou supprimer un modèle ne change jamais ce que vous avez enregistré.";
+"Move Earlier" = "Déplacer vers l’avant";
+"Move Later" = "Déplacer vers l’arrière";
+"Edits the template" = "Modifie le modèle";
