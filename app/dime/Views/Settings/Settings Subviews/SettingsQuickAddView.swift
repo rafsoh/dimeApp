@@ -7,6 +7,7 @@
 
 import CoreData
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct SettingsQuickAddView: View {
   @EnvironmentObject private var dataController: DataController
@@ -17,6 +18,8 @@ struct SettingsQuickAddView: View {
 
   /// The template the editor is open for; `.new` adds one.
   @State private var editing: EditorItem?
+  /// The template being dragged to a new spot.
+  @State private var dragging: TemplateTransaction?
 
   private struct EditorItem: Identifiable {
     let target: TransactionView.TemplateTarget
@@ -66,14 +69,16 @@ struct SettingsQuickAddView: View {
           .accessibilityLabel(Text("\(templates.count) of \(TemplateTransaction.quickAddLimit) templates"))
       }
 
-      VStack(spacing: 0) {
-        ForEach(templates) { template in
+      // The templates laid out as the medium Quick Add widget shows them.
+      LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
+        ForEach(Array(templates.enumerated()), id: \.element.objectID) { index, template in
           Button {
             editing = EditorItem(target: .existing(template))
           } label: {
-            QuickAddRow(title: template.displayTitle, category: template.category, income: template.income, amount: template.amount, currencyCode: template.currencyCode)
+            QuickAddTile(template: template)
           }
           .buttonStyle(.plain)
+          .opacity(dragging == template ? 0.4 : 1)
           .contextMenu {
             Button(role: .destructive) {
               withAnimation {
@@ -83,33 +88,42 @@ struct SettingsQuickAddView: View {
               Label("Delete", systemImage: "trash")
             }
           }
-
-          Divider()
-        }
-
-        Button {
-          editing = EditorItem(target: .new)
-        } label: {
-          HStack(spacing: 12) {
-            Image(systemName: "plus")
-              .font(.system(.body, design: .rounded).weight(.semibold))
-              .frame(width: 30, height: 30)
-
-            (canAdd ? Text("New Template") : Text("You can have up to 4 templates"))
-              .font(.system(.body, design: .rounded).weight(.medium))
-
-            Spacer()
+          .onDrag {
+            dragging = template
+            return NSItemProvider(object: template.objectID.uriRepresentation().absoluteString as NSString)
           }
-          .foregroundColor(canAdd ? Color.PrimaryText : Color.SubtitleText)
-          .frame(minHeight: .settingsRowHeight)
-          .contentShape(Rectangle())
+          .onDrop(of: [UTType.text], delegate: QuickAddDropDelegate(target: template, templates: Array(templates), dragging: $dragging, dataController: dataController))
+          .accessibilityAction(named: Text("Move Earlier")) {
+            move(index, by: -1)
+          }
+          .accessibilityAction(named: Text("Move Later")) {
+            move(index, by: 1)
+          }
         }
-        .buttonStyle(.plain)
-        .disabled(!canAdd)
-      }
-      .settingsSectionRows()
 
-      SettingsSectionFooter("Log a template with one tap from the Quick Add widget, without opening Dime. Each one becomes its own transaction, so editing or deleting a template never changes what you've logged.")
+        ForEach(min(templates.count, TemplateTransaction.quickAddLimit) ..< TemplateTransaction.quickAddLimit, id: \.self) { _ in
+          Button {
+            editing = EditorItem(target: .new)
+          } label: {
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+              .strokeBorder(Color.SubtitleText.opacity(0.3), style: StrokeStyle(lineWidth: 1.5, dash: [4, 4]))
+              .overlay {
+                Image(systemName: "plus")
+                  .font(.system(.body, design: .rounded).weight(.semibold))
+                  .foregroundColor(Color.SubtitleText)
+              }
+              .frame(height: QuickAddTile.height)
+              .contentShape(Rectangle())
+          }
+          .buttonStyle(.plain)
+          .accessibilityLabel(Text("New Template"))
+        }
+      }
+      .padding(12)
+      .frame(maxWidth: .infinity)
+      .settingsSectionBackground()
+
+      SettingsSectionFooter("Tap a template to edit it, or hold and drag it to a new spot. The Quick Add widget logs each one with one tap, without opening Dime, and editing or deleting a template never changes what you've logged.")
 
       if canAdd && !suggestions.isEmpty {
         SettingsSectionHeader("Add From Recent")
@@ -142,9 +156,106 @@ struct SettingsQuickAddView: View {
       TransactionView(template: item.target)
     }
   }
+
+  /// Moves a template one spot earlier or later, for VoiceOver.
+  private func move(_ index: Int, by offset: Int) {
+    let destination = index + offset
+    guard templates.indices.contains(destination) else { return }
+
+    withAnimation {
+      dataController.moveQuickAddTemplates(fromOffsets: IndexSet(integer: index), toOffset: offset > 0 ? destination + 1 : destination)
+    }
+  }
 }
 
-/// A template or transaction as it appears on the Quick Add page: its category tile, name and amount.
+/// A template as the Quick Add widget shows it: tinted with its category, with its emoji, name and amount.
+private struct QuickAddTile: View {
+  static let height: CGFloat = 64
+
+  let template: TemplateTransaction
+
+  @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var currency: String = Locale.current.currencyCode!
+  @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var showCents: Bool = true
+
+  init(template: TemplateTransaction) {
+    self.template = template
+  }
+
+  private var amountText: String {
+    (template.income ? "+" : "") + MoneyFormatter.string(template.amount, currencyCode: template.currencyCode ?? currency, showCents: showCents)
+  }
+
+  var body: some View {
+    HStack(spacing: 8) {
+      Group {
+        if template.category == nil {
+          Image(systemName: Uncategorised.symbol(income: template.income))
+            .font(.system(.subheadline, design: .rounded).weight(.bold))
+            .foregroundColor(Color(hex: Uncategorised.colour))
+        } else {
+          Text(template.wrappedEmoji)
+            .font(.system(.title3))
+        }
+      }
+      .frame(width: 28)
+
+      VStack(alignment: .leading, spacing: 0) {
+        Text(template.displayTitle)
+          .font(.system(.subheadline, design: .rounded).weight(.semibold))
+          .foregroundColor(Color.PrimaryText)
+          .lineLimit(1)
+
+        Text(amountText)
+          .font(.system(.footnote, design: .rounded).weight(.medium))
+          .foregroundColor(template.income ? Color.IncomeGreen : Color.SubtitleText)
+          .lineLimit(1)
+          .minimumScaleFactor(0.7)
+      }
+
+      Spacer(minLength: 0)
+    }
+    .padding(.horizontal, 10)
+    .frame(maxWidth: .infinity, minHeight: Self.height, maxHeight: Self.height, alignment: .leading)
+    .background(Color(hex: template.wrappedColour).opacity(0.18), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    .contentShape(.dragPreview, RoundedRectangle(cornerRadius: 16, style: .continuous))
+    .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+    .dynamicTypeSize(...DynamicTypeSize.xLarge)
+    .accessibilityElement(children: .combine)
+    .accessibilityHint(Text("Edits the template"))
+  }
+}
+
+/// Moves the dragged template into the spot it's dragged over, so the grid reorders as the finger moves.
+private struct QuickAddDropDelegate: DropDelegate {
+  let target: TemplateTransaction
+  let templates: [TemplateTransaction]
+  @Binding var dragging: TemplateTransaction?
+  let dataController: DataController
+
+  func dropEntered(info _: DropInfo) {
+    guard let dragging, dragging != target,
+          let from = templates.firstIndex(of: dragging),
+          let to = templates.firstIndex(of: target)
+    else {
+      return
+    }
+
+    withAnimation(.easeInOut(duration: 0.2)) {
+      dataController.moveQuickAddTemplates(fromOffsets: IndexSet(integer: from), toOffset: to > from ? to + 1 : to)
+    }
+  }
+
+  func dropUpdated(info _: DropInfo) -> DropProposal? {
+    DropProposal(operation: .move)
+  }
+
+  func performDrop(info _: DropInfo) -> Bool {
+    dragging = nil
+    return true
+  }
+}
+
+/// A transaction as it appears on the Quick Add page: its category tile, name and amount.
 private struct QuickAddRow: View {
   let title: String
   let category: Category?

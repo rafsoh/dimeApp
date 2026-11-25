@@ -456,3 +456,9 @@
 // shortcuts
 "Category for an income. Choose No Category to log it without one." = "Category for an income. Choose No Category to log it without one.";
 "Category for an expense. Choose No Category to log it without one." = "Category for an expense. Choose No Category to log it without one.";
+
+// quick add grid
+"Tap a template to edit it, or hold and drag it to a new spot. The Quick Add widget logs each one with one tap, without opening Dime, and editing or deleting a template never changes what you've logged." = "Tap a template to edit it, or hold and drag it to a new spot. The Quick Add widget logs each one with one tap, without opening Dime, and editing or deleting a template never changes what you've logged.";
+"Move Earlier" = "Move Earlier";
+"Move Later" = "Move Later";
+"Edits the template" = "Edits the template";
