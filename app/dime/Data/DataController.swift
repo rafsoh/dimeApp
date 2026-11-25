@@ -686,7 +686,7 @@ class DataController: ObservableObject {
         let transaction = Transaction(context: container.viewContext)
 
         if note.trimmingCharacters(in: .whitespacesAndNewlines) == "" {
-            transaction.note = category?.wrappedName ?? Uncategorised.name
+            transaction.note = category?.wrappedName ?? ""
         } else {
             transaction.note = note.trimmingCharacters(in: .whitespaces)
         }

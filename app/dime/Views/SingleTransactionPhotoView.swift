@@ -89,7 +89,7 @@ struct SingleTransactionPhotoView: View {
                 }
 
             VStack(alignment: .leading, spacing: 5.5) {
-                Text(transaction.wrappedNote)
+                Text(transaction.displayTitle)
                     .font(.system(size: 42, weight: .medium, design: .rounded))
                     .foregroundColor(future ? Color.SubtitleText : Color.PrimaryText)
                     .lineLimit(1)

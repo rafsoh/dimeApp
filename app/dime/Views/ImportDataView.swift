@@ -776,7 +776,7 @@ struct ImportDataView: View {
         var duplicates = Set<Int>()
         for (index, row) in parsed.rows.enumerated() {
             // Notes left empty are saved as the category's name.
-            let savedNote = row.note.isEmpty ? (row.categoryName.isEmpty ? Uncategorised.name : row.categoryName) : row.note
+            let savedNote = row.note.isEmpty ? row.categoryName : row.note
             let key = duplicateKey(date: row.date, amount: row.amount, note: savedNote, income: income(for: row), currencyCode: row.currencyCode)
             if let count = existing[key], count > 0 {
                 existing[key] = count - 1

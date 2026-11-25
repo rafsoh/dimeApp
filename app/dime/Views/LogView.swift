@@ -1205,7 +1205,7 @@ struct SingleTransactionView: View {
                     }
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(transaction.wrappedNote)
+                    Text(transaction.displayTitle)
                         .font(.system(.body, design: .rounded).weight(.medium))
                         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                         .foregroundColor(future ? Color.SubtitleText : Color.PrimaryText)
@@ -1287,7 +1287,7 @@ struct SingleTransactionView: View {
             }
             .offset(x: offset)
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("\(transaction.wrappedNote), \(accessibilityAmount), Transaction Category: \(transaction.wrappedCategoryName), Transaction made at \(timeConverterAccessibilityLabel(date: transaction.wrappedDate))")
+            .accessibilityLabel("\(transaction.displayTitle), \(accessibilityAmount), Transaction Category: \(transaction.wrappedCategoryName), Transaction made at \(timeConverterAccessibilityLabel(date: transaction.wrappedDate))")
         }
         .background {
             GeometryReader { proxy in
@@ -1521,7 +1521,7 @@ struct DeleteTransactionAlert: View {
             .sheet(isPresented: $transactionManager.showPopup) {
                 if let unwrappedToDelete = transactionManager.toDelete, unwrappedToDelete.managedObjectContext != nil {
                     ConfirmationSheet(
-                        title: stopRecurring ? "Stop Recurring?" : "Delete '\(unwrappedToDelete.wrappedNote)'?",
+                        title: stopRecurring ? "Stop Recurring?" : "Delete '\(unwrappedToDelete.displayTitle)'?",
                         message: stopRecurring ? "The transaction will no longer be automatically logged." : "This action cannot be undone."
                     ) {
                         ConfirmationDestructiveButton(stopRecurring ? "Confirm" : "Delete") {
