@@ -454,7 +454,7 @@
 
 // budget rollover
 "+%@ rolled over" = "+%@ riportati";
-"−%@ overspend rolled over" = "−%@ di sforamento riportati";
+"−%@ rolled over" = "−%@ riportati";
 "Leftover rolls over %@" = "Il residuo viene riportato %@";
 "Nothing rolled over" = "Nulla riportato";
 "Rolls over" = "Riporto attivo";
@@ -467,16 +467,16 @@
 "What's left at the end of this period, or overspent, carries into the next one. Earlier periods aren't counted." = "Ciò che resta alla fine di questo periodo, o lo sforamento, passa al successivo. I periodi precedenti non contano.";
 "Turn On Rollover" = "Attiva riporto";
 "Turn off rollover?" = "Disattivare il riporto?";
-"The %@ carried into this period will be cleared. Turning rollover back on starts fresh." = "Il %@ riportato in questo periodo verrà azzerato. Riattivando il riporto si ricomincia da zero.";
+"The %@ from earlier periods will be cleared. Turning rollover back on starts fresh." = "Il %@ riportato in questo periodo verrà azzerato. Riattivando il riporto si ricomincia da zero.";
 "Leftovers will stop carrying over. Turning rollover back on starts fresh." = "Il residuo non verrà più riportato. Riattivando il riporto si ricomincia da zero.";
 "Turn Off" = "Disattiva";
 "Reset rollover?" = "Azzerare il riporto?";
-"Changing how often this budget repeats clears the %@ carried over. Rollover starts again from this period." = "Cambiare la frequenza di questo budget azzera il %@ riportato. Il riporto ricomincia da questo periodo.";
-"Changing the category clears the %@ carried over. Rollover starts again from this period." = "Cambiare la categoria azzera il %@ riportato. Il riporto ricomincia da questo periodo.";
+"Changing how often this budget repeats clears the %@ from earlier periods. Rollover starts again from this period." = "Cambiare la frequenza di questo budget azzera il %@ riportato. Il riporto ricomincia da questo periodo.";
+"Changing the category clears the %@ from earlier periods. Rollover starts again from this period." = "Cambiare la categoria azzera il %@ riportato. Il riporto ricomincia da questo periodo.";
 "Changing how often this budget repeats restarts rollover from this period." = "Cambiare la frequenza di questo budget fa ripartire il riporto da questo periodo.";
 "Changing the category restarts rollover from this period." = "Cambiare la categoria fa ripartire il riporto da questo periodo.";
 "Apply from this period?" = "Applicare da questo periodo?";
 "Your changes apply from this period on, and earlier periods keep their old settings." = "Le modifiche valgono da questo periodo; i periodi precedenti mantengono le vecchie impostazioni.";
 "The new amount applies from this period on, and earlier periods keep the old one." = "Il nuovo importo vale da questo periodo; i periodi precedenti mantengono quello vecchio.";
 "The new reset day applies from this period on, and earlier periods keep the old one." = "Il nuovo giorno di inizio vale da questo periodo; i periodi precedenti mantengono quello vecchio.";
-"The %@ carried over so far is kept." = "Il %@ riportato finora viene mantenuto.";
+"The %@ from earlier periods is kept." = "Il %@ riportato finora viene mantenuto.";

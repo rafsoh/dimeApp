@@ -454,7 +454,7 @@
 
 // budget rollover
 "+%@ rolled over" = "+%@ 이월됨";
-"−%@ overspend rolled over" = "−%@ 초과분 이월됨";
+"−%@ rolled over" = "−%@ 이월됨";
 "Leftover rolls over %@" = "남은 금액은 %@ 이월됩니다";
 "Nothing rolled over" = "이월된 금액 없음";
 "Rolls over" = "이월 켜짐";
@@ -467,16 +467,16 @@
 "What's left at the end of this period, or overspent, carries into the next one. Earlier periods aren't counted." = "이번 기간이 끝날 때 남은 금액이나 초과분이 다음 기간으로 넘어갑니다. 이전 기간은 포함되지 않습니다.";
 "Turn On Rollover" = "이월 켜기";
 "Turn off rollover?" = "이월을 끄시겠습니까?";
-"The %@ carried into this period will be cleared. Turning rollover back on starts fresh." = "이번 기간으로 이월된 %@이(가) 초기화됩니다. 다시 켜면 처음부터 시작합니다.";
+"The %@ from earlier periods will be cleared. Turning rollover back on starts fresh." = "이번 기간으로 이월된 %@이(가) 초기화됩니다. 다시 켜면 처음부터 시작합니다.";
 "Leftovers will stop carrying over. Turning rollover back on starts fresh." = "남은 금액이 더 이상 이월되지 않습니다. 다시 켜면 처음부터 시작합니다.";
 "Turn Off" = "끄기";
 "Reset rollover?" = "이월을 초기화하시겠습니까?";
-"Changing how often this budget repeats clears the %@ carried over. Rollover starts again from this period." = "이 예산의 반복 주기를 바꾸면 이월된 %@이(가) 초기화됩니다. 이번 기간부터 이월이 다시 시작됩니다.";
-"Changing the category clears the %@ carried over. Rollover starts again from this period." = "카테고리를 바꾸면 이월된 %@이(가) 초기화됩니다. 이번 기간부터 이월이 다시 시작됩니다.";
+"Changing how often this budget repeats clears the %@ from earlier periods. Rollover starts again from this period." = "이 예산의 반복 주기를 바꾸면 이월된 %@이(가) 초기화됩니다. 이번 기간부터 이월이 다시 시작됩니다.";
+"Changing the category clears the %@ from earlier periods. Rollover starts again from this period." = "카테고리를 바꾸면 이월된 %@이(가) 초기화됩니다. 이번 기간부터 이월이 다시 시작됩니다.";
 "Changing how often this budget repeats restarts rollover from this period." = "이 예산의 반복 주기를 바꾸면 이번 기간부터 이월이 다시 시작됩니다.";
 "Changing the category restarts rollover from this period." = "카테고리를 바꾸면 이번 기간부터 이월이 다시 시작됩니다.";
 "Apply from this period?" = "이번 기간부터 적용하시겠습니까?";
 "Your changes apply from this period on, and earlier periods keep their old settings." = "변경 사항은 이번 기간부터 적용되며, 이전 기간은 기존 설정을 유지합니다.";
 "The new amount applies from this period on, and earlier periods keep the old one." = "새 금액은 이번 기간부터 적용되며, 이전 기간은 기존 금액을 유지합니다.";
 "The new reset day applies from this period on, and earlier periods keep the old one." = "새 시작일은 이번 기간부터 적용되며, 이전 기간은 기존 시작일을 유지합니다.";
-"The %@ carried over so far is kept." = "지금까지 이월된 %@은(는) 유지됩니다.";
+"The %@ from earlier periods is kept." = "지금까지 이월된 %@은(는) 유지됩니다.";

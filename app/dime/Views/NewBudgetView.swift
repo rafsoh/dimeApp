@@ -822,7 +822,7 @@ struct BrandNewBudgetView: View {
                 change: change,
                 title: String(localized: "Turn off rollover?"),
                 message: hasCarry
-                    ? String(localized: "The \(carryPhrase(carry)) carried into this period will be cleared. Turning rollover back on starts fresh.")
+                    ? String(localized: "The \(carryPhrase(carry)) from earlier periods will be cleared. Turning rollover back on starts fresh.")
                     : String(localized: "Leftovers will stop carrying over. Turning rollover back on starts fresh."),
                 confirm: String(localized: "Turn Off"),
                 isDestructive: true
@@ -833,8 +833,8 @@ struct BrandNewBudgetView: View {
             let message: String
             if hasCarry {
                 message = typeChanged
-                    ? String(localized: "Changing how often this budget repeats clears the \(carryPhrase(carry)) carried over. Rollover starts again from this period.")
-                    : String(localized: "Changing the category clears the \(carryPhrase(carry)) carried over. Rollover starts again from this period.")
+                    ? String(localized: "Changing how often this budget repeats clears the \(carryPhrase(carry)) from earlier periods. Rollover starts again from this period.")
+                    : String(localized: "Changing the category clears the \(carryPhrase(carry)) from earlier periods. Rollover starts again from this period.")
             } else {
                 message = typeChanged
                     ? String(localized: "Changing how often this budget repeats restarts rollover from this period.")
@@ -859,7 +859,7 @@ struct BrandNewBudgetView: View {
             } else {
                 first = String(localized: "The new reset day applies from this period on, and earlier periods keep the old one.")
             }
-            let second = hasCarry ? " " + String(localized: "The \(carryPhrase(carry)) carried over so far is kept.") : ""
+            let second = hasCarry ? " " + String(localized: "The \(carryPhrase(carry)) from earlier periods is kept.") : ""
             return RolloverNotice(
                 change: change,
                 title: String(localized: "Apply from this period?"),

@@ -332,7 +332,7 @@ extension BudgetSnapshot {
             return String(localized: "+\(f.money(carryIn)) rolled over")
         }
         if carryIn <= -0.005 {
-            return String(localized: "−\(f.money(carryIn)) overspend rolled over")
+            return String(localized: "−\(f.money(carryIn)) rolled over")
         }
         return period.isCurrent ? String(localized: "Leftover rolls over \(period.resetText)") : String(localized: "Nothing rolled over")
     }

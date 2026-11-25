@@ -454,7 +454,7 @@
 
 // budget rollover
 "+%@ rolled over" = "已結轉 +%@";
-"−%@ overspend rolled over" = "已結轉超支 −%@";
+"−%@ rolled over" = "已結轉 −%@";
 "Leftover rolls over %@" = "餘額將於%@結轉";
 "Nothing rolled over" = "無結轉";
 "Rolls over" = "結轉";
@@ -467,16 +467,16 @@
 "What's left at the end of this period, or overspent, carries into the next one. Earlier periods aren't counted." = "本週期結束時的剩餘或超支金額將轉入下一週期。之前的週期不計入。";
 "Turn On Rollover" = "開啟結轉";
 "Turn off rollover?" = "關閉結轉？";
-"The %@ carried into this period will be cleared. Turning rollover back on starts fresh." = "結轉到本週期的%@將被清除。再次開啟結轉將重新開始。";
+"The %@ from earlier periods will be cleared. Turning rollover back on starts fresh." = "結轉到本週期的%@將被清除。再次開啟結轉將重新開始。";
 "Leftovers will stop carrying over. Turning rollover back on starts fresh." = "剩餘金額將不再結轉。再次開啟結轉將重新開始。";
 "Turn Off" = "關閉";
 "Reset rollover?" = "重設結轉？";
-"Changing how often this budget repeats clears the %@ carried over. Rollover starts again from this period." = "變更此預算的重複頻率將清除已結轉的%@。結轉將從本週期重新開始。";
-"Changing the category clears the %@ carried over. Rollover starts again from this period." = "變更類別將清除已結轉的%@。結轉將從本週期重新開始。";
+"Changing how often this budget repeats clears the %@ from earlier periods. Rollover starts again from this period." = "變更此預算的重複頻率將清除已結轉的%@。結轉將從本週期重新開始。";
+"Changing the category clears the %@ from earlier periods. Rollover starts again from this period." = "變更類別將清除已結轉的%@。結轉將從本週期重新開始。";
 "Changing how often this budget repeats restarts rollover from this period." = "變更此預算的重複頻率將從本週期重新開始結轉。";
 "Changing the category restarts rollover from this period." = "變更類別將從本週期重新開始結轉。";
 "Apply from this period?" = "從本週期開始套用？";
 "Your changes apply from this period on, and earlier periods keep their old settings." = "你的變更從本週期開始生效，之前的週期保留原有設定。";
 "The new amount applies from this period on, and earlier periods keep the old one." = "新金額從本週期開始生效，之前的週期保留原金額。";
 "The new reset day applies from this period on, and earlier periods keep the old one." = "新的起始日從本週期開始生效，之前的週期保留原起始日。";
-"The %@ carried over so far is kept." = "目前已結轉的%@將保留。";
+"The %@ from earlier periods is kept." = "目前已結轉的%@將保留。";
