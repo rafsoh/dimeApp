@@ -627,9 +627,10 @@ struct BudgetDetailContent: View {
             VStack(alignment: .leading, spacing: 4) {
                 hero(snapshot, transactions: transactions)
 
-                if snapshot.carryIn != nil {
-                    rolloverSummary(snapshot)
-                        .padding(.top, 12)
+                if let summary = rolloverSummary(snapshot) {
+                    summary
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 10)
                 }
 
                 ConversionNote(report: spending.report)
@@ -667,25 +668,23 @@ struct BudgetDetailContent: View {
                     .font(.system(.subheadline, design: .rounded).weight(.medium))
                     .foregroundColor(Color.SubtitleText)
             }
+
+            // Inside the ring, so it stays in view when the sheet is at half height.
+            BudgetRolloverChip(snapshot: snapshot, formatter: formatter)
+                .padding(.top, 6)
         }
         .accessibilityElement(children: .combine)
     }
 
-    /// What rolled in, and how it adds up to what can be spent this period.
-    func rolloverSummary(_ snapshot: BudgetSnapshot) -> some View {
-        VStack(spacing: 6) {
-            BudgetRolloverChip(snapshot: snapshot, formatter: formatter)
-
-            if let carry = snapshot.carryIn, abs(carry) >= 0.005 {
-                let sign = carry < 0 ? "−" : "+"
-                let total = (snapshot.amount < 0 ? "−" : "") + formatter.money(snapshot.amount)
-                Text(String(localized: "\(formatter.whole(snapshot.base)) budget \(sign) \(formatter.money(carry)) = \(total)"))
-                    .font(.system(.footnote, design: .rounded).weight(.medium))
-                    .foregroundColor(Color.SubtitleText)
-                    .monospacedDigit()
-            }
-        }
-        .frame(maxWidth: .infinity)
+    /// How the budget and what rolled in add up to what can be spent this period, under the ring.
+    func rolloverSummary(_ snapshot: BudgetSnapshot) -> Text? {
+        guard let carry = snapshot.carryIn, abs(carry) >= 0.005 else { return nil }
+        let sign = carry < 0 ? "−" : "+"
+        let total = (snapshot.amount < 0 ? "−" : "") + formatter.money(snapshot.amount)
+        return Text(String(localized: "\(formatter.whole(snapshot.base)) budget \(sign) \(formatter.money(carry)) = \(total)"))
+            .font(.system(.footnote, design: .rounded).weight(.medium))
+            .foregroundColor(Color.SubtitleText)
+            .monospacedDigit()
     }
 
     /// The category budget's own colour, or the overall budget's budgeted categories then everything else.

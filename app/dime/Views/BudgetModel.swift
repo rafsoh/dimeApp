@@ -374,7 +374,7 @@ struct BudgetRolloverIcon: View {
     }
 }
 
-/// The detail sheet's line about what rolled in, tinted green for a surplus and red for an overspend.
+/// What rolled in, inside the detail sheet's ring: green for a surplus, red for an overspend.
 struct BudgetRolloverChip: View {
     let snapshot: BudgetSnapshot
     let formatter: BudgetFormatter
@@ -383,17 +383,17 @@ struct BudgetRolloverChip: View {
         if let text = snapshot.rolloverText(formatter), let carry = snapshot.carryIn {
             let tint: Color = carry >= 0.005 ? Color.IncomeGreen : (carry <= -0.005 ? Color.AlertRed : Color.SubtitleText)
 
-            HStack(spacing: 6) {
+            HStack(spacing: 4) {
                 Image(systemName: "arrow.uturn.forward")
-                    .font(.system(.footnote, design: .rounded).weight(.bold))
+                    .font(.system(.caption, design: .rounded).weight(.bold))
                 Text(text)
-                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .font(.system(.footnote, design: .rounded).weight(.semibold))
                     .lineLimit(1)
-                    .minimumScaleFactor(0.8)
+                    .minimumScaleFactor(0.7)
             }
             .foregroundColor(tint)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 7)
+            .padding(.horizontal, 9)
+            .padding(.vertical, 4)
             .background(tint.opacity(0.12), in: Capsule())
             .accessibilityElement(children: .combine)
         }

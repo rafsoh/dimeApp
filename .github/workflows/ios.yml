@@ -131,6 +131,10 @@ jobs:
               rm -f "${1%.png}"-display*.png
             fi
           }
+          # The launch step's dimeapp:// link leaves an "Open in Dime?" prompt on screen; a reboot clears it.
+          xcrun simctl shutdown "$SIM_UDID" || true
+          xcrun simctl boot "$SIM_UDID"
+          xcrun simctl bootstatus "$SIM_UDID" -b
           shot() {
             name=$1; shift
             xcrun simctl terminate "$SIM_UDID" "$BUNDLE_ID" 2>/dev/null || true
