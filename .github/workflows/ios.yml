@@ -17,6 +17,10 @@ jobs:
     # Xcode 27 image (macOS 27): the app uses SDK APIs newer than Xcode 26.
     runs-on: xcode-27
     timeout-minutes: 45
+    # Write access only so the screenshots can be pushed to the ci-screenshots branch and shown on the pull request.
+    permissions:
+      contents: write
+      pull-requests: write
 
     env:
       PROJECT: app/dime.xcodeproj
@@ -138,6 +142,63 @@ jobs:
           shot 10-rollover-alert-turn-off -budgetEdit Food -budgetEditStep disableRollover
           shot 11-rollover-alert-reset -budgetEdit Food -budgetEditStep changeFrequency
           shot 12-rollover-new-budget -budgetEdit new
+
+      - name: Show screenshots on the pull request
+        # Pushes the images to the ci-screenshots branch (one folder per pull request) and keeps one
+        # comment on the pull request up to date with them. Skipped for forks, whose token can't write.
+        if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          REPO: ${{ github.repository }}
+        run: |
+          ls screenshots/*.png > /dev/null 2>&1 || { echo "No screenshots"; exit 0; }
+          folder="pr-$PR"
+          remote="https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git"
+          work=$(mktemp -d)
+          if git ls-remote --exit-code "$remote" refs/heads/ci-screenshots > /dev/null; then
+            git clone -q --depth 1 --branch ci-screenshots "$remote" "$work"
+          else
+            git init -q -b ci-screenshots "$work"
+            git -C "$work" remote add origin "$remote"
+          fi
+          rm -rf "${work:?}/$folder"
+          mkdir -p "$work/$folder"
+          cp screenshots/*.png "$work/$folder/"
+          git -C "$work" add -A
+          git -C "$work" -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "Screenshots for #$PR at ${HEAD_SHA:0:7}" || true
+          git -C "$work" push -q origin ci-screenshots
+          commit=$(git -C "$work" rev-parse HEAD)
+
+          python3 - "$work/$folder" "$commit" > comment.md <<'PY'
+          import os, sys
+          folder, commit = sys.argv[1], sys.argv[2]
+          repo, pr, head = os.environ["REPO"], os.environ["PR"], os.environ["HEAD_SHA"]
+          def order(name):
+              digits = "".join(c for c in name.split("-")[0] if c.isdigit())
+              return (int(digits or 0), name)
+          names = sorted((n for n in os.listdir(folder) if n.endswith(".png")), key=order)
+          print("<!-- ci-screenshots -->")
+          print(f"### Screenshots at {head[:7]}\n")
+          print("<table>")
+          for i in range(0, len(names), 3):
+              print("<tr>")
+              for name in names[i:i + 3]:
+                  url = f"https://raw.githubusercontent.com/{repo}/{commit}/pr-{pr}/{name}"
+                  print(f'<td align="center" valign="top"><img src="{url}" width="240"><br><sub>{name[:-4]}</sub></td>')
+              print("</tr>")
+          print("</table>")
+          PY
+
+          existing=$(gh api "repos/$REPO/issues/$PR/comments" --paginate --jq '.[] | select(.body | startswith("<!-- ci-screenshots -->")) | .id' | head -1)
+          if [ -n "$existing" ]; then
+            gh api -X PATCH "repos/$REPO/issues/comments/$existing" -F body=@comment.md > /dev/null
+          else
+            gh api "repos/$REPO/issues/$PR/comments" -F body=@comment.md > /dev/null
+          fi
 
       - name: Upload screenshots
         if: always()
