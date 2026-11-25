@@ -452,3 +452,7 @@
 "%@ will be added to your log today." = "%@ will be added to your log today.";
 "%@ will be added to your log tomorrow." = "%@ will be added to your log tomorrow.";
 "%@ will be added to your log on %@." = "%@ will be added to your log on %@.";
+
+// shortcuts
+"Category for an income. Choose No Category to log it without one." = "Category for an income. Choose No Category to log it without one.";
+"Category for an expense. Choose No Category to log it without one." = "Category for an expense. Choose No Category to log it without one.";

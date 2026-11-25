@@ -121,11 +121,23 @@ import Foundation
 //    }
 // }
 
+/// The "No Category" choice offered alongside real categories in Shortcuts. It has a fixed id no category can have.
+enum CategoryEntityOptions {
+    static let noCategoryID = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
+
+    static func matchesNoCategory(_ query: String) -> Bool {
+        let trimmed = query.trimmingCharacters(in: .whitespaces)
+        return trimmed.isEmpty || Uncategorised.name.localizedCaseInsensitiveContains(trimmed)
+    }
+}
+
 @available(iOS 16, *)
 struct IncomeCategoryEntity: AppEntity, Identifiable {
     static var typeDisplayRepresentation: TypeDisplayRepresentation = .init(name: "Category")
     typealias DefaultQueryType = IncomeCategoryQuery
     static var defaultQuery: IncomeCategoryQuery = .init()
+
+    static let noCategory = IncomeCategoryEntity(id: CategoryEntityOptions.noCategoryID, name: Uncategorised.name, emoji: "", income: true)
 
     var id: UUID
 
@@ -139,7 +151,7 @@ struct IncomeCategoryEntity: AppEntity, Identifiable {
     var income: Bool
 
     var displayRepresentation: DisplayRepresentation {
-        DisplayRepresentation(title: "\(emoji) \(name)")
+        emoji.isEmpty ? DisplayRepresentation(title: "\(name)") : DisplayRepresentation(title: "\(emoji) \(name)")
     }
 
     init(id: UUID, name: String, emoji: String, income: Bool) {
@@ -160,18 +172,24 @@ struct IncomeCategoryQuery: EntityStringQuery {
             $0.wrappedName.localizedCaseInsensitiveContains(query) || $0.wrappedEmoji.localizedCaseInsensitiveContains(query)
         }
 
-        return categories.compactMap { category in
+        let matches = categories.compactMap { category in
             if let id = category.id {
                 return IncomeCategoryEntity(id: id, name: category.wrappedName, emoji: category.wrappedEmoji, income: category.income)
             } else {
                 return nil
             }
         }
+
+        return matches + (CategoryEntityOptions.matchesNoCategory(query) ? [IncomeCategoryEntity.noCategory] : [])
     }
 
     @MainActor
     func entities(for identifiers: [IncomeCategoryEntity.ID]) async throws -> [IncomeCategoryEntity] {
         return identifiers.compactMap { identifier in
+            if identifier == CategoryEntityOptions.noCategoryID {
+                return IncomeCategoryEntity.noCategory
+            }
+
             let dataController = DataController.shared
 
             if let match = try? dataController.findCategory(withId: identifier) {
@@ -190,13 +208,15 @@ struct IncomeCategoryQuery: EntityStringQuery {
     func suggestedEntities() async throws -> [IncomeCategoryEntity] {
         let dataController = DataController.shared
 
-        return dataController.getAllCategories(income: true).compactMap { category in
+        let categories = dataController.getAllCategories(income: true).compactMap { category in
             if let id = category.id {
                 return IncomeCategoryEntity(id: id, name: category.wrappedName, emoji: category.wrappedEmoji, income: category.income)
             } else {
                 return nil
             }
         }
+
+        return categories + [IncomeCategoryEntity.noCategory]
     }
 }
 
@@ -205,6 +225,8 @@ struct ExpenseCategoryEntity: AppEntity, Identifiable {
     static var typeDisplayRepresentation: TypeDisplayRepresentation = .init(name: "Category")
     typealias DefaultQueryType = ExpenseCategoryQuery
     static var defaultQuery: ExpenseCategoryQuery = .init()
+
+    static let noCategory = ExpenseCategoryEntity(id: CategoryEntityOptions.noCategoryID, name: Uncategorised.name, emoji: "", income: false)
 
     var id: UUID
 
@@ -218,7 +240,7 @@ struct ExpenseCategoryEntity: AppEntity, Identifiable {
     var income: Bool
 
     var displayRepresentation: DisplayRepresentation {
-        DisplayRepresentation(title: "\(emoji) \(name)")
+        emoji.isEmpty ? DisplayRepresentation(title: "\(name)") : DisplayRepresentation(title: "\(emoji) \(name)")
     }
 
     init(id: UUID, name: String, emoji: String, income: Bool) {
@@ -239,18 +261,24 @@ struct ExpenseCategoryQuery: EntityStringQuery {
             $0.wrappedName.localizedCaseInsensitiveContains(query) || $0.wrappedEmoji.localizedCaseInsensitiveContains(query)
         }
 
-        return categories.compactMap { category in
+        let matches = categories.compactMap { category in
             if let id = category.id {
                 return ExpenseCategoryEntity(id: id, name: category.wrappedName, emoji: category.wrappedEmoji, income: category.income)
             } else {
                 return nil
             }
         }
+
+        return matches + (CategoryEntityOptions.matchesNoCategory(query) ? [ExpenseCategoryEntity.noCategory] : [])
     }
 
     @MainActor
     func entities(for identifiers: [ExpenseCategoryEntity.ID]) async throws -> [ExpenseCategoryEntity] {
         return identifiers.compactMap { identifier in
+            if identifier == CategoryEntityOptions.noCategoryID {
+                return ExpenseCategoryEntity.noCategory
+            }
+
             let dataController = DataController.shared
             if let match = try? dataController.findCategory(withId: identifier) {
                 if let id = match.id {
@@ -268,13 +296,15 @@ struct ExpenseCategoryQuery: EntityStringQuery {
     func suggestedEntities() async throws -> [ExpenseCategoryEntity] {
         let dataController = DataController.shared
 
-        return dataController.getAllCategories(income: false).compactMap { category in
+        let categories = dataController.getAllCategories(income: false).compactMap { category in
             if let id = category.id {
                 return ExpenseCategoryEntity(id: id, name: category.wrappedName, emoji: category.wrappedEmoji, income: category.income)
             } else {
                 return nil
             }
         }
+
+        return categories + [ExpenseCategoryEntity.noCategory]
     }
 }
 

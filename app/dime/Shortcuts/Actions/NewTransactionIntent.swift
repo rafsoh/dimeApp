@@ -22,10 +22,10 @@ struct NewTransactionIntent: AppIntent {
     @Parameter(title: "Amount", description: "Value of the transaction", controlStyle: .field, inclusiveRange: (lowerBound: 0.01, upperBound: 100_000_000), requestValueDialog: IntentDialog("How much was transacted?"))
     var amount: Double
 
-    @Parameter(title: "Category", description: "Category associated with the transaction", requestValueDialog: IntentDialog("What category does it come under?"))
+    @Parameter(title: "Income Category", description: "Category for an income. Choose No Category to log it without one.", requestValueDialog: IntentDialog("What category does it come under?"))
     var incomeCategory: IncomeCategoryEntity?
 
-    @Parameter(title: "Category", description: "Category associated with the transaction", requestValueDialog: IntentDialog("What category does it come under?"))
+    @Parameter(title: "Expense Category", description: "Category for an expense. Choose No Category to log it without one.", requestValueDialog: IntentDialog("What category does it come under?"))
     var expenseCategory: ExpenseCategoryEntity?
 
     @Parameter(title: "Note")
@@ -101,9 +101,24 @@ struct NewTransactionIntent: AppIntent {
         }
 
         let isIncome = income == .income
-        // A category is optional: leaving it out logs the transaction without one.
-        let categoryId = isIncome ? incomeCategory?.id : expenseCategory?.id
-        let category = try categoryId.map { try dataController.findCategory(withId: $0) }
+        let category: Category?
+
+        // Left empty, the category is asked for; No Category logs the transaction without one. Since iOS 18
+        // this prompt only appears for parameters in the summary, so every summary below lists both.
+        // A category deleted since the shortcut was set up is asked for again, rather than failing.
+        if isIncome {
+            guard let id = incomeCategory?.id, id == CategoryEntityOptions.noCategoryID || (try? dataController.findCategory(withId: id)) != nil else {
+                throw $incomeCategory.needsValueError()
+            }
+
+            category = id == CategoryEntityOptions.noCategoryID ? nil : try dataController.findCategory(withId: id)
+        } else {
+            guard let id = expenseCategory?.id, id == CategoryEntityOptions.noCategoryID || (try? dataController.findCategory(withId: id)) != nil else {
+                throw $expenseCategory.needsValueError()
+            }
+
+            category = id == CategoryEntityOptions.noCategoryID ? nil : try dataController.findCategory(withId: id)
+        }
 
         let transaction = dataController.newTransaction(note: note ?? "", category: category, income: isIncome, amount: amount, currencyCode: currency, date: Date.now, repeatType: repeatType, repeatCoefficient: 1, delay: false)
 
@@ -146,11 +161,27 @@ struct NewTransactionIntent: AppIntent {
                     }
                 })
             }
+            // Used when the type is asked each time. Both categories must be listed: since iOS 18 a parameter
+            // missing from the summary can't be asked for, and the shortcut ended without logging anything.
             DefaultCase {
-                Summary("Log an \(\.$income) of \(\.$amount)") {
-                    \.$note
-                    \.$currencyCode
-                }
+                When(\NewTransactionIntent.$recurringTransaction, .equalTo, true, {
+                    Summary("Log an \(\.$income) of \(\.$amount)") {
+                        \.$expenseCategory
+                        \.$incomeCategory
+                        \.$note
+                        \.$currencyCode
+                        \.$recurringTransaction
+                        \.$recurringType
+                    }
+                }, otherwise: {
+                    Summary("Log an \(\.$income) of \(\.$amount)") {
+                        \.$expenseCategory
+                        \.$incomeCategory
+                        \.$note
+                        \.$currencyCode
+                        \.$recurringTransaction
+                    }
+                })
             }
         }
     }

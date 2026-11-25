@@ -453,3 +453,7 @@
 "%@ will be added to your log today." = "%@ будет добавлено в журнал сегодня.";
 "%@ will be added to your log tomorrow." = "%@ будет добавлено в журнал завтра.";
 "%@ will be added to your log on %@." = "%@ будет добавлено в журнал %@.";
+
+// shortcuts
+"Category for an income. Choose No Category to log it without one." = "Категория дохода. Выберите «Без категории», чтобы добавить его без категории.";
+"Category for an expense. Choose No Category to log it without one." = "Категория расхода. Выберите «Без категории», чтобы добавить его без категории.";
