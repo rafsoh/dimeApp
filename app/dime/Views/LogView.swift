@@ -1990,6 +1990,32 @@ struct MonthStepperView: View {
     }
 }
 
+private enum LogDateFormatters {
+    static let sectionDateWithYear: DateFormatter = {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "EEE, d MMM yy"
+        return dateFormatter
+    }()
+
+    static let sectionDate: DateFormatter = {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "EEE, d MMM"
+        return dateFormatter
+    }()
+
+    static let accessibilityDate: DateFormatter = {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "EEE, d MMM yyyy"
+        return dateFormatter
+    }()
+
+    static let accessibilityTime: DateFormatter = {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "h:mm a"
+        return dateFormatter
+    }()
+}
+
 func dateConverter(date: Date) -> String {
     let calendar = Calendar.current
 
@@ -2002,20 +2028,12 @@ func dateConverter(date: Date) -> String {
     } else if calendar.isDateInYesterday(date) {
         return String(localized: "yesterday")
     } else if startOfCurrentYear > date {
-        let dateFormatter = DateFormatter()
-
-        dateFormatter.dateFormat = "EEE, d MMM yy"
-
-        var string = dateFormatter.string(from: date)
+        var string = LogDateFormatters.sectionDateWithYear.string(from: date)
         string.insert("'", at: string.index(string.endIndex, offsetBy: -2))
 
         return string
     } else {
-        let dateFormatter = DateFormatter()
-
-        dateFormatter.dateFormat = "EEE, d MMM"
-
-        return dateFormatter.string(from: date)
+        return LogDateFormatters.sectionDate.string(from: date)
     }
 }
 
@@ -2027,20 +2045,12 @@ func dateConverterAccessibilityLabel(date: Date) -> String {
     } else if calendar.isDateInYesterday(date) {
         return "yesterday"
     } else {
-        let dateFormatter = DateFormatter()
-
-        dateFormatter.dateFormat = "EEE, d MMM yyyy"
-
-        return "on " + dateFormatter.string(from: date)
+        return "on " + LogDateFormatters.accessibilityDate.string(from: date)
     }
 }
 
 func timeConverterAccessibilityLabel(date: Date) -> String {
-    let dateFormatter = DateFormatter()
-
-    dateFormatter.dateFormat = "h:mm a"
-
-    return dateFormatter.string(from: date)
+    return LogDateFormatters.accessibilityTime.string(from: date)
 }
 
 func dayTotal(dayTransaction: [Transaction]) -> Double {
