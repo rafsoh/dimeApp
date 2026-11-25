@@ -630,7 +630,7 @@ struct TransactionView: View {
 
         if let editedTransaction = toEdit {
             if note.trimmingCharacters(in: .whitespacesAndNewlines) == "" {
-                editedTransaction.note = category?.wrappedName ?? Uncategorised.name
+                editedTransaction.note = category?.wrappedName ?? ""
             } else {
                 editedTransaction.note = note.trimmingCharacters(in: .whitespaces)
             }
@@ -686,7 +686,7 @@ struct TransactionView: View {
         let transaction = Transaction(context: moc)
 
         if note.trimmingCharacters(in: .whitespacesAndNewlines) == "" {
-            transaction.note = category?.wrappedName ?? Uncategorised.name
+            transaction.note = category?.wrappedName ?? ""
         } else {
             transaction.note = note.trimmingCharacters(in: .whitespaces)
         }

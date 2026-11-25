@@ -234,7 +234,7 @@ struct ShortcutTransactionView: View {
                 }
 
             VStack(alignment: .leading) {
-                Text(transaction.wrappedNote)
+                Text(transaction.displayTitle)
                     .font(.system(size: 16, weight: .medium, design: .rounded))
                     .foregroundColor(Color.PrimaryText)
                     .lineLimit(1)

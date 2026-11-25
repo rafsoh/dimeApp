@@ -30,6 +30,15 @@ extension Transaction {
         note ?? ""
     }
 
+    /// What to call the transaction on screen: its note, or "Expense" or "Income" when it has none.
+    var displayTitle: String {
+        let trimmed = wrappedNote.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmed.isEmpty {
+            return trimmed
+        }
+        return income ? String(localized: "Income") : String(localized: "Expense")
+    }
+
     var money: MoneyEntry {
         MoneyEntry(id: id, amount: amount, currencyCode: currencyCode, date: wrappedDate, income: income)
     }
