@@ -406,3 +406,26 @@
 "Find a transaction by its amount, even with a currency symbol or separators." = "Trouvez une transaction par son montant, même avec un symbole monétaire ou des séparateurs.";
 "Français and Русский" = "Français et Русский";
 "Dime is now available in French and Russian." = "Dime est désormais disponible en français et en russe.";
+
+// quick add
+"Quick Add" = "Ajout rapide";
+"Templates" = "Modèles";
+"%lld/%lld" = "%lld/%lld";
+"%lld of %lld templates" = "%lld modèles sur %lld";
+"New Template" = "Nouveau modèle";
+"You can have up to 4 templates" = "Vous pouvez avoir jusqu’à 4 modèles";
+"Log a template with one tap from the Quick Add widget, without opening Dime. Each one becomes its own transaction, so editing or deleting a template never changes what you've logged." = "Enregistrez un modèle d’un seul geste depuis le widget Ajout rapide, sans ouvrir Dime. Chacun devient une transaction à part entière : modifier ou supprimer un modèle ne change jamais ce que vous avez enregistré.";
+"Add From Recent" = "Ajouter depuis les récentes";
+"Adds a template" = "Ajoute un modèle";
+"Delete Template?" = "Supprimer le modèle ?";
+"Transactions you've logged with it stay as they are." = "Les transactions déjà enregistrées avec ce modèle restent inchangées.";
+"Log your templates with one tap, without opening Dime." = "Enregistrez vos modèles d’un seul geste, sans ouvrir Dime.";
+"Add templates in Settings to log them from here." = "Ajoutez des modèles dans les Réglages pour les enregistrer d’ici.";
+"Add a template" = "Ajouter un modèle";
+"Log %@, %@" = "Enregistrer %@, %@";
+"Logged %@, %@" = "%@ enregistré, %@";
+"Log Quick Add Template" = "Enregistrer un modèle d’ajout rapide";
+"Template" = "Modèle";
+"Coffee" = "Café";
+"Lunch" = "Déjeuner";
+"Bus" = "Bus";

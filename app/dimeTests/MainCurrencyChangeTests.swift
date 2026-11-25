@@ -77,6 +77,27 @@ final class MainCurrencyChangeTests: XCTestCase {
         XCTAssertEqual(try MainCurrencyChanger.apply(plan, in: context), 0)
     }
 
+    func testTemplatesFollowTheSameRuleAsTransactions() throws {
+        for (kind, expected) in [(MainCurrencyChangePlan.Kind.relabel, ["nil", "SGD", "SGD", "EUR"]), (.convert, ["USD", "USD", "USD", "EUR"])] {
+            let context = try makeContext()
+
+            for (index, code) in [nil, "USD", "usd", "EUR"].enumerated() {
+                let template = TemplateTransaction(context: context)
+                template.id = UUID()
+                template.order = Int16(index)
+                template.amount = 5
+                template.currencyCode = code
+            }
+            try context.save()
+
+            try MainCurrencyChanger.applyToTemplates(MainCurrencyChangePlan(kind: kind, oldCurrency: "USD", newCurrency: "SGD"), in: context)
+
+            let request = NSFetchRequest<TemplateTransaction>(entityName: "TemplateTransaction")
+            request.sortDescriptors = [NSSortDescriptor(key: "order", ascending: true)]
+            XCTAssertEqual(try context.fetch(request).map { $0.currencyCode ?? "nil" }, expected, "\(kind)")
+        }
+    }
+
     func testChangesInBatchesAndResumesAfterAnInterruption() throws {
         let context = try makeContext()
         try insert(Array(repeating: nil, count: 1_234) + ["EUR"], into: context)

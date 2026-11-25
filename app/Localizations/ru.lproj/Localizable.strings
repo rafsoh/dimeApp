@@ -406,3 +406,26 @@
 "Find a transaction by its amount, even with a currency symbol or separators." = "Находите транзакцию по сумме, даже с символом валюты или разделителями.";
 "Français and Русский" = "Français и Русский";
 "Dime is now available in French and Russian." = "Dime теперь доступен на французском и русском языках.";
+
+// quick add
+"Quick Add" = "Быстрое добавление";
+"Templates" = "Шаблоны";
+"%lld/%lld" = "%lld/%lld";
+"%lld of %lld templates" = "Шаблонов: %lld из %lld";
+"New Template" = "Новый шаблон";
+"You can have up to 4 templates" = "Можно создать до 4 шаблонов";
+"Log a template with one tap from the Quick Add widget, without opening Dime. Each one becomes its own transaction, so editing or deleting a template never changes what you've logged." = "Добавляйте шаблон одним касанием из виджета «Быстрое добавление», не открывая Dime. Каждый раз создаётся отдельная операция, поэтому изменение или удаление шаблона не меняет уже добавленное.";
+"Add From Recent" = "Добавить из недавних";
+"Adds a template" = "Добавляет шаблон";
+"Delete Template?" = "Удалить шаблон?";
+"Transactions you've logged with it stay as they are." = "Операции, уже добавленные с ним, останутся без изменений.";
+"Log your templates with one tap, without opening Dime." = "Добавляйте шаблоны одним касанием, не открывая Dime.";
+"Add templates in Settings to log them from here." = "Добавьте шаблоны в настройках, чтобы добавлять их отсюда.";
+"Add a template" = "Добавить шаблон";
+"Log %@, %@" = "Добавить %@, %@";
+"Logged %@, %@" = "Добавлено: %@, %@";
+"Log Quick Add Template" = "Добавить шаблон быстрого добавления";
+"Template" = "Шаблон";
+"Coffee" = "Кофе";
+"Lunch" = "Обед";
+"Bus" = "Автобус";

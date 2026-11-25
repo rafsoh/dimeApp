@@ -405,3 +405,26 @@
 "Find a transaction by its amount, even with a currency symbol or separators." = "Find a transaction by its amount, even with a currency symbol or separators.";
 "Français and Русский" = "Français and Русский";
 "Dime is now available in French and Russian." = "Dime is now available in French and Russian.";
+
+// quick add
+"Quick Add" = "Quick Add";
+"Templates" = "Templates";
+"%lld/%lld" = "%lld/%lld";
+"%lld of %lld templates" = "%lld of %lld templates";
+"New Template" = "New Template";
+"You can have up to 4 templates" = "You can have up to 4 templates";
+"Log a template with one tap from the Quick Add widget, without opening Dime. Each one becomes its own transaction, so editing or deleting a template never changes what you've logged." = "Log a template with one tap from the Quick Add widget, without opening Dime. Each one becomes its own transaction, so editing or deleting a template never changes what you've logged.";
+"Add From Recent" = "Add From Recent";
+"Adds a template" = "Adds a template";
+"Delete Template?" = "Delete Template?";
+"Transactions you've logged with it stay as they are." = "Transactions you've logged with it stay as they are.";
+"Log your templates with one tap, without opening Dime." = "Log your templates with one tap, without opening Dime.";
+"Add templates in Settings to log them from here." = "Add templates in Settings to log them from here.";
+"Add a template" = "Add a template";
+"Log %@, %@" = "Log %@, %@";
+"Logged %@, %@" = "Logged %@, %@";
+"Log Quick Add Template" = "Log Quick Add Template";
+"Template" = "Template";
+"Coffee" = "Coffee";
+"Lunch" = "Lunch";
+"Bus" = "Bus";

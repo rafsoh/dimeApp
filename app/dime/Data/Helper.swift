@@ -78,6 +78,9 @@ extension Sequence where Element == Transaction {
 }
 
 extension TemplateTransaction {
+    /// The most Quick Add templates there can be, as many as the widgets show.
+    static let quickAddLimit = 4
+
     var wrappedAmount: Double {
         amount
     }
@@ -92,6 +95,18 @@ extension TemplateTransaction {
 
     var wrappedColour: String {
         category?.wrappedColour ?? Uncategorised.colour
+    }
+
+    /// What to call the template on screen: its note, then its category, then "Expense" or "Income".
+    var displayTitle: String {
+        let trimmed = wrappedNote.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmed.isEmpty {
+            return trimmed
+        }
+        if let category {
+            return category.wrappedName
+        }
+        return income ? String(localized: "Income") : String(localized: "Expense")
     }
 }
 

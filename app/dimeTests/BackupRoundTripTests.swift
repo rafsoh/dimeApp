@@ -49,6 +49,7 @@ final class BackupRoundTripTests: XCTestCase {
         XCTAssertEqual(template.amount, 12.5)
         XCTAssertEqual(template.note, "Lunch")
         XCTAssertEqual(template.category?.name, "Food")
+        XCTAssertEqual(template.currencyCode, "EUR")
     }
 
     func testRestoringTwiceAddsNothingTheSecondTime() throws {
@@ -130,6 +131,7 @@ final class BackupRoundTripTests: XCTestCase {
         XCTAssertEqual(ramen.category?.name, "Food")
         XCTAssertEqual(ramen.date, Date(timeIntervalSinceReferenceDate: 700_000_100))
         XCTAssertTrue(try all(Transaction.self, in: target).allSatisfy { $0.currencyCode == nil })
+        XCTAssertNil(try XCTUnwrap(all(TemplateTransaction.self, in: target).first).currencyCode)
     }
 
     func testVersionTwoBackupKeepsTheCurrency() throws {
@@ -284,6 +286,7 @@ final class BackupRoundTripTests: XCTestCase {
         template.note = "Lunch"
         template.order = 0
         template.category = food
+        template.currencyCode = "EUR"
 
         try context.save()
     }

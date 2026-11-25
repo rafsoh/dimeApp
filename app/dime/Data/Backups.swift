@@ -104,6 +104,8 @@ private struct TemplateRecord: Codable {
     var recurringCoefficient: Int16
     var recurringType: Int16
     var categoryRef: String?
+    /// Missing from backups made before templates had a currency; those templates use the main currency.
+    var currencyCode: String?
 }
 
 // Backups are plain JSON rather than copies of the SQLite file, so restoring never touches the CloudKit
@@ -175,7 +177,7 @@ struct BackupStore {
                 MainBudgetRecord(amount: $0.amount, dateCreated: $0.dateCreated, green: $0.green, startDate: $0.startDate, type: $0.type)
             },
             templates: templates.map {
-                TemplateRecord(id: $0.id, amount: $0.amount, income: $0.income, note: $0.note, order: $0.order, recurringCoefficient: $0.recurringCoefficient, recurringType: $0.recurringType, categoryRef: $0.category.map(Self.reference(for:)))
+                TemplateRecord(id: $0.id, amount: $0.amount, income: $0.income, note: $0.note, order: $0.order, recurringCoefficient: $0.recurringCoefficient, recurringType: $0.recurringType, categoryRef: $0.category.map(Self.reference(for:)), currencyCode: $0.currencyCode)
             }
         )
 
@@ -328,6 +330,7 @@ struct BackupStore {
             template.recurringCoefficient = record.recurringCoefficient
             template.recurringType = record.recurringType
             template.category = record.categoryRef.flatMap { categoriesByRef[$0] }
+            template.currencyCode = record.currencyCode
             templateIDs.insert(id)
             result.templates += 1
         }

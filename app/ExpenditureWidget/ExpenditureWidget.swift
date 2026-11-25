@@ -17,7 +17,10 @@ struct DimeWidgets: WidgetBundle {
         LockBudgetWidget()
         MainBudgetWidget()
         NewExpenseWidget()
-//        TemplateTransactionWidget()
+
+        if #available(iOSApplicationExtension 17.0, *) {
+            QuickAddWidget()
+        }
 
         if #available(iOSApplicationExtension 18.0, *) {
             NewExpenseControl()

@@ -318,6 +318,10 @@ struct SettingsView: View {
                   systemImage: "rectangle.grid.2x2.fill", title: "Categories", colour: 110)
               }
 
+              NavigationLink(destination: SettingsQuickAddView()) {
+                SettingsRowView(systemImage: "bolt.fill", title: "Quick Add", colour: 115)
+              }
+
               NavigationLink(destination: SettingsCloudView()) {
                 SettingsRowView(
                   systemImage: "icloud.fill", title: "iCloud Sync", colour: 111,
@@ -328,11 +332,6 @@ struct SettingsView: View {
                 SettingsRowView(
                   systemImage: "clock.arrow.circlepath", title: "Backups", colour: 106)
               }
-
-              //
-              //                            NavigationLink(destination: SettingsQuickAddWidgetView()) {
-              //                                SettingsRowView(systemImage: "bolt.square.fill", title: "Quick-Add Widget", colour: 115)
-              //                            }
 
               Button {
                 showImportGuide = true

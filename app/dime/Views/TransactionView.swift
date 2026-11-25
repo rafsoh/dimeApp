@@ -57,10 +57,34 @@ struct TransactionView: View {
     // edit mode
     let toEdit: Transaction?
 
+    /// What the page edits when it's a Quick Add template rather than a transaction.
+    enum TemplateTarget {
+        case new
+        case existing(TemplateTransaction)
+    }
+
+    /// Set when the page edits a Quick Add template. Templates have no date and don't repeat.
+    let template: TemplateTarget?
+
+    var isTemplate: Bool {
+        template != nil
+    }
+
+    var editedTemplate: TemplateTransaction? {
+        if case let .existing(existing) = template {
+            return existing
+        }
+        return nil
+    }
+
+    var isEditing: Bool {
+        toEdit != nil || editedTemplate != nil
+    }
+
     @AppStorage("incomeTracking", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var incomeTracking: Bool = true
 
     var showsIncomeControls: Bool {
-        incomeTracking || toEdit?.income == true
+        incomeTracking || toEdit?.income == true || editedTemplate?.income == true
     }
 
     // delete mode
@@ -108,7 +132,7 @@ struct TransactionView: View {
     }
 
     var showingNotePicker: Bool {
-        return note != "" && toEdit == nil && !suggestedTransactions.isEmpty && textFieldFocused
+        return note != "" && !isEditing && !suggestedTransactions.isEmpty && textFieldFocused
         && showRecommendations
     }
 
@@ -139,6 +163,10 @@ struct TransactionView: View {
 
         if let transaction = toEdit {
             return (transaction.currencyCode ?? currency).uppercased()
+        }
+
+        if let editedTemplate {
+            return (editedTemplate.currencyCode ?? currency).uppercased()
         }
 
         return dataController.currencyForNewEntry()
@@ -181,9 +209,11 @@ struct TransactionView: View {
 
                             Spacer()
 
-                            RecurringMenu(
-                                repeatType: $repeatType, repeatCoefficient: $repeatCoefficient,
-                                showPicker: $showPicker, accessibilityLabel: repeatButtonAccessibility)
+                            if !isTemplate {
+                                RecurringMenu(
+                                    repeatType: $repeatType, repeatCoefficient: $repeatCoefficient,
+                                    showPicker: $showPicker, accessibilityLabel: repeatButtonAccessibility)
+                            }
                         }
                     }
                     .frame(height: 44)
@@ -201,7 +231,7 @@ struct TransactionView: View {
                         }
                     }
                     .overlay(alignment: .topTrailing) {
-                        if toEdit != nil && !usesVerticalBar {
+                        if isEditing && !usesVerticalBar {
                             GlassIconButton(
                                 systemName: "trash.fill",
                                 accessibilityLabel: "delete transaction",
@@ -364,15 +394,19 @@ struct TransactionView: View {
                 }
                 .confirmationSheet(
                     isPresented: $deleteMode,
-                    title: "Delete Expense?",
-                    message: "This action cannot be undone.",
+                    title: isTemplate ? "Delete Template?" : "Delete Expense?",
+                    message: isTemplate ? "Transactions you've logged with it stay as they are." : "This action cannot be undone.",
                     onDismiss: { toDelete = nil }
                 ) {
                     withAnimation {
-                        if let itemToDelete = toDelete {
-                            moc.delete(itemToDelete)
+                        if let editedTemplate {
+                            dataController.deleteQuickAddTemplate(editedTemplate)
+                        } else {
+                            if let itemToDelete = toDelete {
+                                moc.delete(itemToDelete)
+                            }
+                            dataController.save()
                         }
-                        dataController.save()
                     }
 
                     dismiss()
@@ -430,6 +464,15 @@ struct TransactionView: View {
                         animateIcon = true
                     }
                 }
+
+                if let editedTemplate {
+                    price = editedTemplate.wrappedAmount
+
+                    if editedTemplate.wrappedAmount.truncatingRemainder(dividingBy: 1) > 0 && numberEntryType == 2 && fractionDigits > 0 {
+                        isEditingDecimal = true
+                        decimalValuesAssigned = AssignedDecimal(count: fractionDigits)
+                    }
+                }
             }
         }
         .sheet(isPresented: $showCategorySheet) {
@@ -464,7 +507,13 @@ struct TransactionView: View {
     }
 
     var hasUnsavedInput: Bool {
-        if let transaction = toEdit {
+        if let editedTemplate {
+            return price != editedTemplate.wrappedAmount
+                || note != editedTemplate.wrappedNote
+                || category != editedTemplate.category
+                || income != editedTemplate.income
+                || !CurrencyPreferences.isSameCurrency(editedTemplate.currencyCode, as: transactionCurrency, mainCurrency: currency)
+        } else if let transaction = toEdit {
             return price != transaction.wrappedAmount
                 || note != transaction.wrappedNote
                 || category != transaction.category
@@ -515,29 +564,53 @@ struct TransactionView: View {
         if #available(iOS 16.0, *) {
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 8) {
-                    dateToken
+                    leadingToken
                     lineSeparator
                     categoryToken
                 }
                 .fixedSize(horizontal: true, vertical: false)
 
                 VStack(spacing: 0) {
-                    dateToken
+                    leadingToken
                     categoryToken
                 }
             }
         } else if dynamicTypeSize > .xLarge {
             VStack(spacing: 0) {
-                dateToken
+                leadingToken
                 categoryToken
             }
         } else {
             HStack(spacing: 8) {
-                dateToken
+                leadingToken
                 lineSeparator
                 categoryToken
             }
         }
+    }
+
+    /// The date, or on a template, which has no date, a label saying it's a Quick Add template.
+    @ViewBuilder var leadingToken: some View {
+        if isTemplate {
+            templateToken
+        } else {
+            dateToken
+        }
+    }
+
+    var templateToken: some View {
+        HStack(spacing: 5) {
+            Image(systemName: "bolt.fill")
+                .font(.system(.subheadline, design: .rounded).weight(.semibold))
+
+            Text("Quick Add")
+                .font(.system(.body, design: .rounded).weight(.semibold))
+                .lineLimit(1)
+        }
+        .foregroundColor(Color.SubtitleText)
+        .padding(.vertical, 11)
+        .padding(.horizontal, 4)
+        .accessibilityElement(children: .combine)
     }
 
     var dateToken: some View {
@@ -627,6 +700,12 @@ struct TransactionView: View {
         generator.notificationOccurred(.success)
 
         let chosenCurrency = transactionCurrency
+
+        if let template {
+            saveTemplate(template, currencyCode: chosenCurrency)
+            dismiss()
+            return
+        }
 
         if let editedTransaction = toEdit {
             if note.trimmingCharacters(in: .whitespacesAndNewlines) == "" {
@@ -729,6 +808,35 @@ struct TransactionView: View {
         dismiss()
     }
 
+    /// Saves the page to a Quick Add template. The note is kept as typed: a blank one shows the category's name instead.
+    func saveTemplate(_ target: TemplateTarget, currencyCode: String) {
+        let saved: TemplateTransaction
+
+        switch target {
+        case let .existing(existing):
+            saved = existing
+        case .new:
+            guard dataController.canAddQuickAddTemplate else {
+                return
+            }
+
+            saved = TemplateTransaction(context: moc)
+            saved.id = UUID()
+            saved.order = dataController.nextQuickAddOrder
+        }
+
+        saved.note = note.trimmingCharacters(in: .whitespacesAndNewlines)
+        saved.amount = price
+        saved.income = income
+        saved.category = category
+        saved.currencyCode = currencyCode
+        saved.recurringType = 0
+        saved.recurringCoefficient = 0
+
+        CurrencyPreferences.record(currencyCode, in: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+        dataController.save()
+    }
+
     init(toEdit: Transaction? = nil) {
         if let transaction = toEdit {
             _note = State(initialValue: transaction.wrappedNote)
@@ -746,6 +854,7 @@ struct TransactionView: View {
             _date = State(initialValue: transaction.date ?? Date.now)
         }
         self.toEdit = toEdit
+        template = nil
     }
 
     init(category: Category? = nil) {
@@ -755,6 +864,22 @@ struct TransactionView: View {
         }
 
         toEdit = nil
+        template = nil
+    }
+
+    init(template: TemplateTarget) {
+        if case let .existing(existing) = template {
+            _note = State(initialValue: existing.wrappedNote)
+            _category = State(initialValue: existing.category)
+            _income = State(initialValue: existing.income)
+
+            if existing.income {
+                _swipingOffset = State(initialValue: 100)
+            }
+        }
+
+        toEdit = nil
+        self.template = template
     }
 
     @ViewBuilder
@@ -786,11 +911,13 @@ struct TransactionView: View {
         }
 
         ToolbarItemGroup(placement: .topBarTrailing) {
-            RecurringToolbarMenu(
-                repeatType: $repeatType, repeatCoefficient: $repeatCoefficient,
-                showPicker: $showPicker, accessibilityLabel: repeatButtonAccessibility)
+            if !isTemplate {
+                RecurringToolbarMenu(
+                    repeatType: $repeatType, repeatCoefficient: $repeatCoefficient,
+                    showPicker: $showPicker, accessibilityLabel: repeatButtonAccessibility)
+            }
 
-            if toEdit != nil {
+            if isEditing {
                 Button(role: .destructive) {
                     toDelete = toEdit
                     deleteMode = true
