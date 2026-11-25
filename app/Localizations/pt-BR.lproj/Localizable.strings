@@ -451,3 +451,32 @@
 "%@ will be added to your log today." = "%@ será adicionado ao seu histórico hoje.";
 "%@ will be added to your log tomorrow." = "%@ será adicionado ao seu histórico amanhã.";
 "%@ will be added to your log on %@." = "%@ será adicionado ao seu histórico em %@.";
+
+// budget rollover
+"+%@ rolled over" = "+%@ transferido";
+"−%@ rolled over" = "−%@ transferido";
+"Leftover rolls over %@" = "O que sobrar é transferido %@";
+"Nothing rolled over" = "Nada transferido";
+"Rolls over" = "Transfere o saldo";
+"%@ budget %@ %@ = %@" = "Orçamento de %@ %@ %@ = %@";
+"Rollover" = "Transferência";
+"Whether what's left, or overspent, carries into the next period" = "Se o que sobra, ou o excesso, passa para o próximo período";
+"%@ overspend" = "excesso de %@";
+"%@ left over" = "sobra de %@";
+"Rollover starts this period" = "A transferência começa neste período";
+"What's left at the end of this period, or overspent, carries into the next one. Earlier periods aren't counted." = "O que sobrar no fim deste período, ou o excesso, passa para o próximo. Períodos anteriores não contam.";
+"Turn On Rollover" = "Ativar transferência";
+"Turn off rollover?" = "Desativar a transferência?";
+"The %@ from earlier periods will be cleared. Turning rollover back on starts fresh." = "O valor de %@ transferido para este período será apagado. Ao reativar a transferência, ela começa do zero.";
+"Leftovers will stop carrying over. Turning rollover back on starts fresh." = "As sobras deixarão de ser transferidas. Ao reativar a transferência, ela começa do zero.";
+"Turn Off" = "Desativar";
+"Reset rollover?" = "Reiniciar a transferência?";
+"Changing how often this budget repeats clears the %@ from earlier periods. Rollover starts again from this period." = "Mudar a frequência deste orçamento apaga o valor de %@ transferido. A transferência recomeça a partir deste período.";
+"Changing the category clears the %@ from earlier periods. Rollover starts again from this period." = "Mudar a categoria apaga o valor de %@ transferido. A transferência recomeça a partir deste período.";
+"Changing how often this budget repeats restarts rollover from this period." = "Mudar a frequência deste orçamento reinicia a transferência a partir deste período.";
+"Changing the category restarts rollover from this period." = "Mudar a categoria reinicia a transferência a partir deste período.";
+"Apply from this period?" = "Aplicar a partir deste período?";
+"Your changes apply from this period on, and earlier periods keep their old settings." = "Suas alterações valem a partir deste período, e os anteriores mantêm os ajustes antigos.";
+"The new amount applies from this period on, and earlier periods keep the old one." = "O novo valor vale a partir deste período, e os anteriores mantêm o antigo.";
+"The new reset day applies from this period on, and earlier periods keep the old one." = "O novo dia de início vale a partir deste período, e os anteriores mantêm o antigo.";
+"The %@ from earlier periods is kept." = "O valor de %@ transferido até agora é mantido.";

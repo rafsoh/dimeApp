@@ -451,3 +451,32 @@
 "%@ will be added to your log today." = "%@ bugün kayıtlarına eklenecek.";
 "%@ will be added to your log tomorrow." = "%@ yarın kayıtlarına eklenecek.";
 "%@ will be added to your log on %@." = "%1$@, %2$@ tarihinde kayıtlarına eklenecek.";
+
+// budget rollover
+"+%@ rolled over" = "+%@ devredildi";
+"−%@ rolled over" = "−%@ devredildi";
+"Leftover rolls over %@" = "Kalan %@ devredilir";
+"Nothing rolled over" = "Devredilen yok";
+"Rolls over" = "Devrediliyor";
+"%@ budget %@ %@ = %@" = "%@ bütçe %@ %@ = %@";
+"Rollover" = "Devir";
+"Whether what's left, or overspent, carries into the next period" = "Kalanın ya da aşımın bir sonraki döneme geçip geçmeyeceği";
+"%@ overspend" = "%@ aşım";
+"%@ left over" = "%@ kalan";
+"Rollover starts this period" = "Devir bu dönem başlıyor";
+"What's left at the end of this period, or overspent, carries into the next one. Earlier periods aren't counted." = "Bu dönemin sonunda kalan ya da aşılan tutar bir sonrakine geçer. Önceki dönemler sayılmaz.";
+"Turn On Rollover" = "Devri Aç";
+"Turn off rollover?" = "Devir kapatılsın mı?";
+"The %@ from earlier periods will be cleared. Turning rollover back on starts fresh." = "Bu döneme devredilen %@ silinecek. Devri yeniden açarsan sıfırdan başlar.";
+"Leftovers will stop carrying over. Turning rollover back on starts fresh." = "Kalan tutarlar artık devredilmeyecek. Devri yeniden açarsan sıfırdan başlar.";
+"Turn Off" = "Kapat";
+"Reset rollover?" = "Devir sıfırlansın mı?";
+"Changing how often this budget repeats clears the %@ from earlier periods. Rollover starts again from this period." = "Bu bütçenin ne sıklıkla yenilendiğini değiştirmek devredilen %@ tutarını siler. Devir bu dönemden yeniden başlar.";
+"Changing the category clears the %@ from earlier periods. Rollover starts again from this period." = "Kategoriyi değiştirmek devredilen %@ tutarını siler. Devir bu dönemden yeniden başlar.";
+"Changing how often this budget repeats restarts rollover from this period." = "Bu bütçenin ne sıklıkla yenilendiğini değiştirmek devri bu dönemden yeniden başlatır.";
+"Changing the category restarts rollover from this period." = "Kategoriyi değiştirmek devri bu dönemden yeniden başlatır.";
+"Apply from this period?" = "Bu dönemden itibaren uygulansın mı?";
+"Your changes apply from this period on, and earlier periods keep their old settings." = "Değişikliklerin bu dönemden itibaren geçerli olur; önceki dönemler eski ayarlarını korur.";
+"The new amount applies from this period on, and earlier periods keep the old one." = "Yeni tutar bu dönemden itibaren geçerli olur; önceki dönemler eskisini korur.";
+"The new reset day applies from this period on, and earlier periods keep the old one." = "Yeni başlangıç günü bu dönemden itibaren geçerli olur; önceki dönemler eskisini korur.";
+"The %@ from earlier periods is kept." = "Şimdiye kadar devredilen %@ korunur.";

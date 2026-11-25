@@ -451,3 +451,32 @@
 "%@ will be added to your log today." = "今日、%@が記録に追加されます。";
 "%@ will be added to your log tomorrow." = "明日、%@が記録に追加されます。";
 "%@ will be added to your log on %@." = "%2$@に%1$@が記録に追加されます。";
+
+// budget rollover
+"+%@ rolled over" = "+%@を繰り越し";
+"−%@ rolled over" = "−%@を繰り越し";
+"Leftover rolls over %@" = "残りは%@に繰り越されます";
+"Nothing rolled over" = "繰り越しなし";
+"Rolls over" = "繰り越しあり";
+"%@ budget %@ %@ = %@" = "予算%@ %@ %@ = %@";
+"Rollover" = "繰り越し";
+"Whether what's left, or overspent, carries into the next period" = "残りや超過分を次の期間に繰り越すかどうか";
+"%@ overspend" = "%@の超過";
+"%@ left over" = "%@の残り";
+"Rollover starts this period" = "繰り越しはこの期間から始まります";
+"What's left at the end of this period, or overspent, carries into the next one. Earlier periods aren't counted." = "この期間の終わりの残り、または超過分が次の期間に繰り越されます。以前の期間は含まれません。";
+"Turn On Rollover" = "繰り越しをオンにする";
+"Turn off rollover?" = "繰り越しをオフにしますか？";
+"The %@ from earlier periods will be cleared. Turning rollover back on starts fresh." = "この期間に繰り越された%@はリセットされます。再びオンにすると最初から始まります。";
+"Leftovers will stop carrying over. Turning rollover back on starts fresh." = "残りは繰り越されなくなります。再びオンにすると最初から始まります。";
+"Turn Off" = "オフにする";
+"Reset rollover?" = "繰り越しをリセットしますか？";
+"Changing how often this budget repeats clears the %@ from earlier periods. Rollover starts again from this period." = "この予算の頻度を変更すると、繰り越された%@はリセットされます。繰り越しはこの期間から再開します。";
+"Changing the category clears the %@ from earlier periods. Rollover starts again from this period." = "カテゴリを変更すると、繰り越された%@はリセットされます。繰り越しはこの期間から再開します。";
+"Changing how often this budget repeats restarts rollover from this period." = "この予算の頻度を変更すると、繰り越しはこの期間から再開します。";
+"Changing the category restarts rollover from this period." = "カテゴリを変更すると、繰り越しはこの期間から再開します。";
+"Apply from this period?" = "この期間から適用しますか？";
+"Your changes apply from this period on, and earlier periods keep their old settings." = "変更はこの期間から適用され、以前の期間は元の設定のままです。";
+"The new amount applies from this period on, and earlier periods keep the old one." = "新しい金額はこの期間から適用され、以前の期間は元の金額のままです。";
+"The new reset day applies from this period on, and earlier periods keep the old one." = "新しい開始日はこの期間から適用され、以前の期間は元の開始日のままです。";
+"The %@ from earlier periods is kept." = "これまでに繰り越された%@は保持されます。";

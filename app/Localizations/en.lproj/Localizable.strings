@@ -462,3 +462,35 @@
 "Move Earlier" = "Move Earlier";
 "Move Later" = "Move Later";
 "Edits the template" = "Edits the template";
+
+// budget rollover
+"with" = "with";
+"rollover" = "rollover";
+"no rollover" = "no rollover";
+"+%@ rolled over" = "+%@ rolled over";
+"−%@ rolled over" = "−%@ rolled over";
+"Leftover rolls over %@" = "Leftover rolls over %@";
+"Nothing rolled over" = "Nothing rolled over";
+"Rolls over" = "Rolls over";
+"%@ budget %@ %@ = %@" = "%@ budget %@ %@ = %@";
+"Rollover" = "Rollover";
+"Whether what's left, or overspent, carries into the next period" = "Whether what's left, or overspent, carries into the next period";
+"%@ overspend" = "%@ overspend";
+"%@ left over" = "%@ left over";
+"Rollover starts this period" = "Rollover starts this period";
+"What's left at the end of this period, or overspent, carries into the next one. Earlier periods aren't counted." = "What's left at the end of this period, or overspent, carries into the next one. Earlier periods aren't counted.";
+"Turn On Rollover" = "Turn On Rollover";
+"Turn off rollover?" = "Turn off rollover?";
+"The %@ from earlier periods will be cleared. Turning rollover back on starts fresh." = "The %@ from earlier periods will be cleared. Turning rollover back on starts fresh.";
+"Leftovers will stop carrying over. Turning rollover back on starts fresh." = "Leftovers will stop carrying over. Turning rollover back on starts fresh.";
+"Turn Off" = "Turn Off";
+"Reset rollover?" = "Reset rollover?";
+"Changing how often this budget repeats clears the %@ from earlier periods. Rollover starts again from this period." = "Changing how often this budget repeats clears the %@ from earlier periods. Rollover starts again from this period.";
+"Changing the category clears the %@ from earlier periods. Rollover starts again from this period." = "Changing the category clears the %@ from earlier periods. Rollover starts again from this period.";
+"Changing how often this budget repeats restarts rollover from this period." = "Changing how often this budget repeats restarts rollover from this period.";
+"Changing the category restarts rollover from this period." = "Changing the category restarts rollover from this period.";
+"Apply from this period?" = "Apply from this period?";
+"Your changes apply from this period on, and earlier periods keep their old settings." = "Your changes apply from this period on, and earlier periods keep their old settings.";
+"The new amount applies from this period on, and earlier periods keep the old one." = "The new amount applies from this period on, and earlier periods keep the old one.";
+"The new reset day applies from this period on, and earlier periods keep the old one." = "The new reset day applies from this period on, and earlier periods keep the old one.";
+"The %@ from earlier periods is kept." = "The %@ from earlier periods is kept.";

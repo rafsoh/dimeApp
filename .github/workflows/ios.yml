@@ -17,6 +17,10 @@ jobs:
     # Xcode 27 image (macOS 27): the app uses SDK APIs newer than Xcode 26.
     runs-on: xcode-27
     timeout-minutes: 45
+    # Write access only so the screenshots can be pushed to the ci-screenshots branch and shown on the pull request.
+    permissions:
+      contents: write
+      pull-requests: write
 
     env:
       PROJECT: app/dime.xcodeproj
@@ -86,16 +90,126 @@ jobs:
         continue-on-error: true
         run: |
           mkdir -p screenshots
+          # Newer simulator images list more than one display, and only one of them shows the app;
+          # take each and keep the largest file, since the others are blank.
+          snap() {
+            if ! err=$(xcrun simctl io "$SIM_UDID" screenshot "$1" 2>&1); then
+              for d in $(echo "$err" | grep -o -- '--display=[0-9]*' | cut -d= -f2); do
+                xcrun simctl io "$SIM_UDID" screenshot --display="$d" "${1%.png}-display$d.png" || true
+              done
+              best=$(ls -S "${1%.png}"-display*.png 2>/dev/null | head -1)
+              if [ -n "$best" ]; then mv "$best" "$1"; fi
+              rm -f "${1%.png}"-display*.png
+            fi
+          }
           APP=$(find "$DERIVED_DATA/Build/Products" -maxdepth 2 -name "*.app" -path "*iphonesimulator*" | head -1)
           echo "App: $APP"
           xcrun simctl bootstatus "$SIM_UDID" -b
           xcrun simctl install "$SIM_UDID" "$APP"
           xcrun simctl launch "$SIM_UDID" "$BUNDLE_ID"
           sleep 8
-          xcrun simctl io "$SIM_UDID" screenshot screenshots/1-launch.png
+          snap screenshots/1-launch.png
           xcrun simctl openurl "$SIM_UDID" "dimeapp://newExpense"
           sleep 4
-          xcrun simctl io "$SIM_UDID" screenshot screenshots/2-new-expense.png
+          snap screenshots/2-new-expense.png
+
+      - name: Take budget rollover screenshots
+        # Relaunches against the seeded `-demoData varied` store (in memory, so every launch starts
+        # from the same data): Overall and Food roll over a surplus, Coffee an overspend, Groceries doesn't roll over.
+        continue-on-error: true
+        run: |
+          mkdir -p screenshots
+          # Newer simulator images list more than one display, and only one of them shows the app;
+          # take each and keep the largest file, since the others are blank.
+          snap() {
+            if ! err=$(xcrun simctl io "$SIM_UDID" screenshot "$1" 2>&1); then
+              for d in $(echo "$err" | grep -o -- '--display=[0-9]*' | cut -d= -f2); do
+                xcrun simctl io "$SIM_UDID" screenshot --display="$d" "${1%.png}-display$d.png" || true
+              done
+              best=$(ls -S "${1%.png}"-display*.png 2>/dev/null | head -1)
+              if [ -n "$best" ]; then mv "$best" "$1"; fi
+              rm -f "${1%.png}"-display*.png
+            fi
+          }
+          # The launch step's dimeapp:// link leaves an "Open in Dime?" prompt on screen; a reboot clears it.
+          xcrun simctl shutdown "$SIM_UDID" || true
+          xcrun simctl boot "$SIM_UDID"
+          xcrun simctl bootstatus "$SIM_UDID" -b
+          shot() {
+            name=$1; shift
+            xcrun simctl terminate "$SIM_UDID" "$BUNDLE_ID" 2>/dev/null || true
+            # The budget arguments start on the Budget tab; dimeapp:// links would stop at an "Open in Dime?" prompt.
+            xcrun simctl launch "$SIM_UDID" "$BUNDLE_ID" -demoData varied "$@"
+            sleep 9
+            snap "screenshots/$name.png"
+          }
+          shot 3-budgets -budgetTab
+          shot 4-rollover-detail-surplus -budgetSheet Food
+          shot 5-rollover-detail-overspend -budgetSheet Coffee
+          shot 6-rollover-detail-overall -budgetSheet overall
+          shot 7-rollover-edit-sentence -budgetEdit Food
+          shot 8-rollover-edit-menu -budgetEdit Food -budgetEditStep rolloverMenu
+          shot 9-rollover-alert-turn-on -budgetEdit Groceries -budgetEditStep enableRollover
+          shot 10-rollover-alert-turn-off -budgetEdit Food -budgetEditStep disableRollover
+          shot 11-rollover-alert-reset -budgetEdit Food -budgetEditStep changeFrequency
+          shot 12-rollover-new-budget -budgetEdit new
+
+      - name: Show screenshots on the pull request
+        # Pushes the images to the ci-screenshots branch (one folder per pull request) and keeps one
+        # comment on the pull request up to date with them. Skipped for forks, whose token can't write.
+        if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          REPO: ${{ github.repository }}
+        run: |
+          ls screenshots/*.png > /dev/null 2>&1 || { echo "No screenshots"; exit 0; }
+          folder="pr-$PR"
+          remote="https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git"
+          work=$(mktemp -d)
+          if git ls-remote --exit-code "$remote" refs/heads/ci-screenshots > /dev/null; then
+            git clone -q --depth 1 --branch ci-screenshots "$remote" "$work"
+          else
+            git init -q -b ci-screenshots "$work"
+            git -C "$work" remote add origin "$remote"
+          fi
+          rm -rf "${work:?}/$folder"
+          mkdir -p "$work/$folder"
+          cp screenshots/*.png "$work/$folder/"
+          git -C "$work" add -A
+          git -C "$work" -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "Screenshots for #$PR at ${HEAD_SHA:0:7}" || true
+          git -C "$work" push -q origin ci-screenshots
+          commit=$(git -C "$work" rev-parse HEAD)
+
+          python3 - "$work/$folder" "$commit" > comment.md <<'PY'
+          import os, sys
+          folder, commit = sys.argv[1], sys.argv[2]
+          repo, pr, head = os.environ["REPO"], os.environ["PR"], os.environ["HEAD_SHA"]
+          def order(name):
+              digits = "".join(c for c in name.split("-")[0] if c.isdigit())
+              return (int(digits or 0), name)
+          names = sorted((n for n in os.listdir(folder) if n.endswith(".png")), key=order)
+          print("<!-- ci-screenshots -->")
+          print(f"### Screenshots at {head[:7]}\n")
+          print("<table>")
+          for i in range(0, len(names), 3):
+              print("<tr>")
+              for name in names[i:i + 3]:
+                  url = f"https://raw.githubusercontent.com/{repo}/{commit}/pr-{pr}/{name}"
+                  print(f'<td align="center" valign="top"><img src="{url}" width="240"><br><sub>{name[:-4]}</sub></td>')
+              print("</tr>")
+          print("</table>")
+          PY
+
+          existing=$(gh api "repos/$REPO/issues/$PR/comments" --paginate --jq '.[] | select(.body | startswith("<!-- ci-screenshots -->")) | .id' | head -1)
+          if [ -n "$existing" ]; then
+            gh api -X PATCH "repos/$REPO/issues/comments/$existing" -F body=@comment.md > /dev/null
+          else
+            gh api "repos/$REPO/issues/$PR/comments" -F body=@comment.md > /dev/null
+          fi
 
       - name: Upload screenshots
         if: always()

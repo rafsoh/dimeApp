@@ -451,3 +451,32 @@
 "%@ will be added to your log today." = "%@ 将于今天记入你的账本。";
 "%@ will be added to your log tomorrow." = "%@ 将于明天记入你的账本。";
 "%@ will be added to your log on %@." = "%@ 将于 %@ 记入你的账本。";
+
+// budget rollover
+"+%@ rolled over" = "已结转 +%@";
+"−%@ rolled over" = "已结转 −%@";
+"Leftover rolls over %@" = "余额将于%@结转";
+"Nothing rolled over" = "无结转";
+"Rolls over" = "结转";
+"%@ budget %@ %@ = %@" = "预算 %@ %@ %@ = %@";
+"Rollover" = "结转";
+"Whether what's left, or overspent, carries into the next period" = "剩余或超支金额是否转入下一周期";
+"%@ overspend" = "超支 %@";
+"%@ left over" = "剩余 %@";
+"Rollover starts this period" = "结转从本周期开始";
+"What's left at the end of this period, or overspent, carries into the next one. Earlier periods aren't counted." = "本周期结束时的剩余或超支金额将转入下一周期。之前的周期不计入。";
+"Turn On Rollover" = "开启结转";
+"Turn off rollover?" = "关闭结转？";
+"The %@ from earlier periods will be cleared. Turning rollover back on starts fresh." = "结转到本周期的%@将被清除。再次开启结转将重新开始。";
+"Leftovers will stop carrying over. Turning rollover back on starts fresh." = "剩余金额将不再结转。再次开启结转将重新开始。";
+"Turn Off" = "关闭";
+"Reset rollover?" = "重置结转？";
+"Changing how often this budget repeats clears the %@ from earlier periods. Rollover starts again from this period." = "更改此预算的重复频率将清除已结转的%@。结转将从本周期重新开始。";
+"Changing the category clears the %@ from earlier periods. Rollover starts again from this period." = "更改类别将清除已结转的%@。结转将从本周期重新开始。";
+"Changing how often this budget repeats restarts rollover from this period." = "更改此预算的重复频率将从本周期重新开始结转。";
+"Changing the category restarts rollover from this period." = "更改类别将从本周期重新开始结转。";
+"Apply from this period?" = "从本周期开始应用？";
+"Your changes apply from this period on, and earlier periods keep their old settings." = "你的更改从本周期开始生效，之前的周期保留原有设置。";
+"The new amount applies from this period on, and earlier periods keep the old one." = "新金额从本周期开始生效，之前的周期保留原金额。";
+"The new reset day applies from this period on, and earlier periods keep the old one." = "新的起始日从本周期开始生效，之前的周期保留原起始日。";
+"The %@ from earlier periods is kept." = "目前已结转的%@将保留。";

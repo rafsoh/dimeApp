@@ -144,14 +144,24 @@ struct BudgetView: View {
         }
         #if DEBUG
         .onAppear {
-            // `-budgetSheet overall|<category name>` opens that budget's sheet, for screenshots.
+            // `-budgetSheet overall|<category name>` opens that budget's sheet, and `-budgetEdit` its edit sheet, for screenshots.
             let arguments = ProcessInfo.processInfo.arguments
-            guard let index = arguments.firstIndex(of: "-budgetSheet"), index + 1 < arguments.count else { return }
-            let value = arguments[index + 1]
-            if value == "overall", let overall = mainBudget.first {
-                detail = .overall(overall)
-            } else if let budget = budgets.first(where: { $0.wrappedName == value }) {
-                detail = .category(budget)
+            if let index = arguments.firstIndex(of: "-budgetSheet"), index + 1 < arguments.count {
+                let value = arguments[index + 1]
+                if value == "overall", let overall = mainBudget.first {
+                    detail = .overall(overall)
+                } else if let budget = budgets.first(where: { $0.wrappedName == value }) {
+                    detail = .category(budget)
+                }
+            } else if let index = arguments.firstIndex(of: "-budgetEdit"), index + 1 < arguments.count {
+                let value = arguments[index + 1]
+                if value == "overall", let overall = mainBudget.first {
+                    toEditMain = overall
+                } else if value == "new" {
+                    newBudget = true
+                } else if let budget = budgets.first(where: { $0.wrappedName == value }) {
+                    toEdit = budget
+                }
             }
         }
         #endif
@@ -181,14 +191,18 @@ struct BudgetView: View {
 struct BudgetOverallCard: View {
     @ObservedObject var budget: MainBudget
     @FetchRequest private var transactions: FetchedResults<Transaction>
+    @FetchRequest private var rolloverTransactions: FetchedResults<Transaction>
 
     let period: BudgetPeriod
+    let rollover: BudgetRollover?
     let formatter = BudgetFormatter.current
 
     init(budget: MainBudget) {
         self.budget = budget
         period = BudgetPeriod(type: Int(budget.type), start: budget.wrappedDate)
+        rollover = BudgetRollover(budget)
         _transactions = FetchRequest(sortDescriptors: [], predicate: budgetPredicate(from: period.start, to: period.end, category: nil))
+        _rolloverTransactions = FetchRequest(sortDescriptors: [], predicate: BudgetRollover.spendingPredicate(rollover, before: period.start, category: nil))
     }
 
     var body: some View {
@@ -196,12 +210,21 @@ struct BudgetOverallCard: View {
             EmptyView()
         } else {
             let spending = transactions.total(using: .current())
-            let snapshot = BudgetSnapshot(amount: budget.amount, spent: spending.value, period: period)
+            let carry = rollover?.carryIn(at: period.start, spentSinceAnchor: rolloverTransactions.total(using: .current()).value)
+            let snapshot = BudgetSnapshot(amount: budget.amount, spent: spending.value, period: period, carryIn: carry)
 
             InsightsCard {
                 VStack(alignment: .leading, spacing: 0) {
                     HStack(alignment: .firstTextBaseline, spacing: 6) {
-                        InsightsCardTitle("Overall")
+                        // Styled like the category tiles' names, so the rollover icon sits the same way beside it.
+                        Text("Overall")
+                            .font(.system(.body, design: .rounded).weight(.semibold))
+                            .foregroundColor(Color.PrimaryText)
+                            .lineLimit(1)
+                            .accessibilityAddTraits(.isHeader)
+                        if rollover != nil {
+                            BudgetRolloverIcon()
+                        }
                         Spacer(minLength: 8)
                         Text(snapshot.overallTrailing)
                             .font(.system(.subheadline, design: .rounded).weight(.medium))
@@ -246,14 +269,18 @@ struct BudgetOverallCard: View {
 struct BudgetCategoryTile: View {
     @ObservedObject var budget: Budget
     @FetchRequest private var transactions: FetchedResults<Transaction>
+    @FetchRequest private var rolloverTransactions: FetchedResults<Transaction>
 
     let period: BudgetPeriod
+    let rollover: BudgetRollover?
     let formatter = BudgetFormatter.current
 
     init(budget: Budget) {
         self.budget = budget
         period = BudgetPeriod(type: Int(budget.type), start: budget.wrappedDate)
+        rollover = BudgetRollover(budget)
         _transactions = FetchRequest(sortDescriptors: [], predicate: budgetPredicate(from: period.start, to: period.end, category: budget.category))
+        _rolloverTransactions = FetchRequest(sortDescriptors: [], predicate: BudgetRollover.spendingPredicate(rollover, before: period.start, category: budget.category))
     }
 
     var body: some View {
@@ -261,7 +288,8 @@ struct BudgetCategoryTile: View {
             EmptyView()
         } else {
             let spending = transactions.total(using: .current())
-            let snapshot = BudgetSnapshot(amount: budget.amount, spent: spending.value, period: period)
+            let carry = rollover?.carryIn(at: period.start, spentSinceAnchor: rolloverTransactions.total(using: .current()).value)
+            let snapshot = BudgetSnapshot(amount: budget.amount, spent: spending.value, period: period, carryIn: carry)
 
             InsightsCard {
                 VStack(alignment: .leading, spacing: 0) {
@@ -272,6 +300,9 @@ struct BudgetCategoryTile: View {
                             .font(.system(.body, design: .rounded).weight(.semibold))
                             .foregroundColor(Color.PrimaryText)
                             .lineLimit(1)
+                        if rollover != nil {
+                            BudgetRolloverIcon()
+                        }
 
                         if snapshot.isOver {
                             Spacer(minLength: 4)
@@ -347,6 +378,15 @@ enum BudgetDetailRoute: Identifiable {
             return budget.amount
         case let .category(budget):
             return budget.amount
+        }
+    }
+
+    var rollover: BudgetRollover? {
+        switch self {
+        case let .overall(budget):
+            return BudgetRollover(budget)
+        case let .category(budget):
+            return BudgetRollover(budget)
         }
     }
 
@@ -565,11 +605,16 @@ struct BudgetDetailContent: View {
     let formatter = BudgetFormatter.current
 
     @FetchRequest private var periodTransactions: FetchedResults<Transaction>
+    @FetchRequest private var rolloverTransactions: FetchedResults<Transaction>
     @SectionedFetchRequest<Date?, Transaction> private var list: SectionedFetchResults<Date?, Transaction>
+
+    let rollover: BudgetRollover?
 
     init(route: BudgetDetailRoute, period: BudgetPeriod) {
         self.route = route
         self.period = period
+        rollover = route.rollover
+        _rolloverTransactions = FetchRequest(sortDescriptors: [], predicate: BudgetRollover.spendingPredicate(rollover, before: period.start, category: route.category))
         _periodTransactions = FetchRequest(sortDescriptors: [SortDescriptor(\.date)], predicate: budgetPredicate(from: period.start, to: period.end, category: route.category))
         _list = SectionedFetchRequest(sectionIdentifier: \.day, sortDescriptors: [
             SortDescriptor(\.day, order: .reverse),
@@ -580,11 +625,18 @@ struct BudgetDetailContent: View {
     var body: some View {
         let transactions = Array(periodTransactions)
         let spending = transactions.total(using: .current())
-        let snapshot = BudgetSnapshot(amount: route.amount, spent: spending.value, period: period)
+        let carry = rollover?.carryIn(at: period.start, spentSinceAnchor: rolloverTransactions.total(using: .current()).value)
+        let snapshot = BudgetSnapshot(amount: route.amount, spent: spending.value, period: period, carryIn: carry)
 
         VStack(alignment: .leading, spacing: 32) {
             VStack(alignment: .leading, spacing: 4) {
                 hero(snapshot, transactions: transactions)
+
+                if let summary = rolloverSummary(snapshot) {
+                    summary
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 10)
+                }
 
                 ConversionNote(report: spending.report)
             }
@@ -613,16 +665,26 @@ struct BudgetDetailContent: View {
         ArcRing(segments: ringSegments(snapshot, transactions: transactions), showsTrack: true, tick: snapshot.showsTick ? period.elapsed : nil) {
             BudgetAmountText(amount: snapshot.difference, font: .system(.title, design: .rounded).weight(.semibold), formatter: formatter)
 
-            HStack(spacing: 4) {
-                if snapshot.isOver {
-                    BudgetOverIcon()
-                }
-                Text(snapshot.overallAmountWord(formatter))
-                    .font(.system(.subheadline, design: .rounded).weight(.medium))
-                    .foregroundColor(Color.SubtitleText)
-            }
+            Text(snapshot.overallAmountWord(formatter))
+                .font(.system(.subheadline, design: .rounded).weight(.medium))
+                .foregroundColor(Color.SubtitleText)
+
+            // Inside the ring, so it stays in view when the sheet is at half height.
+            BudgetRolloverChip(snapshot: snapshot, formatter: formatter)
+                .padding(.top, 6)
         }
         .accessibilityElement(children: .combine)
+    }
+
+    /// How the budget and what rolled in add up to what can be spent this period, under the ring.
+    func rolloverSummary(_ snapshot: BudgetSnapshot) -> Text? {
+        guard let carry = snapshot.carryIn, abs(carry) >= 0.005 else { return nil }
+        let sign = carry < 0 ? "−" : "+"
+        let total = (snapshot.amount < 0 ? "−" : "") + formatter.money(snapshot.amount)
+        return Text(String(localized: "\(formatter.whole(snapshot.base)) budget \(sign) \(formatter.money(carry)) = \(total)"))
+            .font(.system(.footnote, design: .rounded).weight(.medium))
+            .foregroundColor(Color.SubtitleText)
+            .monospacedDigit()
     }
 
     /// The category budget's own colour, or the overall budget's budgeted categories then everything else.

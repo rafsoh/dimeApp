@@ -71,21 +71,53 @@ final class StoreMigrationTests: XCTestCase {
         }
     }
 
-    // Models 2 onward have MainBudget; model 3 added a currency to transactions, and model 4 one to templates.
+    // Models 2 onward have MainBudget; model 3 added a currency to transactions, model 4 one to templates,
+    // and model 5 rollover to both budget entities.
     private var modelTwo: NSManagedObjectModel? {
         earlierModels.first { $0.entitiesByName["MainBudget"] != nil && $0.entitiesByName["Transaction"]?.attributesByName["currencyCode"] == nil }
     }
 
     private var modelThree: NSManagedObjectModel? {
-        earlierModels.first { $0.entitiesByName["Transaction"]?.attributesByName["currencyCode"] != nil }
+        earlierModels.first { $0.entitiesByName["Transaction"]?.attributesByName["currencyCode"] != nil && $0.entitiesByName["TemplateTransaction"]?.attributesByName["currencyCode"] == nil }
+    }
+
+    private var modelFour: NSManagedObjectModel? {
+        earlierModels.first { $0.entitiesByName["TemplateTransaction"]?.attributesByName["currencyCode"] != nil && $0.entitiesByName["Budget"]?.attributesByName["rolloverEnabled"] == nil }
     }
 
     func testModelThreeOnlyAddsAnOptionalCurrencyToTransactions() throws {
         try assertOnlyAddsOptionalCurrency(from: XCTUnwrap(modelTwo), to: XCTUnwrap(modelThree), on: "Transaction")
     }
 
-    func testCurrentModelOnlyAddsAnOptionalCurrencyToTemplates() throws {
-        try assertOnlyAddsOptionalCurrency(from: XCTUnwrap(modelThree), to: currentModel, on: "TemplateTransaction")
+    func testModelFourOnlyAddsAnOptionalCurrencyToTemplates() throws {
+        try assertOnlyAddsOptionalCurrency(from: XCTUnwrap(modelThree), to: XCTUnwrap(modelFour), on: "TemplateTransaction")
+    }
+
+    /// CloudKit only accepts optional or defaulted additions, and older app versions keep syncing the other fields untouched.
+    func testCurrentModelOnlyAddsOptionalRolloverToBudgets() throws {
+        let previous = try XCTUnwrap(modelFour)
+        let added: Set<String> = ["rolloverEnabled", "rolloverAnchor", "rolloverBalance"]
+        XCTAssertEqual(Set(currentModel.entitiesByName.keys), Set(previous.entitiesByName.keys))
+
+        for (name, entity) in currentModel.entitiesByName where name != "Budget" && name != "MainBudget" {
+            XCTAssertEqual(entity.versionHash, previous.entitiesByName[name]?.versionHash, "\(name) changed")
+        }
+
+        for entityName in ["Budget", "MainBudget"] {
+            let entity = try XCTUnwrap(currentModel.entitiesByName[entityName])
+            let previousEntity = try XCTUnwrap(previous.entitiesByName[entityName])
+            XCTAssertEqual(Set(entity.propertiesByName.keys), Set(previousEntity.propertiesByName.keys).union(added))
+
+            for (name, property) in previousEntity.propertiesByName {
+                XCTAssertEqual(entity.propertiesByName[name]?.versionHash, property.versionHash, "\(entityName).\(name) changed")
+            }
+
+            for name in added {
+                XCTAssertTrue(try XCTUnwrap(entity.attributesByName[name]).isOptional, "\(entityName).\(name) isn't optional")
+            }
+            XCTAssertEqual(entity.attributesByName["rolloverEnabled"]?.defaultValue as? Bool, false)
+            XCTAssertEqual(entity.attributesByName["rolloverBalance"]?.defaultValue as? Double, 0)
+        }
     }
 
     private func assertOnlyAddsOptionalCurrency(from previous: NSManagedObjectModel, to model: NSManagedObjectModel, on entityName: String) throws {
