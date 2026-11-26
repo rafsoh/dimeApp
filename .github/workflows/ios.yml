@@ -76,6 +76,24 @@ jobs:
           if [ -z "$UDID" ]; then echo "No iPhone simulator found"; exit 1; fi
           xcrun simctl list devices | grep "$UDID"
           echo "SIM_UDID=$UDID" >> "$GITHUB_ENV"
+          # A regular iPhone, for pull requests that ask for screenshots on both. The Duo comes on its own
+          # runtime (e.g. iOS-27-2-iPhone19-4), so take one from the newest runtime that has one.
+          OTHER=$(xcrun simctl list devices available --json | python3 -c '
+          import json, re, sys
+          data = json.load(sys.stdin)["devices"]
+          def version(key):
+              m = re.search(r"\.iOS-(\d+)-(\d+)", key)
+              return (int(m.group(1)), int(m.group(2))) if m else (0, 0)
+          for runtime in sorted(data, key=version, reverse=True):
+              phones = [d for d in data[runtime] if d["name"].startswith("iPhone") and "Duo" not in d["name"]]
+              pro = [d for d in phones if "Pro" in d["name"] and "Max" not in d["name"]]
+              if phones:
+                  print((pro or phones)[0]["udid"]); break
+          ')
+          if [ -n "$OTHER" ]; then
+            xcrun simctl list devices | grep "$OTHER"
+            echo "SIM_OTHER_UDID=$OTHER" >> "$GITHUB_ENV"
+          fi
           # Start it now, so it boots while the app builds instead of when the tests start.
           xcrun simctl boot "$UDID" || true
 

@@ -11,6 +11,10 @@ A pull request that wants screenshots of its feature lists them in a fenced bloc
 Each line is `name: launch arguments`. The app is relaunched with those arguments for every shot.
 `open <url>` launches the app, then opens the link. Lines starting with # are ignored.
 
+Shots are taken on the first iPhone simulator, usually the iPhone Duo. A line `@also-iphone` takes every
+shot a second time on a regular iPhone (SIM_OTHER_UDID), saved as `<name>-iphone.png`, to check a change
+doesn't affect other devices.
+
 The list lives only in the description, so it goes away with the pull request: nothing has to be
 reverted after testing, and later runs never take another feature's screenshots. Launch arguments
 that a feature adds only for its screenshots should be removed before merging, too.
@@ -64,7 +68,7 @@ def requested_shots(body):
     shots = []
     for line in match.group(1).splitlines():
         line = line.strip()
-        if not line or line.startswith("#"):
+        if not line or line.startswith("#") or line.startswith("@"):
             continue
         name, _, rest = line.partition(":")
         name = re.sub(r"[^A-Za-z0-9._-]", "-", name.strip()) or f"shot-{len(shots) + 1}"
@@ -82,22 +86,35 @@ def main():
         return
 
     os.makedirs(out, exist_ok=True)
-    simctl("bootstatus", udid, "-b")
-    simctl("install", udid, app)
-
-    for name, args in shots:
-        simctl("terminate", udid, bundle, check=False)
-
-        if args[:1] == ["open"] and len(args) > 1:
-            simctl("launch", udid, bundle)
-            time.sleep(LINK_WAIT)
-            simctl("openurl", udid, args[1], check=False)
+    devices = [(udid, "")]
+    body = os.environ.get("PR_BODY", "")
+    if re.search(r"^[ \t]*@also-iphone[ \t]*\r?$", body, re.M):
+        other = os.environ.get("SIM_OTHER_UDID")
+        if other:
+            devices.append((other, "-iphone"))
         else:
-            simctl("launch", udid, bundle, *args)
+            print("No regular iPhone simulator to take the -iphone shots on.")
 
-        time.sleep(LAUNCH_WAIT)
-        snap(udid, os.path.join(out, f"{name}.png"))
-        print(f"Took {name}")
+    for device, suffix in devices:
+        simctl("bootstatus", device, "-b")
+        simctl("install", device, app)
+
+        for name, args in shots:
+            simctl("terminate", device, bundle, check=False)
+
+            if args[:1] == ["open"] and len(args) > 1:
+                simctl("launch", device, bundle)
+                time.sleep(LINK_WAIT)
+                simctl("openurl", device, args[1], check=False)
+            else:
+                simctl("launch", device, bundle, *args)
+
+            time.sleep(LAUNCH_WAIT)
+            snap(device, os.path.join(out, f"{name}{suffix}.png"))
+            print(f"Took {name}{suffix}")
+
+        if device != udid:
+            simctl("shutdown", device, check=False)
 
 
 if __name__ == "__main__":

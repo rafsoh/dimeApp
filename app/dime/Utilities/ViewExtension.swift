@@ -368,6 +368,7 @@ struct GlassSheetHeader: View {
         HStack {
             if showsButton {
                 GlassIconButton(systemName: showsBack ? "chevron.left" : "xmark", accessibilityLabel: showsBack ? "Back" : "Close", action: action)
+                    .hiddenInSideBar()
             }
 
             Spacer()
