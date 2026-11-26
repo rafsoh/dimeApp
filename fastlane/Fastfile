@@ -41,26 +41,30 @@ platform :ios do
     key_json&.unlink
   end
 
-  desc "Upload listing text for every locale to the version being prepared"
-  lane :upload_metadata do
+  # Both upload lanes edit the App Store version being prepared. Pass version:3.0.2 to create that version
+  # first if there isn't one; App Store Connect only accepts listing changes on a version not yet released.
+  desc "Upload listing text for every locale (version:X.Y.Z creates that version if needed)"
+  lane :upload_metadata do |options|
     deliver(
       api_key: load_api_key,
+      app_version: options[:version],
+      skip_app_version_update: options[:version].nil?,
       skip_binary_upload: true,
       skip_screenshots: true,
-      skip_app_version_update: true,
       run_precheck_before_submit: false,
       submit_for_review: false,
       force: true
     )
   end
 
-  desc "Replace the screenshots for every locale with fastlane/screenshots"
-  lane :upload_screenshots do
+  desc "Replace the screenshots for every locale with fastlane/screenshots (version:X.Y.Z as above)"
+  lane :upload_screenshots do |options|
     deliver(
       api_key: load_api_key,
+      app_version: options[:version],
+      skip_app_version_update: options[:version].nil?,
       skip_binary_upload: true,
       skip_metadata: true,
-      skip_app_version_update: true,
       overwrite_screenshots: true,
       run_precheck_before_submit: false,
       submit_for_review: false,
