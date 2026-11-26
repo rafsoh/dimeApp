@@ -191,7 +191,7 @@ struct QuickAddWidgetView: View {
                     .strokeBorder(Color.SubtitleText.opacity(0.3), style: StrokeStyle(lineWidth: 1.5, dash: [4, 4]))
                     .overlay {
                         Image(systemName: "plus")
-                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                            .font(.app(.subheadline, weight: .semibold))
                             .foregroundColor(Color.SubtitleText)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -203,17 +203,17 @@ struct QuickAddWidgetView: View {
     private var emptyState: some View {
         VStack(alignment: .leading, spacing: 6) {
             Image(systemName: "bolt.fill")
-                .font(.system(.title3, design: .rounded).weight(.semibold))
+                .font(.app(.title3, weight: .semibold))
                 .foregroundColor(Color.SubtitleText)
 
             Spacer(minLength: 0)
 
             Text("Quick Add")
-                .font(.system(.headline, design: .rounded).weight(.semibold))
+                .font(.app(.headline, weight: .semibold))
                 .foregroundColor(Color.PrimaryText)
 
             Text("Add templates in Settings to log them from here.")
-                .font(.system(.footnote, design: .rounded).weight(.medium))
+                .font(.app(.footnote, weight: .medium))
                 .foregroundColor(Color.SubtitleText)
                 .lineLimit(3)
                 .minimumScaleFactor(0.8)
@@ -242,7 +242,7 @@ private struct QuickAddTile: View {
                     Spacer(minLength: 4)
 
                     Text(item.title)
-                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                        .font(.app(.subheadline, weight: .semibold))
                         .foregroundColor(Color.PrimaryText)
                         .lineLimit(2)
 
@@ -255,7 +255,7 @@ private struct QuickAddTile: View {
 
                     VStack(alignment: .leading, spacing: 0) {
                         Text(item.title)
-                            .font(.system(.footnote, design: .rounded).weight(.semibold))
+                            .font(.app(.footnote, weight: .semibold))
                             .foregroundColor(Color.PrimaryText)
                             .lineLimit(1)
 
@@ -276,7 +276,7 @@ private struct QuickAddTile: View {
 
     private var amount: some View {
         Text(item.amountText)
-            .font(.system(large ? .subheadline : .footnote, design: .rounded).weight(.medium))
+            .font(.app(large ? .subheadline : .footnote, weight: .medium))
             .foregroundColor(item.income ? Color.IncomeGreen : Color.SubtitleText)
             .lineLimit(1)
             .minimumScaleFactor(0.7)
@@ -286,7 +286,7 @@ private struct QuickAddTile: View {
     private func icon(size: CGFloat) -> some View {
         if logged {
             Image(systemName: "checkmark")
-                .font(.system(size: size * 0.5, weight: .bold, design: .rounded))
+                .font(.app(size: size * 0.5, weight: .bold))
                 .foregroundColor(Color.IncomeGreen)
                 .frame(width: size, height: size)
         } else {

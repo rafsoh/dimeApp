@@ -515,3 +515,14 @@
 "Shown" = "Visibles";
 "Hidden" = "Ocultos";
 "Display +/- Symbol" = "Mostrar signo +/-";
+
+/* Delete category */
+"%@ has 1 transaction. What should happen to it?" = "%@ tiene 1 transacción. ¿Qué hacemos con ella?";
+"%@ has %lld transactions. What should happen to them?" = "%@ tiene %lld transacciones. ¿Qué hacemos con ellas?";
+"Move to" = "Mover a";
+"Delete it" = "Eliminarla";
+"Delete them" = "Eliminarlas";
+"Delete Category" = "Eliminar categoría";
+
+"Font" = "Fuente";
+"Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo es una tipografía de Josh Puckett, con licencia SIL Open Font License.";

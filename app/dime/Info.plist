@@ -45,5 +45,21 @@
 	<array>
 		<string>remote-notification</string>
 	</array>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Allo-Regular.ttf</string>
+		<string>Allo-Medium.ttf</string>
+		<string>Allo-SemiBold.ttf</string>
+		<string>Allo-Bold.ttf</string>
+		<string>AtkinsonHyperlegibleNext-Regular.ttf</string>
+		<string>AtkinsonHyperlegibleNext-Medium.ttf</string>
+		<string>AtkinsonHyperlegibleNext-SemiBold.ttf</string>
+		<string>AtkinsonHyperlegibleNext-Bold.ttf</string>
+		<string>Fraunces-Regular.ttf</string>
+		<string>Fraunces-Medium.ttf</string>
+		<string>Fraunces-SemiBold.ttf</string>
+		<string>Fraunces-Bold.ttf</string>
+		<string>GeistPixel-Square.ttf</string>
+	</array>
 </dict>
 </plist>

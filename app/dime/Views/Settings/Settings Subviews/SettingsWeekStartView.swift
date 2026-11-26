@@ -27,14 +27,14 @@ struct SettingsWeekStartView: View {
           ForEach(1 ... 7, id: \.self) { weekday in
             HStack {
               Text(dimeWeekdaySymbol(weekday))
-                .font(.system(.body, design: .rounded))
+                .font(.app(.body))
                 .foregroundColor(Color.PrimaryText)
 
               Spacer()
 
               if firstWeekday == weekday {
                 Image(systemName: "checkmark")
-                  .font(.system(.subheadline, design: .rounded).weight(.medium))
+                  .font(.app(.subheadline, weight: .medium))
                   .foregroundColor(.DarkIcon.opacity(0.6))
                   .matchedGeometryEffect(id: "tick", in: animation)
               }
@@ -69,14 +69,14 @@ struct SettingsWeekStartView: View {
 
             HStack {
               Text("\(getOrdinal(day)) of month")
-                .font(.system(.body, design: .rounded))
+                .font(.app(.body))
                 .foregroundColor(Color.PrimaryText)
 
               Spacer()
 
               if firstDayOfMonth == day {
                 Image(systemName: "checkmark")
-                  .font(.system(.subheadline, design: .rounded).weight(.medium))
+                  .font(.app(.subheadline, weight: .medium))
                   .foregroundColor(.DarkIcon.opacity(0.6))
                   .matchedGeometryEffect(id: "tick2", in: animation)
               }

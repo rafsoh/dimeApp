@@ -515,3 +515,14 @@
 "Shown" = "顯示";
 "Hidden" = "隱藏";
 "Display +/- Symbol" = "顯示 +/- 符號";
+
+/* Delete category */
+"%@ has 1 transaction. What should happen to it?" = "「%@」中有 1 筆交易。要如何處理？";
+"%@ has %lld transactions. What should happen to them?" = "「%@」中有 %lld 筆交易。要如何處理？";
+"Move to" = "移至";
+"Delete it" = "刪除";
+"Delete them" = "全部刪除";
+"Delete Category" = "刪除類別";
+
+"Font" = "字體";
+"Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo 是 Josh Puckett 設計的字體，採用 SIL Open Font License 授權。";

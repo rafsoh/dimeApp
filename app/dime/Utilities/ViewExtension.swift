@@ -238,7 +238,7 @@ private struct EmptyStateLabel: View {
                 .accessibilityHidden(true)
 
             Text(title)
-                .font(.system(.title3, design: .rounded).weight(.medium))
+                .font(.app(.title3, weight: .medium))
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -375,7 +375,7 @@ struct GlassSheetHeader: View {
         .frame(height: 44)
         .overlay {
             title
-                .font(.system(.title3, design: .rounded).weight(.semibold))
+                .font(.app(.title3, weight: .semibold))
                 .foregroundColor(Color.PrimaryText)
                 .lineLimit(1)
                 .padding(.horizontal, 56)
@@ -399,7 +399,7 @@ struct TabHeader<Trailing: View>: View {
     var body: some View {
         HStack {
             Text(title)
-                .font(.system(.title, design: .rounded).weight(.semibold))
+                .font(.app(.title, weight: .semibold))
                 .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                 .foregroundColor(.PrimaryText)
                 .accessibilityAddTraits(.isHeader)
@@ -448,7 +448,7 @@ struct GlassIconButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: systemName)
-                .font(.system(.body, design: .rounded).weight(.semibold))
+                .font(.app(.body, weight: .semibold))
                 .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                 .foregroundColor(foreground)
                 .frame(width: 44, height: 44)
@@ -526,13 +526,13 @@ struct GlassPopoverRow: View {
             HStack(spacing: 12) {
                 if let systemImage {
                     Image(systemName: systemImage)
-                        .font(.system(size: titleSize, weight: .medium, design: .rounded))
+                        .font(.app(size: titleSize, weight: .medium))
                         .foregroundColor(Color.SubtitleText)
                         .frame(width: 24)
                 }
 
                 Text(title)
-                    .font(.system(size: titleSize, weight: .medium, design: .rounded))
+                    .font(.app(size: titleSize, weight: .medium))
                     .foregroundColor(Color.PrimaryText)
                     .lineLimit(1)
 
@@ -540,13 +540,13 @@ struct GlassPopoverRow: View {
 
                 if let detail {
                     Text(detail)
-                        .font(.system(size: titleSize, design: .rounded))
+                        .font(.app(size: titleSize))
                         .foregroundColor(Color.SubtitleText)
                         .lineLimit(1)
                 }
 
                 Image(systemName: "checkmark")
-                    .font(.system(size: titleSize * 0.88, weight: .semibold, design: .rounded))
+                    .font(.app(size: titleSize * 0.88, weight: .semibold))
                     .foregroundColor(Color.PrimaryText)
                     .opacity(isSelected ? 1 : 0)
                     .accessibilityHidden(true)
@@ -583,7 +583,7 @@ private struct GlassCapsuleGlyph: View {
 
     var body: some View {
         Image(systemName: systemName)
-            .font(.system(.subheadline, design: .rounded).weight(.semibold))
+            .font(.app(.subheadline, weight: .semibold))
             .foregroundColor(Color.SubtitleText)
     }
 }
@@ -594,7 +594,7 @@ struct GlassCapsuleButton: View {
     let font: Font
     let action: () -> Void
 
-    init(_ title: LocalizedStringKey, trailingSystemImage: String, font: Font = .system(.body, design: .rounded).weight(.medium), action: @escaping () -> Void) {
+    init(_ title: LocalizedStringKey, trailingSystemImage: String, font: Font = .app(.body, weight: .medium), action: @escaping () -> Void) {
         self.title = title
         self.trailingSystemImage = trailingSystemImage
         self.font = font
@@ -634,7 +634,7 @@ struct GlassCapsuleTag: View {
     var body: some View {
         HStack(spacing: 0) {
             Text(title)
-                .font(.system(.body, design: .rounded).weight(.medium))
+                .font(.app(.body, weight: .medium))
                 .foregroundColor(Color.PrimaryText)
                 .lineLimit(1)
 
@@ -699,7 +699,7 @@ struct GlassStepperCapsule: View {
 
             VStack(spacing: 6) {
                 Text(isScrubbing ? title(pending) ?? currentTitle : currentTitle)
-                    .font(.system(.body, design: .rounded).weight(.semibold))
+                    .font(.app(.body, weight: .semibold))
                     .foregroundColor(Color.PrimaryText)
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
@@ -907,7 +907,7 @@ struct GlassStepperCapsule: View {
             action()
         } label: {
             Image(systemName: systemName)
-                .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                .font(.app(.subheadline, weight: .semibold))
                 .foregroundColor(Color.PrimaryText)
                 .frame(width: 36, height: 36)
                 .contentShape(Rectangle().inset(by: -4))
@@ -963,11 +963,11 @@ struct GlassToast: View {
     var body: some View {
         HStack(spacing: 6.5) {
             Image(systemName: systemImage)
-                .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                .font(.app(.subheadline, weight: .semibold))
                 .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
 
             Text(LocalizedStringKey(title))
-                .font(.system(.body, design: .rounded).weight(.semibold))
+                .font(.app(.body, weight: .semibold))
                 .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                 .lineLimit(1)
         }
@@ -991,7 +991,7 @@ struct SectionHeaderButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: systemImage)
-                .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                .font(.app(.subheadline, weight: .semibold))
                 .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                 .foregroundColor(color)
                 .frame(width: 44, height: 32, alignment: .trailing)
@@ -1020,7 +1020,7 @@ struct GlassSegmentedPicker<Value: Hashable>: View {
                     }
                 } label: {
                     Text(option.title)
-                        .font(.system(.body, design: .rounded).weight(.semibold))
+                        .font(.app(.body, weight: .semibold))
                         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                         .lineLimit(1)
                         .foregroundColor(isSelected ? Color.PrimaryText : Color.SubtitleText)
@@ -1132,7 +1132,7 @@ struct GlassDatePicker: View {
         return HStack(spacing: 0) {
             ForEach(0 ..< 7, id: \.self) { column in
                 Text(symbols[(calendar.firstWeekday - 1 + column) % 7])
-                    .font(.system(.footnote, design: .rounded).weight(.semibold))
+                    .font(.app(.footnote, weight: .semibold))
                     .foregroundColor(Color.SubtitleText)
                     .frame(maxWidth: .infinity)
             }
@@ -1185,7 +1185,7 @@ struct GlassDatePicker: View {
         let enabled = Self.isSelectable(day, range, calendar)
 
         return Text("\(number)")
-            .font(.system(size: 19, weight: isSelected || isToday ? .semibold : .regular, design: .rounded))
+            .font(.app(size: 19, weight: isSelected || isToday ? .semibold : .regular))
             .monospacedDigit()
             .foregroundColor(isSelected ? Color.LightIcon : Color.PrimaryText)
             .frame(maxWidth: .infinity)
@@ -1242,7 +1242,7 @@ struct GlassDatePicker: View {
     var timeRow: some View {
         HStack(spacing: 12) {
             Text("Time")
-                .font(.system(size: titleSize, weight: .medium, design: .rounded))
+                .font(.app(size: titleSize, weight: .medium))
                 .foregroundColor(Color.PrimaryText)
                 .lineLimit(1)
 
@@ -1274,7 +1274,7 @@ private struct MonthTitle: View {
     var body: some View {
         GeometryReader { proxy in
             Text(title)
-                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .font(.app(size: 11, weight: .semibold))
                 .foregroundColor(Color.SubtitleText)
                 .lineLimit(1)
                 .fixedSize()

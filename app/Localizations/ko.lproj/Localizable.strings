@@ -515,3 +515,14 @@
 "Shown" = "표시";
 "Hidden" = "숨김";
 "Display +/- Symbol" = "+/- 기호 표시";
+
+/* Delete category */
+"%@ has 1 transaction. What should happen to it?" = "'%@'에 거래가 1건 있습니다. 어떻게 할까요?";
+"%@ has %lld transactions. What should happen to them?" = "'%@'에 거래가 %lld건 있습니다. 어떻게 할까요?";
+"Move to" = "이동할 곳";
+"Delete it" = "삭제";
+"Delete them" = "모두 삭제";
+"Delete Category" = "카테고리 삭제";
+
+"Font" = "서체";
+"Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo는 Josh Puckett이 만든 서체로, SIL Open Font License에 따라 제공됩니다.";

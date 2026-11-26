@@ -229,7 +229,7 @@ struct LogView: View {
     var searchCapsule: some View {
         HStack(spacing: 0) {
             Image(systemName: "magnifyingglass")
-                .font(.system(.body, design: .rounded).weight(.semibold))
+                .font(.app(.body, weight: .semibold))
                 .foregroundColor(Color.PrimaryText)
                 .frame(width: 44, height: 44)
                 .accessibilityHidden(true)
@@ -237,14 +237,14 @@ struct LogView: View {
             ZStack(alignment: .leading) {
                 if searchQuery.isEmpty {
                     Text("Search")
-                        .font(.system(.body, design: .rounded))
+                        .font(.app(.body))
                         .foregroundColor(Color.SubtitleText)
                         .lineLimit(1)
                         .accessibilityHidden(true)
                 }
 
                 TextField("", text: $searchQuery)
-                    .font(.system(.body, design: .rounded))
+                    .font(.app(.body))
                     .foregroundColor(Color.PrimaryText)
                     .focused($searchFocused)
                     .submitLabel(.search)
@@ -259,7 +259,7 @@ struct LogView: View {
                     searchQuery = ""
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(.body, design: .rounded))
+                        .font(.app(.body))
                         .foregroundColor(Color.SubtitleText)
                         .frame(width: 40, height: 44)
                         .contentShape(Rectangle())
@@ -401,7 +401,7 @@ struct NumberView: AnimatableModifier {
                 Text("\(number, specifier: showCents && hasCents ? "%.2f" : "%.0f")")
                     .foregroundColor(Color.PrimaryText)
             }
-            .font(.system(size: fontSize, weight: .regular, design: .rounded))
+            .font(.app(size: fontSize, weight: .regular))
         }
         .minimumScaleFactor(0.5)
         .lineLimit(1)
@@ -555,11 +555,11 @@ struct LogInsightsView: View {
             VStack(spacing: 4) {
                 HStack(spacing: 8) {
                     Text(LocalizedStringKey(headingText))
-                        .font(.system(.title3, design: .rounded).weight(.medium))
+                        .font(.app(.title3, weight: .medium))
                         .foregroundColor(Color.SubtitleText)
                         .lineLimit(1)
 
-                    GlassCapsuleButton(LocalizedStringKey(subtitleText[timeframe - 1]), trailingSystemImage: "chevron.up.chevron.down", font: .system(.title3, design: .rounded).weight(.medium)) {
+                    GlassCapsuleButton(LocalizedStringKey(subtitleText[timeframe - 1]), trailingSystemImage: "chevron.up.chevron.down", font: .app(.title3, weight: .medium)) {
                         showMenu1 = true
                     }
                     .popover(present: $showMenu1, attributes: {
@@ -615,20 +615,20 @@ struct LogInsightsView: View {
                 HStack {
 //                    if showCents {
 //                        Text("+\(totalIncome, specifier: "%.2f")")
-//                            .font(.system(size: 18, weight: .medium, design: .rounded))
+//                            .font(.app(size: 18, weight: .medium))
 //                            .foregroundColor(Color.IncomeGreen)
 //                            .lineLimit(1)
 //                    } else {
 //                        Text("+\(Int(floor(totalIncome)))")
-//                            .font(.system(size: 18, weight: .medium, design: .rounded))
+//                            .font(.app(size: 18, weight: .medium))
 //                            .foregroundColor(Color.IncomeGreen)
 //                            .lineLimit(1)
 //                    }
 
                     Text("+\(formatNumber(showCents: showCents, number: totalIncome))")
-                        .font(.system(.title2, design: .rounded).weight(.medium))
+                        .font(.app(.title2, weight: .medium))
                         .minimumScaleFactor(0.5)
-//                        .font(.system(size: 18, weight: .medium, design: .rounded))
+//                        .font(.app(size: 18, weight: .medium))
                         .foregroundColor(Color.IncomeGreen)
                         .lineLimit(1)
 
@@ -638,20 +638,20 @@ struct LogInsightsView: View {
                         .foregroundColor(Color.Outline)
 
                     Text("-\(formatNumber(showCents: showCents, number: totalSpent))")
-                        .font(.system(.title2, design: .rounded).weight(.medium))
+                        .font(.app(.title2, weight: .medium))
                         .minimumScaleFactor(0.5)
-//                        .font(.system(size: 18, weight: .medium, design: .rounded))
+//                        .font(.app(size: 18, weight: .medium))
                         .foregroundColor(Color.AlertRed)
                         .lineLimit(1)
 
 //                    if showCents {
 //                        Text("-\(totalSpent, specifier: "%.2f")")
-//                            .font(.system(size: 18, weight: .medium, design: .rounded))
+//                            .font(.app(size: 18, weight: .medium))
 //                            .foregroundColor(Color.AlertRed)
 //                            .lineLimit(1)
 //                    } else {
 //                        Text("-\(Int(floor(totalSpent)))")
-//                            .font(.system(size: 18, weight: .medium, design: .rounded))
+//                            .font(.app(size: 18, weight: .medium))
 //                            .foregroundColor(Color.AlertRed)
 //                            .lineLimit(1)
 //                    }
@@ -892,9 +892,9 @@ struct ListView: View {
                             Text(filtered.string)
                                 .layoutPriority(1)
                         }
-                        .font(.system(.callout, design: .rounded).weight(.semibold))
+                        .font(.app(.callout, weight: .semibold))
                         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+//                        .font(.app(size: 14, weight: .semibold))
                         .foregroundColor(Color.SubtitleText)
                         .accessibilityElement(children: .ignore)
                         .accessibilityLabel("\(currencySymbol)\(String(format: "%.2f", filtered.string)) was spent \(dateConverterAccessibilityLabel(date: day.id ?? Date.now))")
@@ -1046,9 +1046,9 @@ struct FutureListView: View {
 
                         Text(totalString)
                     }
-                    .font(.system(.callout, design: .rounded).weight(.semibold))
+                    .font(.app(.callout, weight: .semibold))
                     .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+//                    .font(.app(size: 14, weight: .semibold))
                     .foregroundColor(Color.SubtitleText)
                     .accessibilityElement(children: .ignore)
 
@@ -1164,7 +1164,7 @@ struct SingleTransactionView: View {
                 amount
 
                 Text(converted)
-                    .font(.system(.caption, design: .rounded).weight(.medium))
+                    .font(.app(.caption, weight: .medium))
                     .dynamicTypeSize(...DynamicTypeSize.xxLarge)
                     .foregroundColor(Color.SubtitleText)
                     .lineLimit(1)
@@ -1178,7 +1178,7 @@ struct SingleTransactionView: View {
     var body: some View {
         ZStack(alignment: .trailing) {
             Image(systemName: deleteConfirm ? "trash.fill" : "trash")
-                .font(.system(.body, design: .rounded).weight(.semibold))
+                .font(.app(.body, weight: .semibold))
                 .dynamicTypeSize(...DynamicTypeSize.xxLarge)
                 .foregroundColor(deleteConfirm ? Color.AlertRed : Color.PrimaryText)
                 .frame(width: 44, height: 44)
@@ -1206,13 +1206,13 @@ struct SingleTransactionView: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(transaction.displayTitle)
-                        .font(.system(.body, design: .rounded).weight(.medium))
+                        .font(.app(.body, weight: .medium))
                         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                         .foregroundColor(future ? Color.SubtitleText : Color.PrimaryText)
                         .lineLimit(1)
 
                     Text(getSubtitle())
-                        .font(.system(.subheadline, design: .rounded).weight(.medium))
+                        .font(.app(.subheadline, weight: .medium))
                         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
                         .foregroundColor(future ? Color.EvenLighterText : Color.SubtitleText)
                         .lineLimit(1)
@@ -1221,7 +1221,7 @@ struct SingleTransactionView: View {
 
                 if transaction.income {
                     amountWithConversion(Text(showExpenseOrIncomeSign ? "+\(transactionAmountString)" : transactionAmountString)
-                        .font(.system(.title3, design: .rounded).weight(.medium))
+                        .font(.app(.title3, weight: .medium))
                         .foregroundColor(future ? Color.SubtitleText : Color.IncomeGreen))
                         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                         .minimumScaleFactor(0.7)
@@ -1230,7 +1230,7 @@ struct SingleTransactionView: View {
 
                 } else {
                     amountWithConversion(Text(showExpenseOrIncomeSign ? "-\(transactionAmountString)" : transactionAmountString)
-                        .font(.system(.title3, design: .rounded).weight(.medium))
+                        .font(.app(.title3, weight: .medium))
                         .foregroundColor(future ? Color.SubtitleText : Color.PrimaryText))
                         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                         .minimumScaleFactor(0.7)
@@ -1464,7 +1464,7 @@ struct EmojiLogView: View {
                     .hidden()
                     .overlay {
                         Image(systemName: symbol)
-                            .font(.system(huge ? .title2 : .body, design: .rounded).weight(.bold))
+                            .font(.app(huge ? .title2 : .body, weight: .bold))
                             .dynamicTypeSize(...DynamicTypeSize.xxLarge)
                             .foregroundColor(Color(hex: colour))
                     }
@@ -1758,10 +1758,10 @@ struct CategoryStepperView: View {
                     }
 
                     Image(systemName: "chevron.down")
-                        .font(.system(.caption, design: .rounded).weight(.bold))
+                        .font(.app(.caption, weight: .bold))
                         .foregroundColor(Color.SubtitleText)
                 }
-                .font(.system(.body, design: .rounded).weight(.semibold))
+                .font(.app(.body, weight: .semibold))
                 .padding(.horizontal, 16)
                 .frame(height: 44)
                 .contentShape(Capsule())

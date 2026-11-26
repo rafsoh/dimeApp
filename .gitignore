@@ -15,3 +15,6 @@ fastlane/metadata/review_information/
 fastlane/report.xml
 fastlane/README.md
 scripts/appstore-screenshots/out/
+
+## Sentry auth. The public DSN is committed; the upload token is not.
+.sentryclirc

@@ -42,7 +42,7 @@ struct SettingsExchangeRatesView: View {
                 refresh()
             } label: {
                 Text("Refresh Rates")
-                    .font(.system(.body, design: .rounded))
+                    .font(.app(.body))
                     .foregroundColor(Color.PrimaryText)
                     .frame(maxWidth: .infinity, minHeight: .settingsRowHeight, alignment: .leading)
                     .contentShape(Rectangle())
@@ -71,13 +71,13 @@ struct SettingsExchangeRatesView: View {
     func row(_ title: LocalizedStringKey, value: String) -> some View {
         HStack {
             Text(title)
-                .font(.system(.body, design: .rounded))
+                .font(.app(.body))
                 .foregroundColor(Color.PrimaryText)
 
             Spacer()
 
             Text(value)
-                .font(.system(.body, design: .rounded))
+                .font(.app(.body))
                 .foregroundColor(Color.SubtitleText)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)

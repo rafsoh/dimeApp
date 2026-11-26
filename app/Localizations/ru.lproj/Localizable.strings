@@ -527,3 +527,14 @@
 "Shown" = "Показаны";
 "Hidden" = "Скрыты";
 "Display +/- Symbol" = "Показывать знак +/-";
+
+/* Delete category */
+"%@ has 1 transaction. What should happen to it?" = "В категории «%@» 1 транзакция. Что с ней сделать?";
+"%@ has %lld transactions. What should happen to them?" = "В категории «%@» транзакций: %lld. Что с ними сделать?";
+"Move to" = "Перенести в";
+"Delete it" = "Удалить её";
+"Delete them" = "Удалить их";
+"Delete Category" = "Удалить категорию";
+
+"Font" = "Шрифт";
+"Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo — шрифт Джоша Пакетта, распространяется по лицензии SIL Open Font License.";

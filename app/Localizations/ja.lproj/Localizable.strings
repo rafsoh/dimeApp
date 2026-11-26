@@ -515,3 +515,14 @@
 "Shown" = "表示";
 "Hidden" = "非表示";
 "Display +/- Symbol" = "+/-記号を表示";
+
+/* Delete category */
+"%@ has 1 transaction. What should happen to it?" = "「%@」には取引が1件あります。どうしますか？";
+"%@ has %lld transactions. What should happen to them?" = "「%@」には取引が%lld件あります。どうしますか？";
+"Move to" = "移動先";
+"Delete it" = "削除する";
+"Delete them" = "すべて削除";
+"Delete Category" = "カテゴリを削除";
+
+"Font" = "フォント";
+"Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "AlloはJosh Puckettによる書体で、SIL Open Font Licenseのもとで提供されています。";

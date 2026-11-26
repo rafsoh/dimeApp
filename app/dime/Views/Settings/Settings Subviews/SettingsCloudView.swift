@@ -20,7 +20,7 @@ struct SettingsCloudView: View {
       VStack(spacing: 0) {
         Toggle(isOn: $iCloudStorage) {
           Text("Enable Sync")
-            .font(.system(.body, design: .rounded))
+            .font(.app(.body))
             .foregroundColor(Color.PrimaryText)
         }
         .tint(.green)
@@ -29,6 +29,12 @@ struct SettingsCloudView: View {
       .settingsSectionRows()
 
       SettingsSectionFooter("Close and reload app for change to take effect.")
+        .onChange(of: iCloudStorage) { enabled in
+          DataIntegrityLog.breadcrumb(
+            "iCloud sync preference changed",
+            flags: ["enabled": enabled]
+          )
+        }
 
       if iCloudStorage && dataController.isCloudKitSyncEnabled {
         SyncStatusSection(status: dataController.syncStatus)
@@ -46,17 +52,17 @@ struct SyncStatusSection: View {
   var body: some View {
     HStack(alignment: .center, spacing: 12) {
       Image(systemName: symbolName)
-        .font(.system(.body, design: .rounded).weight(.semibold))
+        .font(.app(.body, weight: .semibold))
         .foregroundColor(symbolColor)
 
       VStack(alignment: .leading, spacing: 3) {
         Text(title)
-          .font(.system(.body, design: .rounded))
+          .font(.app(.body))
           .foregroundColor(Color.PrimaryText)
 
         if case let .problem(problem) = status.summary {
           Text(problem.message)
-            .font(.system(.footnote, design: .rounded).weight(.medium))
+            .font(.app(.footnote, weight: .medium))
             .foregroundColor(Color.SubtitleText)
 
           if let detail = problem.detail {
@@ -68,11 +74,11 @@ struct SyncStatusSection: View {
 
         if let lastSynced = status.lastSynced {
           Text("Last synced \(lastSynced.formatted(.relative(presentation: .named)))")
-            .font(.system(.footnote, design: .rounded).weight(.medium))
+            .font(.app(.footnote, weight: .medium))
             .foregroundColor(Color.SubtitleText)
         } else if status.summary == .waiting {
           Text("Checking iCloud…")
-            .font(.system(.footnote, design: .rounded).weight(.medium))
+            .font(.app(.footnote, weight: .medium))
             .foregroundColor(Color.SubtitleText)
         }
       }

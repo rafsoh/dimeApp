@@ -435,6 +435,15 @@ final class BackupManager: ObservableObject {
         let currentCount = dataController.transactionCount()
 
         if BackupStore.looksLikeDataLoss(currentTransactionCount: currentCount, backupTransactionCount: backup.transactionCount) {
+            DataIntegrityLog.captureOnce(
+                key: "below-backup",
+                message: "Transaction count is far below the newest backup",
+                numbers: [
+                    "transactions": currentCount,
+                    "backupTransactions": backup.transactionCount
+                ],
+                flags: ["cloudKit": dataController.isCloudKitSyncEnabled]
+            )
             suggestedRestore = SuggestedRestore(backup: backup, currentTransactionCount: currentCount)
         }
     }
@@ -480,11 +489,28 @@ final class BackupManager: ObservableObject {
                 } ?? false
 
                 if !automatic || (!isEmpty && !looksLost) {
-                    try store.write(from: context)
+                    let summary = try store.write(from: context)
                     succeeded = true
+                    DataIntegrityLog.breadcrumb(
+                        "backup written",
+                        numbers: ["transactions": summary.transactionCount],
+                        flags: ["automatic": automatic]
+                    )
+                } else {
+                    DataIntegrityLog.breadcrumb(
+                        "backup skipped",
+                        numbers: ["transactions": transactionCount],
+                        flags: ["automatic": automatic, "empty": isEmpty, "looksLost": looksLost]
+                    )
                 }
             } catch {
-                logger.error("Backing up failed: \(String(describing: error), privacy: .public)")
+                let nsError = error as NSError
+                logger.error("Backing up failed: \(nsError.domain, privacy: .public) \(nsError.code, privacy: .public)")
+                DataIntegrityLog.capture(
+                    error,
+                    message: "Backup failed",
+                    flags: ["automatic": automatic]
+                )
             }
 
             DispatchQueue.main.async {
@@ -499,16 +525,30 @@ final class BackupManager: ObservableObject {
     func restore(_ backup: BackupSummary, completion: @escaping (Result<RestoreResult, Error>) -> Void) {
         // Restoring before iCloud has caught up would re-add items that are about to be downloaded again.
         guard dataController.isDataCurrentWithICloud else {
+            DataIntegrityLog.breadcrumb(
+                "restore skipped",
+                numbers: ["backupTransactions": backup.transactionCount],
+                tokens: ["reason": "waitingForICloud"]
+            )
             completion(.failure(RestoreError.waitingForICloud))
             return
         }
 
         // Rows restored mid-change could miss it and be read in the wrong currency.
         guard defaults?.data(forKey: MainCurrencyChangeManager.pendingPlanKey) == nil else {
+            DataIntegrityLog.breadcrumb(
+                "restore skipped",
+                numbers: ["backupTransactions": backup.transactionCount],
+                tokens: ["reason": "currencyChange"]
+            )
             completion(.failure(RestoreError.currencyChangeInProgress))
             return
         }
 
+        DataIntegrityLog.breadcrumb(
+            "restore started",
+            numbers: ["backupTransactions": backup.transactionCount]
+        )
         isWorking = true
         let context = dataController.container.newBackgroundContext()
         context.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
@@ -527,10 +567,27 @@ final class BackupManager: ObservableObject {
             DispatchQueue.main.async {
                 self.isWorking = false
 
-                if case .success = result {
+                switch result {
+                case let .success(restored):
                     self.defaults?.set(backup.url.lastPathComponent, forKey: Self.handledBackupKey)
                     self.suggestedRestore = nil
                     WidgetCenter.shared.reloadAllTimelines()
+                    DataIntegrityLog.breadcrumb(
+                        "restore finished",
+                        numbers: [
+                            "transactions": restored.transactions,
+                            "categories": restored.categories,
+                            "budgets": restored.budgets,
+                            "templates": restored.templates,
+                            "backupTransactions": backup.transactionCount
+                        ]
+                    )
+                case let .failure(error):
+                    DataIntegrityLog.capture(
+                        error,
+                        message: "Restore failed",
+                        numbers: ["backupTransactions": backup.transactionCount]
+                    )
                 }
 
                 completion(result)

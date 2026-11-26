@@ -60,6 +60,7 @@ Dime is a 100% free, open-source personal finance tracker built with iOS design 
 ## Third party dependencies
 
 - [Alamofire](https://github.com/Alamofire/Alamofire)
+- [Sentry](https://github.com/getsentry/sentry-cocoa) (crash and diagnostic reporting; see [SENTRY.md](SENTRY.md))
 - [CloudKitSyncMonitor](https://github.com/ggruen/CloudKitSyncMonitor)
 - [ConfettiSwiftUI](https://github.com/simibac/ConfettiSwiftUI)
 - [CrookedText](https://github.com/duemunk/CrookedText)
