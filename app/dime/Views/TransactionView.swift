@@ -289,8 +289,11 @@ struct TransactionView: View {
                     .overlay {
                         if showToast {
                             GlassToast(title: toastTitle, systemImage: toastImage, color: Color.AlertRed)
-                        } else if kindOptions.count > 1 {
+                        } else if kindOptions.count > 1 && usesVerticalBar {
+                            // The Duo's sheet has room for every choice side by side.
                             GlassSegmentedPicker(selection: kindSelection, options: kindOptions, segmentPadding: kindOptions.count > 2 ? 12 : 16)
+                        } else if kindOptions.count > 1 {
+                            EntryKindMenu(selection: kindSelection, options: kindOptions)
                         } else {
                             CategoryEditorTitle(title: "Expense")
                         }
@@ -1348,6 +1351,52 @@ private struct RecurringToolbarMenu: View {
         }
         .tint(repeatType > 0 ? Color.IncomeGreen : Color.PrimaryText)
         .accessibilityLabel(accessibilityLabel)
+    }
+}
+
+/// Expense, Income or Transfer as a menu, like the repeat menu, so the top bar stays uncluttered.
+private struct EntryKindMenu: View {
+    @Binding var selection: TransactionView.EntryKind
+    let options: [(value: TransactionView.EntryKind, title: LocalizedStringKey)]
+
+    @State private var showMenu = false
+
+    var selectedTitle: LocalizedStringKey {
+        options.first { $0.value == selection }?.title ?? "Expense"
+    }
+
+    var body: some View {
+        GlassCapsuleButton(selectedTitle, trailingSystemImage: "chevron.up.chevron.down", font: .app(.body, weight: .semibold)) {
+            showMenu = true
+        }
+        .accessibilityLabel(Text("Type") + Text(", ") + Text(selectedTitle))
+        .popover(present: $showMenu, attributes: {
+            $0.position = .absolute(
+                originAnchor: .bottom,
+                popoverAnchor: .top
+            )
+            $0.rubberBandingMode = .none
+            $0.sourceFrameInset = UIEdgeInsets(top: 0, left: 0, bottom: -10, right: 0)
+            $0.presentation.animation = .easeInOut(duration: 0.2)
+            $0.dismissal.animation = .easeInOut(duration: 0.3)
+        }) {
+            GlassPopoverMenu {
+                ForEach(options.indices, id: \.self) { index in
+                    GlassPopoverRow(options[index].title, isSelected: options[index].value == selection) {
+                        if options[index].value != selection {
+                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                selection = options[index].value
+                            }
+                        }
+
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                            showMenu = false
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
