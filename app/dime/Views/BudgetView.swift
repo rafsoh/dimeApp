@@ -142,29 +142,6 @@ struct BudgetView: View {
                 .environmentObject(dataController)
                 .environmentObject(toastPresenter)
         }
-        #if DEBUG
-        .onAppear {
-            // `-budgetSheet overall|<category name>` opens that budget's sheet, and `-budgetEdit` its edit sheet, for screenshots.
-            let arguments = ProcessInfo.processInfo.arguments
-            if let index = arguments.firstIndex(of: "-budgetSheet"), index + 1 < arguments.count {
-                let value = arguments[index + 1]
-                if value == "overall", let overall = mainBudget.first {
-                    detail = .overall(overall)
-                } else if let budget = budgets.first(where: { $0.wrappedName == value }) {
-                    detail = .category(budget)
-                }
-            } else if let index = arguments.firstIndex(of: "-budgetEdit"), index + 1 < arguments.count {
-                let value = arguments[index + 1]
-                if value == "overall", let overall = mainBudget.first {
-                    toEditMain = overall
-                } else if value == "new" {
-                    newBudget = true
-                } else if let budget = budgets.first(where: { $0.wrappedName == value }) {
-                    toEdit = budget
-                }
-            }
-        }
-        #endif
     }
 
     func editDeleteMenu(onEdit: @escaping () -> Void, onDelete: @escaping () -> Void) -> some View {

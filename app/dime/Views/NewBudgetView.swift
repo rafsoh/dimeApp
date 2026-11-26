@@ -173,9 +173,6 @@ struct BrandNewBudgetView: View {
         } message: { notice in
             Text(notice.message)
         }
-        #if DEBUG
-        .onAppear(perform: runScreenshotStep)
-        #endif
     }
 
     var header: some View {
@@ -1024,33 +1021,6 @@ struct BrandNewBudgetView: View {
         _activeEditor = State(initialValue: toEditBudget == nil && toEditMainBudget == nil ? .amount : nil)
         _rollover = State(initialValue: toEditBudget?.rolloverEnabled ?? toEditMainBudget?.rolloverEnabled ?? false)
     }
-
-    #if DEBUG
-    /// `-budgetEditStep rolloverMenu|enableRollover|disableRollover|changeFrequency` puts the sheet in a state worth a screenshot.
-    func runScreenshotStep() {
-        let arguments = ProcessInfo.processInfo.arguments
-        guard let index = arguments.firstIndex(of: "-budgetEditStep"), index + 1 < arguments.count else { return }
-        let step = arguments[index + 1]
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-            switch step {
-            case "rolloverMenu":
-                showRolloverMenu = true
-            case "enableRollover":
-                rollover = true
-                submit()
-            case "disableRollover":
-                rollover = false
-                submit()
-            case "changeFrequency":
-                timeFrame = timeFrame == .week ? .month : .week
-                submit()
-            default:
-                break
-            }
-        }
-    }
-    #endif
 }
 
 // MARK: - Sentence token
