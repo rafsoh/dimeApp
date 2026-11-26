@@ -128,7 +128,7 @@ struct InsightsView: View {
                             .animation(.easeInOut(duration: 0.2), value: isScrubbingPeriod)
 
                         GlassStepperCapsule(
-                            maxWidth: UIScreen.main.bounds.width - 32 - periodMenuWidth - 8,
+                            reservedWidth: periodMenuWidth + 8,
                             previousLabel: period.previousLabel,
                             nextLabel: period.nextLabel
                         ) { offset in

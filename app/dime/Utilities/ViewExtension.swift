@@ -168,6 +168,7 @@ private struct FloatingAboveTabBarModifier<Bar: View>: ViewModifier {
 
     @Environment(\.tabBarTop) private var tabBarTop
     @State private var containerBottom: CGFloat?
+    @State private var containerWidth: CGFloat?
     @State private var barHeight: CGFloat = 0
 
     private var bottomPadding: CGFloat {
@@ -182,13 +183,19 @@ private struct FloatingAboveTabBarModifier<Bar: View>: ViewModifier {
                 ZStack(alignment: .bottom) {
                     GeometryReader { proxy in
                         let bottom = proxy.frame(in: .global).maxY
+                        let width = proxy.size.width
                         Color.clear
-                            .onAppear { containerBottom = bottom }
+                            .onAppear {
+                                containerBottom = bottom
+                                containerWidth = width
+                            }
                             .onChange(of: bottom) { containerBottom = $0 }
+                            .onChange(of: width) { containerWidth = $0 }
                     }
                     .allowsHitTesting(false)
 
                     bar
+                        .environment(\.floatingBarWidth, containerWidth)
                         .background {
                             GeometryReader { proxy in
                                 Color.clear
@@ -670,9 +677,10 @@ struct GlassCapsuleTag: View {
 }
 
 struct GlassStepperCapsule: View {
+    @Environment(\.floatingBarWidth) private var floatingBarWidth
     var accessibilityTitle: String?
-    /// The widest the capsule rests at, when it shares its row; it then grows leftward while scrubbing, over whatever sits beside it.
-    var maxWidth: CGFloat?
+    /// The width of whatever shares its row, so the two fit between the margins; it then grows leftward while scrubbing, over what sits beside it.
+    var reservedWidth: CGFloat = 0
     let previousLabel: LocalizedStringKey
     let nextLabel: LocalizedStringKey
     /// The title `offset` steps from the current one (negative is earlier), or nil past either end.
@@ -711,9 +719,10 @@ struct GlassStepperCapsule: View {
     private let scrubSpring = Animation.spring(response: 0.38, dampingFraction: 0.78)
 
     var body: some View {
-        let screenWidth = UIScreen.main.bounds.width - 32
-        let restingWidth = min(capsuleWidth, maxWidth ?? screenWidth, screenWidth)
-        let scrubbingWidth = min(restingWidth + 56, screenWidth)
+        // The space the floating bar actually has, which on the Duo excludes the side tab bar, less 16pt margins.
+        let availableWidth = (floatingBarWidth ?? UIScreen.main.bounds.width) - 32
+        let restingWidth = max(0, min(capsuleWidth, availableWidth - reservedWidth))
+        let scrubbingWidth = min(restingWidth + 56, availableWidth)
         let currentTitle = title(0) ?? ""
 
         HStack(spacing: 8) {
@@ -743,7 +752,7 @@ struct GlassStepperCapsule: View {
         .glassBackground(in: Capsule(), tint: .glassTint)
         .contentShape(Capsule())
         .simultaneousGesture(scrubGesture)
-        .frame(width: restingWidth, height: 44, alignment: maxWidth == nil ? .bottom : .bottomTrailing)
+        .frame(width: restingWidth, height: 44, alignment: reservedWidth == 0 ? .bottom : .bottomTrailing)
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .onChange(of: isScrubbing) { scrubbing in
             onScrubbingChange?(scrubbing)
@@ -1375,5 +1384,17 @@ class Utilities {
 
         (UIApplication.shared.connectedScenes.first as?
             UIWindowScene)?.windows.first!.overrideUserInterfaceStyle = userInterfaceStyle
+    }
+}
+
+private struct FloatingBarWidthKey: EnvironmentKey {
+    static let defaultValue: CGFloat? = nil
+}
+
+extension EnvironmentValues {
+    /// How wide the view a floating bar sits over is, which is narrower than the screen beside the Duo's side tab bar.
+    var floatingBarWidth: CGFloat? {
+        get { self[FloatingBarWidthKey.self] }
+        set { self[FloatingBarWidthKey.self] = newValue }
     }
 }
