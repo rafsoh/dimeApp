@@ -80,6 +80,9 @@
 "Edit" = "Изменить";
 "Delete Expense?" = "Удалить расход?";
 "Missing Amount" = "Нет суммы";
+"Expense Was Deleted" = "Расход удалён";
+"Template Was Deleted" = "Шаблон удалён";
+"Category Was Deleted" = "Категория удалена";
 "Missing Category" = "Нет категории";
 "No Category" = "Без категории";
 "category-picker-none" = "Нет";

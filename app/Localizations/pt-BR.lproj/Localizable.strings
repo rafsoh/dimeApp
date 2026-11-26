@@ -81,6 +81,9 @@
 "Edit" = "Editar";
 "Delete Expense?" = "Apagar despesa?";
 "Missing Amount" = "Falta o valor";
+"Expense Was Deleted" = "Despesa apagada";
+"Template Was Deleted" = "Modelo apagado";
+"Category Was Deleted" = "Categoria apagada";
 "Missing Category" = "Falta a categoria";
 "No Category" = "Sem categoria";
 "category-picker-none" = "Nenhuma";

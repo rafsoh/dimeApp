@@ -6,6 +6,7 @@
 //
 
 import Combine
+import CoreData
 import Foundation
 import Popovers
 import SwiftUI
@@ -75,6 +76,14 @@ struct TransactionView: View {
             return existing
         }
         return nil
+    }
+
+    /// The saved transaction or template this page edits, if any.
+    var editedObject: NSManagedObject? {
+        if let toEdit {
+            return toEdit
+        }
+        return editedTemplate
     }
 
     var isEditing: Bool {
@@ -705,6 +714,34 @@ struct TransactionView: View {
         if price == 0 {
             toastImage = "centsign.circle"
             toastTitle = "Missing Amount"
+            showToast = true
+            generator.notificationOccurred(.error)
+            return
+        }
+
+        // What this page edits, or the category picked on it, can be deleted while the page is open,
+        // most often by a change synced from another device. Linking a deleted object throws
+        // "Illegal attempt to establish a relationship ... between objects in different contexts".
+        let targetContext: NSManagedObjectContext?
+
+        if let edited = editedObject {
+            targetContext = edited.isDeleted ? nil : edited.managedObjectContext
+        } else {
+            targetContext = moc
+        }
+
+        guard let saveContext = targetContext else {
+            toastImage = "trash"
+            toastTitle = isTemplate ? "Template Was Deleted" : "Expense Was Deleted"
+            showToast = true
+            generator.notificationOccurred(.error)
+            return
+        }
+
+        if let chosen = category, chosen.isDeleted || chosen.managedObjectContext !== saveContext {
+            category = nil
+            toastImage = "tray"
+            toastTitle = "Category Was Deleted"
             showToast = true
             generator.notificationOccurred(.error)
             return

@@ -82,6 +82,9 @@
 "Edit" = "Modifier";
 "Delete Expense?" = "Supprimer une dépense?";
 "Missing Amount" = "Montant manquant";
+"Expense Was Deleted" = "Dépense supprimée";
+"Template Was Deleted" = "Modèle supprimé";
+"Category Was Deleted" = "Catégorie supprimée";
 "Missing Category" = "Catégorie manquante";
 "No Category" = "Sans catégorie";
 "category-picker-none" = "Aucune";

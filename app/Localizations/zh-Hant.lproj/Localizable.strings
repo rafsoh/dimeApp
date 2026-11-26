@@ -81,6 +81,9 @@
 "Edit" = "編輯";
 "Delete Expense?" = "要刪除這筆支出嗎？";
 "Missing Amount" = "缺少金額";
+"Expense Was Deleted" = "這筆支出已被刪除";
+"Template Was Deleted" = "此範本已被刪除";
+"Category Was Deleted" = "此類別已被刪除";
 "Missing Category" = "缺少類別";
 "No Category" = "無類別";
 "category-picker-none" = "無";

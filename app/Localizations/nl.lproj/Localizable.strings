@@ -81,6 +81,9 @@
 "Edit" = "Wijzig";
 "Delete Expense?" = "Uitgave verwijderen?";
 "Missing Amount" = "Bedrag ontbreekt";
+"Expense Was Deleted" = "Uitgave verwijderd";
+"Template Was Deleted" = "Sjabloon verwijderd";
+"Category Was Deleted" = "Categorie verwijderd";
 "Missing Category" = "Categorie ontbreekt";
 "No Category" = "Geen categorie";
 "category-picker-none" = "Geen";

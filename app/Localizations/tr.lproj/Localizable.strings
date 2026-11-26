@@ -81,6 +81,9 @@
 "Edit" = "Düzenle";
 "Delete Expense?" = "Gider silinsin mi?";
 "Missing Amount" = "Tutar eksik";
+"Expense Was Deleted" = "Gider silindi";
+"Template Was Deleted" = "Şablon silindi";
+"Category Was Deleted" = "Kategori silindi";
 "Missing Category" = "Kategori eksik";
 "No Category" = "Kategorisiz";
 "category-picker-none" = "Yok";
