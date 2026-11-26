@@ -156,8 +156,8 @@ struct CategoryPickerSheet: View {
         }
         .sideBarSheet {
             SideBarCloseItem { dismiss() }
-            if allowsEditing {
-                ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItem(placement: .topBarTrailing) {
+                if allowsEditing {
                     Button {
                         showNewCategory = true
                     } label: {

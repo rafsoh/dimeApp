@@ -113,9 +113,7 @@ struct ImportDataView: View {
         }
         .confettiCannon(counter: $confetti, num: 50, openingAngle: Angle(degrees: 0), closingAngle: Angle(degrees: 360), radius: 200)
         .sideBarSheet {
-            if !isImporting {
-                SideBarCloseItem(isBack: step != .start && step != .finished) { goBack() }
-            }
+            SideBarCloseItem(isBack: step != .start && step != .finished, isShown: !isImporting) { goBack() }
         }
     }
 

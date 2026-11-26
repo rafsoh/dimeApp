@@ -133,15 +133,19 @@ extension View {
 /// A `sideBarSheet` sheet's close button, or its back button while it shows a page within the sheet.
 struct SideBarCloseItem: ToolbarContent {
     var isBack = false
+    var isShown = true
     let action: () -> Void
 
     var body: some ToolbarContent {
+        // Conditions go inside the item: `if` in toolbar content needs iOS 16.
         ToolbarItem(placement: .topBarLeading) {
-            Button(action: action) {
-                if isBack {
-                    Label("Back", systemImage: "chevron.left")
-                } else {
-                    Label("Close", systemImage: "xmark")
+            if isShown {
+                Button(action: action) {
+                    if isBack {
+                        Label("Back", systemImage: "chevron.left")
+                    } else {
+                        Label("Close", systemImage: "xmark")
+                    }
                 }
             }
         }
