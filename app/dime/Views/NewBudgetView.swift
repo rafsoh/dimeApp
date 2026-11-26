@@ -173,6 +173,9 @@ struct BrandNewBudgetView: View {
         } message: { notice in
             Text(notice.message)
         }
+        .sideBarSheet {
+            SideBarCloseItem { dismiss() }
+        }
     }
 
     var header: some View {
@@ -180,6 +183,7 @@ struct BrandNewBudgetView: View {
             GlassIconButton(systemName: "xmark", accessibilityLabel: "Close") {
                 dismiss()
             }
+            .hiddenInSideBar()
 
             Spacer()
         }
@@ -1319,6 +1323,7 @@ private struct BudgetStartDateSheet: View {
                 GlassIconButton(systemName: "xmark", accessibilityLabel: "Close") {
                     dismiss()
                 }
+                .hiddenInSideBar()
 
                 Spacer()
 
@@ -1331,6 +1336,7 @@ private struct BudgetStartDateSheet: View {
                 ) {
                     dismiss()
                 }
+                .hiddenInSideBar()
             }
             .frame(height: 44)
             .overlay {
@@ -1358,6 +1364,10 @@ private struct BudgetStartDateSheet: View {
         }
         .frame(maxHeight: .infinity, alignment: .top)
         .sheetBackground()
+        .sideBarSheet {
+            SideBarCloseItem { dismiss() }
+            SideBarConfirmItem(title: "Done") { dismiss() }
+        }
     }
 }
 

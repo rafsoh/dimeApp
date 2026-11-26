@@ -72,6 +72,106 @@ extension EnvironmentValues {
     }
 }
 
+private struct SheetButtonsInSideBarKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+extension EnvironmentValues {
+    /// Whether `sideBarSheet` has moved this sheet's top buttons into the iPhone Duo's side bar.
+    var sheetButtonsInSideBar: Bool {
+        get { self[SheetButtonsInSideBarKey.self] }
+        set { self[SheetButtonsInSideBarKey.self] = newValue }
+    }
+}
+
+/// On the iPhone Duo the system bar runs down the side, and a sheet's close and action buttons belong there
+/// rather than in its own header. Wraps the sheet in a navigation stack whose toolbar holds `items`.
+/// Everywhere else the sheet is left exactly as it was.
+private struct SideBarSheet<Items: ToolbarContent>: ViewModifier {
+    let items: () -> Items
+
+    @State private var usesVerticalBar = VerticalBar.isActiveInKeyWindow
+
+    func body(content: Content) -> some View {
+        Group {
+            if #available(iOS 16.0, *), usesVerticalBar {
+                NavigationStack {
+                    content
+                        .toolbar { items() }
+                }
+            } else {
+                content
+            }
+        }
+        .environment(\.sheetButtonsInSideBar, usesVerticalBar)
+        .readsVerticalBar($usesVerticalBar)
+    }
+}
+
+private struct HiddenInSideBar: ViewModifier {
+    @Environment(\.sheetButtonsInSideBar) private var inSideBar
+
+    @ViewBuilder func body(content: Content) -> some View {
+        if !inSideBar {
+            content
+        }
+    }
+}
+
+extension View {
+    /// Puts this sheet's top buttons in the iPhone Duo's side bar. Mark the header's own buttons `hiddenInSideBar()`.
+    func sideBarSheet<Items: ToolbarContent>(@ToolbarContentBuilder items: @escaping () -> Items) -> some View {
+        modifier(SideBarSheet(items: items))
+    }
+
+    /// Leaves out a sheet header's button where `sideBarSheet` shows it in the side bar instead.
+    func hiddenInSideBar() -> some View {
+        modifier(HiddenInSideBar())
+    }
+}
+
+/// A `sideBarSheet` sheet's close button, or its back button while it shows a page within the sheet.
+struct SideBarCloseItem: ToolbarContent {
+    var isBack = false
+    let action: () -> Void
+
+    var body: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            Button(action: action) {
+                if isBack {
+                    Label("Back", systemImage: "chevron.left")
+                } else {
+                    Label("Close", systemImage: "xmark")
+                }
+            }
+        }
+    }
+}
+
+/// A `sideBarSheet` sheet's confirm button, drawn prominent like the dark checkmark in the sheet's own header.
+struct SideBarConfirmItem: ToolbarContent {
+    let title: LocalizedStringKey
+    let action: () -> Void
+
+    var body: some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            Button(action: action) {
+                Label(title, systemImage: "checkmark")
+            }
+            .prominentToolbarButton(tint: Color.DarkBackground, isProminent: true)
+        }
+    }
+}
+
+#if DEBUG
+// SCREENSHOT ONLY, remove before merging: `-sideBarShot <name>` opens that sheet.
+func sideBarShot(_ name: String, perform action: @escaping () -> Void) {
+    let arguments = ProcessInfo.processInfo.arguments
+    guard let index = arguments.firstIndex(of: "-sideBarShot"), index + 1 < arguments.count, arguments[index + 1] == name else { return }
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.8, execute: action)
+}
+#endif
+
 private struct VerticalBarReader: UIViewRepresentable {
     @Binding var usesVerticalBar: Bool
 

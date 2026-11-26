@@ -112,6 +112,11 @@ struct ImportDataView: View {
             }
         }
         .confettiCannon(counter: $confetti, num: 50, openingAngle: Angle(degrees: 0), closingAngle: Angle(degrees: 360), radius: 200)
+        .sideBarSheet {
+            if !isImporting {
+                SideBarCloseItem(isBack: step != .start && step != .finished) { goBack() }
+            }
+        }
     }
 
     // MARK: - Chrome
@@ -122,6 +127,7 @@ struct ImportDataView: View {
                 GlassIconButton(systemName: step == .start || step == .finished ? "xmark" : "chevron.left", accessibilityLabel: step == .start || step == .finished ? "Close" : "Back") {
                     goBack()
                 }
+                .hiddenInSideBar()
             }
 
             Spacer()

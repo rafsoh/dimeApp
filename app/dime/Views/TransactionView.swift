@@ -484,6 +484,10 @@ struct TransactionView: View {
                         isEditingDecimal = true
                         decimalValuesAssigned = AssignedDecimal(count: fractionDigits)
                     }
+
+                    sideBarShot("customInterval") { showPicker = true }
+                    sideBarShot("date") { showingDatePicker = true }
+                    sideBarShot("category") { showCategorySheet = true }
                 }
                 #endif
             }
@@ -1234,6 +1238,7 @@ struct CustomRecurringView: View {
                 GlassIconButton(systemName: "xmark", accessibilityLabel: "Close") {
                     dismiss()
                 }
+                .hiddenInSideBar()
 
                 Spacer()
 
@@ -1242,15 +1247,10 @@ struct CustomRecurringView: View {
                     accessibilityLabel: "Save",
                     foreground: Color.LightIcon,
                     tint: Color.DarkBackground,
-                    fallback: Color.DarkBackground
-                ) {
-                    repeatType = holdingType
-                    repeatCoefficient = holdingCoefficient
-
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
-
-                    dismiss()
-                }
+                    fallback: Color.DarkBackground,
+                    action: save
+                )
+                .hiddenInSideBar()
             }
             .frame(height: 44)
             .overlay {
@@ -1318,6 +1318,19 @@ struct CustomRecurringView: View {
                 holdingCoefficient = 2
             }
         }
+        .sideBarSheet {
+            SideBarCloseItem { dismiss() }
+            SideBarConfirmItem(title: "Save", action: save)
+        }
+    }
+
+    func save() {
+        repeatType = holdingType
+        repeatCoefficient = holdingCoefficient
+
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+
+        dismiss()
     }
 }
 
@@ -1354,6 +1367,7 @@ struct DateTimePickerSheet: View {
                 GlassIconButton(systemName: "xmark", accessibilityLabel: "Close") {
                     dismiss()
                 }
+                .hiddenInSideBar()
 
                 Spacer()
 
@@ -1366,6 +1380,7 @@ struct DateTimePickerSheet: View {
                 ) {
                     dismiss()
                 }
+                .hiddenInSideBar()
             }
             .frame(height: 44)
             .overlay {
@@ -1393,6 +1408,10 @@ struct DateTimePickerSheet: View {
         }
         .frame(maxHeight: .infinity, alignment: .top)
         .sheetBackground()
+        .sideBarSheet {
+            SideBarCloseItem { dismiss() }
+            SideBarConfirmItem(title: "Done") { dismiss() }
+        }
     }
 }
 

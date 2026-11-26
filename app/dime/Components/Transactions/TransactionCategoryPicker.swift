@@ -127,6 +127,7 @@ struct CategoryPickerSheet: View {
                 GlassIconButton(systemName: "xmark", accessibilityLabel: "Close") {
                     dismiss()
                 }
+                .hiddenInSideBar()
 
                 Spacer()
 
@@ -134,6 +135,7 @@ struct CategoryPickerSheet: View {
                     GlassIconButton(systemName: "pencil", accessibilityLabel: "Edit Categories") {
                         showNewCategory = true
                     }
+                    .hiddenInSideBar()
                 }
             }
             .frame(height: 44)
@@ -151,6 +153,18 @@ struct CategoryPickerSheet: View {
         }
         .onPreferenceChange(CategorySheetBodyHeightKey.self) { height in
             bodyHeight = height
+        }
+        .sideBarSheet {
+            SideBarCloseItem { dismiss() }
+            if allowsEditing {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showNewCategory = true
+                    } label: {
+                        Label("Edit Categories", systemImage: "pencil")
+                    }
+                }
+            }
         }
     }
 

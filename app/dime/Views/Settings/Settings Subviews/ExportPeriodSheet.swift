@@ -185,6 +185,7 @@ struct ExportPeriodSheet: View {
                 GlassIconButton(systemName: "xmark", accessibilityLabel: "Close") {
                     dismiss()
                 }
+                .hiddenInSideBar()
 
                 Spacer()
             }
@@ -216,6 +217,9 @@ struct ExportPeriodSheet: View {
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .sheetBackground()
         .onAppear(perform: load)
+        .sideBarSheet {
+            SideBarCloseItem { dismiss() }
+        }
     }
 
     private var emptyState: some View {

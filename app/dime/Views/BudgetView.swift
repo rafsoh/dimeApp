@@ -114,6 +114,12 @@ struct BudgetView: View {
         .background(Color.PrimaryBackground)
         .onAppear {
             dataController.updateBudgetDates()
+            #if DEBUG
+            sideBarShot("budget") {
+                detail = mainBudget.first.map { .overall($0) } ?? orderedBudgets.first.map { .category($0) }
+            }
+            sideBarShot("newBudget") { newBudget = true }
+            #endif
         }
         .onReceive(didSave) { _ in
             refreshID = UUID()
@@ -487,6 +493,16 @@ struct BudgetDetailSheet: View {
         .onReceive(didSave) { _ in
             refreshID = UUID()
         }
+        .sideBarSheet {
+            SideBarCloseItem { dismiss() }
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    menuItems
+                } label: {
+                    Label("More", systemImage: "ellipsis")
+                }
+            }
+        }
     }
 
     var header: some View {
@@ -494,20 +510,12 @@ struct BudgetDetailSheet: View {
             GlassIconButton(systemName: "xmark", accessibilityLabel: "Close") {
                 dismiss()
             }
+            .hiddenInSideBar()
 
             Spacer()
 
             Menu {
-                Button {
-                    showEdit = true
-                } label: {
-                    Label("Edit Budget", systemImage: "pencil")
-                }
-                Button(role: .destructive) {
-                    showDelete = true
-                } label: {
-                    Label("Delete Budget", systemImage: "trash")
-                }
+                menuItems
             } label: {
                 Image(systemName: "ellipsis")
                     .font(.app(.body, weight: .semibold))
@@ -517,6 +525,7 @@ struct BudgetDetailSheet: View {
             }
             .glassBackground(in: Circle(), tint: .glassTint)
             .accessibilityLabel("More")
+            .hiddenInSideBar()
         }
         .frame(height: 44)
         .overlay {
@@ -530,6 +539,19 @@ struct BudgetDetailSheet: View {
         .padding(.horizontal, 20)
         .padding(.top, 20)
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+    }
+
+    @ViewBuilder var menuItems: some View {
+        Button {
+            showEdit = true
+        } label: {
+            Label("Edit Budget", systemImage: "pencil")
+        }
+        Button(role: .destructive) {
+            showDelete = true
+        } label: {
+            Label("Delete Budget", systemImage: "trash")
+        }
     }
 
     var title: Text {
