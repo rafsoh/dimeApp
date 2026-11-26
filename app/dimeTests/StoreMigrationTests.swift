@@ -41,6 +41,19 @@ final class StoreMigrationTests: XCTestCase {
         try? FileManager.default.removeItem(at: directory)
     }
 
+    func testRecordCountsReadsTheStoreWithoutMigratingIt() throws {
+        let model = try XCTUnwrap(earlierModels.first)
+        let storeURL = directory.appendingPathComponent("counts.sqlite")
+        _ = try writeFixture(to: storeURL, model: model)
+
+        let counts = try XCTUnwrap(StoreSnapshot.recordCounts(storeAt: storeURL, model: model))
+
+        XCTAssertEqual(counts["categories"], 3)
+        XCTAssertGreaterThan(counts["transactions"] ?? 0, 0)
+        XCTAssertTrue(StoreSnapshot.needsMigration(storeAt: storeURL, to: currentModel))
+        XCTAssertEqual(StoreSnapshot.sourceModel(forStoreAt: storeURL)?.entityVersionHashesByName, model.entityVersionHashesByName)
+    }
+
     func testTestsNeverOpenTheRealStore() {
         let urls = DataController.shared.container.persistentStoreCoordinator.persistentStores.map(\.url?.path)
 
