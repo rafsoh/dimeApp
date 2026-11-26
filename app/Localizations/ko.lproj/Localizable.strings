@@ -563,3 +563,10 @@
 "Keep cash, cards and savings apart" = "현금, 카드, 저축을 따로 관리하세요";
 "Everything you've logged so far is in %@. Tap it to rename it, or add an account below." = "지금까지 기록한 내용은 모두 %@에 있습니다. 탭하여 이름을 바꾸거나 아래에서 계좌를 추가하세요.";
 "Time frame" = "기간";
+"Account Was Deleted" = "계좌가 삭제됨";
+"Type" = "유형";
+"Shows insights for this account" = "이 계좌의 분석을 표시합니다";
+"Which accounts' spending counts towards this budget" = "이 예산에 포함할 계좌";
+"Renames the account" = "계좌 이름을 변경합니다";
+"Edits the account" = "계좌를 편집합니다";
+"%@, %@, %lld percent of spending" = "%1$@, %2$@, 지출의 %3$lld%%";

@@ -563,3 +563,10 @@
 "Keep cash, cards and savings apart" = "Separa efectivo, tarjetas y ahorros";
 "Everything you've logged so far is in %@. Tap it to rename it, or add an account below." = "Todo lo que has registrado hasta ahora está en %@. Tócala para cambiarle el nombre o añade una cuenta abajo.";
 "Time frame" = "Periodo";
+"Account Was Deleted" = "Cuenta eliminada";
+"Type" = "Tipo";
+"Shows insights for this account" = "Muestra el análisis de esta cuenta";
+"Which accounts' spending counts towards this budget" = "Qué cuentas cuentan para este presupuesto";
+"Renames the account" = "Cambia el nombre de la cuenta";
+"Edits the account" = "Edita la cuenta";
+"%@, %@, %lld percent of spending" = "%1$@, %2$@, %3$lld por ciento del gasto";

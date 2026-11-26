@@ -563,3 +563,10 @@
 "Keep cash, cards and savings apart" = "Nakit, kart ve birikimlerinizi ayrı tutun";
 "Everything you've logged so far is in %@. Tap it to rename it, or add an account below." = "Şimdiye kadar kaydettiğiniz her şey %@ hesabında. Yeniden adlandırmak için dokunun veya aşağıdan bir hesap ekleyin.";
 "Time frame" = "Zaman aralığı";
+"Account Was Deleted" = "Hesap silindi";
+"Type" = "Tür";
+"Shows insights for this account" = "Bu hesabın analizini gösterir";
+"Which accounts' spending counts towards this budget" = "Bu bütçeye hangi hesapların harcamaları sayılır";
+"Renames the account" = "Hesabı yeniden adlandırır";
+"Edits the account" = "Hesabı düzenler";
+"%@, %@, %lld percent of spending" = "%1$@, %2$@, harcamaların %%%3$lld kadarı";

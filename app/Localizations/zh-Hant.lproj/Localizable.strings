@@ -563,3 +563,10 @@
 "Keep cash, cards and savings apart" = "將現金、卡片和儲蓄分開管理";
 "Everything you've logged so far is in %@. Tap it to rename it, or add an account below." = "你目前記錄的所有內容都在「%@」中。點一下可重新命名，或在下方加入帳戶。";
 "Time frame" = "時間範圍";
+"Account Was Deleted" = "此帳戶已被刪除";
+"Type" = "類型";
+"Shows insights for this account" = "顯示此帳戶的分析";
+"Which accounts' spending counts towards this budget" = "哪些帳戶的支出計入此預算";
+"Renames the account" = "重新命名此帳戶";
+"Edits the account" = "編輯此帳戶";
+"%@, %@, %lld percent of spending" = "%1$@，%2$@，佔支出的%3$lld%%";

@@ -575,3 +575,10 @@
 "Keep cash, cards and savings apart" = "Разделяйте наличные, карты и сбережения";
 "Everything you've logged so far is in %@. Tap it to rename it, or add an account below." = "Всё, что вы записали до сих пор, находится в «%@». Нажмите, чтобы переименовать, или добавьте счёт ниже.";
 "Time frame" = "Период";
+"Account Was Deleted" = "Счёт удалён";
+"Type" = "Тип";
+"Shows insights for this account" = "Показывает отчет по этому счёту";
+"Which accounts' spending counts towards this budget" = "Расходы каких счетов учитываются в этом бюджете";
+"Renames the account" = "Переименовывает счёт";
+"Edits the account" = "Изменяет счёт";
+"%@, %@, %lld percent of spending" = "%1$@, %2$@, %3$lld%% расходов";

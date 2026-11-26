@@ -563,3 +563,10 @@
 "Keep cash, cards and savings apart" = "現金、カード、貯金を分けて管理";
 "Everything you've logged so far is in %@. Tap it to rename it, or add an account below." = "これまでの記録はすべて「%@」にあります。タップして名前を変更するか、下で口座を追加してください。";
 "Time frame" = "期間";
+"Account Was Deleted" = "この口座は削除されました";
+"Type" = "種類";
+"Shows insights for this account" = "この口座の分析を表示します";
+"Which accounts' spending counts towards this budget" = "どの口座の支出をこの予算に含めるか";
+"Renames the account" = "口座の名前を変更します";
+"Edits the account" = "口座を編集します";
+"%@, %@, %lld percent of spending" = "%1$@、%2$@、支出の%3$lld%%";

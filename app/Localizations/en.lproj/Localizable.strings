@@ -545,3 +545,10 @@
 "Keep cash, cards and savings apart" = "Keep cash, cards and savings apart";
 "Everything you've logged so far is in %@. Tap it to rename it, or add an account below." = "Everything you've logged so far is in %@. Tap it to rename it, or add an account below.";
 "Time frame" = "Time frame";
+"Account Was Deleted" = "Account Was Deleted";
+"Type" = "Type";
+"Shows insights for this account" = "Shows insights for this account";
+"Which accounts' spending counts towards this budget" = "Which accounts' spending counts towards this budget";
+"Renames the account" = "Renames the account";
+"Edits the account" = "Edits the account";
+"%@, %@, %lld percent of spending" = "%@, %@, %lld percent of spending";
