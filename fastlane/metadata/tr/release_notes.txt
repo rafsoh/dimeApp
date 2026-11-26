@@ -1,0 +1,17 @@
+Dime 3.0.1'deki yenilikler
+
+• Birden fazla para birimi: Para birimi simgesine dokunarak istediğiniz para biriminde kayıt girin. Toplamlar, her günün kuruyla ana para biriminize çevrilir.
+• Hızlı ekle: Ayarlar'a en fazla 4 şablon kaydedin ve yeni Hızlı ekle widget'ından Dime'ı açmadan tek dokunuşla kaydedin.
+• Yaklaşan ödeme hatırlatıcıları: Tekrarlanan bir gider kayıtlarınıza eklenmeden önce haber alın.
+• Denetim Merkezi, kilit ekranı ve Eylem düğmesi için yeni "Yeni gider" düğmesi.
+• Kategori artık isteğe bağlı: Kategorisiz bir işlem girin; Gider veya Gelir olarak görünür.
+• Haftanızı istediğiniz günle başlatın.
+• Bir dönemi dışa aktarın: Dışa aktarmadan önce dahil edilecek tarihleri seçin.
+• Sınırsız gider kategorisi, istediğiniz sırada.
+• Para birimi simgesi veya ayırıcılar olsa bile tutara göre arayın.
+• Dime artık Fransızca ve Rusça olarak da kullanılabilir.
+
+Düzeltmeler
+• Emoji klavyesi açık olmasa bile artık kategori ekleyebilirsiniz.
+• iPhone Duo'da not yazmak artık ekleme ekranını kaydırmıyor.
+• Ayarlar'da küçük düzen düzeltmeleri.

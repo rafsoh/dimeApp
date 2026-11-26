@@ -1,0 +1,17 @@
+Novedades de Dime 3.0.1
+
+• Varias monedas: toca el símbolo de la moneda para registrar en cualquier moneda. Los totales se convierten a tu moneda principal al cambio de cada día.
+• Añadido rápido: guarda hasta 4 plantillas en Configuración y regístralas con un toque desde el nuevo widget de Añadido rápido, sin abrir Dime.
+• Avisos de próximos cargos: recibe un aviso antes de que se añada un gasto recurrente a tu registro.
+• Nuevo botón Nuevo gasto para el centro de control, la pantalla bloqueada y el botón de acción.
+• La categoría ahora es opcional: registra un movimiento sin categoría y aparecerá como Gasto o Ingreso.
+• Empieza la semana el día que quieras.
+• Exporta un periodo: elige las fechas que quieres incluir antes de exportar.
+• Categorías de gasto ilimitadas, en el orden que elijas.
+• Busca por importe, incluso con símbolo de moneda o separadores.
+• Dime ya está disponible en francés y ruso.
+
+Correcciones
+• Ya puedes añadir una categoría aunque no tengas activado el teclado de emojis.
+• Escribir una nota en el iPhone Duo ya no desplaza la pantalla para añadir.
+• Pequeños ajustes de diseño en Configuración.

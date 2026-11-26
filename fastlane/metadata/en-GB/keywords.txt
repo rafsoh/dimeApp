@@ -1,0 +1,1 @@
+expense,spending,budgeting,finance,tracker,saving,manager,transaction,wallet,subscription,income,net

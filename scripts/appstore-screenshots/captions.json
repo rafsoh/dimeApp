@@ -1,0 +1,132 @@
+{
+  "en-GB": {
+    "hero": { "lines": ["Simple, intuitive", "expense tracking."], "underline": "intuitive", "award": "Must-Have\nFinance Apps" },
+    "input": "Blazing Fast Input.",
+    "charts": "Good Ol’ Charts.",
+    "budgets": "Budget. Budget. Budget.",
+    "custom": "Make It Yours.",
+    "dark": "Gorgeous In Black.",
+    "widgets": "Stunning Widgets.",
+    "insights": "Richer Insights."
+  },
+  "de-DE": {
+    "hero": { "lines": ["Einfach, intuitiv:", "Ausgaben im Blick."], "underline": "intuitiv", "award": "Unverzichtbare\nFinanz-Apps" },
+    "input": "Blitzschnell erfasst.",
+    "charts": "Gute alte Diagramme.",
+    "budgets": "Budget. Budget. Budget.",
+    "custom": "Ganz wie du willst.",
+    "dark": "Wunderschön in Schwarz.",
+    "widgets": "Starke Widgets.",
+    "insights": "Tiefere Einblicke."
+  },
+  "es-ES": {
+    "hero": { "lines": ["Control de gastos", "simple e intuitivo."], "underline": "intuitivo", "award": "Apps de finanzas\nimprescindibles" },
+    "input": "Registro ultrarrápido.",
+    "charts": "Gráficos de siempre.",
+    "budgets": "Presupuestos claros.",
+    "custom": "Hazla tuya.",
+    "dark": "Preciosa en negro.",
+    "widgets": "Widgets increíbles.",
+    "insights": "Análisis más completos."
+  },
+  "fr-FR": {
+    "hero": { "lines": ["Suivi des dépenses", "simple et intuitif."], "underline": "intuitif", "award": "Apps de finance\nincontournables" },
+    "input": "Saisie ultra rapide.",
+    "charts": "De bons vieux graphiques.",
+    "budgets": "Budget. Budget. Budget.",
+    "custom": "À votre image.",
+    "dark": "Superbe en noir.",
+    "widgets": "Des widgets bluffants.",
+    "insights": "Des analyses plus riches."
+  },
+  "it": {
+    "hero": { "lines": ["Gestione spese", "semplice e intuitiva."], "underline": "intuitiva", "award": "App di finanza\nimperdibili" },
+    "input": "Inserimento fulmineo.",
+    "charts": "I buoni vecchi grafici.",
+    "budgets": "Budget. Budget. Budget.",
+    "custom": "Su misura per te.",
+    "dark": "Splendida in nero.",
+    "widgets": "Widget stupendi.",
+    "insights": "Analisi più ricche."
+  },
+  "ja": {
+    "hero": { "lines": ["シンプルで直感的な", "家計簿アプリ。"], "underline": "直感的", "award": "必携の\nファイナンスApp" },
+    "input": "爆速で記録。",
+    "charts": "見やすいグラフ。",
+    "budgets": "予算、予算、予算。",
+    "custom": "自分好みに。",
+    "dark": "黒も美しく。",
+    "widgets": "便利なウィジェット。",
+    "insights": "もっと深い分析。"
+  },
+  "ko": {
+    "hero": { "lines": ["간편하고 직관적인", "지출 관리."], "underline": "직관적인", "award": "필수\n금융 앱" },
+    "input": "초고속 입력.",
+    "charts": "보기 쉬운 차트.",
+    "budgets": "예산. 예산. 예산.",
+    "custom": "나만의 스타일로.",
+    "dark": "블랙도 아름답게.",
+    "widgets": "멋진 위젯.",
+    "insights": "더 깊은 인사이트."
+  },
+  "nl-NL": {
+    "hero": { "lines": ["Simpel, intuïtief", "uitgaven bijhouden."], "underline": "intuïtief", "award": "Onmisbare\nfinanciële apps" },
+    "input": "Bliksemsnel invoeren.",
+    "charts": "Goede oude grafieken.",
+    "budgets": "Budget. Budget. Budget.",
+    "custom": "Helemaal van jou.",
+    "dark": "Prachtig in zwart.",
+    "widgets": "Handige widgets.",
+    "insights": "Rijkere inzichten."
+  },
+  "pt-BR": {
+    "hero": { "lines": ["Controle de gastos", "simples e intuitivo."], "underline": "intuitivo", "award": "Apps de finanças\nessenciais" },
+    "input": "Registro ultrarrápido.",
+    "charts": "Os bons e velhos gráficos.",
+    "budgets": "Orçamentos sob controle.",
+    "custom": "Do seu jeito.",
+    "dark": "Lindo no preto.",
+    "widgets": "Widgets incríveis.",
+    "insights": "Análises mais completas."
+  },
+  "ru": {
+    "hero": { "lines": ["Простой и понятный", "учёт расходов."], "underline": "понятный", "award": "Незаменимые\nфинансовые приложения" },
+    "input": "Молниеносный ввод.",
+    "charts": "Старые добрые графики.",
+    "budgets": "Бюджет. Бюджет. Бюджет.",
+    "custom": "Настройте под себя.",
+    "dark": "Прекрасен в чёрном.",
+    "widgets": "Отличные виджеты.",
+    "insights": "Глубокая аналитика."
+  },
+  "tr": {
+    "hero": { "lines": ["Basit ve sezgisel", "harcama takibi."], "underline": "sezgisel", "award": "Olmazsa olmaz\nfinans uygulamaları" },
+    "input": "Işık hızında giriş.",
+    "charts": "Klasik grafikler.",
+    "budgets": "Bütçe. Bütçe. Bütçe.",
+    "custom": "Tamamen size özel.",
+    "dark": "Siyahta bir başka.",
+    "widgets": "Harika widget’lar.",
+    "insights": "Daha derin analizler."
+  },
+  "zh-Hans": {
+    "hero": { "lines": ["简单、直观的", "记账体验。"], "underline": "直观", "award": "必备\n理财 App" },
+    "input": "极速记账。",
+    "charts": "经典图表。",
+    "budgets": "预算，预算，预算。",
+    "custom": "随心定制。",
+    "dark": "深色更惊艳。",
+    "widgets": "精美小组件。",
+    "insights": "更深入的分析。"
+  },
+  "zh-Hant": {
+    "hero": { "lines": ["簡單、直覺的", "記帳體驗。"], "underline": "直覺", "award": "必備\n理財 App" },
+    "input": "極速記帳。",
+    "charts": "經典圖表。",
+    "budgets": "預算，預算，預算。",
+    "custom": "隨心自訂。",
+    "dark": "深色更驚豔。",
+    "widgets": "精美小工具。",
+    "insights": "更深入的分析。"
+  }
+}

@@ -1,0 +1,17 @@
+Nieuw in Dime 3.0.1
+
+• Meerdere valuta’s: tik op het valutasymbool om in elke valuta in te voeren. Totalen worden omgerekend naar je hoofdvaluta tegen de koers van die dag.
+• Snel toevoegen: bewaar tot 4 sjablonen in Instellingen en voer ze met één tik in via de nieuwe widget Snel toevoegen, zonder Dime te openen.
+• Herinneringen voor komende afschrijvingen: krijg een seintje voordat een terugkerende uitgave aan je overzicht wordt toegevoegd.
+• Nieuwe knop Nieuwe uitgave voor het bedieningspaneel, het toegangsscherm en de actieknop.
+• Een categorie is nu optioneel: voer een transactie zonder categorie in, dan wordt die getoond als Uitgave of Inkomsten.
+• Begin je week op elke gewenste dag.
+• Een periode exporteren: kies vóór het exporteren welke datums je wilt meenemen.
+• Onbeperkt uitgavencategorieën, in de volgorde die jij kiest.
+• Zoek op bedrag, ook met een valutasymbool of scheidingstekens.
+• Dime is nu ook beschikbaar in het Frans en Russisch.
+
+Oplossingen
+• Je kunt nu een categorie toevoegen, ook als het emojitoetsenbord niet aanstaat.
+• Een notitie typen op de iPhone Duo verschuift het toevoegscherm niet meer.
+• Kleine lay-outverbeteringen in Instellingen.

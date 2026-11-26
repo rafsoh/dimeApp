@@ -1,0 +1,17 @@
+New in Dime 3.0.1
+
+• Multiple currencies: tap the currency symbol to log in any currency. Totals are converted to your primary currency at each day's rate.
+• Quick Add: save up to 4 templates in Settings, then log them with one tap from the new Quick Add widget, without opening Dime.
+• Upcoming charge reminders: get a heads-up before a recurring expense is added to your log.
+• New Expense button for Control Center, the Lock Screen and the Action Button.
+• Category is now optional: log a transaction without one, and it shows as Expense or Income.
+• Start your week on any day.
+• Export a period: choose the dates to include before exporting.
+• Unlimited expense categories, in the order you set.
+• Search by amount, even with a currency symbol or separators.
+• Dime is now available in French and Russian.
+
+Fixes
+• You can now add a category even if the emoji keyboard isn't turned on.
+• Typing a note on iPhone Duo no longer moves the add screen.
+• Small layout fixes in Settings.
