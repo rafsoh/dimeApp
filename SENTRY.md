@@ -55,7 +55,7 @@ The empty-store and below-backup issues are sent once per app version so a launc
 
 ## Out of storage
 
-Before migrating, the app copies the store only when the volume has room for the copy and for the migration after it (twice the store and its write-ahead log, plus 20 MB). Otherwise it skips the copy and leaves a `pre-migration snapshot skipped for lack of space` breadcrumb; a copy that fails partway is deleted. When a save fails, the changes stay in the view context and the person is told: "Dime couldn't save your changes", with a storage-specific message when the device is full. The save is tried again each time the app returns to the foreground. Each kind of save failure is sent once per launch; repeats are breadcrumbs, since a full disk fails every save after it.
+Before migrating, the app copies the store only when the volume has room for the copy and for the migration after it (twice the store and its write-ahead log, plus 20 MB). Otherwise it first deletes all but the newest earlier copy, and if that still isn't enough it skips the copy and leaves a `pre-migration snapshot skipped for lack of space` breadcrumb. A copy that fails partway is deleted. When a save fails, the changes stay in the view context and the person is told: "Dime couldn't save your changes", with a storage-specific message when the device is full. The save is tried again each time the app returns to the foreground. Each kind of save failure is sent once per launch; repeats are breadcrumbs, since a full disk fails every save after it.
 
 ## When the store won't open
 

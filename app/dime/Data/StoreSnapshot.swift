@@ -149,8 +149,18 @@ enum StoreSnapshot {
             throw SnapshotError.unknownSourceModel
         }
 
-        if let available = availableCapacity(forStoreAt: storeURL), available < bytesNeededForSnapshot(storeAt: storeURL) {
-            throw SnapshotError.notEnoughSpace
+        let needed = bytesNeededForSnapshot(storeAt: storeURL)
+
+        if let available = availableCapacity(forStoreAt: storeURL), available < needed {
+            // Older copies are the first space to give back. The newest stays, since it's the last copy
+            // of the data from before a migration.
+            if let newest = list(in: directory).first {
+                prune(directory, keeping: newest, maximum: 1)
+            }
+
+            if let available = availableCapacity(forStoreAt: storeURL), available < needed {
+                throw SnapshotError.notEnoughSpace
+            }
         }
 
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -186,8 +196,8 @@ enum StoreSnapshot {
         }
     }
 
-    private static func prune(_ directory: URL, keeping newest: URL) {
-        for url in list(in: directory).filter({ $0 != newest }).dropFirst(maximumCount - 1) {
+    private static func prune(_ directory: URL, keeping newest: URL, maximum: Int = maximumCount) {
+        for url in list(in: directory).filter({ $0 != newest }).dropFirst(maximum - 1) {
             removeFiles(of: url)
         }
     }
