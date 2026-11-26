@@ -66,7 +66,7 @@ final class StoreMigrationTests: XCTestCase {
 
         let coordinators = models.map { NSPersistentStoreCoordinator(managedObjectModel: $0) }
 
-        withExtendedLifetime(coordinators) {
+        try withExtendedLifetime(coordinators) {
             XCTAssertEqual(Transaction.entity().name, "Transaction")
             XCTAssertEqual(Category.entity().name, "Category")
 
