@@ -22,7 +22,7 @@ struct SettingsUpcomingView: View {
       VStack(spacing: 0) {
         Toggle(isOn: $showFuture.animation()) {
           Text("Display on Log Page")
-            .font(.system(.body, design: .rounded))
+            .font(.app(.body))
             .foregroundColor(Color.PrimaryText)
         }
         .tint(.green)
@@ -42,7 +42,7 @@ struct SettingsUpcomingView: View {
 
         Toggle(isOn: $showSoon.animation()) {
           Text("Limit to 14-Day Outlook")
-            .font(.system(.body, design: .rounded))
+            .font(.app(.body))
             .foregroundColor(Color.PrimaryText)
         }
         .tint(.green)

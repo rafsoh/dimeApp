@@ -30,12 +30,12 @@ struct InsightsSummaryBlockView: View {
 
             VStack(alignment: .leading, spacing: 0) {
                 Text(income ? "Income" : "Expenses")
-                    .font(.system(.caption, design: .rounded).weight(.semibold))
+                    .font(.app(.caption, weight: .semibold))
                     .lineLimit(1)
                     .foregroundColor(Color.SubtitleText)
 
                 Text(amountString)
-                    .font(.system(.title3, design: .rounded).weight(.medium))
+                    .font(.app(.title3, weight: .medium))
                     .foregroundColor(Color.PrimaryText)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)

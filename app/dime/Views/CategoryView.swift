@@ -62,7 +62,7 @@ struct CategoryView: View {
                         newCategory = true
                     } label: {
                         Label("New", systemImage: "plus")
-                            .font(.system(.body, design: .rounded).weight(.semibold))
+                            .font(.app(.body, weight: .semibold))
                             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                             .lineLimit(1)
                             .foregroundColor(Color.PrimaryText)
@@ -160,7 +160,7 @@ struct CategoryListView: View {
                 }
             }
         }
-        .font(.system(.subheadline, design: .rounded).weight(.semibold))
+        .font(.app(.subheadline, weight: .semibold))
         .frame(height: 32)
         .foregroundColor(Color.SubtitleText)
         .textCase(.uppercase)
@@ -216,13 +216,13 @@ struct CategoryListView: View {
                                 ForEach(categories) { category in
                                     HStack(spacing: 10) {
                                         Text(category.wrappedEmoji)
-                                            .font(.system(.subheadline, design: .rounded))
+                                            .font(.app(.subheadline))
                                             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
 //                                            .font(.system(size: 15))
                                         Text(category.wrappedName)
-                                            .font(.system(.body, design: .rounded))
+                                            .font(.app(.body))
                                             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                                            .font(.system(size: 18.5, weight: .regular, design: .rounded))
+//                                            .font(.app(size: 18.5, weight: .regular))
                                             .lineLimit(1)
                                             .foregroundColor(toDelete == category ? Color.AlertRed : Color.PrimaryText)
 
@@ -284,13 +284,13 @@ struct CategoryListView: View {
                                 ForEach(categories) { category in
                                     HStack(spacing: 10) {
                                         Text(category.wrappedEmoji)
-                                            .font(.system(.subheadline, design: .rounded))
+                                            .font(.app(.subheadline))
                                             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
 //                                            .font(.system(size: 15))
                                         Text(category.wrappedName)
-                                            .font(.system(.body, design: .rounded))
+                                            .font(.app(.body))
                                             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                                            .font(.system(size: 18.5, weight: .regular, design: .rounded))
+//                                            .font(.app(size: 18.5, weight: .regular))
                                             .lineLimit(1)
                                             .foregroundColor(toDelete == category ? Color.AlertRed : Color.PrimaryText)
 
@@ -1143,7 +1143,7 @@ struct SuggestedCategoriesView: View {
                 }
             }
         }
-        .font(.system(.subheadline, design: .rounded).weight(.semibold))
+        .font(.app(.subheadline, weight: .semibold))
         .frame(height: 32)
         .foregroundColor(Color.SubtitleText)
         .textCase(.uppercase)
@@ -1155,18 +1155,18 @@ struct SuggestedCategoriesView: View {
                     HStack(spacing: 8) {
                         Text(category.emoji)
 //                            .font(.system(size: 15))
-                            .font(.system(.subheadline, design: .rounded))
+                            .font(.app(.subheadline))
                             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                         Text(LocalizedStringKey(category.name))
-                            .font(.system(.body, design: .rounded))
+                            .font(.app(.body))
                             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                            .font(.system(size: 18.5, weight: .regular, design: .rounded))
+//                            .font(.app(size: 18.5, weight: .regular))
                             .lineLimit(1)
 
                         Spacer()
 
                         Image(systemName: "plus")
-                            .font(.system(.body, design: .rounded).weight(.semibold))
+                            .font(.app(.body, weight: .semibold))
                             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                             .foregroundColor(Color.SubtitleText)
                             .accessibilityLabel("Add")
@@ -1241,7 +1241,7 @@ struct CategoryEditorTitle: View {
 
     var body: some View {
         Text(title)
-            .font(.system(.title3, design: .rounded).weight(.semibold))
+            .font(.app(.title3, weight: .semibold))
             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
             .foregroundColor(Color.PrimaryText)
     }
@@ -1270,7 +1270,7 @@ struct CategoryConfirmButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: systemImage)
-                .font(.system(.title3, design: .rounded).weight(.semibold))
+                .font(.app(.title3, weight: .semibold))
                 .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                 .foregroundColor(Color.LightIcon)
                 .frame(width: 50, height: 50)

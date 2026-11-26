@@ -378,7 +378,7 @@ struct TransactionView: View {
 
                             if let convertedPreview {
                                 Text(convertedPreview)
-                                    .font(.system(.subheadline, design: .rounded).weight(.medium))
+                                    .font(.app(.subheadline, weight: .medium))
                                     .foregroundColor(Color.SubtitleText)
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.7)
@@ -423,7 +423,7 @@ struct TransactionView: View {
                                                     Color(hex: transaction.wrappedColour).opacity(0.23),
                                                     in: RoundedRectangle(cornerRadius: 6.5, style: .continuous))
                                         }
-                                        .font(.system(.body, design: .rounded).weight(.semibold))
+                                        .font(.app(.body, weight: .semibold))
                                         .padding(5)
                                         .background(
                                             Color.SecondaryBackground,
@@ -754,7 +754,7 @@ struct TransactionView: View {
             .accessibilityLabel(Text("From") + Text(", ") + Text(account.name))
 
             Image(systemName: "arrow.right")
-                .font(.system(.subheadline, design: .rounded).weight(.bold))
+                .font(.app(.subheadline, weight: .bold))
                 .foregroundColor(Color.SubtitleText.opacity(0.6))
                 .accessibilityHidden(true)
 
@@ -790,10 +790,10 @@ struct TransactionView: View {
     var templateToken: some View {
         HStack(spacing: 5) {
             Image(systemName: "bolt.fill")
-                .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                .font(.app(.subheadline, weight: .semibold))
 
             Text("Quick Add")
-                .font(.system(.body, design: .rounded).weight(.semibold))
+                .font(.app(.body, weight: .semibold))
                 .lineLimit(1)
         }
         .foregroundColor(Color.SubtitleText)
@@ -819,11 +819,11 @@ struct TransactionView: View {
                             Image(systemName: "slowmo")
                         }
                     }
-                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .font(.app(.subheadline, weight: .semibold))
                 }
 
                 Text(dateTokenText)
-                    .font(.system(.body, design: .rounded).weight(.semibold))
+                    .font(.app(.body, weight: .semibold))
                     .lineLimit(1)
             }
             .foregroundColor(Color.SubtitleText)
@@ -839,7 +839,7 @@ struct TransactionView: View {
 
     var lineSeparator: some View {
         Text("·")
-            .font(.system(.body, design: .rounded).weight(.semibold))
+            .font(.app(.body, weight: .semibold))
             .foregroundColor(Color.SubtitleText.opacity(0.5))
             .accessibilityHidden(true)
     }
@@ -1264,7 +1264,7 @@ struct NoteView: View {
     var body: some View {
         HStack(spacing: 6) {
             Image(systemName: "text.alignleft")
-                .font(.system(.subheadline, design: .rounded).weight(.medium))
+                .font(.app(.subheadline, weight: .medium))
                 .foregroundColor(Color.SubtitleText.opacity(0.6))
                 .accessibilityHidden(true)
 
@@ -1287,7 +1287,7 @@ struct NoteView: View {
                         .accessibilityLabel(Text("Note"))
                 }
         }
-        .font(.system(.body, design: .rounded).weight(.medium))
+        .font(.app(.body, weight: .medium))
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .frame(maxWidth: UIScreen.main.bounds.width / 1.5)
         .padding(.horizontal, 44)
@@ -1389,7 +1389,7 @@ struct RecurringMenu: View {
             showRecurring = true
         } label: {
             Image(systemName: "repeat")
-                .font(.system(.body, design: .rounded).weight(.semibold))
+                .font(.app(.body, weight: .semibold))
                 .dynamicTypeSize(...DynamicTypeSize.xxLarge)
                 .foregroundColor(repeatType > 0 ? Color.IncomeGreen : Color.PrimaryText)
                 .frame(width: 44, height: 44)
@@ -1494,7 +1494,7 @@ struct CustomRecurringView: View {
             }
 
             Text("Repeats every")
-                .font(.system(.body, design: .rounded).weight(.medium))
+                .font(.app(.body, weight: .medium))
                 .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                 .foregroundColor(Color.SubtitleText)
                 .padding(.top, 20)
@@ -1513,7 +1513,7 @@ struct CustomRecurringView: View {
                     increment: { holdingCoefficient += 1 }
                 ) {
                     Text("\(holdingCoefficient)")
-                        .font(.system(.title2, design: .rounded).weight(.semibold))
+                        .font(.app(.title2, weight: .semibold))
                         .monospacedDigit()
                 }
 
@@ -1536,7 +1536,7 @@ struct CustomRecurringView: View {
                             Text("\(holdingCoefficient) months")
                         }
                     }
-                    .font(.system(.title3, design: .rounded).weight(.semibold))
+                    .font(.app(.title3, weight: .semibold))
                 }
             }
         }
@@ -1730,7 +1730,7 @@ private struct CustomRecurringStepper<Value: View>: View {
     func stepButton(systemName: String, label: LocalizedStringKey, enabled: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: systemName)
-                .font(.system(.body, design: .rounded).weight(.semibold))
+                .font(.app(.body, weight: .semibold))
                 .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                 .foregroundColor(Color.PrimaryText)
                 .frame(width: 44, height: 44)
@@ -1749,7 +1749,7 @@ struct ButtonView: View {
 
     var body: some View {
         Text("\(number)")
-            .font(.system(size: 34, weight: .regular, design: .rounded))
+            .font(.app(size: 34, weight: .regular))
             .frame(width: size.width * 0.3, height: size.height * 0.22)
             .background(Color.SecondaryBackground)
             .foregroundColor(Color.PrimaryText)

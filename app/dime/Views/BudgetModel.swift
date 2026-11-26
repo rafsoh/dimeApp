@@ -359,7 +359,7 @@ struct BudgetOverIcon: View {
         Image(systemName: "exclamationmark.circle.fill")
             .symbolRenderingMode(.palette)
             .foregroundStyle(Color.white, Color.AlertRed)
-            .font(.system(.body, design: .rounded).weight(.semibold))
+            .font(.app(.body, weight: .semibold))
             .accessibilityLabel("Over budget")
     }
 }
@@ -368,7 +368,7 @@ struct BudgetOverIcon: View {
 struct BudgetRolloverIcon: View {
     var body: some View {
         Image(systemName: "arrow.uturn.forward")
-            .font(.system(.caption, design: .rounded).weight(.bold))
+            .font(.app(.caption, weight: .bold))
             .foregroundColor(Color.SubtitleText)
             .accessibilityLabel("Rolls over")
     }
@@ -385,9 +385,9 @@ struct BudgetRolloverChip: View {
 
             HStack(spacing: 4) {
                 Image(systemName: "arrow.uturn.forward")
-                    .font(.system(.caption, design: .rounded).weight(.bold))
+                    .font(.app(.caption, weight: .bold))
                 Text(text)
-                    .font(.system(.footnote, design: .rounded).weight(.semibold))
+                    .font(.app(.footnote, weight: .semibold))
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
             }

@@ -515,3 +515,5 @@
 "Add %@" = "%@を追加";
 "Show all accounts" = "すべての口座を表示";
 "Account filter" = "口座フィルタ";
+"Font" = "フォント";
+"Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "AlloはJosh Puckettによる書体で、SIL Open Font Licenseのもとで提供されています。";

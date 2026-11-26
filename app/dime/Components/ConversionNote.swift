@@ -48,7 +48,7 @@ struct ConversionNote: View {
     var body: some View {
         if let note = report.note {
             Text(note)
-                .font(.system(.footnote, design: .rounded).weight(.medium))
+                .font(.app(.footnote, weight: .medium))
                 .foregroundColor(Color.SubtitleText)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)

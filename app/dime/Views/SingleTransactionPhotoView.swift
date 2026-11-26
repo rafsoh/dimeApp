@@ -36,7 +36,7 @@ struct SingleDayPhotoView: View {
 
                         Text(amountText)
                     }
-                    .font(.system(size: 35, weight: .semibold, design: .rounded))
+                    .font(.app(size: 35, weight: .semibold))
                     .foregroundColor(Color.SubtitleText)
 
                     Line()
@@ -90,19 +90,19 @@ struct SingleTransactionPhotoView: View {
 
             VStack(alignment: .leading, spacing: 5.5) {
                 Text(transaction.displayTitle)
-                    .font(.system(size: 42, weight: .medium, design: .rounded))
+                    .font(.app(size: 42, weight: .medium))
                     .foregroundColor(future ? Color.SubtitleText : Color.PrimaryText)
                     .lineLimit(1)
 
                 if future {
                     if transaction.wrappedDate > Date.now {
                         Text(dateFormatter(date: transaction.wrappedDate))
-                            .font(.system(size: 35, weight: .medium, design: .rounded))
+                            .font(.app(size: 35, weight: .medium))
                             .foregroundColor(Color.EvenLighterText)
                             .lineLimit(1)
                     } else {
                         Text(dateFormatter(date: transaction.nextTransactionDate))
-                            .font(.system(size: 35, weight: .medium, design: .rounded))
+                            .font(.app(size: 35, weight: .medium))
                             .foregroundColor(Color.EvenLighterText)
                             .lineLimit(1)
                     }
@@ -110,12 +110,12 @@ struct SingleTransactionPhotoView: View {
                 } else {
                     if swapTimeLabel {
                         Text(transaction.wrappedCategoryName)
-                            .font(.system(size: 35, weight: .medium, design: .rounded))
+                            .font(.app(size: 35, weight: .medium))
                             .foregroundColor(Color.SubtitleText)
                             .lineLimit(1)
                     } else {
                         Text(transaction.wrappedDate, format: .dateTime.hour().minute())
-                            .font(.system(size: 35, weight: .medium, design: .rounded))
+                            .font(.app(size: 35, weight: .medium))
                             .foregroundColor(Color.SubtitleText)
                             .lineLimit(1)
                     }
@@ -126,14 +126,14 @@ struct SingleTransactionPhotoView: View {
 
             if transaction.income {
                 Text("+\(transactionAmountString)")
-                    .font(.system(size: 45, weight: .medium, design: .rounded))
+                    .font(.app(size: 45, weight: .medium))
                     .foregroundColor(future ? Color.SubtitleText : Color.IncomeGreen)
                     .minimumScaleFactor(0.7)
                     .lineLimit(1)
                     .layoutPriority(1)
             } else {
                 Text("-\(transactionAmountString)")
-                    .font(.system(size: 45, weight: .medium, design: .rounded))
+                    .font(.app(size: 45, weight: .medium))
                     .foregroundColor(future ? Color.SubtitleText : Color.PrimaryText)
                     .minimumScaleFactor(0.7)
                     .lineLimit(1)

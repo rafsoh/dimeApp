@@ -28,14 +28,14 @@ struct SettingsHapticsView: View {
                 ForEach(options.indices, id: \.self) { option in
                     HStack {
                         Text(LocalizedStringKey(options[option]))
-                            .font(.system(.body, design: .rounded))
+                            .font(.app(.body))
                             .foregroundColor(Color.PrimaryText)
 
                         Spacer()
 
                         if hapticType == option {
                             Image(systemName: "checkmark")
-                                .font(.system(.subheadline, design: .rounded))
+                                .font(.app(.subheadline))
                                 .foregroundColor(.DarkIcon.opacity(0.6))
                                 .matchedGeometryEffect(id: "tick", in: animation)
                         }

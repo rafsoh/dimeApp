@@ -13,6 +13,14 @@
 		0CDBCA47DBC8A9593159CFB1 /* Accounts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 823A3BD58AB1C6E3436CF9FC /* Accounts.swift */; };
 		F8725A966530F3F5DDF859E9 /* Accounts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 823A3BD58AB1C6E3436CF9FC /* Accounts.swift */; };
 		4527BF8BB996382C06E6B358 /* Accounts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 823A3BD58AB1C6E3436CF9FC /* Accounts.swift */; };
+		A110F0032F0C000000A110F0 /* Allo-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A110F0022F0C000000A110F0 /* Allo-Regular.ttf */; };
+		A110F0042F0C000000A110F0 /* Allo-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A110F0022F0C000000A110F0 /* Allo-Regular.ttf */; };
+		A110F0062F0C000000A110F0 /* Allo-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A110F0052F0C000000A110F0 /* Allo-Medium.ttf */; };
+		A110F0072F0C000000A110F0 /* Allo-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A110F0052F0C000000A110F0 /* Allo-Medium.ttf */; };
+		A110F0092F0C000000A110F0 /* Allo-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A110F0082F0C000000A110F0 /* Allo-SemiBold.ttf */; };
+		A110F00A2F0C000000A110F0 /* Allo-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A110F0082F0C000000A110F0 /* Allo-SemiBold.ttf */; };
+		A110F00C2F0C000000A110F0 /* Allo-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A110F00B2F0C000000A110F0 /* Allo-Bold.ttf */; };
+		A110F00D2F0C000000A110F0 /* Allo-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A110F00B2F0C000000A110F0 /* Allo-Bold.ttf */; };
 		06140E274FB53425F119BF72 /* SettingsExchangeRatesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B951DE42184DFACEAECA4504 /* SettingsExchangeRatesView.swift */; };
 		09C6994AECA68B95CABE5AAB /* CurrencyPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 032CF5BD18809C03DAAA5FF2 /* CurrencyPreferences.swift */; };
 		0D95DE86C1FF58444537CF7C /* StoreSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C2F4C180CD6273FAE74092C /* StoreSnapshot.swift */; };
@@ -277,6 +285,11 @@
 		64D591C139E5526C2F17E652 /* AccountsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountsTests.swift; sourceTree = "<group>"; };
 		823A3BD58AB1C6E3436CF9FC /* Accounts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Accounts.swift; sourceTree = "<group>"; };
 		490ECA28C2F358F1275FEA4E /* MainModel 6.xcdatamodel */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = wrapper.xcdatamodel; path = "MainModel 6.xcdatamodel"; sourceTree = "<group>"; };
+		A110F0022F0C000000A110F0 /* Allo-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Allo-Regular.ttf"; sourceTree = "<group>"; };
+		A110F0052F0C000000A110F0 /* Allo-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Allo-Medium.ttf"; sourceTree = "<group>"; };
+		A110F0082F0C000000A110F0 /* Allo-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Allo-SemiBold.ttf"; sourceTree = "<group>"; };
+		A110F00B2F0C000000A110F0 /* Allo-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Allo-Bold.ttf"; sourceTree = "<group>"; };
+		A110F00E2F0C000000A110F0 /* Allo-OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Allo-OFL.txt"; sourceTree = "<group>"; };
 		032CF5BD18809C03DAAA5FF2 /* CurrencyPreferences.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CurrencyPreferences.swift; sourceTree = "<group>"; };
 		08D342B5C70E676C4D289814 /* CSVCurrencyTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CSVCurrencyTests.swift; sourceTree = "<group>"; };
 		1427F27CEB06BEEEB431857A /* CurrencyConverterTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CurrencyConverterTests.swift; sourceTree = "<group>"; };
@@ -513,6 +526,18 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		A110F0012F0C000000A110F0 /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				A110F0022F0C000000A110F0 /* Allo-Regular.ttf */,
+				A110F0052F0C000000A110F0 /* Allo-Medium.ttf */,
+				A110F0082F0C000000A110F0 /* Allo-SemiBold.ttf */,
+				A110F00B2F0C000000A110F0 /* Allo-Bold.ttf */,
+				A110F00E2F0C000000A110F0 /* Allo-OFL.txt */,
+			);
+			path = Fonts;
+			sourceTree = "<group>";
+		};
 		530C89D42A793B4400B5028D /* Shortcuts */ = {
 			isa = PBXGroup;
 			children = (
@@ -582,6 +607,7 @@
 				53A4147A28B66265008C30E7 /* SceneDelegate.swift */,
 				5327D286287C697400F76ADF /* dimeApp.swift */,
 				5327D2DF287C6B7C00F76ADF /* DeviceModels.json */,
+				A110F0012F0C000000A110F0 /* Fonts */,
 				5327D2CA287C6B4700F76ADF /* ContentView.swift */,
 				5327D294287C698900F76ADF /* Assets.xcassets */,
 				530C89D42A793B4400B5028D /* Shortcuts */,
@@ -1056,6 +1082,10 @@
 				5327D295287C698900F76ADF /* Assets.xcassets in Resources */,
 				53756F632AC3C25E0065D0C2 /* sample.csv in Resources */,
 				5327D2E0287C6B7D00F76ADF /* DeviceModels.json in Resources */,
+				A110F0032F0C000000A110F0 /* Allo-Regular.ttf in Resources */,
+				A110F0062F0C000000A110F0 /* Allo-Medium.ttf in Resources */,
+				A110F0092F0C000000A110F0 /* Allo-SemiBold.ttf in Resources */,
+				A110F00C2F0C000000A110F0 /* Allo-Bold.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1067,6 +1097,10 @@
 				D7A1B2C32E9F000600A1B2C3 /* Localizable.stringsdict in Resources */,
 				533182D328A0D61D00DEBFA3 /* Assets.xcassets in Resources */,
 				53B1D193288ED87000E28062 /* Assets.xcassets in Resources */,
+				A110F0042F0C000000A110F0 /* Allo-Regular.ttf in Resources */,
+				A110F0072F0C000000A110F0 /* Allo-Medium.ttf in Resources */,
+				A110F00A2F0C000000A110F0 /* Allo-SemiBold.ttf in Resources */,
+				A110F00D2F0C000000A110F0 /* Allo-Bold.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1417,7 +1451,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = BudgetIntent/BudgetIntent.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = 5UNNTHMF44;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BudgetIntent/Info.plist;
@@ -1449,7 +1483,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = BudgetIntent/BudgetIntent.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = 5UNNTHMF44;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BudgetIntent/Info.plist;
@@ -1480,7 +1514,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = BudgetIntentUI/BudgetIntentUI.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = 5UNNTHMF44;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BudgetIntentUI/Info.plist;
@@ -1507,7 +1541,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = BudgetIntentUI/BudgetIntentUI.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = 5UNNTHMF44;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BudgetIntentUI/Info.plist;
@@ -1655,7 +1689,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = dime/dime.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_ASSET_PATHS = "\"dime/Preview Content\"";
 				DEVELOPMENT_TEAM = 5UNNTHMF44;
 				ENABLE_PREVIEWS = YES;
@@ -1696,7 +1730,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = dime/dime.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_ASSET_PATHS = "\"dime/Preview Content\"";
 				DEVELOPMENT_TEAM = 5UNNTHMF44;
 				ENABLE_PREVIEWS = YES;
@@ -1736,7 +1770,7 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CODE_SIGN_ENTITLEMENTS = ExpenditureWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = 5UNNTHMF44;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ExpenditureWidget/Info.plist;
@@ -1767,7 +1801,7 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CODE_SIGN_ENTITLEMENTS = ExpenditureWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = 5UNNTHMF44;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ExpenditureWidget/Info.plist;

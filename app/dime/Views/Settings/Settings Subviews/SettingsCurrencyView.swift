@@ -28,13 +28,13 @@ struct SettingsCurrencyView: View {
         ForEach(currencies, id: \.self) { currency in
           HStack(spacing: 10) {
             Text(currency.code)
-              .font(.system(.body, design: .rounded).weight(.semibold))
+              .font(.app(.body, weight: .semibold))
               .foregroundColor(Color.SubtitleText)
               .lineLimit(1)
               //                                    .layoutPriority(1)
               .frame(width: dynamicTypeSize > .xLarge ? 55 : 45, alignment: .leading)
             Text(currency.name)
-              .font(.system(.body, design: .rounded))
+              .font(.app(.body))
               .foregroundColor(Color.PrimaryText)
               .lineLimit(1)
 
@@ -42,7 +42,7 @@ struct SettingsCurrencyView: View {
 
             if currency.code == currencyCode {
               Image(systemName: "checkmark")
-                .font(.system(.subheadline, design: .rounded))
+                .font(.app(.subheadline))
                 .foregroundColor(.DarkIcon.opacity(0.6))
                 .matchedGeometryEffect(id: "tick", in: animation)
             }

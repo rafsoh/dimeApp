@@ -515,3 +515,5 @@
 "Add %@" = "%@ 추가";
 "Show all accounts" = "모든 계좌 보기";
 "Account filter" = "계좌 필터";
+"Font" = "서체";
+"Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo는 Josh Puckett이 만든 서체로, SIL Open Font License에 따라 제공됩니다.";

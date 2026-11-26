@@ -107,7 +107,7 @@ struct SettingsSectionHeader<Trailing: View>: View {
     var body: some View {
         HStack {
             Text(title)
-                .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                .font(.app(.subheadline, weight: .semibold))
                 .foregroundColor(Color.SubtitleText)
                 .textCase(.uppercase)
                 .accessibilityAddTraits(.isHeader)
@@ -142,7 +142,7 @@ struct SettingsSectionFooter: View {
 
     var body: some View {
         text
-            .font(.system(.footnote, design: .rounded).weight(.medium))
+            .font(.app(.footnote, weight: .medium))
             .foregroundColor(Color.SubtitleText)
             .fixedSize(horizontal: false, vertical: true)
             .padding(.horizontal, .settingsRowInset)

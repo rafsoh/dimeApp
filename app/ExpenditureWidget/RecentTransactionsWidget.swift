@@ -239,14 +239,14 @@ struct ExpenditureWidgetEntryView: View {
 
         case .systemSmall:
             VStack(alignment: .leading, spacing: 0) {
-                header(amountFont: .system(.title2, design: .rounded).weight(.semibold))
+                header(amountFont: .app(.title2, weight: .semibold))
 
                 if entry.transactions.isEmpty {
                     emptyMessage
                 } else {
                     VStack(alignment: .leading, spacing: 6) {
                         ForEach(Array(entry.transactions.prefix(3).enumerated()), id: \.offset) { _, transaction in
-                            row(transaction, tileSize: 20, font: .system(.footnote, design: .rounded).weight(.medium))
+                            row(transaction, tileSize: 20, font: .app(.footnote, weight: .medium))
                         }
                     }
                     .padding(.top, 10)
@@ -264,7 +264,7 @@ struct ExpenditureWidgetEntryView: View {
 
         case .systemLarge:
             VStack(alignment: .leading, spacing: 0) {
-                header(amountFont: .system(.largeTitle, design: .rounded).weight(.semibold))
+                header(amountFont: .app(.largeTitle, weight: .semibold))
 
                 if entry.transactions.isEmpty {
                     emptyMessage
@@ -274,7 +274,7 @@ struct ExpenditureWidgetEntryView: View {
 
                     VStack(alignment: .leading, spacing: 6) {
                         ForEach(Array(entry.transactions.prefix(8).enumerated()), id: \.offset) { _, transaction in
-                            row(transaction, tileSize: 26, font: .system(.subheadline, design: .rounded).weight(.medium))
+                            row(transaction, tileSize: 26, font: .app(.subheadline, weight: .medium))
                         }
                     }
                     .padding(.top, 8)
@@ -304,7 +304,7 @@ struct ExpenditureWidgetEntryView: View {
 
     var emptyMessage: some View {
         Text("No recent expenses")
-            .font(.system(.subheadline, design: .rounded).weight(.medium))
+            .font(.app(.subheadline, weight: .medium))
             .foregroundColor(Color.SubtitleText)
             .multilineTextAlignment(.center)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -332,7 +332,7 @@ struct ExpenditureWidgetEntryView: View {
         Group {
             if entry.transactions.isEmpty {
                 Text("No recent expenses")
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .font(.app(size: 13, weight: .semibold))
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
@@ -349,7 +349,7 @@ struct ExpenditureWidgetEntryView: View {
                                     .lineLimit(1)
                                     .layoutPriority(1)
                             }
-                            .font(.system(size: rectangularFontSize(width: proxy.size.width), design: .rounded))
+                            .font(.app(size: rectangularFontSize(width: proxy.size.width)))
                         }
                     }
                     .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)

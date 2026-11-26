@@ -515,3 +515,5 @@
 "Add %@" = "%@ ekle";
 "Show all accounts" = "Tüm hesapları göster";
 "Account filter" = "Hesap filtresi";
+"Font" = "Yazı Tipi";
+"Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo, Josh Puckett'ın SIL Open Font License ile lisanslanan yazı tipidir.";

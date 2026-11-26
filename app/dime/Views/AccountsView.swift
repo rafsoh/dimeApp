@@ -103,7 +103,7 @@ struct AccountsView: View {
                         editing = .new
                     } label: {
                         Label("New", systemImage: "plus")
-                            .font(.system(.body, design: .rounded).weight(.semibold))
+                            .font(.app(.body, weight: .semibold))
                             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                             .lineLimit(1)
                             .foregroundColor(Color.PrimaryText)
@@ -183,7 +183,7 @@ struct AccountsView: View {
                 header
             } footer: {
                 Text("Transactions not in another account are in \(MainAccount.name). You can rename \(MainAccount.name), but not delete it.")
-                    .font(.system(.footnote, design: .rounded))
+                    .font(.app(.footnote))
                     .foregroundColor(Color.SubtitleText)
                     .padding(.top, 4)
                     // Keeps the footer with its own section, apart from the next one's header.
@@ -224,7 +224,7 @@ struct AccountsView: View {
                 }
             }
         }
-        .font(.system(.subheadline, design: .rounded).weight(.semibold))
+        .font(.app(.subheadline, weight: .semibold))
         .frame(height: 32)
         .foregroundColor(Color.SubtitleText)
         .textCase(.uppercase)
@@ -234,7 +234,7 @@ struct AccountsView: View {
     private func row(name: String, isMain: Bool) -> some View {
         HStack(spacing: 10) {
             Text(name)
-                .font(.system(.body, design: .rounded))
+                .font(.app(.body))
                 .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                 .lineLimit(1)
                 .foregroundColor(Color.PrimaryText)
@@ -274,14 +274,14 @@ private struct AccountSuggestionsSection: View {
                 ForEach(suggestions, id: \.self) { name in
                     HStack(spacing: 8) {
                         Text(name)
-                            .font(.system(.body, design: .rounded))
+                            .font(.app(.body))
                             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                             .lineLimit(1)
 
                         Spacer()
 
                         Image(systemName: "plus")
-                            .font(.system(.body, design: .rounded).weight(.semibold))
+                            .font(.app(.body, weight: .semibold))
                             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                             .foregroundColor(Color.SubtitleText)
                     }
@@ -305,7 +305,7 @@ private struct AccountSuggestionsSection: View {
                 }
             } header: {
                 Text("Suggested")
-                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .font(.app(.subheadline, weight: .semibold))
                     .frame(height: 32)
                     .foregroundColor(Color.SubtitleText)
                     .textCase(.uppercase)
@@ -574,7 +574,7 @@ struct AccountPickerSheet: View {
         return Button(action: action) {
             HStack(spacing: 12) {
                 name
-                    .font(.system(.body, design: .rounded).weight(.semibold))
+                    .font(.app(.body, weight: .semibold))
                     .lineLimit(1)
                     .foregroundColor(isDisabled ? Color.SubtitleText.opacity(0.6) : Color.PrimaryText)
 
@@ -582,7 +582,7 @@ struct AccountPickerSheet: View {
 
                 if isSelected {
                     Image(systemName: "checkmark")
-                        .font(.system(.body, design: .rounded).weight(.bold))
+                        .font(.app(.body, weight: .bold))
                         .foregroundColor(Color.PrimaryText)
                         .transition(.scale.combined(with: .opacity))
                 }
@@ -668,12 +668,12 @@ struct AccountToken: View {
             HStack(spacing: 5) {
                 if showsIcon {
                     Image(systemName: "creditcard")
-                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                        .font(.app(.subheadline, weight: .semibold))
                         .accessibilityHidden(true)
                 }
 
                 Text(name)
-                    .font(.system(.body, design: .rounded).weight(.semibold))
+                    .font(.app(.body, weight: .semibold))
                     .lineLimit(1)
             }
             .foregroundColor(isError ? Color.AlertRed : Color.SubtitleText)

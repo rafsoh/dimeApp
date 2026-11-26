@@ -168,10 +168,10 @@ struct BudgetTileWidgetView: View {
             HStack(spacing: 5) {
                 if let emoji = budget.emoji {
                     Text(emoji)
-                        .font(.system(.subheadline, design: .rounded))
+                        .font(.app(.subheadline))
                 }
                 Text(budget.name)
-                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .font(.app(.subheadline, weight: .semibold))
                     .foregroundColor(Color.PrimaryText)
                     .lineLimit(1)
 
@@ -183,17 +183,17 @@ struct BudgetTileWidgetView: View {
 
             Spacer(minLength: 0)
 
-            BudgetAmountText(amount: snapshot.difference, font: .system(.title, design: .rounded).weight(.semibold), formatter: formatter, prefix: budget.conversion.approximatePrefix)
+            BudgetAmountText(amount: snapshot.difference, font: .app(.title, weight: .semibold), formatter: formatter, prefix: budget.conversion.approximatePrefix)
 
             Text(budget.amountWord)
-                .font(.system(.subheadline, design: .rounded).weight(.medium))
+                .font(.app(.subheadline, weight: .medium))
                 .foregroundColor(Color.SubtitleText)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
 
             if let statusLine = budget.statusLine {
                 statusLine
-                    .font(.system(.caption, design: .rounded).weight(.medium))
+                    .font(.app(.caption, weight: .medium))
                     .foregroundColor(Color.SubtitleText)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
@@ -218,7 +218,7 @@ struct WidgetBudgetMessage: View {
 
     var body: some View {
         Text(message)
-            .font(.system(size: 14, weight: .medium, design: .rounded))
+            .font(.app(size: 14, weight: .medium))
             .multilineTextAlignment(.center)
             .foregroundColor(Color.SubtitleText)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -236,11 +236,11 @@ struct BudgetAccessoryRectangleView: View {
 
         VStack(alignment: .leading, spacing: 2) {
             Text([budget.emoji, budget.name].compactMap { $0 }.joined(separator: " "))
-                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                .font(.app(size: 15, weight: .semibold))
                 .lineLimit(1)
 
             Text("\(budget.conversion.approximatePrefix)\(formatter.money(snapshot.difference)) \(budget.amountWord)")
-                .font(.system(size: 14, weight: .regular, design: .rounded))
+                .font(.app(size: 14, weight: .regular))
                 .foregroundColor(Color.SubtitleText)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
@@ -290,7 +290,7 @@ struct BudgetAccessoryMessage: View {
             }
 
             Text(message)
-                .font(.system(size: circular ? 8 : 12, weight: .semibold, design: .rounded))
+                .font(.app(size: circular ? 8 : 12, weight: .semibold))
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
         }
@@ -312,7 +312,7 @@ struct WidgetEmojiTile: View {
         Group {
             if let symbol {
                 Image(systemName: symbol)
-                    .font(.system(size: size * 0.42, weight: .bold, design: .rounded))
+                    .font(.app(size: size * 0.42, weight: .bold))
                     .foregroundColor(Color(hex: colour))
             } else {
                 Text(emoji)
@@ -330,7 +330,7 @@ struct WidgetNewExpenseButton: View {
     var body: some View {
         Link(destination: URL(string: "dimeapp://newExpense")!) {
             Label("widget-log-button", systemImage: "plus")
-                .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                .font(.app(.subheadline, weight: .semibold))
                 .foregroundColor(Color.LightIcon)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)

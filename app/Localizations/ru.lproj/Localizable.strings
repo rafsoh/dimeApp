@@ -527,3 +527,5 @@
 "Add %@" = "Добавить: %@";
 "Show all accounts" = "Показать все счета";
 "Account filter" = "Фильтр по счёту";
+"Font" = "Шрифт";
+"Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo — шрифт Джоша Пакетта, распространяется по лицензии SIL Open Font License.";
