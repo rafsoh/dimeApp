@@ -90,27 +90,29 @@ jobs:
                   break
           ' "$UDID")
           if [ -z "$OTHER" ]; then
-            # The runtime may only come with the Duo: create a regular iPhone on it.
-            read -r RUNTIME TYPE NAME <<< "$(xcrun simctl list runtimes available --json | python3 -c '
-          import json, sys
-          udid_runtime = sys.argv[1]
-          for r in json.load(sys.stdin)["runtimes"]:
-              if r["identifier"] != udid_runtime:
-                  continue
-              phones = [t for t in r.get("supportedDeviceTypes", []) if t["name"].startswith("iPhone") and "Duo" not in t["name"]]
-              pro = [t for t in phones if "Pro" in t["name"] and "Max" not in t["name"]]
-              if phones:
-                  t = (pro or phones)[-1]
-                  print(r["identifier"], t["identifier"], t["name"].replace(" ", "_"))
-          ' "$(xcrun simctl list devices available --json | python3 -c '
+            # The runtime may only come with the Duo: create a regular iPhone on it, trying the
+            # newest device types first until the runtime accepts one.
+            RUNTIME=$(xcrun simctl list devices available --json | python3 -c '
           import json, sys
           for runtime, devices in json.load(sys.stdin)["devices"].items():
               if any(d["udid"] == sys.argv[1] for d in devices):
                   print(runtime)
-          ' "$UDID")")"
-            if [ -n "$TYPE" ]; then
-              OTHER=$(xcrun simctl create "${NAME//_/ } (screenshots)" "$TYPE" "$RUNTIME" || true)
-            fi
+          ' "$UDID")
+            TYPES=$(xcrun simctl list devicetypes --json | python3 -c '
+          import json, sys
+          types = [t for t in json.load(sys.stdin)["devicetypes"] if t["name"].startswith("iPhone") and "Duo" not in t["name"]]
+          pro = [t for t in types if "Pro" in t["name"] and "Max" not in t["name"]]
+          for t in list(reversed(pro)) + list(reversed(types)):
+              print(t["identifier"])
+          ')
+            echo "Runtime $RUNTIME; candidate device types: $(echo $TYPES | head -c 400)"
+            for TYPE in $TYPES; do
+              if OTHER=$(xcrun simctl create "Screenshots iPhone" "$TYPE" "$RUNTIME" 2>/dev/null); then
+                echo "Created $TYPE"
+                break
+              fi
+              OTHER=""
+            done
           fi
           if [ -n "$OTHER" ]; then
             xcrun simctl list devices | grep "$OTHER"
