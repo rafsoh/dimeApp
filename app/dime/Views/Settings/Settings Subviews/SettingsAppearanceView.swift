@@ -78,7 +78,7 @@ struct SettingsFontView: View {
         ForEach(AppFont.allCases, id: \.self) { option in
           HStack {
             Text(option.displayName)
-              .font(preview(option))
+              .font(.app(.body, font: option))
               .foregroundColor(Color.PrimaryText)
 
             Spacer()
@@ -110,7 +110,7 @@ struct SettingsFontView: View {
       }
       .settingsSectionRows()
 
-      SettingsSectionFooter("Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License.")
+      SettingsSectionFooter("Allo is by Josh Puckett, Atkinson Hyperlegible Next by the Braille Institute, Fraunces by Undercase Type and Geist Pixel by Vercel, all licensed under the SIL Open Font License.")
     }
     .modifier(SettingsSubviewModifier(title: "Font"))
     .onDisappear {
@@ -118,14 +118,6 @@ struct SettingsFontView: View {
         appFont = selection.rawValue
         WidgetCenter.shared.reloadAllTimelines()
       }
-    }
-  }
-
-  /// Each option is shown in its own typeface.
-  private func preview(_ option: AppFont) -> Font {
-    switch option {
-    case .sfProRounded: return .system(.body, design: .rounded)
-    case .allo: return .custom("Allo-Regular", size: 17, relativeTo: .body)
     }
   }
 }
