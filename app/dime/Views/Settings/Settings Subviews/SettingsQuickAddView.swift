@@ -64,7 +64,7 @@ struct SettingsQuickAddView: View {
     VStack(spacing: 0) {
       SettingsSectionHeader("Templates") {
         Text("\(templates.count)/\(TemplateTransaction.quickAddLimit)")
-          .font(.system(.subheadline, design: .rounded).weight(.semibold))
+          .font(.app(.subheadline, weight: .semibold))
           .foregroundColor(Color.SubtitleText)
           .accessibilityLabel(Text("\(templates.count) of \(TemplateTransaction.quickAddLimit) templates"))
       }
@@ -109,7 +109,7 @@ struct SettingsQuickAddView: View {
               .strokeBorder(Color.SubtitleText.opacity(0.3), style: StrokeStyle(lineWidth: 1.5, dash: [4, 4]))
               .overlay {
                 Image(systemName: "plus")
-                  .font(.system(.body, design: .rounded).weight(.semibold))
+                  .font(.app(.body, weight: .semibold))
                   .foregroundColor(Color.SubtitleText)
               }
               .frame(height: QuickAddTile.height)
@@ -190,7 +190,7 @@ private struct QuickAddTile: View {
       Group {
         if template.category == nil {
           Image(systemName: Uncategorised.symbol(income: template.income))
-            .font(.system(.subheadline, design: .rounded).weight(.bold))
+            .font(.app(.subheadline, weight: .bold))
             .foregroundColor(Color(hex: Uncategorised.colour))
         } else {
           Text(template.wrappedEmoji)
@@ -201,12 +201,12 @@ private struct QuickAddTile: View {
 
       VStack(alignment: .leading, spacing: 0) {
         Text(template.displayTitle)
-          .font(.system(.subheadline, design: .rounded).weight(.semibold))
+          .font(.app(.subheadline, weight: .semibold))
           .foregroundColor(Color.PrimaryText)
           .lineLimit(1)
 
         Text(amountText)
-          .font(.system(.footnote, design: .rounded).weight(.medium))
+          .font(.app(.footnote, weight: .medium))
           .foregroundColor(template.income ? Color.IncomeGreen : Color.SubtitleText)
           .lineLimit(1)
           .minimumScaleFactor(0.7)
@@ -287,12 +287,12 @@ private struct QuickAddRow: View {
 
       VStack(alignment: .leading, spacing: 1) {
         Text(title)
-          .font(.system(.body, design: .rounded).weight(.medium))
+          .font(.app(.body, weight: .medium))
           .foregroundColor(Color.PrimaryText)
           .lineLimit(1)
 
         Text(category?.wrappedName ?? Uncategorised.name)
-          .font(.system(.footnote, design: .rounded))
+          .font(.app(.footnote))
           .foregroundColor(Color.SubtitleText)
           .lineLimit(1)
       }
@@ -300,13 +300,13 @@ private struct QuickAddRow: View {
       Spacer(minLength: 8)
 
       Text(amountText)
-        .font(.system(.body, design: .rounded).weight(.medium))
+        .font(.app(.body, weight: .medium))
         .foregroundColor(income ? Color.IncomeGreen : Color.PrimaryText)
         .lineLimit(1)
         .layoutPriority(1)
 
       Image(systemName: accessory)
-        .font(.system(.subheadline, design: .rounded).weight(accessory == "chevron.forward" ? .regular : .semibold))
+        .font(.app(.subheadline).weight(accessory == "chevron.forward" ? .regular : .semibold))
         .foregroundColor(accessory == "chevron.forward" ? .DarkIcon.opacity(0.6) : Color.SubtitleText)
     }
     .padding(.vertical, 8)

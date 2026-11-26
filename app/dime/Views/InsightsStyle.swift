@@ -58,7 +58,7 @@ struct InsightsCardTitle: View {
 
     var body: some View {
         title
-            .font(.system(.subheadline, design: .rounded).weight(.semibold))
+            .font(.app(.subheadline, weight: .semibold))
             .foregroundColor(Color.SubtitleText)
             .lineLimit(1)
             .accessibilityAddTraits(.isHeader)

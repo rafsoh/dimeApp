@@ -28,6 +28,9 @@ struct SettingsView: View {
     }
   }
 
+  @AppStorage(AppFont.storageKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+  var appFont: Int = 0
+
   @AppStorage("activeIcon", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
   var activeIcon: String = "AppIcon"
   var appIconString: String {
@@ -251,6 +254,12 @@ struct SettingsView: View {
                   optionalText: colourSchemeString)
               }
 
+              NavigationLink(destination: SettingsFontView()) {
+                SettingsRowView(
+                  systemImage: "textformat", title: "Font", colour: 130,
+                  optionalText: (AppFont(rawValue: appFont) ?? .sfProRounded).displayName)
+              }
+
               NavigationLink(destination: SettingsAppIconView()) {
                 SettingsRowView(
                   systemImage: "app.badge.fill", title: "App Icon", colour: 101,
@@ -431,13 +440,13 @@ struct SettingsView: View {
           VStack(spacing: 5) {
             HStack(spacing: 3) {
               Text("Version \(UIApplication.appVersion ?? "") (\(UIApplication.buildNumber ?? ""))")
-                .font(.system(.footnote, design: .rounded).weight(.medium))
+                .font(.app(.footnote, weight: .medium))
 
-                //                                .font(.system(size: 14, weight: .medium, design: .rounded))
+                //                                .font(.app(size: 14, weight: .medium))
                 .foregroundColor(Color.SubtitleText)
 
               Text("·")
-                .font(.system(.footnote, design: .rounded).weight(.medium))
+                .font(.app(.footnote, weight: .medium))
 
                 .foregroundColor(Color.SubtitleText)
 
@@ -445,14 +454,14 @@ struct SettingsView: View {
                 showUpdate = true
               } label: {
                 Text("What's New")
-                  .font(.system(.footnote, design: .rounded).weight(.medium))
+                  .font(.app(.footnote, weight: .medium))
                   .foregroundColor(Color.PrimaryText)
               }
               .buttonStyle(.plain)
             }
 
             Text("Made with ❤️ by \(makeAttributedString()) from 🇸🇬")
-              .font(.system(.footnote, design: .rounded).weight(.medium))
+              .font(.app(.footnote, weight: .medium))
 
               .foregroundColor(Color.SubtitleText)
               .multilineTextAlignment(.center)
@@ -499,7 +508,7 @@ struct SettingsView: View {
     -> some View {
     HStack(spacing: 12) {
       Image(systemName: icon)
-            .font(.system(smaller ? .subheadline : .body, design: .rounded))
+            .font(.app(smaller ? .subheadline : .body))
         .foregroundColor(.white)
         .frame(
           width: dynamicTypeSize > .xLarge ? 40 : 30, height: dynamicTypeSize > .xLarge ? 40 : 30,
@@ -509,7 +518,7 @@ struct SettingsView: View {
 
       Toggle(isOn: Binding(get: { bool }, set: { _ in withAnimation { onTap() } })) {
         Text(LocalizedStringKey(text))
-          .font(.system(.body, design: .rounded).weight(.medium))
+          .font(.app(.body, weight: .medium))
           .lineLimit(1)
           .foregroundColor(Color.PrimaryText)
       }
@@ -600,7 +609,7 @@ struct TipJarSheet: View {
       Text(
         "Hey! Dime was built by a solo student developer, and is intended to be completely free-of-charge, with no paywalls or ads. If you enjoy using Dime and want to support development, please consider a small tip."
       )
-      .font(.system(.body, design: .rounded).weight(.medium))
+      .font(.app(.body, weight: .medium))
       .foregroundColor(Color.SubtitleText)
       .fixedSize(horizontal: false, vertical: true)
       .padding(.top, 20)
@@ -614,7 +623,7 @@ struct TipJarSheet: View {
             .frame(height: 170)
         case .failed:
           Text("Unable to load tip options, please try again later 🥲")
-            .font(.system(.body, design: .rounded).weight(.medium))
+            .font(.app(.body, weight: .medium))
             .multilineTextAlignment(.center)
             .foregroundColor(Color.SubtitleText)
             .frame(maxWidth: .infinity)
@@ -626,7 +635,7 @@ struct TipJarSheet: View {
             }
 
             bottomCaption
-              .font(.system(.subheadline, design: .rounded).weight(.medium))
+              .font(.app(.subheadline, weight: .medium))
               .foregroundColor(Color.SubtitleText)
               .frame(maxWidth: .infinity)
               .padding(.top, 10)
@@ -693,7 +702,7 @@ private struct TipOptionButton: View {
           .frame(height: 36)
           .background(Color.DarkBackground, in: Capsule())
       }
-      .font(.system(.body, design: .rounded).weight(.semibold))
+      .font(.app(.body, weight: .semibold))
       .padding(.leading, 18)
       .padding(.trailing, 7)
       .frame(height: 50)
@@ -729,7 +738,7 @@ struct SettingsRowView: View {
   var body: some View {
     HStack(spacing: 12) {
       Image(systemName: systemImage)
-        .font(.system(.body, design: .rounded))
+        .font(.app(.body))
 
         //                .font(.system(size: 17))
         //                .padding(5)
@@ -741,9 +750,9 @@ struct SettingsRowView: View {
         .background(Color("\(colour)"), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
 
       Text(LocalizedStringKey(title))
-        .font(.system(.body, design: .rounded).weight(.medium))
+        .font(.app(.body, weight: .medium))
 
-        //                .font(.system(size: 17, weight: .medium, design: .rounded))
+        //                .font(.app(size: 17, weight: .medium))
         .lineLimit(1)
         .foregroundColor(Color.PrimaryText)
 
@@ -751,16 +760,16 @@ struct SettingsRowView: View {
 
       if optionalText != nil {
         Text(optionalText!)
-          .font(.system(.body, design: .rounded))
+          .font(.app(.body))
 
-          //                    .font(.system(size: 17, weight: .regular, design: .rounded))
+          //                    .font(.app(size: 17, weight: .regular))
           .foregroundColor(.DarkIcon.opacity(0.6))
           .layoutPriority(1)
           .padding(.trailing, -8)
       }
 
       Image(systemName: "chevron.forward")
-        .font(.system(.subheadline, design: .rounded))
+        .font(.app(.subheadline))
         //                .font(.system(size: 15))
         .foregroundColor(.DarkIcon.opacity(0.6))
     }

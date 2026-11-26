@@ -18,7 +18,7 @@ struct DetailedBudgetViewTopBarButton: View {
             self.action()
         }) {
             Image(systemName: imageName)
-                .font(.system(.callout, design: .rounded).weight(.semibold))
+                .font(.app(.callout, weight: .semibold))
                 .foregroundColor(color)
                 .padding(8)
 //                .frame(width: 30, height: 30)

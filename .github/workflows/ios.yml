@@ -2,8 +2,18 @@ name: iOS build & test
 
 on:
   pull_request:
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - 'LICENSE'
   push:
     branches: [main]
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - 'LICENSE'
   workflow_dispatch:
 
 concurrency:
@@ -66,6 +76,8 @@ jobs:
           if [ -z "$UDID" ]; then echo "No iPhone simulator found"; exit 1; fi
           xcrun simctl list devices | grep "$UDID"
           echo "SIM_UDID=$UDID" >> "$GITHUB_ENV"
+          # Start it now, so it boots while the app builds instead of when the tests start.
+          xcrun simctl boot "$UDID" || true
 
       - name: Build and run tests
         run: |
@@ -84,83 +96,18 @@ jobs:
           if [ "$status" -ne 0 ]; then tail -80 xcodebuild.log; fi
           exit "$status"
 
-      - name: Launch app and take screenshots
-        # Smoke check: the app starts, and the dimeapp://newExpense link (used by the
-        # New Expense widget and control) opens the add sheet.
+      - name: Take the pull request's screenshots
+        # Only the screenshots the pull request asks for, in a ```ci-screenshots block in its description
+        # (see .github/scripts/pr_screenshots.py). Nothing is committed for them, so they go away with the
+        # pull request. Editing the description doesn't rerun CI: push a commit or rerun the job.
+        if: github.event_name == 'pull_request' && contains(github.event.pull_request.body, '```ci-screenshots')
         continue-on-error: true
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
         run: |
-          mkdir -p screenshots
-          # Newer simulator images list more than one display, and only one of them shows the app;
-          # take each and keep the largest file, since the others are blank.
-          snap() {
-            if ! err=$(xcrun simctl io "$SIM_UDID" screenshot "$1" 2>&1); then
-              for d in $(echo "$err" | grep -o -- '--display=[0-9]*' | cut -d= -f2); do
-                xcrun simctl io "$SIM_UDID" screenshot --display="$d" "${1%.png}-display$d.png" || true
-              done
-              best=$(ls -S "${1%.png}"-display*.png 2>/dev/null | head -1)
-              if [ -n "$best" ]; then mv "$best" "$1"; fi
-              rm -f "${1%.png}"-display*.png
-            fi
-          }
           APP=$(find "$DERIVED_DATA/Build/Products" -maxdepth 2 -name "*.app" -path "*iphonesimulator*" | head -1)
           echo "App: $APP"
-          xcrun simctl bootstatus "$SIM_UDID" -b
-          xcrun simctl install "$SIM_UDID" "$APP"
-          xcrun simctl launch "$SIM_UDID" "$BUNDLE_ID"
-          sleep 8
-          snap screenshots/1-launch.png
-          xcrun simctl openurl "$SIM_UDID" "dimeapp://newExpense"
-          sleep 4
-          snap screenshots/2-new-expense.png
-
-      - name: Take budget rollover screenshots
-        # Relaunches against the seeded `-demoData varied` store (in memory, so every launch starts
-        # from the same data): Overall and Food roll over a surplus, Coffee an overspend, Groceries doesn't roll over.
-        continue-on-error: true
-        run: |
-          mkdir -p screenshots
-          # Newer simulator images list more than one display, and only one of them shows the app;
-          # take each and keep the largest file, since the others are blank.
-          snap() {
-            if ! err=$(xcrun simctl io "$SIM_UDID" screenshot "$1" 2>&1); then
-              for d in $(echo "$err" | grep -o -- '--display=[0-9]*' | cut -d= -f2); do
-                xcrun simctl io "$SIM_UDID" screenshot --display="$d" "${1%.png}-display$d.png" || true
-              done
-              best=$(ls -S "${1%.png}"-display*.png 2>/dev/null | head -1)
-              if [ -n "$best" ]; then mv "$best" "$1"; fi
-              rm -f "${1%.png}"-display*.png
-            fi
-          }
-          # The launch step's dimeapp:// link leaves an "Open in Dime?" prompt on screen; a reboot clears it.
-          xcrun simctl shutdown "$SIM_UDID" || true
-          xcrun simctl boot "$SIM_UDID"
-          xcrun simctl bootstatus "$SIM_UDID" -b
-          shot() {
-            name=$1; shift
-            xcrun simctl terminate "$SIM_UDID" "$BUNDLE_ID" 2>/dev/null || true
-            # The budget arguments start on the Budget tab; dimeapp:// links would stop at an "Open in Dime?" prompt.
-            xcrun simctl launch "$SIM_UDID" "$BUNDLE_ID" -demoData varied "$@"
-            sleep 9
-            snap "screenshots/$name.png"
-          }
-          shot 3-budgets -budgetTab
-          shot 4-rollover-detail-surplus -budgetSheet Food
-          shot 5-rollover-detail-overspend -budgetSheet Coffee
-          shot 6-rollover-detail-overall -budgetSheet overall
-          shot 7-rollover-edit-sentence -budgetEdit Food
-          shot 8-rollover-edit-menu -budgetEdit Food -budgetEditStep rolloverMenu
-          shot 9-rollover-alert-turn-on -budgetEdit Groceries -budgetEditStep enableRollover
-          shot 10-rollover-alert-turn-off -budgetEdit Food -budgetEditStep disableRollover
-          shot 11-rollover-alert-reset -budgetEdit Food -budgetEditStep changeFrequency
-          shot 12-rollover-new-budget -budgetEdit new
-          # Delete-category sheet over Settings › Categories. Food has transactions, Travel has none.
-          shot 13-delete-category-move-none -deleteCategory Food
-          shot 14-delete-category-move-groceries -deleteCategory Food -deleteCategoryFate move:Groceries
-          shot 15-delete-category-delete-all -deleteCategory Food -deleteCategoryFate delete
-          shot 16-delete-category-no-transactions -deleteCategory Travel
-          xcrun simctl ui "$SIM_UDID" appearance dark
-          shot 17-delete-category-dark -deleteCategory Food -deleteCategoryFate move:Groceries
-          xcrun simctl ui "$SIM_UDID" appearance light
+          python3 .github/scripts/pr_screenshots.py "$APP" screenshots
 
       - name: Show screenshots on the pull request
         # Pushes the images to the ci-screenshots branch (one folder per pull request) and keeps one
@@ -218,14 +165,6 @@ jobs:
           else
             gh api "repos/$REPO/issues/$PR/comments" -F body=@comment.md > /dev/null
           fi
-
-      - name: Upload screenshots
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: screenshots
-          path: screenshots
-          if-no-files-found: ignore
 
       - name: Upload logs and test results
         if: failure()

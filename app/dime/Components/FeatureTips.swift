@@ -163,11 +163,11 @@ private struct FeatureTipCallout: View {
         HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(tip.title)
-                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .font(.app(.subheadline, weight: .semibold))
                     .foregroundColor(Color.PrimaryText)
 
                 Text(tip.message)
-                    .font(.system(.subheadline, design: .rounded))
+                    .font(.app(.subheadline))
                     .foregroundColor(Color.SubtitleText)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -176,7 +176,7 @@ private struct FeatureTipCallout: View {
 
             Button(action: close) {
                 Image(systemName: "xmark")
-                    .font(.system(.caption, design: .rounded).weight(.bold))
+                    .font(.app(.caption, weight: .bold))
                     .foregroundColor(Color.SubtitleText)
                     .frame(width: 30, height: 30)
                     .contentShape(Circle())

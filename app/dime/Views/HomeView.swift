@@ -37,6 +37,8 @@ struct HomeView: View {
     @AppStorage("firstWeekday", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var firstWeekday: Int = 1
     @AppStorage("firstDayOfMonth", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var firstDayOfMonth: Int = 1
 
+    @AppStorage(AppFont.storageKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var appFont: Int = 0
+
     // Tabs cache date ranges in @State, so rebuild them when the time frame settings change.
     var timeFrameID: String {
         "\(firstWeekday)-\(firstDayOfMonth)"
@@ -149,7 +151,9 @@ struct HomeView: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
+            // Views read the font when they draw, so rebuild everything below the tab selection when it changes.
             tabView
+                .id(appFont)
                 .background {
                     DeleteTransactionAlert()
                 }
@@ -161,6 +165,7 @@ struct HomeView: View {
 
             if !usesVerticalBar {
                 CustomTabBar(currentTab: $currentTab, topEdge: topEdge, bottomEdge: bottomEdge, addTransaction: $addTransaction)
+                    .id(appFont)
                     .background {
                         GeometryReader { proxy in
                             let top = proxy.frame(in: .global).minY
@@ -201,6 +206,14 @@ struct HomeView: View {
         }
         .confettiCannon(counter: $counter, num: 50, openingAngle: Angle(degrees: 0), closingAngle: Angle(degrees: 360), radius: 200)
         .onAppear {
+            #if DEBUG
+            // TEMPORARY (font PR screenshots): `-screenshotTab Insights` opens that tab. Remove before merging.
+            let arguments = ProcessInfo.processInfo.arguments
+            if let index = arguments.firstIndex(of: "-screenshotTab"), index + 1 < arguments.count {
+                currentTab = arguments[index + 1]
+            }
+            #endif
+
             if appLockVM.isAppLockEnabled && fromURL1 {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     launchAdd.toggle()
@@ -243,17 +256,6 @@ struct HomeView: View {
                 currentTab = "Settings"
             }
         }
-        #if DEBUG
-        .onAppear {
-            // `-budgetTab`, `-budgetSheet` and `-budgetEdit` (see BudgetView) start on the Budget tab, for screenshots.
-            let arguments = ProcessInfo.processInfo.arguments
-            if arguments.contains("-budgetTab") || arguments.contains("-budgetSheet") || arguments.contains("-budgetEdit") {
-                currentTab = "Budget"
-            } else if arguments.contains("-deleteCategory") {
-                currentTab = "Settings"
-            }
-        }
-        #endif
     }
 }
 
@@ -267,7 +269,7 @@ struct AppLockView: View {
                 .foregroundColor(Color.DarkIcon.opacity(0.7))
 
             Text("App Locked")
-                .font(.system(size: 28, weight: .semibold, design: .rounded))
+                .font(.app(size: 28, weight: .semibold))
                 .foregroundColor(Color.PrimaryText)
                 .padding(.bottom, 30)
 
@@ -279,7 +281,7 @@ struct AppLockView: View {
 
                     Text("Unlock App")
                 }
-                .font(.system(size: 20, weight: .medium, design: .rounded))
+                .font(.app(size: 20, weight: .medium))
                 .foregroundColor(Color.PrimaryText)
                 .padding(.horizontal, 40)
                 .padding(.vertical, 15)
@@ -291,7 +293,7 @@ struct AppLockView: View {
 
             if appLockVM.enrollmentError {
                 Text("Please re-enable Face ID access in the Settings app to unlock application.")
-                    .font(.system(size: 15, weight: .regular, design: .rounded))
+                    .font(.app(size: 15, weight: .regular))
                     .foregroundColor(Color.SubtitleText)
                     .multilineTextAlignment(.center)
             }

@@ -53,11 +53,11 @@ struct SettingsAppIconView: View {
 
             VStack(alignment: .leading, spacing: 3) {
               Text(options[index].displayName)
-                .font(.system(.body, design: .rounded))
+                .font(.app(.body))
                 .foregroundColor(Color.PrimaryText)
 
               Text(options[index].displaySubtitle)
-                .font(.system(.footnote, design: .rounded))
+                .font(.app(.footnote))
                 .foregroundColor(Color.SubtitleText)
             }
 
@@ -65,12 +65,12 @@ struct SettingsAppIconView: View {
 
             if activeIcon == options[index].actualFileName {
               Image(systemName: "checkmark")
-                .font(.system(.subheadline, design: .rounded))
+                .font(.app(.subheadline))
                 .foregroundColor(.DarkIcon.opacity(0.6))
                 .matchedGeometryEffect(id: "tick", in: animation)
             } else {
               Image(systemName: "checkmark")
-                .font(.system(.subheadline, design: .rounded))
+                .font(.app(.subheadline))
                 .foregroundColor(.SettingsBackground)
             }
           }

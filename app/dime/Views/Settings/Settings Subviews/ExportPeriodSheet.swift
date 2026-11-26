@@ -225,7 +225,7 @@ struct ExportPeriodSheet: View {
                 .accessibilityHidden(true)
 
             Text("No transactions to export")
-                .font(.system(.title3, design: .rounded).weight(.medium))
+                .font(.app(.title3, weight: .medium))
                 .multilineTextAlignment(.center)
         }
         .foregroundColor(Color.SubtitleText)
@@ -265,7 +265,7 @@ struct ExportPeriodSheet: View {
             }
 
             Text(summary)
-                .font(.system(.subheadline, design: .rounded).weight(.medium))
+                .font(.app(.subheadline, weight: .medium))
                 .foregroundColor(Color.SubtitleText)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
@@ -274,7 +274,7 @@ struct ExportPeriodSheet: View {
 
             Button(action: export) {
                 Text("Export")
-                    .font(.system(.body, design: .rounded).weight(.semibold))
+                    .font(.app(.body, weight: .semibold))
                     .foregroundColor(Color.LightIcon)
                     .frame(maxWidth: .infinity)
                     .frame(height: 50)
@@ -290,7 +290,7 @@ struct ExportPeriodSheet: View {
     private func chip(_ title: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(title)
-                .font(.system(.body, design: .rounded).weight(isSelected ? .semibold : .medium))
+                .font(.app(.body).weight(isSelected ? .semibold : .medium))
                 .monospacedDigit()
                 .foregroundColor(isSelected ? Color.LightIcon : Color.PrimaryText)
                 .lineLimit(1)
@@ -313,7 +313,7 @@ struct ExportPeriodSheet: View {
             select(isPicked ? .year(year) : .month(year: year, month: month))
         } label: {
             Text(ExportCatalog.calendar.shortMonthSymbols[month - 1])
-                .font(.system(.body, design: .rounded).weight(isIncluded ? .semibold : .regular))
+                .font(.app(.body).weight(isIncluded ? .semibold : .regular))
                 .foregroundColor(isIncluded ? Color.PrimaryText : Color.SubtitleText)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)

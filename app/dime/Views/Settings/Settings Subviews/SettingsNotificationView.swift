@@ -36,7 +36,7 @@ struct SettingsNotificationsView: View {
       VStack(spacing: 0) {
         Toggle(isOn: Binding(get: { showNotifications }, set: { _ in toggleNotifications() })) {
           Text("Enable Notifications")
-            .font(.system(.body, design: .rounded))
+            .font(.app(.body))
             .foregroundColor(Color.PrimaryText)
         }
         .tint(.green)
@@ -109,7 +109,7 @@ struct SettingsNotificationsView: View {
 
         HStack {
           Text("Custom Time")
-            .font(.system(.body, design: .rounded))
+            .font(.app(.body))
             .foregroundColor(Color.PrimaryText)
 
           Spacer()
@@ -122,7 +122,7 @@ struct SettingsNotificationsView: View {
             .labelsHidden()
 
             Image(systemName: "checkmark")
-              .font(.system(.subheadline, design: .rounded))
+              .font(.app(.subheadline))
               .foregroundColor(.DarkIcon.opacity(0.6))
               .matchedGeometryEffect(id: "tick", in: animation)
           }
@@ -164,7 +164,7 @@ struct SettingsNotificationsView: View {
       VStack(spacing: 0) {
         HStack(spacing: 12) {
           Text("Remind Me")
-            .font(.system(.body, design: .rounded))
+            .font(.app(.body))
             .foregroundColor(Color.PrimaryText)
             .lineLimit(1)
 
@@ -184,14 +184,14 @@ struct SettingsNotificationsView: View {
   private func timeRow(_ value: Int, title: LocalizedStringKey) -> some View {
     HStack {
       Text(title)
-        .font(.system(.body, design: .rounded))
+        .font(.app(.body))
         .foregroundColor(Color.PrimaryText)
 
       Spacer()
 
       if option == value {
         Image(systemName: "checkmark")
-          .font(.system(.subheadline, design: .rounded))
+          .font(.app(.subheadline))
           .foregroundColor(.DarkIcon.opacity(0.6))
           .matchedGeometryEffect(id: "tick", in: animation)
       }
@@ -290,11 +290,11 @@ private struct NotificationToggleRow: View {
     Toggle(isOn: $isOn) {
       VStack(alignment: .leading, spacing: 2) {
         Text(title)
-          .font(.system(.body, design: .rounded))
+          .font(.app(.body))
           .foregroundColor(Color.PrimaryText)
 
         Text(subtitle)
-          .font(.system(.footnote, design: .rounded).weight(.medium))
+          .font(.app(.footnote, weight: .medium))
           .foregroundColor(Color.SubtitleText)
           .fixedSize(horizontal: false, vertical: true)
       }
@@ -316,7 +316,7 @@ private struct LeadDaysStepper: View {
       }
 
       Text(label)
-        .font(.system(.subheadline, design: .rounded).weight(.semibold))
+        .font(.app(.subheadline, weight: .semibold))
         .foregroundColor(Color.PrimaryText)
         .monospacedDigit()
         .lineLimit(1)
@@ -363,7 +363,7 @@ private struct LeadDaysStepper: View {
       UISelectionFeedbackGenerator().selectionChanged()
     } label: {
       Image(systemName: systemName)
-        .font(.system(.footnote, design: .rounded).weight(.bold))
+        .font(.app(.footnote, weight: .bold))
         .foregroundColor(Color.PrimaryText)
         .frame(width: 34, height: 34)
         .contentShape(Circle())

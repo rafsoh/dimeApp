@@ -71,7 +71,7 @@ struct NewExpenseWidgetEntryView: View {
                     AccessoryWidgetBackground()
 
                     Image(systemName: "plus")
-                        .font(.system(.title2, design: .rounded).weight(.bold))
+                        .font(.app(.title2, weight: .bold))
                         .accessibilityLabel("New Expense")
                 }
                 .widgetURL(URL(string: "dimeapp://newExpense"))
@@ -86,7 +86,7 @@ struct NewExpenseTileView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Image(systemName: "plus")
-                .font(.system(.title2, design: .rounded).weight(.bold))
+                .font(.app(.title2, weight: .bold))
                 .foregroundColor(Color.LightIcon)
                 .frame(width: 52, height: 52)
                 .background(Color.DarkBackground, in: Circle())
@@ -95,7 +95,7 @@ struct NewExpenseTileView: View {
             Spacer(minLength: 0)
 
             Text("New Expense")
-                .font(.system(.title3, design: .rounded).weight(.semibold))
+                .font(.app(.title3, weight: .semibold))
                 .foregroundColor(Color.PrimaryText)
                 .lineLimit(2)
                 .minimumScaleFactor(0.8)
