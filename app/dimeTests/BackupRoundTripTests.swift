@@ -301,6 +301,31 @@ final class BackupRoundTripTests: XCTestCase {
         XCTAssertEqual(try XCTUnwrap(all(Budget.self, in: target).first).countedAccounts, AccountScope([.account(recreated)]))
     }
 
+    // Main has no object to restore, so its name comes back in the result for the manager to adopt.
+    func testRestoreHandsBackMainsName() throws {
+        let json = """
+        {
+          "version": 3,
+          "createdAt": 700000000,
+          "categories": [],
+          "transactions": [],
+          "budgets": [],
+          "mainBudgets": [],
+          "templates": [],
+          "accounts": [],
+          "mainAccountName": "Checking"
+        }
+        """
+        let url = directory.appendingPathComponent("backup-700000000-0.json")
+        try Data(json.utf8).write(to: url)
+        let backup = BackupSummary(url: url, createdAt: Date(timeIntervalSince1970: 700_000_000), transactionCount: 0)
+
+        let result = try BackupStore(directory: directory).restore(backup, into: try makeContext())
+
+        XCTAssertEqual(result.mainAccountName, "Checking")
+        XCTAssertEqual(result.total, 0)
+    }
+
     // Backups from before accounts put everything in Main.
     func testVersionTwoBackupRestoresIntoMain() throws {
         let json = """

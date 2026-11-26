@@ -27,6 +27,9 @@ struct RestoreResult {
     var budgets = 0
     var templates = 0
     var accounts = 0
+    /// Main's name in the backup. Main has no object to restore, so the manager adopts the name
+    /// where this device hasn't named Main itself.
+    var mainAccountName: String?
 
     var total: Int { transactions + categories + budgets + templates + accounts }
 }
@@ -238,6 +241,7 @@ struct BackupStore {
         }
 
         var result = RestoreResult()
+        result.mainAccountName = file.mainAccountName
 
         var accounts: [Account] = try context.fetch(Account.fetchRequest())
         var accountsByRef: [String: Account] = [:]
@@ -633,6 +637,12 @@ final class BackupManager: ObservableObject {
                 case let .success(restored):
                     self.defaults?.set(backup.url.lastPathComponent, forKey: Self.handledBackupKey)
                     self.suggestedRestore = nil
+
+                    // Like everything else a restore adds, Main's name only fills in what's missing.
+                    if let name = restored.mainAccountName, self.defaults?.string(forKey: MainAccount.nameKey) == nil {
+                        self.dataController.renameAccount(.main, to: name)
+                    }
+
                     WidgetCenter.shared.reloadAllTimelines()
                     DataIntegrityLog.breadcrumb(
                         "restore finished",
@@ -641,6 +651,7 @@ final class BackupManager: ObservableObject {
                             "categories": restored.categories,
                             "budgets": restored.budgets,
                             "templates": restored.templates,
+                            "accounts": restored.accounts,
                             "backupTransactions": backup.transactionCount
                         ]
                     )
