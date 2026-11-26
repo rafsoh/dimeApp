@@ -747,7 +747,7 @@ struct TransactionView: View {
     /// "Main → Savings", each side tappable.
     var transferTokens: some View {
         HStack(spacing: 2) {
-            AccountToken(name: account.name, isError: account == transferTo) {
+            AccountToken(name: account.name, isError: account == transferTo, showsIcon: false) {
                 UIApplication.shared.endEditing()
                 accountPicker = .from
             }
@@ -758,7 +758,7 @@ struct TransactionView: View {
                 .foregroundColor(Color.SubtitleText.opacity(0.6))
                 .accessibilityHidden(true)
 
-            AccountToken(name: transferTo?.name ?? String(localized: "Account"), isError: account == transferTo) {
+            AccountToken(name: transferTo?.name ?? String(localized: "Account"), isError: account == transferTo, showsIcon: false) {
                 UIApplication.shared.endEditing()
                 accountPicker = .to
             }

@@ -657,7 +657,7 @@ struct BudgetDetailContent: View {
                 ConversionNote(report: spending.report)
 
                 if let accounts = budgetAccountsSummary(route.budget) {
-                    Label(accounts, systemImage: "wallet.pass")
+                    Label(accounts, systemImage: "creditcard")
                         .font(.system(.footnote, design: .rounded).weight(.medium))
                         .foregroundColor(Color.SubtitleText)
                         .frame(maxWidth: .infinity)

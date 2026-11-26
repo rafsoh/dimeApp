@@ -176,11 +176,6 @@ struct InsightsView: View {
             // `-insightsSheet category|categories|cashFlow|recurring` opens that sheet, for screenshots.
             let arguments = ProcessInfo.processInfo.arguments
 
-            // `-insightsAccount <name>` shows one account, and `-insightsAccount all` every account.
-            if let index = arguments.firstIndex(of: "-insightsAccount"), index + 1 < arguments.count {
-                insightsAccount = accounts.first { $0.wrappedName == arguments[index + 1] }?.key ?? ""
-            }
-
             guard let index = arguments.firstIndex(of: "-insightsSheet") else { return }
             let value = index + 1 < arguments.count ? arguments[index + 1] : "category"
 
@@ -212,7 +207,7 @@ struct InsightsView: View {
                 showAccountPicker = true
             } label: {
                 HStack(spacing: 6) {
-                    Image(systemName: "wallet.pass.fill")
+                    Image(systemName: "creditcard.fill")
                         .foregroundColor(Color.SubtitleText)
 
                     Text(selectedAccount?.name ?? String(localized: "All Accounts"))

@@ -272,6 +272,11 @@ struct HomeView: View {
             if arguments.contains("-insightsTab") || arguments.contains("-insightsSheet") || arguments.contains("-insightsAccount") {
                 currentTab = "Insights"
             }
+            // `-insightsAccount <name>` shows one account, and `-insightsAccount all` every account.
+            if let index = arguments.firstIndex(of: "-insightsAccount"), index + 1 < arguments.count {
+                let key = dataController.accounts().first { $0.wrappedName == arguments[index + 1] }?.key ?? ""
+                UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.set(key, forKey: InsightsAccountFilter.key)
+            }
             // `-accountsScreen settings|welcome` opens the accounts page as Settings or onboarding shows it.
             if let index = arguments.firstIndex(of: "-accountsScreen"), index + 1 < arguments.count {
                 debugAccountsScreen = arguments[index + 1]

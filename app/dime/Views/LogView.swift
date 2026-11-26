@@ -992,7 +992,14 @@ struct ListView: View {
             numberFormatter.maximumFractionDigits = 0
         }
 
-        let dayMoney = filtered.filter { countsTransfers || !$0.isTransfer }.total(using: .current(), signed: true)
+        let counted = filtered.filter { countsTransfers || !$0.isTransfer }
+
+        // A day with only transfers has no spending or income to total.
+        if counted.isEmpty && !filtered.isEmpty {
+            return (filtered, "")
+        }
+
+        let dayMoney = counted.total(using: .current(), signed: true)
         let total = dayMoney.value
 
         let text: String
@@ -1741,7 +1748,7 @@ struct FilteredAccountView: View {
 
     var body: some View {
         if transactions.isEmpty {
-            EmptyStateView(systemImage: "wallet.pass", title: "No logs in this account")
+            EmptyStateView(systemImage: "creditcard", title: "No logs in this account")
                 .fillsScrollViewport()
         } else {
             ListView(transactions: _transactions, countsTransfers: true)
@@ -1775,7 +1782,7 @@ struct AccountFilterView: View {
             showPicker = true
         } label: {
             HStack(spacing: 6) {
-                Image(systemName: "wallet.pass.fill")
+                Image(systemName: "creditcard.fill")
                     .foregroundColor(Color.SubtitleText)
 
                 Text(account.name)
