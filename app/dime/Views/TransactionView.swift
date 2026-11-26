@@ -473,6 +473,19 @@ struct TransactionView: View {
                         decimalValuesAssigned = AssignedDecimal(count: fractionDigits)
                     }
                 }
+
+                #if DEBUG
+                if toEdit == nil && editedTemplate == nil && ProcessInfo.processInfo.arguments.contains("-screenshotAdd") {
+                    price = DemoLocale.amount(5.8)
+                    note = DemoLocale.text("Oat latte")
+                    category = dataController.results(for: dataController.fetchRequestForCategoriesMigration(income: false)).first { $0.name == DemoLocale.text("Coffee") }
+
+                    if price.truncatingRemainder(dividingBy: 1) > 0 && numberEntryType == 2 && fractionDigits > 0 {
+                        isEditingDecimal = true
+                        decimalValuesAssigned = AssignedDecimal(count: fractionDigits)
+                    }
+                }
+                #endif
             }
         }
         .sheet(isPresented: $showCategorySheet) {

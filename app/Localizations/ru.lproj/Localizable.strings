@@ -493,6 +493,41 @@
 "The new reset day applies from this period on, and earlier periods keep the old one." = "Новый день начала применится с этого периода, а прошлые периоды сохранят прежний.";
 "The %@ from earlier periods is kept." = "Уже перенесённый %@ сохранится.";
 
+// log
+"UPCOMING" = "ПРЕДСТОЯЩИЕ";
+
+// budgets, insights and settings
+"Overall" = "Общий";
+"%lld days to go" = "Осталось дней: %lld";
+"1 day to go" = "Остался 1 день";
+"%lld hours to go" = "Осталось часов: %lld";
+"1 hour to go" = "Остался 1 час";
+"%@ a day for %lld days" = "%@ в день, дней: %lld";
+"%@ left today" = "Сегодня осталось %@";
+"%@ a day" = "%@ в день";
+"Close to limit" = "Почти на пределе";
+"Resets %@" = "Сброс: %@";
+"tomorrow" = "завтра";
+"Nothing spent yet" = "Пока без трат";
+"Over budget" = "Бюджет превышен";
+"Net" = "Итог";
+"Top categories" = "Топ категорий";
+"Largest expenses" = "Крупнейшие расходы";
+"%lld%% of spending" = "%lld%% расходов";
+"of spending" = "расходов";
+"of income" = "доходов";
+"avg " = "в ср. ";
+"~%@ forecasted" = "Прогноз: ~%@";
+"categories" = "категорий";
+"category" = "категория";
+"Time Frames" = "Периоды";
+"Theme" = "Тема";
+"App Icon" = "Значок приложения";
+"Upcoming Logs" = "Предстоящие записи";
+"Shown" = "Показаны";
+"Hidden" = "Скрыты";
+"Display +/- Symbol" = "Показывать знак +/-";
+
 /* Delete category */
 "%@ has 1 transaction. What should happen to it?" = "В категории «%@» 1 транзакция. Что с ней сделать?";
 "%@ has %lld transactions. What should happen to them?" = "В категории «%@» транзакций: %lld. Что с ними сделать?";

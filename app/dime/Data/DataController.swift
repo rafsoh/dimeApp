@@ -2686,6 +2686,190 @@ enum DemoDataset: String {
     }
 }
 
+/// Demo data in the app's language. `-demoCurrency JPY` also makes that the main currency, with amounts
+/// scaled so they look natural in it, for localized App Store screenshots.
+enum DemoLocale {
+    static let currencyCode: String? = {
+        let arguments = ProcessInfo.processInfo.arguments
+        guard let index = arguments.firstIndex(of: "-demoCurrency"), index + 1 < arguments.count else { return nil }
+        return arguments[index + 1].uppercased()
+    }()
+
+    /// Roughly how many units of the currency buy a dollar, and the steps amounts and budgets are rounded to.
+    private static let scaling: (factor: Double, amountStep: Double, budgetStep: Double) = {
+        switch currencyCode {
+        case "BRL": return (5, 0.1, 50)
+        case "CNY": return (7, 0.1, 50)
+        case "TWD": return (30, 1, 100)
+        case "TRY": return (40, 1, 500)
+        case "RUB": return (90, 1, 1000)
+        case "JPY": return (150, 10, 1000)
+        case "KRW": return (1400, 100, 10000)
+        default: return (1, 0.01, 10)
+        }
+    }()
+
+    static var budgetStep: Double { scaling.budgetStep }
+
+    static func amount(_ dollars: Double) -> Double {
+        guard scaling.factor != 1 else { return dollars }
+        return (dollars * scaling.factor / scaling.amountStep).rounded() * scaling.amountStep
+    }
+
+    static func text(_ english: String) -> String {
+        guard let language = Bundle.main.preferredLocalizations.first else { return english }
+        return translations[language]?[english] ?? english
+    }
+
+    // US-only shops become generic names outside English.
+    private static let translations: [String: [String: String]] = [
+        "de": [
+            "Food": "Essen", "Groceries": "Lebensmittel", "Transport": "Verkehr", "Coffee": "Kaffee", "Shopping": "Shopping",
+            "Entertainment": "Freizeit", "Bills": "Rechnungen", "Health": "Gesundheit", "Salary": "Gehalt", "Freelance": "Freiberuflich",
+            "Blue Bottle": "Café", "Flat white": "Flat White", "Oat latte": "Hafer-Latte", "Cold brew": "Cold Brew",
+            "Dinner – Ramen": "Abendessen – Ramen", "Thai with Mia": "Thai mit Mia", "Pizza night": "Pizzaabend", "Sushi": "Sushi",
+            "Lunch": "Mittagessen", "Lunch with Sam": "Mittagessen mit Sam", "Poke bowl": "Poke Bowl", "Sandwich": "Sandwich",
+            "Whole Foods": "Supermarkt", "Trader Joe's": "Wocheneinkauf", "Costco": "Großeinkauf", "Farmers market": "Wochenmarkt",
+            "Metro card": "U-Bahn-Ticket", "Lyft": "Taxi", "Parking": "Parken", "New sneakers": "Neue Sneaker", "Desk lamp": "Schreibtischlampe",
+            "Cinema": "Kino", "Concert tickets": "Konzertkarten", "Bowling": "Bowling", "Museum": "Museum",
+            "Pharmacy": "Apotheke", "Dentist": "Zahnarzt", "Vitamins": "Vitamine", "Electricity": "Strom", "Phone plan": "Handyvertrag",
+            "Logo design": "Logodesign", "Ramen": "Ramen", "Bakery": "Bäckerei",
+        ],
+        "es": [
+            "Food": "Comida", "Groceries": "Súper", "Transport": "Transporte", "Coffee": "Café", "Shopping": "Compras",
+            "Entertainment": "Ocio", "Bills": "Facturas", "Health": "Salud", "Salary": "Salario", "Freelance": "Freelance",
+            "Blue Bottle": "Cafetería", "Flat white": "Flat white", "Oat latte": "Latte de avena", "Cold brew": "Cold brew",
+            "Dinner – Ramen": "Cena – Ramen", "Thai with Mia": "Tailandés con Mia", "Pizza night": "Noche de pizza", "Sushi": "Sushi",
+            "Lunch": "Almuerzo", "Lunch with Sam": "Almuerzo con Sam", "Poke bowl": "Poke", "Sandwich": "Sándwich",
+            "Whole Foods": "Supermercado", "Trader Joe's": "Compra semanal", "Costco": "Compra grande", "Farmers market": "Mercado",
+            "Metro card": "Metro", "Lyft": "Taxi", "Parking": "Aparcamiento", "New sneakers": "Zapatillas nuevas", "Desk lamp": "Lámpara de escritorio",
+            "Cinema": "Cine", "Concert tickets": "Entradas de concierto", "Bowling": "Bolos", "Museum": "Museo",
+            "Pharmacy": "Farmacia", "Dentist": "Dentista", "Vitamins": "Vitaminas", "Electricity": "Luz", "Phone plan": "Tarifa móvil",
+            "Logo design": "Diseño de logo", "Ramen": "Ramen", "Bakery": "Panadería",
+        ],
+        "fr": [
+            "Food": "Repas", "Groceries": "Courses", "Transport": "Transports", "Coffee": "Café", "Shopping": "Shopping",
+            "Entertainment": "Loisirs", "Bills": "Factures", "Health": "Santé", "Salary": "Salaire", "Freelance": "Freelance",
+            "Blue Bottle": "Café du coin", "Flat white": "Flat white", "Oat latte": "Latte avoine", "Cold brew": "Cold brew",
+            "Dinner – Ramen": "Dîner – Ramen", "Thai with Mia": "Thaï avec Mia", "Pizza night": "Soirée pizza", "Sushi": "Sushis",
+            "Lunch": "Déjeuner", "Lunch with Sam": "Déjeuner avec Sam", "Poke bowl": "Poke bowl", "Sandwich": "Sandwich",
+            "Whole Foods": "Supermarché", "Trader Joe's": "Courses de la semaine", "Costco": "Grosses courses", "Farmers market": "Marché",
+            "Metro card": "Ticket de métro", "Lyft": "Taxi", "Parking": "Parking", "New sneakers": "Nouvelles baskets", "Desk lamp": "Lampe de bureau",
+            "Cinema": "Cinéma", "Concert tickets": "Billets de concert", "Bowling": "Bowling", "Museum": "Musée",
+            "Pharmacy": "Pharmacie", "Dentist": "Dentiste", "Vitamins": "Vitamines", "Electricity": "Électricité", "Phone plan": "Forfait mobile",
+            "Logo design": "Création de logo", "Ramen": "Ramen", "Bakery": "Boulangerie",
+        ],
+        "it": [
+            "Food": "Pasti", "Groceries": "Spesa", "Transport": "Trasporti", "Coffee": "Caffè", "Shopping": "Shopping",
+            "Entertainment": "Svago", "Bills": "Bollette", "Health": "Salute", "Salary": "Stipendio", "Freelance": "Freelance",
+            "Blue Bottle": "Bar", "Flat white": "Flat white", "Oat latte": "Latte d’avena", "Cold brew": "Cold brew",
+            "Dinner – Ramen": "Cena – Ramen", "Thai with Mia": "Thai con Mia", "Pizza night": "Serata pizza", "Sushi": "Sushi",
+            "Lunch": "Pranzo", "Lunch with Sam": "Pranzo con Sam", "Poke bowl": "Poke", "Sandwich": "Panino",
+            "Whole Foods": "Supermercato", "Trader Joe's": "Spesa settimanale", "Costco": "Spesa grossa", "Farmers market": "Mercato",
+            "Metro card": "Biglietto metro", "Lyft": "Taxi", "Parking": "Parcheggio", "New sneakers": "Sneakers nuove", "Desk lamp": "Lampada da scrivania",
+            "Cinema": "Cinema", "Concert tickets": "Biglietti concerto", "Bowling": "Bowling", "Museum": "Museo",
+            "Pharmacy": "Farmacia", "Dentist": "Dentista", "Vitamins": "Vitamine", "Electricity": "Luce", "Phone plan": "Abbonamento telefono",
+            "Logo design": "Design logo", "Ramen": "Ramen", "Bakery": "Panetteria",
+        ],
+        "ja": [
+            "Food": "外食", "Groceries": "食料品", "Transport": "交通費", "Coffee": "コーヒー", "Shopping": "買い物",
+            "Entertainment": "娯楽", "Bills": "固定費", "Health": "医療", "Salary": "給料", "Freelance": "副業",
+            "Blue Bottle": "カフェ", "Flat white": "フラットホワイト", "Oat latte": "オーツラテ", "Cold brew": "コールドブリュー",
+            "Dinner – Ramen": "夕食 – ラーメン", "Thai with Mia": "ミアとタイ料理", "Pizza night": "ピザパーティー", "Sushi": "寿司",
+            "Lunch": "ランチ", "Lunch with Sam": "サムとランチ", "Poke bowl": "ポキ丼", "Sandwich": "サンドイッチ",
+            "Whole Foods": "スーパー", "Trader Joe's": "週末の買い出し", "Costco": "まとめ買い", "Farmers market": "マルシェ",
+            "Metro card": "地下鉄", "Lyft": "タクシー", "Parking": "駐車場", "New sneakers": "新しいスニーカー", "Desk lamp": "デスクライト",
+            "Cinema": "映画", "Concert tickets": "コンサートチケット", "Bowling": "ボウリング", "Museum": "美術館",
+            "Pharmacy": "薬局", "Dentist": "歯医者", "Vitamins": "サプリ", "Electricity": "電気代", "Phone plan": "携帯代",
+            "Logo design": "ロゴデザイン", "Ramen": "ラーメン", "Bakery": "パン屋", "Uniqlo": "ユニクロ",
+        ],
+        "ko": [
+            "Food": "식비", "Groceries": "장보기", "Transport": "교통", "Coffee": "커피", "Shopping": "쇼핑",
+            "Entertainment": "여가", "Bills": "공과금", "Health": "건강", "Salary": "월급", "Freelance": "프리랜스",
+            "Blue Bottle": "카페", "Flat white": "플랫 화이트", "Oat latte": "오트 라테", "Cold brew": "콜드브루",
+            "Dinner – Ramen": "저녁 – 라멘", "Thai with Mia": "미아와 태국 음식", "Pizza night": "피자 파티", "Sushi": "초밥",
+            "Lunch": "점심", "Lunch with Sam": "샘과 점심", "Poke bowl": "포케", "Sandwich": "샌드위치",
+            "Whole Foods": "마트", "Trader Joe's": "주간 장보기", "Costco": "대용량 구매", "Farmers market": "시장",
+            "Metro card": "지하철", "Lyft": "택시", "Parking": "주차", "New sneakers": "새 운동화", "Desk lamp": "책상 조명",
+            "Cinema": "영화", "Concert tickets": "콘서트 티켓", "Bowling": "볼링", "Museum": "미술관",
+            "Pharmacy": "약국", "Dentist": "치과", "Vitamins": "비타민", "Electricity": "전기 요금", "Phone plan": "휴대폰 요금",
+            "Logo design": "로고 디자인", "Ramen": "라멘", "Bakery": "빵집", "Uniqlo": "유니클로", "Amazon": "온라인 쇼핑",
+        ],
+        "nl": [
+            "Food": "Eten", "Groceries": "Boodschappen", "Transport": "Vervoer", "Coffee": "Koffie", "Shopping": "Winkelen",
+            "Entertainment": "Uitjes", "Bills": "Rekeningen", "Health": "Gezondheid", "Salary": "Salaris", "Freelance": "Freelance",
+            "Blue Bottle": "Koffiebar", "Flat white": "Flat white", "Oat latte": "Haverlatte", "Cold brew": "Cold brew",
+            "Dinner – Ramen": "Diner – Ramen", "Thai with Mia": "Thais met Mia", "Pizza night": "Pizza-avond", "Sushi": "Sushi",
+            "Lunch": "Lunch", "Lunch with Sam": "Lunch met Sam", "Poke bowl": "Poke bowl", "Sandwich": "Broodje",
+            "Whole Foods": "Supermarkt", "Trader Joe's": "Weekboodschappen", "Costco": "Groothandel", "Farmers market": "Markt",
+            "Metro card": "Metrokaartje", "Lyft": "Taxi", "Parking": "Parkeren", "New sneakers": "Nieuwe sneakers", "Desk lamp": "Bureaulamp",
+            "Cinema": "Bioscoop", "Concert tickets": "Concertkaartjes", "Bowling": "Bowling", "Museum": "Museum",
+            "Pharmacy": "Apotheek", "Dentist": "Tandarts", "Vitamins": "Vitamines", "Electricity": "Stroom", "Phone plan": "Telefoonabonnement",
+            "Logo design": "Logo-ontwerp", "Ramen": "Ramen", "Bakery": "Bakker",
+        ],
+        "pt-BR": [
+            "Food": "Comida", "Groceries": "Mercado", "Transport": "Transporte", "Coffee": "Café", "Shopping": "Compras",
+            "Entertainment": "Lazer", "Bills": "Contas", "Health": "Saúde", "Salary": "Salário", "Freelance": "Freela",
+            "Blue Bottle": "Cafeteria", "Flat white": "Flat white", "Oat latte": "Latte de aveia", "Cold brew": "Cold brew",
+            "Dinner – Ramen": "Jantar – Lámen", "Thai with Mia": "Tailandês com a Mia", "Pizza night": "Noite da pizza", "Sushi": "Sushi",
+            "Lunch": "Almoço", "Lunch with Sam": "Almoço com Sam", "Poke bowl": "Poke", "Sandwich": "Sanduíche",
+            "Whole Foods": "Supermercado", "Trader Joe's": "Compras da semana", "Costco": "Compra do mês", "Farmers market": "Feira",
+            "Metro card": "Metrô", "Lyft": "Táxi", "Parking": "Estacionamento", "New sneakers": "Tênis novo", "Desk lamp": "Luminária",
+            "Cinema": "Cinema", "Concert tickets": "Ingressos do show", "Bowling": "Boliche", "Museum": "Museu",
+            "Pharmacy": "Farmácia", "Dentist": "Dentista", "Vitamins": "Vitaminas", "Electricity": "Conta de luz", "Phone plan": "Plano de celular",
+            "Logo design": "Design de logo", "Ramen": "Lámen", "Bakery": "Padaria",
+        ],
+        "ru": [
+            "Food": "Еда", "Groceries": "Продукты", "Transport": "Транспорт", "Coffee": "Кофе", "Shopping": "Покупки",
+            "Entertainment": "Развлечения", "Bills": "Счета", "Health": "Здоровье", "Salary": "Зарплата", "Freelance": "Фриланс",
+            "Blue Bottle": "Кофейня", "Flat white": "Флэт уайт", "Oat latte": "Латте на овсяном", "Cold brew": "Колд брю",
+            "Dinner – Ramen": "Ужин – рамен", "Thai with Mia": "Тайская кухня с Мией", "Pizza night": "Вечер пиццы", "Sushi": "Суши",
+            "Lunch": "Обед", "Lunch with Sam": "Обед с Сэмом", "Poke bowl": "Поке", "Sandwich": "Сэндвич",
+            "Whole Foods": "Супермаркет", "Trader Joe's": "Продукты на неделю", "Costco": "Закупка впрок", "Farmers market": "Рынок",
+            "Metro card": "Метро", "Lyft": "Такси", "Parking": "Парковка", "New sneakers": "Новые кроссовки", "Desk lamp": "Настольная лампа",
+            "Cinema": "Кино", "Concert tickets": "Билеты на концерт", "Bowling": "Боулинг", "Museum": "Музей",
+            "Pharmacy": "Аптека", "Dentist": "Стоматолог", "Vitamins": "Витамины", "Electricity": "Электричество", "Phone plan": "Мобильная связь",
+            "Logo design": "Дизайн логотипа", "Ramen": "Рамен", "Bakery": "Пекарня",
+        ],
+        "tr": [
+            "Food": "Yemek", "Groceries": "Market", "Transport": "Ulaşım", "Coffee": "Kahve", "Shopping": "Alışveriş",
+            "Entertainment": "Eğlence", "Bills": "Faturalar", "Health": "Sağlık", "Salary": "Maaş", "Freelance": "Serbest iş",
+            "Blue Bottle": "Kafe", "Flat white": "Flat white", "Oat latte": "Yulaf sütlü latte", "Cold brew": "Cold brew",
+            "Dinner – Ramen": "Akşam yemeği – Ramen", "Thai with Mia": "Mia ile Tayland yemeği", "Pizza night": "Pizza gecesi", "Sushi": "Suşi",
+            "Lunch": "Öğle yemeği", "Lunch with Sam": "Sam ile öğle yemeği", "Poke bowl": "Poke", "Sandwich": "Sandviç",
+            "Whole Foods": "Süpermarket", "Trader Joe's": "Haftalık alışveriş", "Costco": "Toplu alışveriş", "Farmers market": "Pazar",
+            "Metro card": "Metro", "Lyft": "Taksi", "Parking": "Otopark", "New sneakers": "Yeni spor ayakkabı", "Desk lamp": "Masa lambası",
+            "Cinema": "Sinema", "Concert tickets": "Konser bileti", "Bowling": "Bowling", "Museum": "Müze",
+            "Pharmacy": "Eczane", "Dentist": "Diş hekimi", "Vitamins": "Vitamin", "Electricity": "Elektrik", "Phone plan": "Telefon faturası",
+            "Logo design": "Logo tasarımı", "Ramen": "Ramen", "Bakery": "Fırın",
+        ],
+        "zh-Hans": [
+            "Food": "餐饮", "Groceries": "买菜", "Transport": "交通", "Coffee": "咖啡", "Shopping": "购物",
+            "Entertainment": "娱乐", "Bills": "账单", "Health": "医疗", "Salary": "工资", "Freelance": "副业",
+            "Blue Bottle": "咖啡馆", "Flat white": "澳白", "Oat latte": "燕麦拿铁", "Cold brew": "冷萃",
+            "Dinner – Ramen": "晚餐 – 拉面", "Thai with Mia": "和 Mia 吃泰餐", "Pizza night": "披萨之夜", "Sushi": "寿司",
+            "Lunch": "午餐", "Lunch with Sam": "和 Sam 吃午饭", "Poke bowl": "波奇饭", "Sandwich": "三明治",
+            "Whole Foods": "超市", "Trader Joe's": "每周采购", "Costco": "囤货", "Farmers market": "菜市场",
+            "Uber": "网约车", "Metro card": "地铁", "Lyft": "打车", "Parking": "停车", "New sneakers": "新球鞋", "Uniqlo": "优衣库",
+            "Amazon": "网购", "Desk lamp": "台灯", "Cinema": "电影", "Concert tickets": "演唱会门票", "Bowling": "保龄球", "Museum": "博物馆",
+            "Pharmacy": "药店", "Dentist": "牙医", "Vitamins": "维生素", "Electricity": "电费", "Phone plan": "话费",
+            "Logo design": "Logo 设计", "Netflix": "视频会员", "Ramen": "拉面", "Bakery": "面包店",
+        ],
+        "zh-Hant": [
+            "Food": "餐飲", "Groceries": "買菜", "Transport": "交通", "Coffee": "咖啡", "Shopping": "購物",
+            "Entertainment": "娛樂", "Bills": "帳單", "Health": "醫療", "Salary": "薪水", "Freelance": "接案",
+            "Blue Bottle": "咖啡廳", "Flat white": "馥列白", "Oat latte": "燕麥拿鐵", "Cold brew": "冷萃",
+            "Dinner – Ramen": "晚餐 – 拉麵", "Thai with Mia": "和 Mia 吃泰式料理", "Pizza night": "披薩之夜", "Sushi": "壽司",
+            "Lunch": "午餐", "Lunch with Sam": "和 Sam 吃午餐", "Poke bowl": "波奇碗", "Sandwich": "三明治",
+            "Whole Foods": "超市", "Trader Joe's": "每週採買", "Costco": "大量採購", "Farmers market": "傳統市場",
+            "Metro card": "捷運", "Lyft": "計程車", "Parking": "停車", "New sneakers": "新球鞋", "Desk lamp": "檯燈",
+            "Cinema": "電影", "Concert tickets": "演唱會門票", "Bowling": "保齡球", "Museum": "博物館",
+            "Pharmacy": "藥局", "Dentist": "牙醫", "Vitamins": "維他命", "Electricity": "電費", "Phone plan": "電信費",
+            "Logo design": "Logo 設計", "Ramen": "拉麵", "Bakery": "麵包店",
+        ],
+    ]
+}
+
 private struct DemoRandom {
     var state: UInt64
 
@@ -2714,10 +2898,14 @@ extension DataController {
         let now = Date.now
         var order: Int64 = 0
 
+        if let currencyCode = DemoLocale.currencyCode {
+            UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.set(currencyCode, forKey: "currency")
+        }
+
         func category(_ name: String, _ emoji: String, _ colour: String, income: Bool = false) -> Category {
             let category = Category(context: context)
             category.id = UUID()
-            category.name = name
+            category.name = DemoLocale.text(name)
             category.emoji = emoji
             category.colour = colour
             category.income = income
@@ -2736,10 +2924,10 @@ extension DataController {
 
             let transaction = Transaction(context: context)
             transaction.id = UUID()
-            transaction.note = note
+            transaction.note = DemoLocale.text(note)
             transaction.category = category
             transaction.income = category.income
-            transaction.amount = amount
+            transaction.amount = DemoLocale.amount(amount)
             transaction.currencyCode = currencyCode
             transaction.date = date
             transaction.day = calendar.startOfDay(for: date)
@@ -2816,9 +3004,9 @@ extension DataController {
             let firstOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? now
             let streaming = Transaction(context: context)
             streaming.id = UUID()
-            streaming.note = "Netflix"
+            streaming.note = DemoLocale.text("Netflix")
             streaming.category = fun
-            streaming.amount = 15.49
+            streaming.amount = DemoLocale.amount(15.49)
             streaming.date = calendar.date(byAdding: .month, value: -3, to: calendar.date(byAdding: .day, value: 6, to: firstOfMonth) ?? now)
             streaming.day = calendar.startOfDay(for: streaming.wrappedDate)
             streaming.month = calendar.date(from: calendar.dateComponents([.year, .month], from: streaming.wrappedDate))
@@ -2868,7 +3056,8 @@ extension DataController {
         }
 
         func rounded(_ value: Double) -> Double {
-            max(10, (value / 10).rounded(.up) * 10)
+            let step = DemoLocale.budgetStep
+            return max(step, (value / step).rounded(.up) * step)
         }
 
         let monthElapsed = elapsed(since: month, component: .month, value: 1)
@@ -2897,13 +3086,13 @@ extension DataController {
         budget(groceries, type: 3, start: month, amount: rounded(spent(groceries, since: month) / 0.92), order: 1)
         foodBudget.rolloverEnabled = true
         foodBudget.rolloverAnchor = calendar.date(byAdding: .month, value: -2, to: month)
-        let coffeeBudget = budget(coffee, type: 2, start: week, amount: max(5, (spent(coffee, since: week) * 0.75).rounded()), order: 2)
+        let coffeeBudget = budget(coffee, type: 2, start: week, amount: DemoLocale.amount(max(5, (spent(coffee, since: week) * 0.75 / DemoLocale.amount(1)).rounded())), order: 2)
         coffeeBudget.rolloverEnabled = true
         coffeeBudget.rolloverAnchor = week
-        coffeeBudget.rolloverBalance = -6
+        coffeeBudget.rolloverBalance = DemoLocale.amount(-6)
         budget(shopping, type: 4, start: year, amount: rounded(spent(shopping, since: year) / elapsed(since: year, component: .year, value: 1) * 1.3), order: 3)
         if spent(health, since: month) == 0 {
-            budget(health, type: 3, start: month, amount: 60, order: 4)
+            budget(health, type: 3, start: month, amount: DemoLocale.amount(60), order: 4)
         }
     }
 }

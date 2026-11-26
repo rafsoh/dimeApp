@@ -481,6 +481,41 @@
 "The new reset day applies from this period on, and earlier periods keep the old one." = "新的起始日從本週期開始生效，之前的週期保留原起始日。";
 "The %@ from earlier periods is kept." = "目前已結轉的%@將保留。";
 
+// log
+"UPCOMING" = "即將到來";
+
+// budgets, insights and settings
+"Overall" = "總預算";
+"%lld days to go" = "還剩 %lld 天";
+"1 day to go" = "還剩 1 天";
+"%lld hours to go" = "還剩 %lld 小時";
+"1 hour to go" = "還剩 1 小時";
+"%@ a day for %lld days" = "接下來 %2$lld 天每天 %1$@";
+"%@ left today" = "今天還剩 %@";
+"%@ a day" = "每天 %@";
+"Close to limit" = "接近上限";
+"Resets %@" = "%@重設";
+"tomorrow" = "明天";
+"Nothing spent yet" = "尚無支出";
+"Over budget" = "已超出預算";
+"Net" = "結餘";
+"Top categories" = "主要類別";
+"Largest expenses" = "最大支出";
+"%lld%% of spending" = "佔支出 %lld%%";
+"of spending" = "支出佔比";
+"of income" = "收入佔比";
+"avg " = "平均 ";
+"~%@ forecasted" = "預計 ~%@";
+"categories" = "個類別";
+"category" = "個類別";
+"Time Frames" = "時間範圍";
+"Theme" = "主題";
+"App Icon" = "App 圖像";
+"Upcoming Logs" = "即將記入的帳目";
+"Shown" = "顯示";
+"Hidden" = "隱藏";
+"Display +/- Symbol" = "顯示 +/- 符號";
+
 /* Delete category */
 "%@ has 1 transaction. What should happen to it?" = "「%@」中有 1 筆交易。要如何處理？";
 "%@ has %lld transactions. What should happen to them?" = "「%@」中有 %lld 筆交易。要如何處理？";

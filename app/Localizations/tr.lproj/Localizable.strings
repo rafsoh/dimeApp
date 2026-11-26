@@ -481,6 +481,41 @@
 "The new reset day applies from this period on, and earlier periods keep the old one." = "Yeni başlangıç günü bu dönemden itibaren geçerli olur; önceki dönemler eskisini korur.";
 "The %@ from earlier periods is kept." = "Şimdiye kadar devredilen %@ korunur.";
 
+// log
+"UPCOMING" = "YAKLAŞAN";
+
+// budgets, insights and settings
+"Overall" = "Genel";
+"%lld days to go" = "%lld gün kaldı";
+"1 day to go" = "1 gün kaldı";
+"%lld hours to go" = "%lld saat kaldı";
+"1 hour to go" = "1 saat kaldı";
+"%@ a day for %lld days" = "%2$lld gün boyunca günde %1$@";
+"%@ left today" = "Bugün %@ kaldı";
+"%@ a day" = "Günde %@";
+"Close to limit" = "Limite yakın";
+"Resets %@" = "Sıfırlanma: %@";
+"tomorrow" = "yarın";
+"Nothing spent yet" = "Henüz harcama yok";
+"Over budget" = "Bütçe aşıldı";
+"Net" = "Net";
+"Top categories" = "Öne çıkan kategoriler";
+"Largest expenses" = "En büyük giderler";
+"%lld%% of spending" = "%%%lld harcama payı";
+"of spending" = "harcama payı";
+"of income" = "gelir payı";
+"avg " = "ort. ";
+"~%@ forecasted" = "Tahmini ~%@";
+"categories" = "kategori";
+"category" = "kategori";
+"Time Frames" = "Zaman dilimleri";
+"Theme" = "Tema";
+"App Icon" = "Uygulama simgesi";
+"Upcoming Logs" = "Yaklaşan kayıtlar";
+"Shown" = "Gösteriliyor";
+"Hidden" = "Gizli";
+"Display +/- Symbol" = "+/- işaretini göster";
+
 /* Delete category */
 "%@ has 1 transaction. What should happen to it?" = "%@ kategorisinde 1 işlem var. Ne yapılsın?";
 "%@ has %lld transactions. What should happen to them?" = "%@ kategorisinde %lld işlem var. Ne yapılsın?";
