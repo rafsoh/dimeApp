@@ -34,7 +34,9 @@ struct InsightsView: View {
     /// The account Insights shows; empty for every account.
     @AppStorage(InsightsAccountFilter.key, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var insightsAccount = ""
     @AppStorage(MainAccount.nameKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var mainAccountName = ""
-    @State private var showAccountPicker = false
+    @State private var showAccountMenu = false
+    @State private var periodMenuWidth: CGFloat = 0
+    @State private var isScrubbingPeriod = false
 
     var accountChoices: [AccountChoice] {
         [.main] + accounts.map(AccountChoice.account)
@@ -89,10 +91,6 @@ struct InsightsView: View {
                 ScrollViewReader { scroller in
                     ScrollView(showsIndicators: false) {
                         VStack(spacing: 12) {
-                            if !accounts.isEmpty {
-                                accountScopeChip
-                            }
-
                             InsightsDashboard(period: period, dataController: dataController, incomeTracking: incomeTracking, firstDay: firstDay, formatter: formatter, breaksDownByAccount: !accounts.isEmpty && selectedAccount == nil, onSelectAccount: { choice in
                                 withAnimation(.easeInOut(duration: 0.2)) {
                                     insightsAccount = choice.key
@@ -118,15 +116,30 @@ struct InsightsView: View {
                 }
                 .tabBarClearance()
                 .floatingAboveTabBar {
-                    GlassStepperCapsule(
-                        previousLabel: period.previousLabel,
-                        nextLabel: period.nextLabel
-                    ) { offset in
-                        let shifted = period.shifted(by: offset)
-                        guard offset == 0 || (shifted.start >= earliestStart && shifted.start <= currentStart) else { return nil }
-                        return shifted.title
-                    } onStep: { offset in
-                        step(by: offset)
+                    // When on the left, which period on the right: the time frame sits beside the dates it steps through.
+                    HStack(spacing: 8) {
+                        periodMenu
+                            .background(GeometryReader { proxy in
+                                Color.clear
+                                    .onAppear { periodMenuWidth = proxy.size.width }
+                                    .onChange(of: proxy.size.width) { periodMenuWidth = $0 }
+                            })
+                            .opacity(isScrubbingPeriod ? 0 : 1)
+                            .animation(.easeInOut(duration: 0.2), value: isScrubbingPeriod)
+
+                        GlassStepperCapsule(
+                            maxWidth: UIScreen.main.bounds.width - 32 - periodMenuWidth - 8,
+                            previousLabel: period.previousLabel,
+                            nextLabel: period.nextLabel
+                        ) { offset in
+                            let shifted = period.shifted(by: offset)
+                            guard offset == 0 || (shifted.start >= earliestStart && shifted.start <= currentStart) else { return nil }
+                            return shifted.title
+                        } onStep: { offset in
+                            step(by: offset)
+                        } onScrubbingChange: { scrubbing in
+                            isScrubbingPeriod = scrubbing
+                        }
                     }
                 }
             }
@@ -134,23 +147,10 @@ struct InsightsView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .tabHeader {
             TabHeader("Insights") {
-                GlassCapsuleButton(LocalizedStringKey(chartTypeString), trailingSystemImage: "chevron.up.chevron.down") {
-                    showTimeMenu = true
+                // Hidden until there's an account besides Main, so Insights looks as it always has for one account.
+                if !accounts.isEmpty {
+                    accountMenu
                 }
-                .popover(present: $showTimeMenu, attributes: {
-                    $0.position = .absolute(
-                        originAnchor: .bottomRight,
-                        popoverAnchor: .topRight
-                    )
-                    $0.rubberBandingMode = .none
-                    $0.sourceFrameInset = UIEdgeInsets(top: 0, left: 0, bottom: -10, right: 0)
-                    $0.presentation.animation = .easeInOut(duration: 0.2)
-                    $0.dismissal.animation = .easeInOut(duration: 0.3)
-                }) {
-                    ChartTimePickerView(showMenu: $showTimeMenu)
-                }
-                .disabled(transactions.isEmpty)
-                .opacity(transactions.isEmpty ? 0.4 : 1)
             }
         }
         .background(Color.PrimaryBackground)
@@ -167,11 +167,21 @@ struct InsightsView: View {
         .onChange(of: insightsAccount) { _ in
             refreshID = UUID()
         }
-        .sheet(isPresented: $showAccountPicker) {
-            AccountPickerSheet(title: "Account", selection: Binding(get: { selectedAccount }, set: { insightsAccount = $0?.key ?? "" }), allowsAll: true)
-                .environmentObject(dataController)
-        }
         #if DEBUG
+        .onAppear {
+            // `-insightsMenu account|period` opens that menu, for screenshots.
+            let arguments = ProcessInfo.processInfo.arguments
+            if let index = arguments.firstIndex(of: "-insightsMenu") {
+                let value = index + 1 < arguments.count ? arguments[index + 1] : "account"
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    if value == "period" {
+                        showTimeMenu = true
+                    } else {
+                        showAccountMenu = true
+                    }
+                }
+            }
+        }
         .onAppear {
             // `-insightsSheet category|categories|cashFlow|recurring` opens that sheet, for screenshots.
             let arguments = ProcessInfo.processInfo.arguments
@@ -200,35 +210,51 @@ struct InsightsView: View {
         }
     }
 
-    /// Which account the dashboard shows, as a quiet line under the title. Hidden until there's an account besides Main.
-    var accountScopeChip: some View {
-        HStack {
-            Button {
-                showAccountPicker = true
-            } label: {
-                HStack(spacing: 5) {
-                    Text(selectedAccount?.name ?? String(localized: "All Accounts"))
-                        .lineLimit(1)
+    /// Which account the dashboard shows, in the header where the time frame used to be.
+    var accountMenu: some View {
+        let name = selectedAccount?.name ?? String(localized: "All Accounts")
 
-                    Image(systemName: "chevron.down")
-                        .font(.app(.caption, weight: .bold))
-                }
-                .font(.app(.headline, weight: .semibold))
-                .foregroundColor(selectedAccount == nil ? Color.SubtitleText : Color.PrimaryText)
-                .padding(.vertical, 6)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(Text("Account") + Text(", ") + Text(selectedAccount?.name ?? String(localized: "All Accounts")))
-            .accessibilityAddTraits(.isButton)
-
-            Spacer(minLength: 0)
+        return GlassCapsuleButton(verbatim: name, trailingSystemImage: "chevron.up.chevron.down") {
+            showAccountMenu = true
         }
-        // Lines up with the title above it.
-        .padding(.horizontal, 14)
-        .padding(.top, -10)
-        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+        .frame(maxWidth: 190)
+        .popover(present: $showAccountMenu, attributes: {
+            $0.position = .absolute(
+                originAnchor: .bottomRight,
+                popoverAnchor: .topRight
+            )
+            $0.rubberBandingMode = .none
+            $0.sourceFrameInset = UIEdgeInsets(top: 0, left: 0, bottom: -10, right: 0)
+            $0.presentation.animation = .easeInOut(duration: 0.2)
+            $0.dismissal.animation = .easeInOut(duration: 0.3)
+        }) {
+            InsightsAccountMenu(choices: accountChoices, selectedKey: selectedAccount?.key ?? "", showMenu: $showAccountMenu) { key in
+                insightsAccount = key
+            }
+        }
+        .disabled(transactions.isEmpty)
+        .opacity(transactions.isEmpty ? 0.4 : 1)
+        .accessibilityLabel(Text("Account") + Text(", ") + Text(verbatim: name))
+    }
+
+    /// Week, month or year, beside the stepper; its menu opens upwards.
+    var periodMenu: some View {
+        GlassCapsuleButton(LocalizedStringKey(chartTypeString), trailingSystemImage: "chevron.up.chevron.down") {
+            showTimeMenu = true
+        }
+        .fixedSize()
+        .popover(present: $showTimeMenu, attributes: {
+            $0.position = .absolute(
+                originAnchor: .topLeft,
+                popoverAnchor: .bottomLeft
+            )
+            $0.rubberBandingMode = .none
+            $0.sourceFrameInset = UIEdgeInsets(top: -10, left: 0, bottom: 0, right: 0)
+            $0.presentation.animation = .easeInOut(duration: 0.2)
+            $0.dismissal.animation = .easeInOut(duration: 0.3)
+        }) {
+            ChartTimePickerView(showMenu: $showTimeMenu)
+        }
     }
 
     func step(by value: Int) {
@@ -2331,6 +2357,57 @@ struct ChartTimePickerView: View {
                 timeframe = ChartTimeFrame.month
             } else if chartType == 3 {
                 timeframe = ChartTimeFrame.year
+            }
+        }
+    }
+}
+
+/// Every account, with All Accounts first; picking one scopes the whole dashboard.
+struct InsightsAccountMenu: View {
+    let choices: [AccountChoice]
+    let selectedKey: String
+    @Binding var showMenu: Bool
+    let onSelect: (String) -> Void
+
+    @State private var picked: String?
+
+    var current: String {
+        picked ?? selectedKey
+    }
+
+    var body: some View {
+        GlassPopoverMenu {
+            GlassPopoverRow("All Accounts", isSelected: current.isEmpty) {
+                pick("")
+            }
+
+            Divider()
+                .padding(.horizontal, 16)
+                .padding(.vertical, 4)
+
+            ForEach(choices, id: \.key) { choice in
+                GlassPopoverRow(verbatim: choice.name, isSelected: current == choice.key) {
+                    pick(choice.key)
+                }
+            }
+        }
+    }
+
+    func pick(_ key: String) {
+        guard key != current else {
+            showMenu = false
+            return
+        }
+
+        // Like the time frame menu: the tick moves, then the menu closes.
+        withAnimation(.easeIn(duration: 0.15)) {
+            picked = key
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            showMenu = false
+            withAnimation(.easeInOut(duration: 0.2)) {
+                onSelect(key)
             }
         }
     }
