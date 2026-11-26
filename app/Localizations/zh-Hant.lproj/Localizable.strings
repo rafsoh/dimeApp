@@ -83,6 +83,7 @@
 "Missing Amount" = "缺少金額";
 "Expense Was Deleted" = "這筆支出已被刪除";
 "Template Was Deleted" = "此範本已被刪除";
+"Budget Was Deleted" = "此預算已被刪除";
 "Category Was Deleted" = "此類別已被刪除";
 "Dime couldn't open your data" = "Dime 無法開啟你的資料";
 "Your entries are still on this device, and nothing has been changed or deleted. Please don't delete Dime: that would remove them. Try again, or contact support if this keeps happening." = "你的記錄仍在此裝置上，沒有任何內容被更改或刪除。請不要刪除 Dime，否則這些記錄也會被刪除。請再試一次；若問題持續發生，請聯絡支援。";

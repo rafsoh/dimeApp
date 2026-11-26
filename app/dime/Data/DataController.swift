@@ -969,11 +969,17 @@ class DataController: ObservableObject {
     }
 
     func deleteTransaction(_ transaction: Transaction) {
-        guard transaction.managedObjectContext != nil else {
+        delete(transaction)
+    }
+
+    /// Deletes and saves, unless sync from another device already deleted it while a sheet or menu was open.
+    /// Deleting an object that has no context any more throws.
+    func delete(_ object: NSManagedObject) {
+        guard !object.isGone else {
             return
         }
 
-        container.viewContext.delete(transaction)
+        container.viewContext.delete(object)
         save()
     }
 
@@ -1203,6 +1209,10 @@ class DataController: ObservableObject {
     }
 
     func deleteQuickAddTemplate(_ template: TemplateTransaction) {
+        guard !template.isGone else {
+            return
+        }
+
         container.viewContext.delete(template)
 
         // Number the rest from 0 again, so new templates always go at the end.
@@ -2820,6 +2830,13 @@ extension NSManagedObjectContext {
         .map { _ in () }
         .receive(on: DispatchQueue.main)
         .share()
+}
+
+extension NSManagedObject {
+    /// Deleted, here or by a change synced from another device, so it can't be changed, linked or deleted.
+    var isGone: Bool {
+        isDeleted || managedObjectContext == nil
+    }
 }
 
 struct LineGraphDataPoint: Equatable {

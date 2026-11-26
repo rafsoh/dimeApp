@@ -83,6 +83,7 @@
 "Missing Amount" = "금액 없음";
 "Expense Was Deleted" = "지출이 삭제됨";
 "Template Was Deleted" = "템플릿이 삭제됨";
+"Budget Was Deleted" = "예산이 삭제됨";
 "Category Was Deleted" = "카테고리가 삭제됨";
 "Dime couldn't open your data" = "Dime에서 데이터를 열 수 없음";
 "Your entries are still on this device, and nothing has been changed or deleted. Please don't delete Dime: that would remove them. Try again, or contact support if this keeps happening." = "기록은 이 기기에 그대로 있으며, 아무것도 변경되거나 삭제되지 않았습니다. Dime을 삭제하면 기록도 사라지므로 삭제하지 마십시오. 다시 시도하고, 문제가 계속되면 지원팀에 문의하십시오.";

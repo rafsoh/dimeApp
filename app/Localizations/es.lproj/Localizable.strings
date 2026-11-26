@@ -83,6 +83,7 @@
 "Missing Amount" = "Falta el importe";
 "Expense Was Deleted" = "Gasto eliminado";
 "Template Was Deleted" = "Plantilla eliminada";
+"Budget Was Deleted" = "Presupuesto eliminado";
 "Category Was Deleted" = "Categoría eliminada";
 "Dime couldn't open your data" = "Dime no pudo abrir tus datos";
 "Your entries are still on this device, and nothing has been changed or deleted. Please don't delete Dime: that would remove them. Try again, or contact support if this keeps happening." = "Tus registros siguen en este dispositivo y no se ha cambiado ni eliminado nada. No elimines Dime: se borrarían. Vuelve a intentarlo o contacta con soporte si sigue ocurriendo.";

@@ -84,6 +84,7 @@
 "Missing Amount" = "Missing Amount";
 "Expense Was Deleted" = "Expense Was Deleted";
 "Template Was Deleted" = "Template Was Deleted";
+"Budget Was Deleted" = "Budget Was Deleted";
 "Category Was Deleted" = "Category Was Deleted";
 "Dime couldn't open your data" = "Dime couldn't open your data";
 "Your entries are still on this device, and nothing has been changed or deleted. Please don't delete Dime: that would remove them. Try again, or contact support if this keeps happening." = "Your entries are still on this device, and nothing has been changed or deleted. Please don't delete Dime: that would remove them. Try again, or contact support if this keeps happening.";

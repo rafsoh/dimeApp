@@ -83,6 +83,7 @@
 "Missing Amount" = "Tutar eksik";
 "Expense Was Deleted" = "Gider silindi";
 "Template Was Deleted" = "Şablon silindi";
+"Budget Was Deleted" = "Bütçe silindi";
 "Category Was Deleted" = "Kategori silindi";
 "Dime couldn't open your data" = "Dime verilerini açamadı";
 "Your entries are still on this device, and nothing has been changed or deleted. Please don't delete Dime: that would remove them. Try again, or contact support if this keeps happening." = "Kayıtların hâlâ bu cihazda; hiçbir şey değiştirilmedi veya silinmedi. Lütfen Dime'ı silme, yoksa kayıtların da silinir. Tekrar dene, sorun devam ederse destekle iletişime geç.";

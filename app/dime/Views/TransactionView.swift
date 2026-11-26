@@ -415,9 +415,8 @@ struct TransactionView: View {
                             dataController.deleteQuickAddTemplate(editedTemplate)
                         } else {
                             if let itemToDelete = toDelete {
-                                moc.delete(itemToDelete)
+                                dataController.deleteTransaction(itemToDelete)
                             }
-                            dataController.save()
                         }
                     }
 
@@ -771,6 +770,11 @@ struct TransactionView: View {
             editedTransaction.category = category
 
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                // Sync can still delete it during this delay.
+                guard !editedTransaction.isGone else {
+                    return
+                }
+
                 withAnimation(.easeInOut(duration: 0.5)) {
                     editedTransaction.amount = price
 

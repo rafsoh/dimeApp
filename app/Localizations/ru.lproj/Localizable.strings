@@ -82,6 +82,7 @@
 "Missing Amount" = "Нет суммы";
 "Expense Was Deleted" = "Расход удалён";
 "Template Was Deleted" = "Шаблон удалён";
+"Budget Was Deleted" = "Бюджет удалён";
 "Category Was Deleted" = "Категория удалена";
 "Dime couldn't open your data" = "Dime не удалось открыть ваши данные";
 "Your entries are still on this device, and nothing has been changed or deleted. Please don't delete Dime: that would remove them. Try again, or contact support if this keeps happening." = "Ваши записи по-прежнему на этом устройстве, ничего не изменено и не удалено. Не удаляйте Dime: вместе с приложением удалятся и записи. Попробуйте ещё раз или напишите в поддержку, если это повторяется.";
