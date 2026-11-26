@@ -35,6 +35,14 @@ struct ContentView: View {
 
     var center = UNUserNotificationCenter.current()
 
+    private var isUsingDemoData: Bool {
+        #if DEBUG
+        DemoDataset(arguments: ProcessInfo.processInfo.arguments) != nil
+        #else
+        false
+        #endif
+    }
+
     @AppStorage("topEdge", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var savedTopEdge: Double = 30
     @AppStorage("bottomEdge", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var savedBottomEdge: Double = 15
 
@@ -106,13 +114,17 @@ struct ContentView: View {
                 defaults.set(true, forKey: "showCents")
                 defaults.set(true, forKey: "animated")
 
-                if NSUbiquitousKeyValueStore.default.string(forKey: "currency") == nil {
+                if isUsingDemoData {
+                    // Demo data sets its own currency, and must not reach iCloud's copy.
+                } else if NSUbiquitousKeyValueStore.default.string(forKey: "currency") == nil {
                     NSUbiquitousKeyValueStore.default.set(Locale.current.currencyCode!, forKey: "currency")
                 } else {
                     currency = NSUbiquitousKeyValueStore.default.string(forKey: "currency")!
                 }
 
                 defaults.set(2, forKey: "numberEntryType")
+            } else if isUsingDemoData {
+                // Demo data sets its own currency, and must not reach iCloud's copy.
             } else {
                 if let holdingCurrency = NSUbiquitousKeyValueStore.default.string(forKey: "currency") {
                     currency = holdingCurrency

@@ -129,8 +129,18 @@ struct InsightsView: View {
         }
         #if DEBUG
         .onAppear {
-            // `-insightsSheet category|categories|cashFlow|recurring` opens that sheet, for screenshots.
+            // `-insightsTimeFrame 1|2|3` shows weeks, months or years, `-insightsOffset -1` steps back that many periods,
+            // and `-insightsSheet category|categories|cashFlow|recurring` opens that sheet, for screenshots.
             let arguments = ProcessInfo.processInfo.arguments
+            if let index = arguments.firstIndex(of: "-insightsTimeFrame"), index + 1 < arguments.count, let value = Int(arguments[index + 1]) {
+                chartType = value
+            }
+            if let index = arguments.firstIndex(of: "-insightsOffset"), index + 1 < arguments.count, let offset = Int(arguments[index + 1]) {
+                // After onChange(of: chartType) has reset the period.
+                DispatchQueue.main.async {
+                    periodStart = period.shifted(by: offset).start
+                }
+            }
             guard let index = arguments.firstIndex(of: "-insightsSheet") else { return }
             let value = index + 1 < arguments.count ? arguments[index + 1] : "category"
 
@@ -1332,7 +1342,12 @@ struct InsightsLogRow: View {
 extension InsightsLogRow {
     init(transaction: Transaction, dateFormat: String) {
         let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = dateFormat
+        // "j" only exists in templates: the locale's hour, 12- or 24-hour.
+        if dateFormat.contains("j") {
+            dateFormatter.setLocalizedDateFormatFromTemplate(dateFormat)
+        } else {
+            dateFormatter.dateFormat = dateFormat
+        }
         self.init(transaction: transaction, subtitle: dateFormatter.string(from: transaction.wrappedDate).uppercased())
     }
 }
@@ -1762,7 +1777,7 @@ struct InsightsDetailSheet: View {
         return VStack(spacing: 20) {
             InsightsSheetSummary(amount: total, formatter: formatter, caption: ratio > 0 ? Text(String(format: "%.1f×", ratio)) + Text(" ") + Text(period.type == 3 ? "your monthly average" : "your daily average") : nil)
 
-            InsightsTallyList(title: dateFormatter.string(from: date), items: items, formatter: formatter, dateFormat: period.type == 3 ? "d MMM" : "h:mm a")
+            InsightsTallyList(title: dateFormatter.string(from: date), items: items, formatter: formatter, dateFormat: period.type == 3 ? "d MMM" : "jmm")
         }
     }
 

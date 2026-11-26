@@ -494,3 +494,6 @@
 "The new amount applies from this period on, and earlier periods keep the old one." = "The new amount applies from this period on, and earlier periods keep the old one.";
 "The new reset day applies from this period on, and earlier periods keep the old one." = "The new reset day applies from this period on, and earlier periods keep the old one.";
 "The %@ from earlier periods is kept." = "The %@ from earlier periods is kept.";
+
+// log
+"UPCOMING" = "UPCOMING";

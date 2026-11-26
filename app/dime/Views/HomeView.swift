@@ -245,10 +245,18 @@ struct HomeView: View {
         }
         #if DEBUG
         .onAppear {
-            // `-budgetTab`, `-budgetSheet` and `-budgetEdit` (see BudgetView) start on the Budget tab, for screenshots.
+            // `-budgetTab`, `-budgetSheet` and `-budgetEdit` (see BudgetView) start on the Budget tab,
+            // `-screenshotTab Log|Insights|Budget|Settings` on that tab, and `-screenshotAdd` opens a filled-in
+            // add screen (see TransactionView), for screenshots.
             let arguments = ProcessInfo.processInfo.arguments
             if arguments.contains("-budgetTab") || arguments.contains("-budgetSheet") || arguments.contains("-budgetEdit") {
                 currentTab = "Budget"
+            }
+            if let index = arguments.firstIndex(of: "-screenshotTab"), index + 1 < arguments.count {
+                currentTab = arguments[index + 1]
+            }
+            if arguments.contains("-screenshotAdd") {
+                addTransaction = true
             }
         }
         #endif

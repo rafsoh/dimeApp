@@ -45,7 +45,13 @@ final class FeatureTipStore: ObservableObject {
     }
 
     func isPending(_ tip: FeatureTip) -> Bool {
-        !isFinished(tip) && defaults.integer(forKey: key(tip, "shows")) < Self.maxShows
+        #if DEBUG
+        // Keeps tips out of screenshots.
+        if DemoDataset(arguments: ProcessInfo.processInfo.arguments) != nil {
+            return false
+        }
+        #endif
+        return !isFinished(tip) && defaults.integer(forKey: key(tip, "shows")) < Self.maxShows
     }
 
     func recordShow(_ tip: FeatureTip) {
