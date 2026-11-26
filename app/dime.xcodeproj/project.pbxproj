@@ -15,6 +15,24 @@
 		A110F00A2F0C000000A110F0 /* Allo-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A110F0082F0C000000A110F0 /* Allo-SemiBold.ttf */; };
 		A110F00C2F0C000000A110F0 /* Allo-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A110F00B2F0C000000A110F0 /* Allo-Bold.ttf */; };
 		A110F00D2F0C000000A110F0 /* Allo-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A110F00B2F0C000000A110F0 /* Allo-Bold.ttf */; };
+		A110F1112F0C000000A110F0 /* AtkinsonHyperlegibleNext-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A110F1102F0C000000A110F0 /* AtkinsonHyperlegibleNext-Regular.ttf */; };
+		A110F1122F0C000000A110F0 /* AtkinsonHyperlegibleNext-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A110F1102F0C000000A110F0 /* AtkinsonHyperlegibleNext-Regular.ttf */; };
+		A110F1142F0C000000A110F0 /* AtkinsonHyperlegibleNext-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A110F1132F0C000000A110F0 /* AtkinsonHyperlegibleNext-Medium.ttf */; };
+		A110F1152F0C000000A110F0 /* AtkinsonHyperlegibleNext-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A110F1132F0C000000A110F0 /* AtkinsonHyperlegibleNext-Medium.ttf */; };
+		A110F1172F0C000000A110F0 /* AtkinsonHyperlegibleNext-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A110F1162F0C000000A110F0 /* AtkinsonHyperlegibleNext-SemiBold.ttf */; };
+		A110F1182F0C000000A110F0 /* AtkinsonHyperlegibleNext-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A110F1162F0C000000A110F0 /* AtkinsonHyperlegibleNext-SemiBold.ttf */; };
+		A110F11A2F0C000000A110F0 /* AtkinsonHyperlegibleNext-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A110F1192F0C000000A110F0 /* AtkinsonHyperlegibleNext-Bold.ttf */; };
+		A110F11B2F0C000000A110F0 /* AtkinsonHyperlegibleNext-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A110F1192F0C000000A110F0 /* AtkinsonHyperlegibleNext-Bold.ttf */; };
+		A110F11D2F0C000000A110F0 /* Fraunces-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A110F11C2F0C000000A110F0 /* Fraunces-Regular.ttf */; };
+		A110F11E2F0C000000A110F0 /* Fraunces-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A110F11C2F0C000000A110F0 /* Fraunces-Regular.ttf */; };
+		A110F1202F0C000000A110F0 /* Fraunces-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A110F11F2F0C000000A110F0 /* Fraunces-Medium.ttf */; };
+		A110F1212F0C000000A110F0 /* Fraunces-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A110F11F2F0C000000A110F0 /* Fraunces-Medium.ttf */; };
+		A110F1232F0C000000A110F0 /* Fraunces-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A110F1222F0C000000A110F0 /* Fraunces-SemiBold.ttf */; };
+		A110F1242F0C000000A110F0 /* Fraunces-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A110F1222F0C000000A110F0 /* Fraunces-SemiBold.ttf */; };
+		A110F1262F0C000000A110F0 /* Fraunces-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A110F1252F0C000000A110F0 /* Fraunces-Bold.ttf */; };
+		A110F1272F0C000000A110F0 /* Fraunces-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A110F1252F0C000000A110F0 /* Fraunces-Bold.ttf */; };
+		A110F1292F0C000000A110F0 /* GeistPixel-Square.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A110F1282F0C000000A110F0 /* GeistPixel-Square.ttf */; };
+		A110F12A2F0C000000A110F0 /* GeistPixel-Square.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A110F1282F0C000000A110F0 /* GeistPixel-Square.ttf */; };
 		06140E274FB53425F119BF72 /* SettingsExchangeRatesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B951DE42184DFACEAECA4504 /* SettingsExchangeRatesView.swift */; };
 		09C6994AECA68B95CABE5AAB /* CurrencyPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 032CF5BD18809C03DAAA5FF2 /* CurrencyPreferences.swift */; };
 		0D95DE86C1FF58444537CF7C /* StoreSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C2F4C180CD6273FAE74092C /* StoreSnapshot.swift */; };
@@ -280,6 +298,18 @@
 		A110F0082F0C000000A110F0 /* Allo-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Allo-SemiBold.ttf"; sourceTree = "<group>"; };
 		A110F00B2F0C000000A110F0 /* Allo-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Allo-Bold.ttf"; sourceTree = "<group>"; };
 		A110F00E2F0C000000A110F0 /* Allo-OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Allo-OFL.txt"; sourceTree = "<group>"; };
+		A110F1102F0C000000A110F0 /* AtkinsonHyperlegibleNext-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "AtkinsonHyperlegibleNext-Regular.ttf"; sourceTree = "<group>"; };
+		A110F1132F0C000000A110F0 /* AtkinsonHyperlegibleNext-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "AtkinsonHyperlegibleNext-Medium.ttf"; sourceTree = "<group>"; };
+		A110F1162F0C000000A110F0 /* AtkinsonHyperlegibleNext-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "AtkinsonHyperlegibleNext-SemiBold.ttf"; sourceTree = "<group>"; };
+		A110F1192F0C000000A110F0 /* AtkinsonHyperlegibleNext-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "AtkinsonHyperlegibleNext-Bold.ttf"; sourceTree = "<group>"; };
+		A110F11C2F0C000000A110F0 /* Fraunces-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Fraunces-Regular.ttf"; sourceTree = "<group>"; };
+		A110F11F2F0C000000A110F0 /* Fraunces-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Fraunces-Medium.ttf"; sourceTree = "<group>"; };
+		A110F1222F0C000000A110F0 /* Fraunces-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Fraunces-SemiBold.ttf"; sourceTree = "<group>"; };
+		A110F1252F0C000000A110F0 /* Fraunces-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Fraunces-Bold.ttf"; sourceTree = "<group>"; };
+		A110F1282F0C000000A110F0 /* GeistPixel-Square.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "GeistPixel-Square.ttf"; sourceTree = "<group>"; };
+		A110F12B2F0C000000A110F0 /* AtkinsonHyperlegibleNext-OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "AtkinsonHyperlegibleNext-OFL.txt"; sourceTree = "<group>"; };
+		A110F12C2F0C000000A110F0 /* Fraunces-OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Fraunces-OFL.txt"; sourceTree = "<group>"; };
+		A110F12D2F0C000000A110F0 /* GeistPixel-OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "GeistPixel-OFL.txt"; sourceTree = "<group>"; };
 		032CF5BD18809C03DAAA5FF2 /* CurrencyPreferences.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CurrencyPreferences.swift; sourceTree = "<group>"; };
 		08D342B5C70E676C4D289814 /* CSVCurrencyTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CSVCurrencyTests.swift; sourceTree = "<group>"; };
 		1427F27CEB06BEEEB431857A /* CurrencyConverterTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CurrencyConverterTests.swift; sourceTree = "<group>"; };
@@ -524,6 +554,18 @@
 				A110F0082F0C000000A110F0 /* Allo-SemiBold.ttf */,
 				A110F00B2F0C000000A110F0 /* Allo-Bold.ttf */,
 				A110F00E2F0C000000A110F0 /* Allo-OFL.txt */,
+				A110F1102F0C000000A110F0 /* AtkinsonHyperlegibleNext-Regular.ttf */,
+				A110F1132F0C000000A110F0 /* AtkinsonHyperlegibleNext-Medium.ttf */,
+				A110F1162F0C000000A110F0 /* AtkinsonHyperlegibleNext-SemiBold.ttf */,
+				A110F1192F0C000000A110F0 /* AtkinsonHyperlegibleNext-Bold.ttf */,
+				A110F11C2F0C000000A110F0 /* Fraunces-Regular.ttf */,
+				A110F11F2F0C000000A110F0 /* Fraunces-Medium.ttf */,
+				A110F1222F0C000000A110F0 /* Fraunces-SemiBold.ttf */,
+				A110F1252F0C000000A110F0 /* Fraunces-Bold.ttf */,
+				A110F1282F0C000000A110F0 /* GeistPixel-Square.ttf */,
+				A110F12B2F0C000000A110F0 /* AtkinsonHyperlegibleNext-OFL.txt */,
+				A110F12C2F0C000000A110F0 /* Fraunces-OFL.txt */,
+				A110F12D2F0C000000A110F0 /* GeistPixel-OFL.txt */,
 			);
 			path = Fonts;
 			sourceTree = "<group>";
@@ -1073,6 +1115,15 @@
 				A110F0062F0C000000A110F0 /* Allo-Medium.ttf in Resources */,
 				A110F0092F0C000000A110F0 /* Allo-SemiBold.ttf in Resources */,
 				A110F00C2F0C000000A110F0 /* Allo-Bold.ttf in Resources */,
+				A110F1112F0C000000A110F0 /* AtkinsonHyperlegibleNext-Regular.ttf in Resources */,
+				A110F1142F0C000000A110F0 /* AtkinsonHyperlegibleNext-Medium.ttf in Resources */,
+				A110F1172F0C000000A110F0 /* AtkinsonHyperlegibleNext-SemiBold.ttf in Resources */,
+				A110F11A2F0C000000A110F0 /* AtkinsonHyperlegibleNext-Bold.ttf in Resources */,
+				A110F11D2F0C000000A110F0 /* Fraunces-Regular.ttf in Resources */,
+				A110F1202F0C000000A110F0 /* Fraunces-Medium.ttf in Resources */,
+				A110F1232F0C000000A110F0 /* Fraunces-SemiBold.ttf in Resources */,
+				A110F1262F0C000000A110F0 /* Fraunces-Bold.ttf in Resources */,
+				A110F1292F0C000000A110F0 /* GeistPixel-Square.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1088,6 +1139,15 @@
 				A110F0072F0C000000A110F0 /* Allo-Medium.ttf in Resources */,
 				A110F00A2F0C000000A110F0 /* Allo-SemiBold.ttf in Resources */,
 				A110F00D2F0C000000A110F0 /* Allo-Bold.ttf in Resources */,
+				A110F1122F0C000000A110F0 /* AtkinsonHyperlegibleNext-Regular.ttf in Resources */,
+				A110F1152F0C000000A110F0 /* AtkinsonHyperlegibleNext-Medium.ttf in Resources */,
+				A110F1182F0C000000A110F0 /* AtkinsonHyperlegibleNext-SemiBold.ttf in Resources */,
+				A110F11B2F0C000000A110F0 /* AtkinsonHyperlegibleNext-Bold.ttf in Resources */,
+				A110F11E2F0C000000A110F0 /* Fraunces-Regular.ttf in Resources */,
+				A110F1212F0C000000A110F0 /* Fraunces-Medium.ttf in Resources */,
+				A110F1242F0C000000A110F0 /* Fraunces-SemiBold.ttf in Resources */,
+				A110F1272F0C000000A110F0 /* Fraunces-Bold.ttf in Resources */,
+				A110F12A2F0C000000A110F0 /* GeistPixel-Square.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
