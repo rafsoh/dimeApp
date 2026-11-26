@@ -28,6 +28,9 @@ struct dimeApp: App {
     }
 
     init() {
+        // Before the store opens, so a migration failure is reported with the crash that follows it.
+        SentryBootstrap.start()
+
         let dataController = DataController.shared
 //        let dataController = DataController()
         let unlockManager = UnlockManager(dataController: dataController)
