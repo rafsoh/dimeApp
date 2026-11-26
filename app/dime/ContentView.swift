@@ -32,6 +32,7 @@ struct ContentView: View {
     @State var showWhatsNew: Bool = false
     @State var whatsNewPending: Bool = false
     @State var whatsNewReleases: [WhatsNewRelease] = []
+    @State var showAccountsIntro: Bool = false
 
     var center = UNUserNotificationCenter.current()
 
@@ -51,6 +52,10 @@ struct ContentView: View {
                 }
                 .sheet(isPresented: $showWhatsNew) {
                     WhatsNewSheet(releases: whatsNewReleases)
+                }
+                .sheet(isPresented: $showAccountsIntro) {
+                    AccountsIntroSheet()
+                        .environmentObject(dataController)
                 }
                 .onAppear {
                     savedTopEdge = topEdge
@@ -91,6 +96,8 @@ struct ContentView: View {
                 showIntro = true
                 firstLaunch = false
                 WhatsNew.markSeen()
+                // Onboarding has its own accounts step.
+                AccountsIntro.markSeen()
 
                 // Fresh installs have no legacy data, and running these on categories that are still
                 // arriving from iCloud would overwrite the user's order and colours on every device.
@@ -159,7 +166,7 @@ struct ContentView: View {
             }
 
             whatsNewReleases = WhatsNew.unseenReleases
-            whatsNewPending = !whatsNewReleases.isEmpty
+            whatsNewPending = !whatsNewReleases.isEmpty || !AccountsIntro.isSeen
             presentWhatsNewIfReady()
 
             center.getNotificationSettings { settings in
@@ -231,7 +238,7 @@ struct ContentView: View {
 
     /// Waits for the lock screen and any restore offer, since the sheet would cover the first and block the second.
     func presentWhatsNewIfReady() {
-        guard whatsNewPending, !showIntro, !showWhatsNew, backupManager.suggestedRestore == nil, !appLockVM.isAppLockEnabled || appLockVM.isAppUnLocked else {
+        guard whatsNewPending, !showIntro, !showWhatsNew, !showAccountsIntro, backupManager.suggestedRestore == nil, !appLockVM.isAppLockEnabled || appLockVM.isAppUnLocked else {
             return
         }
 
@@ -243,6 +250,19 @@ struct ContentView: View {
                 whatsNewPending = true
                 return
             }
+
+            // Accounts get their own sheet, ahead of the release notes, which wait for the next launch
+            // rather than following straight after. Anyone who already has accounts, say from another
+            // device, has found them.
+            if !AccountsIntro.isSeen {
+                AccountsIntro.markSeen()
+                if dataController.accountCount() == 0 {
+                    showAccountsIntro = true
+                    return
+                }
+            }
+
+            guard !whatsNewReleases.isEmpty else { return }
             WhatsNew.markSeen()
             showWhatsNew = true
         }

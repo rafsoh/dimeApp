@@ -537,3 +537,5 @@
 
 "Font" = "Шрифт";
 "Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo — шрифт Джоша Пакетта, распространяется по лицензии SIL Open Font License.";
+"Keep cash, cards and savings apart" = "Разделяйте наличные, карты и сбережения";
+"Everything you've logged so far is in %@. Tap it to rename it, or add an account below." = "Всё, что вы записали до сих пор, находится в «%@». Нажмите, чтобы переименовать, или добавьте счёт ниже.";

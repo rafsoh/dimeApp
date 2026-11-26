@@ -43,7 +43,10 @@ struct HomeView: View {
 
     @ViewBuilder
     private func debugAccountsSheet(_ mode: String) -> some View {
-        if #available(iOS 16.0, *) {
+        if mode == "intro" {
+            AccountsIntroSheet()
+                .environmentObject(dataController)
+        } else if #available(iOS 16.0, *) {
             NavigationStack {
                 AccountsView(mode: mode == "welcome" ? .welcome : .settings)
             }

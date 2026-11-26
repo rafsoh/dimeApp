@@ -26,7 +26,47 @@ enum AccountSymbol {
 }
 
 enum AccountsViewMode {
-    case settings, welcome
+    /// In Settings; in onboarding, after categories; and once, as a half sheet, for people updating from before accounts.
+    case settings, welcome, announcement
+}
+
+// MARK: - Announcement
+
+/// Introduces accounts, once, to people who used Dime before them. New installs meet accounts in onboarding instead.
+enum AccountsIntro {
+    private static let seenKey = "accountsIntroSeen"
+
+    private static var defaults: UserDefaults {
+        UserDefaults(suiteName: "group.com.rafaelsoh.dime") ?? .standard
+    }
+
+    static var isSeen: Bool {
+        defaults.bool(forKey: seenKey)
+    }
+
+    static func markSeen() {
+        defaults.set(true, forKey: seenKey)
+    }
+}
+
+/// The accounts list as a half sheet, with a note above it saying what's new; it can be pulled up to full height.
+struct AccountsIntroSheet: View {
+    @EnvironmentObject var dataController: DataController
+
+    var body: some View {
+        if #available(iOS 16.0, *) {
+            NavigationStack {
+                AccountsView(mode: .announcement)
+            }
+            .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.visible)
+        } else {
+            NavigationView {
+                AccountsView(mode: .announcement)
+            }
+            .navigationViewStyle(.stack)
+        }
+    }
 }
 
 // MARK: - Onboarding
@@ -88,7 +128,7 @@ struct AccountsView: View {
         case .settings:
             content
                 .modifier(SettingsPageHeader(title: "Accounts"))
-        case .welcome:
+        case .welcome, .announcement:
             content
                 .navigationTitle(Text("Accounts"))
                 .navigationBarTitleDisplayMode(.inline)
@@ -156,6 +196,10 @@ struct AccountsView: View {
 
     @ViewBuilder private var list: some View {
         let list = List {
+            if mode == .announcement {
+                announcement
+            }
+
             Section {
                 row(name: MainAccount.name, isMain: true)
                     .moveDisabled(true)
@@ -220,6 +264,39 @@ struct AccountsView: View {
                 .scrollIndicators(.hidden)
         } else {
             list
+        }
+    }
+
+    /// Shown only in the announcement sheet: what accounts are for, and that nothing logged so far has moved.
+    private var announcement: some View {
+        Section {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("New")
+                    .font(.app(.caption, weight: .bold))
+                    .textCase(.uppercase)
+                    .foregroundColor(Color.IncomeGreen)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(Capsule().fill(Color.IncomeGreen.opacity(0.14)))
+                    .accessibilityHidden(true)
+
+                Text("Keep cash, cards and savings apart")
+                    .font(.app(.title3, weight: .semibold))
+                    .foregroundColor(Color.PrimaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text("Everything you've logged so far is in \(MainAccount.name). Tap it to rename it, or add an account below.")
+                    .font(.app(.subheadline))
+                    .foregroundColor(Color.SubtitleText)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.bottom, 4)
+            .listRowInsets(EdgeInsets(top: 0, leading: .settingsRowInset, bottom: 0, trailing: .settingsRowInset))
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .accessibilityElement(children: .combine)
         }
     }
 
