@@ -56,7 +56,7 @@ The empty-store and below-backup issues are sent once per app version so a launc
 
 Release builds of the `dime` target run `app/scripts/upload-dsyms.sh` after the other build phases. The script does nothing unless `CONFIGURATION` is `Release` and `SENTRY_AUTH_TOKEN` is set. When both are set, a missing `sentry-cli` or a failed upload fails the build so a release cannot ship without symbols by accident. Debug builds, including CI tests, skip the upload.
 
-Create a Sentry auth token with `project:releases` and `org:read`, then expose it as `SENTRY_AUTH_TOKEN`. Do not commit the token, and do not put it in the build phase. `.sentryclirc` is gitignored.
+Create a Sentry organization token (scope `org:ci`) in Settings > Organization Tokens, then expose it as `SENTRY_AUTH_TOKEN`. `scripts/testflight.sh` sources `~/.appstoreconnect/testflight.env`, so an `export SENTRY_AUTH_TOKEN=...` line there reaches the archive. Do not commit the token, and do not put it in the build phase. `.sentryclirc` is gitignored.
 
 Install the CLI on the machine that archives:
 

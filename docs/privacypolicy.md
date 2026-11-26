@@ -14,7 +14,16 @@ For a better experience, while using our Service, I may require you to provide u
 
 **Log Data**
 
-I want to inform you that whenever you use my Service, in a case of an error in the app I collect data and information (through third-party products) on your phone called Log Data. This Log Data may include information such as your device Internet Protocol (“IP”) address, device name, operating system version, the configuration of the app when utilizing my Service, the time and date of your use of the Service, and other statistics.
+Your transactions, categories, budgets and notes stay on your device and in your own iCloud account. I cannot see them.
+
+When the app crashes, freezes, or detects that data may have gone missing, it sends a diagnostic report to [Sentry](https://sentry.io), a crash reporting service. A report can include:
+
+*   The stack trace and error codes
+*   The app version, operating system version and device model
+*   Counts and sizes, such as how many transactions were in the store before and after an update
+*   Performance timings for app launch, from about one in ten launches
+
+Reports never include your transaction amounts, notes, dates, currencies, category names, budget names or any other text you type. They also don't include your name, Apple ID, device name, advertising identifier, or screenshots of the app. IP addresses are not stored, and reports are not linked to you or used for tracking or advertising.
 
 **Cookies**
 
@@ -49,7 +58,7 @@ I do not knowingly collect personally identifiable information from children. I 
 
 I may update our Privacy Policy from time to time. Thus, you are advised to review this page periodically for any changes. I will notify you of any changes by posting the new Privacy Policy on this page.
 
-This policy is effective as of 2022-08-30
+This policy is effective as of 2026-11-25
 
 **Contact Us**
 

@@ -1,17 +1,8 @@
-Nouveautés de Dime 3.0.1
+Nouveautés de Dime 3.0.2
 
-• Plusieurs devises : touchez le symbole de la devise pour saisir dans n’importe quelle devise. Les totaux sont convertis dans votre devise principale au taux de chaque jour.
-• Ajout rapide : enregistrez jusqu’à 4 modèles dans Réglages, puis saisissez-les d’un toucher depuis le nouveau widget Ajout rapide, sans ouvrir Dime.
-• Rappels de prélèvements à venir : soyez prévenu avant qu’une dépense récurrente soit ajoutée à votre historique.
-• Nouveau bouton Nouvelle dépense pour le centre de contrôle, l’écran verrouillé et le bouton Action.
-• La catégorie est désormais facultative : saisissez une transaction sans catégorie, elle s’affiche comme Dépense ou Revenu.
-• Commencez votre semaine le jour de votre choix.
-• Exportez une période : choisissez les dates à inclure avant d’exporter.
-• Catégories de dépenses illimitées, dans l’ordre de votre choix.
-• Recherchez par montant, même avec un symbole de devise ou des séparateurs.
-• Dime est désormais disponible en français et en russe.
-
-Corrections
-• Vous pouvez maintenant ajouter une catégorie même si le clavier emoji n’est pas activé.
-• Saisir une note sur l’iPhone Duo ne déplace plus l’écran d’ajout.
-• Petites corrections de mise en page dans Réglages.
+• Report de budget : ce qui reste d'un budget, ou ce que vous avez dépassé, est reporté sur la période suivante. Activez-le en créant ou en modifiant un budget.
+• Les modèles d'Ajout rapide s'affichent désormais dans une grille au style du widget. Maintenez un modèle et faites-le glisser pour le réorganiser.
+• Lorsque vous supprimez une catégorie, Dime vous demande de déplacer ses transactions vers une autre catégorie ou de les supprimer.
+• Nouvelles polices dans Paramètres > Apparence : SF Pro, Allo, Atkinson Hyperlegible, Fraunces et Geist Pixel.
+• Dime est désormais disponible en espagnol, allemand, portugais, italien, néerlandais, turc, japonais, coréen et chinois (simplifié et traditionnel).
+• Des rapports de plantage anonymes aident à trouver et corriger les bugs. Ils n'incluent jamais vos transactions, montants, notes ou catégories.
