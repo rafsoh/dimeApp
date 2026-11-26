@@ -7,3 +7,6 @@ xcuserdata/
 
 ## MacOS
 .DS_Store
+
+## Sentry auth. The public DSN is committed; the upload token is not.
+.sentryclirc

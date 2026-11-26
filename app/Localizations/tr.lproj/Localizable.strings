@@ -515,5 +515,13 @@
 "Add %@" = "%@ ekle";
 "Show all accounts" = "Tüm hesapları göster";
 "Account filter" = "Hesap filtresi";
+/* Delete category */
+"%@ has 1 transaction. What should happen to it?" = "%@ kategorisinde 1 işlem var. Ne yapılsın?";
+"%@ has %lld transactions. What should happen to them?" = "%@ kategorisinde %lld işlem var. Ne yapılsın?";
+"Move to" = "Şuraya taşı";
+"Delete it" = "Sil";
+"Delete them" = "Hepsini sil";
+"Delete Category" = "Kategoriyi sil";
+
 "Font" = "Yazı Tipi";
 "Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo, Josh Puckett'ın SIL Open Font License ile lisanslanan yazı tipidir.";

@@ -515,5 +515,13 @@
 "Add %@" = "添加%@";
 "Show all accounts" = "显示所有账户";
 "Account filter" = "账户筛选";
+/* Delete category */
+"%@ has 1 transaction. What should happen to it?" = "“%@”中有 1 笔交易。要如何处理？";
+"%@ has %lld transactions. What should happen to them?" = "“%@”中有 %lld 笔交易。要如何处理？";
+"Move to" = "移至";
+"Delete it" = "删除";
+"Delete them" = "全部删除";
+"Delete Category" = "删除类别";
+
 "Font" = "字体";
 "Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo 是 Josh Puckett 设计的字体，采用 SIL Open Font License 授权。";

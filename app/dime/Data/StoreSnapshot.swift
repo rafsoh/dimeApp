@@ -13,10 +13,72 @@ enum StoreSnapshot {
         case unknownSourceModel
     }
 
+    private final class CountBox {
+        var values: [String: Int] = [:]
+        var failed = false
+    }
+
     static let maximumCount = 3
 
     static func directory(forStoreAt storeURL: URL) -> URL {
         storeURL.deletingLastPathComponent().appendingPathComponent("PreMigrationSnapshots", isDirectory: true)
+    }
+
+    /// The model the file was written with, when one of the shipped versions matches its metadata.
+    static func sourceModel(forStoreAt storeURL: URL, among models: [NSManagedObjectModel] = modelVersions()) -> NSManagedObjectModel? {
+        guard FileManager.default.fileExists(atPath: storeURL.path),
+              let metadata = try? NSPersistentStoreCoordinator.metadataForPersistentStore(ofType: NSSQLiteStoreType, at: storeURL)
+        else {
+            return nil
+        }
+
+        return models.first { $0.isConfiguration(withName: nil, compatibleWithStoreMetadata: metadata) }
+    }
+
+    /// Counts rows without migrating. The model has to be one the file can open as-is.
+    /// Keys are fixed (`transactions`, `categories`, …) and values are counts, never record contents.
+    static func recordCounts(storeAt storeURL: URL, model: NSManagedObjectModel) -> [String: Int]? {
+        let names = [
+            "Transaction": "transactions",
+            "Category": "categories",
+            "Budget": "budgets",
+            "MainBudget": "mainBudgets",
+            "TemplateTransaction": "templates"
+        ]
+        let coordinator = NSPersistentStoreCoordinator(managedObjectModel: model)
+
+        do {
+            let store = try coordinator.addPersistentStore(
+                ofType: NSSQLiteStoreType,
+                configurationName: nil,
+                at: storeURL,
+                options: [
+                    NSReadOnlyPersistentStoreOption: true as NSNumber,
+                    NSMigratePersistentStoresAutomaticallyOption: false as NSNumber,
+                    NSInferMappingModelAutomaticallyOption: false as NSNumber
+                ]
+            )
+            defer { try? coordinator.remove(store) }
+
+            let context = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
+            context.persistentStoreCoordinator = coordinator
+            let counts = CountBox()
+
+            context.performAndWait {
+                for (entityName, key) in names where model.entitiesByName[entityName] != nil {
+                    let request = NSFetchRequest<NSManagedObject>(entityName: entityName)
+                    do {
+                        counts.values[key] = try context.count(for: request)
+                    } catch {
+                        counts.failed = true
+                    }
+                }
+            }
+
+            return counts.failed ? nil : counts.values
+        } catch {
+            return nil
+        }
     }
 
     static func needsMigration(storeAt storeURL: URL, to model: NSManagedObjectModel) -> Bool {

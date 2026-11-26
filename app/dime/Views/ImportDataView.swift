@@ -794,6 +794,7 @@ struct ImportDataView: View {
 
         isImporting = true
         advance(to: .finished)
+        let transactionsBefore = dataController.transactionCount()
 
         // Lets the progress view appear before the main thread is busy.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
@@ -882,6 +883,15 @@ struct ImportDataView: View {
 
             dataController.save()
             dataController.refreshExchangeRates()
+            DataIntegrityLog.breadcrumb(
+                "csv import finished",
+                numbers: [
+                    "rows": rows.count,
+                    "categoriesCreated": created.count,
+                    "transactionsBefore": transactionsBefore,
+                    "transactionsAfter": dataController.transactionCount()
+                ]
+            )
 
             importedCount = rows.count
             UINotificationFeedbackGenerator().notificationOccurred(.success)

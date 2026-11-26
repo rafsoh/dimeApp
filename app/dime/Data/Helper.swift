@@ -18,6 +18,14 @@ enum Uncategorised {
     }
 }
 
+/// What happens to a deleted category's transactions and Quick Add templates.
+enum DeleteCategoryFate: Equatable {
+    /// Move them to another category of the same kind, or leave them without one when nil.
+    case move(to: Category?)
+    /// Delete them along with the category.
+    case delete
+}
+
 extension Transaction {
     var wrappedAmount: Double {
         amount

@@ -527,5 +527,13 @@
 "Add %@" = "Ajouter %@";
 "Show all accounts" = "Afficher tous les comptes";
 "Account filter" = "Filtre de compte";
+/* Delete category */
+"%@ has 1 transaction. What should happen to it?" = "%@ contient 1 transaction. Que faut-il en faire ?";
+"%@ has %lld transactions. What should happen to them?" = "%@ contient %lld transactions. Que faut-il en faire ?";
+"Move to" = "Déplacer vers";
+"Delete it" = "La supprimer";
+"Delete them" = "Les supprimer";
+"Delete Category" = "Supprimer la catégorie";
+
 "Font" = "Police";
 "Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo est une police de Josh Puckett, sous licence SIL Open Font License.";

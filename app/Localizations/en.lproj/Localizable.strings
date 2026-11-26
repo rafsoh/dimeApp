@@ -529,5 +529,13 @@
 "Add %@" = "Add %@";
 "Show all accounts" = "Show all accounts";
 "Account filter" = "Account filter";
+/* Delete category */
+"%@ has 1 transaction. What should happen to it?" = "%@ has 1 transaction. What should happen to it?";
+"%@ has %lld transactions. What should happen to them?" = "%@ has %lld transactions. What should happen to them?";
+"Move to" = "Move to";
+"Delete it" = "Delete it";
+"Delete them" = "Delete them";
+"Delete Category" = "Delete Category";
+
 "Font" = "Font";
 "Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License.";
