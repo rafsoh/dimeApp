@@ -133,6 +133,18 @@ struct AccountsView: View {
                 .navigationTitle(Text("Accounts"))
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
+                    // A half sheet has no room for a floating button over its list, so New moves up here.
+                    if mode == .announcement {
+                        ToolbarItem(placement: .navigationBarLeading) {
+                            Button {
+                                editing = .new
+                            } label: {
+                                Label("New Account", systemImage: "plus")
+                            }
+                            .prominentToolbarButton(tint: Color.PrimaryText, isProminent: false)
+                        }
+                    }
+
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button {
                             if let finishOnboarding {
@@ -153,28 +165,30 @@ struct AccountsView: View {
     private var content: some View {
         list
             .bottomBar {
-                HStack(spacing: 12) {
-                    Spacer(minLength: 0)
+                if mode != .announcement {
+                    HStack(spacing: 12) {
+                        Spacer(minLength: 0)
 
-                    Button {
-                        editing = .new
-                    } label: {
-                        Label("New", systemImage: "plus")
-                            .font(.app(.body, weight: .semibold))
-                            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                            .lineLimit(1)
-                            .foregroundColor(Color.PrimaryText)
-                            .padding(.horizontal, 18)
-                            .frame(height: 44)
-                            .contentShape(Capsule())
+                        Button {
+                            editing = .new
+                        } label: {
+                            Label("New", systemImage: "plus")
+                                .font(.app(.body, weight: .semibold))
+                                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                                .lineLimit(1)
+                                .foregroundColor(Color.PrimaryText)
+                                .padding(.horizontal, 18)
+                                .frame(height: 44)
+                                .contentShape(Capsule())
+                        }
+                        .buttonStyle(.plain)
+                        .glassBackground(in: Capsule(), tint: .glassTint)
+                        .accessibilityLabel("New Account")
                     }
-                    .buttonStyle(.plain)
-                    .glassBackground(in: Capsule(), tint: .glassTint)
-                    .accessibilityLabel("New Account")
+                    .padding(.horizontal, .settingsPageInset)
+                    .padding(.top, 8)
+                    .padding(.bottom, 12)
                 }
-                .padding(.horizontal, .settingsPageInset)
-                .padding(.top, 8)
-                .padding(.bottom, 12)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .ignoresSafeArea(.keyboard, edges: .all)
