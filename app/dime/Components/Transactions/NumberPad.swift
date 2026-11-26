@@ -83,7 +83,7 @@ struct NumberPad: View {
                             isEditingDecimal = true
                         } label: {
                             Text(".")
-                                .font(.system(size: 34, weight: .regular, design: .rounded))
+                                .font(.app(size: 34, weight: .regular))
                                 .foregroundColor(Color.PrimaryText)
                                 .keyFrame(size: proxy.size)
                                 .glassBackground(in: keyShape(size: proxy.size), tint: Color.glassTint)
@@ -101,11 +101,11 @@ struct NumberPad: View {
                         Group {
                             if #available(iOS 17.0, *) {
                                 Image(systemName: "checkmark")
-                                    .font(.system(size: 28, weight: .semibold, design: .rounded))
+                                    .font(.app(size: 28, weight: .semibold))
                                     .symbolEffect(.bounce.up.byLayer, value: price != 0)
                             } else {
                                 Image(systemName: "checkmark")
-                                    .font(.system(size: 28, weight: .semibold, design: .rounded))
+                                    .font(.app(size: 28, weight: .semibold))
                             }
                         }
                         .foregroundColor(Color.LightIcon)
@@ -223,7 +223,7 @@ struct NumberPad: View {
             }
         } label: {
             Text("\(number)")
-                .font(.system(size: 34, weight: .regular, design: .rounded))
+                .font(.app(size: 34, weight: .regular))
                 .foregroundColor(Color.PrimaryText)
                 .keyFrame(size: size)
                 .glassBackground(in: keyShape(size: size), tint: Color.glassTint)
@@ -344,7 +344,7 @@ struct NumberPadTextView: View {
             }
 
             Text(amount)
-                .font(.system(size: largerFontSize, weight: .regular, design: .rounded))
+                .font(.app(size: largerFontSize, weight: .regular))
                 .foregroundColor(Color.PrimaryText)
         }
         .minimumScaleFactor(0.5)
@@ -361,7 +361,7 @@ struct NumberPadTextView: View {
 
     var symbolText: some View {
         Text(currencySymbol)
-            .font(.system(size: largerFontSize, weight: .regular, design: .rounded))
+            .font(.app(size: largerFontSize, weight: .regular))
             .foregroundColor(Color.SubtitleText)
     }
 

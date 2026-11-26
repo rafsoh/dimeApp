@@ -44,23 +44,23 @@ struct SettingsNumberEntryView: View {
       VStack(spacing: 10) {
         if numberEntryType == 1 {
           Text("\"Pre-dotted\"")
-            .font(.system(.title2, design: .rounded).weight(.semibold))
+            .font(.app(.title2, weight: .semibold))
             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
             .foregroundColor(Color.PrimaryText)
 
           Text("If you're too lazy to add a decimal point, I gotchu covered.")
-            .font(.system(.subheadline, design: .rounded).weight(.medium))
+            .font(.app(.subheadline, weight: .medium))
             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
             .multilineTextAlignment(.center)
             .foregroundColor(Color.SubtitleText)
         } else {
           Text("\"Cent-less\"")
-            .font(.system(.title2, design: .rounded).weight(.semibold))
+            .font(.app(.title2, weight: .semibold))
             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
             .foregroundColor(Color.PrimaryText)
 
           Text("If your transactions usually amount to whole numbers - this one is for you.")
-            .font(.system(.subheadline, design: .rounded).weight(.medium))
+            .font(.app(.subheadline, weight: .medium))
             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
             .multilineTextAlignment(.center)
             .foregroundColor(Color.SubtitleText)

@@ -97,7 +97,7 @@ struct WhatsNewSheet: View {
                             .accessibilityHidden(true)
 
                         Text("What's New in Dime")
-                            .font(.system(.largeTitle, design: .rounded).weight(.bold))
+                            .font(.app(.largeTitle, weight: .bold))
                             .foregroundColor(Color.PrimaryText)
                             .multilineTextAlignment(.center)
                             .accessibilityAddTraits(.isHeader)
@@ -133,7 +133,7 @@ struct WhatsNewSheet: View {
                 dismiss()
             } label: {
                 Text("Continue")
-                    .font(.system(.headline, design: .rounded))
+                    .font(.app(.headline))
                     .foregroundColor(.black)
                     .frame(maxWidth: .infinity)
                     .frame(height: 50)
@@ -159,7 +159,7 @@ struct WhatsNewSheet: View {
 
     private func versionText(_ release: WhatsNewRelease) -> some View {
         Text("Version \(release.version)")
-            .font(.system(.callout, design: .rounded).weight(.medium))
+            .font(.app(.callout, weight: .medium))
             .foregroundColor(Color.SubtitleText)
     }
 
@@ -174,11 +174,11 @@ struct WhatsNewSheet: View {
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(LocalizedStringKey(feature.title))
-                    .font(.system(.title3, design: .rounded).weight(.semibold))
+                    .font(.app(.title3, weight: .semibold))
                     .foregroundColor(Color.PrimaryText)
 
                 Text(LocalizedStringKey(feature.subtitle))
-                    .font(.system(.body, design: .rounded))
+                    .font(.app(.body))
                     .foregroundColor(Color.SubtitleText)
                     .fixedSize(horizontal: false, vertical: true)
             }

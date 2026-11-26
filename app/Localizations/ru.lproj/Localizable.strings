@@ -492,3 +492,5 @@
 "The new amount applies from this period on, and earlier periods keep the old one." = "Новая сумма применится с этого периода, а прошлые периоды сохранят прежнюю.";
 "The new reset day applies from this period on, and earlier periods keep the old one." = "Новый день начала применится с этого периода, а прошлые периоды сохранят прежний.";
 "The %@ from earlier periods is kept." = "Уже перенесённый %@ сохранится.";
+"Font" = "Шрифт";
+"Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo — шрифт Джоша Пакетта, распространяется по лицензии SIL Open Font License.";

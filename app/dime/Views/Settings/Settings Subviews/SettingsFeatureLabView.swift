@@ -64,7 +64,7 @@ struct SettingsGoofyView: View {
       //            .background(Color.SettingsBackground, in: RoundedRectangle(cornerRadius: 9))
       //
       //            Text("Enables a chromatic abberation effect on the 'New Transaction' page when a future date is set.")
-      //                .font(.system(size: 12, weight: .medium, design: .rounded))
+      //                .font(.app(size: 12, weight: .medium))
       //                .foregroundColor(Color.SubtitleText)
       //                .padding(.horizontal, 15)
       //                .frame(maxWidth: .infinity, alignment: .leading)
@@ -76,7 +76,7 @@ struct SettingsGoofyView: View {
   func ToggleRow(text: String, bool: Binding<Bool>) -> some View {
     Toggle(isOn: bool.animation()) {
       Text(LocalizedStringKey(text))
-        .font(.system(.body, design: .rounded))
+        .font(.app(.body))
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .foregroundColor(Color.PrimaryText)
     }

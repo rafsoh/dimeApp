@@ -814,7 +814,7 @@ struct InsightsDashboard: View {
                         }
                     }
 
-                    InsightsAmountText(amount: spent, formatter: formatter, font: .system(.largeTitle, design: .rounded).weight(.semibold))
+                    InsightsAmountText(amount: spent, formatter: formatter, font: .app(.largeTitle, weight: .semibold))
 
                     ConversionNote(report: spentReport)
                 }
@@ -840,7 +840,7 @@ struct InsightsDashboard: View {
     func spentLabels(summary: LocalizedStringKey?) -> some View {
         if let summary {
             Text(summary)
-                .font(.system(.subheadline, design: .rounded).weight(.medium))
+                .font(.app(.subheadline, weight: .medium))
                 .foregroundColor(Color.SubtitleText)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
@@ -887,7 +887,7 @@ struct InsightsDashboard: View {
         VStack(alignment: .leading, spacing: 6) {
             InsightsCardTitle(title)
 
-            InsightsAmountText(amount: amount, sign: sign, formatter: formatter, font: .system(.title2, design: .rounded).weight(.semibold))
+            InsightsAmountText(amount: amount, sign: sign, formatter: formatter, font: .app(.title2, weight: .semibold))
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -949,16 +949,16 @@ struct InsightsDashboard: View {
                         Spacer(minLength: 8)
 
                         Text("\(formatter.rounded(monthly * 12))/year")
-                            .font(.system(.subheadline, design: .rounded).weight(.medium))
+                            .font(.app(.subheadline, weight: .medium))
                             .foregroundColor(Color.SubtitleText)
                             .lineLimit(1)
                     }
 
                     HStack(alignment: .firstTextBaseline, spacing: 2) {
-                        InsightsAmountText(amount: monthly, formatter: formatter, font: .system(.title2, design: .rounded).weight(.semibold))
+                        InsightsAmountText(amount: monthly, formatter: formatter, font: .app(.title2, weight: .semibold))
 
                         Text("/month")
-                            .font(.system(.body, design: .rounded).weight(.medium))
+                            .font(.app(.body, weight: .medium))
                             .foregroundColor(Color.SubtitleText)
                             .lineLimit(1)
                     }
@@ -1093,7 +1093,7 @@ struct InsightsChangeLabel: View {
 
     var body: some View {
         (Text(Image(systemName: percent > 0 ? "arrow.up" : "arrow.down")).fontWeight(.semibold) + Text(" \(abs(percent))%"))
-            .font(.system(.subheadline, design: .rounded).weight(.medium))
+            .font(.app(.subheadline, weight: .medium))
             .foregroundColor(tint)
             .lineLimit(1)
             .accessibilityElement(children: .ignore)
@@ -1122,10 +1122,10 @@ struct InsightsCategoryRing: View {
                 onSelect(total.slice)
             }
         }) {
-            InsightsAmountText(amount: categories.reduce(0) { $0 + $1.amount }, formatter: formatter, font: .system(.title, design: .rounded).weight(.semibold))
+            InsightsAmountText(amount: categories.reduce(0) { $0 + $1.amount }, formatter: formatter, font: .app(.title, weight: .semibold))
 
             caption
-                .font(.system(.subheadline, design: .rounded).weight(.medium))
+                .font(.app(.subheadline, weight: .medium))
                 .foregroundColor(Color.SubtitleText)
         }
     }
@@ -1294,19 +1294,19 @@ struct InsightsCategoryRow: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(total.slice.name)
-                    .font(.system(.body, design: .rounded).weight(.medium))
+                    .font(.app(.body, weight: .medium))
                     .foregroundColor(Color.PrimaryText)
                     .lineLimit(1)
 
                 Text("\(share)% of spending")
-                    .font(.system(.subheadline, design: .rounded))
+                    .font(.app(.subheadline))
                     .foregroundColor(Color.SubtitleText)
                     .lineLimit(1)
             }
 
             Spacer(minLength: 8)
 
-            InsightsAmountText(amount: total.amount, formatter: formatter, font: .system(.body, design: .rounded).weight(.medium))
+            InsightsAmountText(amount: total.amount, formatter: formatter, font: .app(.body, weight: .medium))
                 .layoutPriority(1)
         }
         .padding(.horizontal, 16)
@@ -1366,7 +1366,7 @@ struct InsightsTallyList: View {
                         Text(totalText)
                             .layoutPriority(1)
                     }
-                    .font(.system(.callout, design: .rounded).weight(.semibold))
+                    .font(.app(.callout, weight: .semibold))
                     .foregroundColor(Color.SubtitleText)
                     .accessibilityElement(children: .combine)
                     .accessibilityAddTraits(.isHeader)
@@ -1451,7 +1451,7 @@ struct InsightsBarChart: View {
             HStack(spacing: spacing) {
                 ForEach(buckets) { bucket in
                     Text(bucket.label)
-                        .font(.system(.footnote, design: .rounded).weight(.medium))
+                        .font(.app(.footnote, weight: .medium))
                         .foregroundColor(bucket.isCurrent ? Color.PrimaryText : Color.SubtitleText)
                         .fixedSize()
                         .frame(maxWidth: .infinity)
@@ -1478,7 +1478,7 @@ struct InsightsBarChart: View {
                 .offset(y: averageY)
 
             (Text("avg ") + Text(formatter.compact(average)).fontWeight(.semibold))
-                .font(.system(.footnote, design: .rounded).weight(.medium))
+                .font(.app(.footnote, weight: .medium))
                 .foregroundColor(Color.SubtitleText)
                 .lineLimit(1)
                 .fixedSize()
@@ -1561,7 +1561,7 @@ struct InsightsCashFlowChart: View {
             HStack(spacing: 0) {
                 ForEach(Array(points.enumerated()), id: \.element.id) { index, point in
                     Text(showsLabel(index) ? point.label : "")
-                        .font(.system(.footnote, design: .rounded).weight(.medium))
+                        .font(.app(.footnote, weight: .medium))
                         .foregroundColor(isEmphasised(index) ? Color.PrimaryText : Color.SubtitleText)
                         .fixedSize()
                         .frame(maxWidth: .infinity)
@@ -1902,13 +1902,13 @@ struct InsightsSheetSummary<Detail: View>: View {
 
     var body: some View {
         VStack(spacing: 4) {
-            InsightsAmountText(amount: amount, sign: sign, formatter: formatter, font: .system(.title, design: .rounded).weight(.semibold))
+            InsightsAmountText(amount: amount, sign: sign, formatter: formatter, font: .app(.title, weight: .semibold))
 
             detail
 
             if let caption {
                 caption
-                    .font(.system(.subheadline, design: .rounded).weight(.medium))
+                    .font(.app(.subheadline, weight: .medium))
                     .foregroundColor(Color.SubtitleText)
                     .multilineTextAlignment(.center)
             }
@@ -1984,7 +1984,7 @@ struct InsightsCashFlowDetail: View {
                 .frame(width: 8, height: 8)
 
             (Text(title) + Text(" ") + Text(formatter.string(amount)).foregroundColor(Color.PrimaryText))
-                .font(.system(.subheadline, design: .rounded).weight(.medium))
+                .font(.app(.subheadline, weight: .medium))
                 .foregroundColor(Color.SubtitleText)
                 .lineLimit(1)
         }

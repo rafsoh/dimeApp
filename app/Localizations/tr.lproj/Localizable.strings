@@ -480,3 +480,5 @@
 "The new amount applies from this period on, and earlier periods keep the old one." = "Yeni tutar bu dönemden itibaren geçerli olur; önceki dönemler eskisini korur.";
 "The new reset day applies from this period on, and earlier periods keep the old one." = "Yeni başlangıç günü bu dönemden itibaren geçerli olur; önceki dönemler eskisini korur.";
 "The %@ from earlier periods is kept." = "Şimdiye kadar devredilen %@ korunur.";
+"Font" = "Yazı Tipi";
+"Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo, Josh Puckett'ın SIL Open Font License ile lisanslanan yazı tipidir.";

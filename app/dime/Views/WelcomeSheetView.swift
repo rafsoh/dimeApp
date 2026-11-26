@@ -47,11 +47,11 @@ struct WelcomeSheetView: View {
                             .padding(.bottom, 18)
 
                         Text("dime_name")
-                            .font(.system(.largeTitle, design: .rounded).weight(.bold))
+                            .font(.app(.largeTitle, weight: .bold))
                             .foregroundColor(Color.PrimaryText)
 
                         Text("Version \(UIApplication.appVersion ?? "") (\(UIApplication.buildNumber ?? ""))")
-                            .font(.system(.callout, design: .rounded).weight(.medium))
+                            .font(.app(.callout, weight: .medium))
                             .foregroundColor(Color.SubtitleText)
                     }
                     .frame(maxWidth: .infinity, alignment: .center)
@@ -68,11 +68,11 @@ struct WelcomeSheetView: View {
 
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(LocalizedStringKey(welcomeFeatures[rowIndex].header))
-                                            .font(.system(.title3, design: .rounded).weight(.semibold))
+                                            .font(.app(.title3, weight: .semibold))
                                             .foregroundColor(Color.PrimaryText)
 
                                         Text(LocalizedStringKey(welcomeFeatures[rowIndex].subtitle))
-                                            .font(.system(.body, design: .rounded))
+                                            .font(.app(.body))
                                             .fixedSize(horizontal: false, vertical: true)
                                             .foregroundColor(Color.SubtitleText)
                                     }
@@ -102,7 +102,7 @@ struct WelcomeSheetView: View {
                         }
                     } label: {
                         Text("Get Started")
-                            .font(.system(.headline, design: .rounded))
+                            .font(.app(.headline))
                             .foregroundColor(.black)
                             .frame(maxWidth: .infinity)
                             .frame(height: 50)

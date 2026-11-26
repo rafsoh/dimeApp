@@ -349,7 +349,7 @@ public struct AlertToast: View {
 
                     Image(systemName: name)
                         .foregroundColor(color)
-                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                        .font(.app(size: 14, weight: .medium))
                         .frame(width: 31, height: 31, alignment: .center)
                         .background(color.opacity(0.23), in: Circle())
                         .onTapGesture {
@@ -369,13 +369,13 @@ public struct AlertToast: View {
                     VStack(alignment: .center, spacing: 1) {
                         if title != nil {
                             Text(LocalizedStringKey(title ?? ""))
-                                .font(.system(size: 14, weight: .medium, design: .rounded))
+                                .font(.app(size: 14, weight: .medium))
                                 .multilineTextAlignment(.center)
                                 .textColor(style?.titleColor ?? nil)
                         }
                         if subTitle != nil {
                             Text(LocalizedStringKey(subTitle ?? ""))
-                                .font(.system(size: 11.5, weight: .medium, design: .rounded))
+                                .font(.app(size: 11.5, weight: .medium))
                                 .opacity(0.7)
                                 .multilineTextAlignment(.center)
                                 .textColor(style?.subtitleColor ?? nil)

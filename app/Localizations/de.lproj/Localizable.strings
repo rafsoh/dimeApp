@@ -480,3 +480,5 @@
 "The new amount applies from this period on, and earlier periods keep the old one." = "Der neue Betrag gilt ab diesem Zeitraum, frühere Zeiträume behalten den alten.";
 "The new reset day applies from this period on, and earlier periods keep the old one." = "Der neue Starttag gilt ab diesem Zeitraum, frühere Zeiträume behalten den alten.";
 "The %@ from earlier periods is kept." = "Der bisher übertragene Betrag (%@) bleibt erhalten.";
+"Font" = "Schrift";
+"Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo ist eine Schrift von Josh Puckett, lizenziert unter der SIL Open Font License.";

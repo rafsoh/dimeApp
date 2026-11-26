@@ -74,7 +74,7 @@ struct BrandNewBudgetView: View {
     @ScaledMetric(relativeTo: .title) private var sentenceSize: CGFloat = 27
 
     private var sentenceFont: Font {
-        .system(size: min(sentenceSize, 33), weight: .semibold, design: .rounded)
+        .app(size: min(sentenceSize, 33), weight: .semibold)
     }
 
     private let editorAnimation = Animation.spring(response: 0.38, dampingFraction: 0.86)
@@ -118,7 +118,7 @@ struct BrandNewBudgetView: View {
 
                     if let perDayHint {
                         Text(perDayHint)
-                            .font(.system(.body, design: .rounded).weight(.medium))
+                            .font(.app(.body, weight: .medium))
                             .foregroundColor(Color.SubtitleText)
                             .transition(.opacity)
                     }
@@ -196,7 +196,7 @@ struct BrandNewBudgetView: View {
             submit()
         } label: {
             Text(editMode ? "Save" : "Create Budget")
-                .font(.system(.headline, design: .rounded))
+                .font(.app(.headline))
                 .foregroundColor(.black)
                 .frame(maxWidth: .infinity)
                 .frame(height: 50)
@@ -1062,7 +1062,7 @@ private struct SentenceTokenButton: View {
             if let clear {
                 Button(action: clear) {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 22, weight: .semibold, design: .rounded))
+                        .font(.app(size: 22, weight: .semibold))
                         .foregroundColor(Color.SubtitleText)
                         .frame(width: 38)
                         .frame(maxHeight: .infinity)
@@ -1199,7 +1199,7 @@ private struct BudgetCategoryGrid: View {
             if categories.isEmpty && overall == nil {
                 VStack(spacing: 16) {
                     Text("no_expense_categories")
-                        .font(.system(.body, design: .rounded).weight(.medium))
+                        .font(.app(.body, weight: .medium))
                         .foregroundColor(Color.SubtitleText)
                         .multilineTextAlignment(.center)
 
@@ -1266,7 +1266,7 @@ private struct BudgetDayGrid: View {
             onPick()
         } label: {
             Text("\(day)")
-                .font(.system(size: 20, weight: isSelected ? .semibold : .regular, design: .rounded))
+                .font(.app(size: 20, weight: isSelected ? .semibold : .regular))
                 .monospacedDigit()
                 .foregroundColor(isSelected ? Color.LightIcon : Color.PrimaryText)
                 .frame(maxWidth: .infinity)
