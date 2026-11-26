@@ -82,6 +82,14 @@
 "Edit" = "Edit";
 "Delete Expense?" = "Delete Expense?";
 "Missing Amount" = "Missing Amount";
+"Expense Was Deleted" = "Expense Was Deleted";
+"Template Was Deleted" = "Template Was Deleted";
+"Category Was Deleted" = "Category Was Deleted";
+"Dime couldn't open your data" = "Dime couldn't open your data";
+"Your entries are still on this device, and nothing has been changed or deleted. Please don't delete Dime: that would remove them. Try again, or contact support if this keeps happening." = "Your entries are still on this device, and nothing has been changed or deleted. Please don't delete Dime: that would remove them. Try again, or contact support if this keeps happening.";
+"Try Again" = "Try Again";
+"Trying Again…" = "Trying Again…";
+"Contact Support" = "Contact Support";
 "Missing Category" = "Missing Category";
 "No Category" = "No Category";
 "category-picker-none" = "None";

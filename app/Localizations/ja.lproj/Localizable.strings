@@ -81,6 +81,14 @@
 "Edit" = "編集";
 "Delete Expense?" = "この支出を削除しますか？";
 "Missing Amount" = "金額がありません";
+"Expense Was Deleted" = "この支出は削除されました";
+"Template Was Deleted" = "このテンプレートは削除されました";
+"Category Was Deleted" = "このカテゴリは削除されました";
+"Dime couldn't open your data" = "Dimeでデータを開けませんでした";
+"Your entries are still on this device, and nothing has been changed or deleted. Please don't delete Dime: that would remove them. Try again, or contact support if this keeps happening." = "記録はこのデバイスに残っており、何も変更・削除されていません。Dimeを削除すると記録も消えてしまうため、削除しないでください。もう一度お試しいただき、問題が続く場合はサポートにお問い合わせください。";
+"Try Again" = "もう一度試す";
+"Trying Again…" = "再試行中…";
+"Contact Support" = "サポートに問い合わせる";
 "Missing Category" = "カテゴリがありません";
 "No Category" = "カテゴリなし";
 "category-picker-none" = "なし";

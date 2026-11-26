@@ -81,6 +81,14 @@
 "Edit" = "Editar";
 "Delete Expense?" = "Apagar despesa?";
 "Missing Amount" = "Falta o valor";
+"Expense Was Deleted" = "Despesa apagada";
+"Template Was Deleted" = "Modelo apagado";
+"Category Was Deleted" = "Categoria apagada";
+"Dime couldn't open your data" = "O Dime não conseguiu abrir seus dados";
+"Your entries are still on this device, and nothing has been changed or deleted. Please don't delete Dime: that would remove them. Try again, or contact support if this keeps happening." = "Seus registros continuam neste dispositivo, e nada foi alterado ou apagado. Não apague o Dime: isso os removeria. Tente novamente ou fale com o suporte se isso continuar acontecendo.";
+"Try Again" = "Tentar novamente";
+"Trying Again…" = "Tentando novamente…";
+"Contact Support" = "Falar com o suporte";
 "Missing Category" = "Falta a categoria";
 "No Category" = "Sem categoria";
 "category-picker-none" = "Nenhuma";

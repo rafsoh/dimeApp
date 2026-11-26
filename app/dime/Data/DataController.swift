@@ -1066,7 +1066,7 @@ class DataController: ObservableObject {
         }
 
         transaction.income = income
-        transaction.category = transaction.sameContext(category)
+        transaction.category = category
 
         transaction.amount = amount
         transaction.currencyCode = currencyCode ?? currencyForNewTransaction()
@@ -2739,33 +2739,6 @@ extension Transaction {
         request.sortDescriptors = []
         request.includesPropertyValues = false
         return request
-    }
-}
-
-extension NSManagedObject {
-    /// `object` as it exists in this object's context, or nil when it has been deleted.
-    ///
-    /// A relationship can only join objects in the same context. A category picked in a sheet can be deleted
-    /// meanwhile (by sync, or from the picker), which leaves it with no context; linking it then raised
-    /// "Illegal attempt to establish a relationship between objects in different contexts" and the entry
-    /// being saved was lost with the crash.
-    func sameContext<T: NSManagedObject>(_ object: T?) -> T? {
-        guard let object, let context = managedObjectContext else {
-            return nil
-        }
-
-        if object.managedObjectContext === context {
-            return object.isDeleted ? nil : object
-        }
-
-        guard !object.objectID.isTemporaryID,
-              let found = try? context.existingObject(with: object.objectID) as? T,
-              !found.isDeleted
-        else {
-            return nil
-        }
-
-        return found
     }
 }
 

@@ -81,6 +81,14 @@
 "Edit" = "编辑";
 "Delete Expense?" = "删除这笔支出？";
 "Missing Amount" = "缺少金额";
+"Expense Was Deleted" = "这笔支出已被删除";
+"Template Was Deleted" = "此模板已被删除";
+"Category Was Deleted" = "此类别已被删除";
+"Dime couldn't open your data" = "Dime 无法打开你的数据";
+"Your entries are still on this device, and nothing has been changed or deleted. Please don't delete Dime: that would remove them. Try again, or contact support if this keeps happening." = "你的记录仍在此设备上，没有任何内容被更改或删除。请不要删除 Dime，否则这些记录也会被删除。请重试；如果问题持续出现，请联系支持。";
+"Try Again" = "重试";
+"Trying Again…" = "正在重试…";
+"Contact Support" = "联系支持";
 "Missing Category" = "缺少类别";
 "No Category" = "无类别";
 "category-picker-none" = "无";

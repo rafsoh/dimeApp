@@ -109,7 +109,7 @@ struct StoreLoadFailedView: View {
                     isRetrying = false
                 }
             } label: {
-                Text(isRetrying ? "Trying Again…" : "Try Again")
+                Text(isRetrying ? LocalizedStringKey("Trying Again…") : LocalizedStringKey("Try Again"))
                     .font(.app(.body, weight: .semibold))
                     .foregroundColor(Color.PrimaryBackground)
                     .frame(maxWidth: .infinity, minHeight: 50)

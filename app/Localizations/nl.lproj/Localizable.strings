@@ -81,6 +81,14 @@
 "Edit" = "Wijzig";
 "Delete Expense?" = "Uitgave verwijderen?";
 "Missing Amount" = "Bedrag ontbreekt";
+"Expense Was Deleted" = "Uitgave verwijderd";
+"Template Was Deleted" = "Sjabloon verwijderd";
+"Category Was Deleted" = "Categorie verwijderd";
+"Dime couldn't open your data" = "Dime kon je gegevens niet openen";
+"Your entries are still on this device, and nothing has been changed or deleted. Please don't delete Dime: that would remove them. Try again, or contact support if this keeps happening." = "Je invoer staat nog op dit apparaat en er is niets gewijzigd of verwijderd. Verwijder Dime niet: dan raak je alles kwijt. Probeer het opnieuw, of neem contact op met support als dit blijft gebeuren.";
+"Try Again" = "Probeer opnieuw";
+"Trying Again…" = "Opnieuw proberen…";
+"Contact Support" = "Neem contact op";
 "Missing Category" = "Categorie ontbreekt";
 "No Category" = "Geen categorie";
 "category-picker-none" = "Geen";
