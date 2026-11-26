@@ -1163,6 +1163,8 @@ class DataController: ObservableObject {
             objectWillChange.send()
             WidgetCenter.shared.reloadAllTimelines()
         case let .account(account):
+            // Sync can delete it while its editor is open.
+            guard !account.isDeleted, account.managedObjectContext != nil else { return }
             account.name = trimmed
             save()
         }
@@ -1173,6 +1175,9 @@ class DataController: ObservableObject {
     /// The model's delete rule would also leave them in Main, but they're moved here first so that no
     /// transaction ever depends on a delete rule to survive.
     func deleteAccount(_ account: Account) {
+        // Sync can delete it while the confirmation is up, and deleting an object with no context throws.
+        guard !account.isDeleted, account.managedObjectContext != nil else { return }
+
         for transaction in account.transactions as? Set<Transaction> ?? [] {
             transaction.account = nil
         }
@@ -1238,7 +1243,12 @@ class DataController: ObservableObject {
 
         let trimmedNote = note.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        for (transaction, isIncoming, account) in [(outgoing, false, from.account), (incoming, true, to.account)] {
+        // An account deleted meanwhile, such as by sync, can't be linked; what was in it is in Main now.
+        func linkable(_ choice: AccountChoice) -> Account? {
+            choice.account.flatMap { ($0.isDeleted || $0.managedObjectContext == nil) ? nil : $0 }
+        }
+
+        for (transaction, isIncoming, account) in [(outgoing, false, linkable(from)), (incoming, true, linkable(to))] {
             if transaction.id == nil {
                 transaction.id = UUID()
             }

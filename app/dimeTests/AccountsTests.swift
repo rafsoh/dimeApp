@@ -249,6 +249,22 @@ final class AccountsTests: XCTestCase {
         XCTAssertNil(defaults?.object(forKey: DataController.lastBulkDeletionKey))
     }
 
+    // Sync can delete an account while a page that picked it is still open.
+    func testAnAccountDeletedMeanwhileIsNeitherDeletedAgainNorLinked() throws {
+        let savings = makeAccount("Savings")
+        dataController.deleteAccount(savings)
+        XCTAssertNil(savings.managedObjectContext)
+
+        dataController.deleteAccount(savings)
+        dataController.renameAccount(.account(savings), to: "Renamed")
+
+        let legs = transfer(50, from: .main, to: .account(savings))
+
+        XCTAssertNil(legs.outgoing.account)
+        XCTAssertNil(legs.incoming.account)
+        XCTAssertFalse(context.hasChanges)
+    }
+
     func testNewAccountsGoLastAndMainStaysFirst() throws {
         let first = makeAccount("First")
         let second = makeAccount("Second")

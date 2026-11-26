@@ -902,6 +902,25 @@ struct TransactionView: View {
             return
         }
 
+        // An account picked here can be deleted while the page is open, most often by a change synced from
+        // another device. Linking a deleted account throws "Illegal attempt to establish a relationship ...
+        // between objects in different contexts", so it's flagged and put back before anything is saved.
+        if account.account?.isGone == true || (isTransfer && transferTo?.account?.isGone == true) {
+            if account.account?.isGone == true {
+                account = .main
+            }
+
+            if transferTo?.account?.isGone == true {
+                transferTo = nil
+            }
+
+            toastImage = AccountSymbol.outline
+            toastTitle = "Account Was Deleted"
+            showToast = true
+            generator.notificationOccurred(.error)
+            return
+        }
+
         let chosenCurrency = transactionCurrency
 
         if isTransfer {
