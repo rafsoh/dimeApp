@@ -486,6 +486,7 @@ struct AccountEditorSheet: View {
                 GlassIconButton(systemName: "xmark", accessibilityLabel: "Close") {
                     dismiss()
                 }
+                .hiddenInSideBar()
 
                 Spacer()
             }
@@ -523,6 +524,9 @@ struct AccountEditorSheet: View {
                     showToast = false
                 }
             }
+        }
+        .sideBarSheet {
+            SideBarCloseItem { dismiss() }
         }
     }
 
@@ -643,12 +647,14 @@ struct AccountPickerSheet: View {
                 GlassIconButton(systemName: "xmark", accessibilityLabel: "Close") {
                     dismiss()
                 }
+                .hiddenInSideBar()
 
                 Spacer()
 
                 GlassIconButton(systemName: "plus", accessibilityLabel: "New Account") {
                     showNewAccount = true
                 }
+                .hiddenInSideBar()
             }
             .frame(height: 44)
             .overlay {
@@ -673,6 +679,16 @@ struct AccountPickerSheet: View {
                 }
             }
             .environmentObject(dataController)
+        }
+        .sideBarSheet {
+            SideBarCloseItem { dismiss() }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    showNewAccount = true
+                } label: {
+                    Label("New Account", systemImage: "plus")
+                }
+            }
         }
     }
 
