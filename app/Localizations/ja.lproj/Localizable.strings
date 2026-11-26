@@ -81,6 +81,10 @@
 "Edit" = "編集";
 "Delete Expense?" = "この支出を削除しますか？";
 "Missing Amount" = "金額がありません";
+"Expense Was Deleted" = "この支出は削除されました";
+"Template Was Deleted" = "このテンプレートは削除されました";
+"Budget Was Deleted" = "この予算は削除されました";
+"Category Was Deleted" = "このカテゴリは削除されました";
 "Missing Category" = "カテゴリがありません";
 "No Category" = "カテゴリなし";
 "category-picker-none" = "なし";

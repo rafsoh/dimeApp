@@ -81,6 +81,10 @@
 "Edit" = "Editar";
 "Delete Expense?" = "¿Eliminar el gasto?";
 "Missing Amount" = "Falta el importe";
+"Expense Was Deleted" = "Gasto eliminado";
+"Template Was Deleted" = "Plantilla eliminada";
+"Budget Was Deleted" = "Presupuesto eliminado";
+"Category Was Deleted" = "Categoría eliminada";
 "Missing Category" = "Falta la categoría";
 "No Category" = "Sin categoría";
 "category-picker-none" = "Ninguna";

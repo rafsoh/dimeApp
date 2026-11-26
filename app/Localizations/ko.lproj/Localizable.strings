@@ -81,6 +81,10 @@
 "Edit" = "편집";
 "Delete Expense?" = "지출을 삭제하겠습니까?";
 "Missing Amount" = "금액 없음";
+"Expense Was Deleted" = "지출이 삭제됨";
+"Template Was Deleted" = "템플릿이 삭제됨";
+"Budget Was Deleted" = "예산이 삭제됨";
+"Category Was Deleted" = "카테고리가 삭제됨";
 "Missing Category" = "카테고리 없음";
 "No Category" = "카테고리 없음";
 "category-picker-none" = "없음";

@@ -81,6 +81,10 @@
 "Edit" = "编辑";
 "Delete Expense?" = "删除这笔支出？";
 "Missing Amount" = "缺少金额";
+"Expense Was Deleted" = "这笔支出已被删除";
+"Template Was Deleted" = "此模板已被删除";
+"Budget Was Deleted" = "此预算已被删除";
+"Category Was Deleted" = "此类别已被删除";
 "Missing Category" = "缺少类别";
 "No Category" = "无类别";
 "category-picker-none" = "无";
