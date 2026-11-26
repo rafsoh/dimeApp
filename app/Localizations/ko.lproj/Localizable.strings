@@ -515,6 +515,41 @@
 "Add %@" = "%@ 추가";
 "Show all accounts" = "모든 계좌 보기";
 "Account filter" = "계좌 필터";
+// log
+"UPCOMING" = "예정";
+
+// budgets, insights and settings
+"Overall" = "전체";
+"%lld days to go" = "%lld일 남음";
+"1 day to go" = "1일 남음";
+"%lld hours to go" = "%lld시간 남음";
+"1 hour to go" = "1시간 남음";
+"%@ a day for %lld days" = "%2$lld일 동안 하루 %1$@";
+"%@ left today" = "오늘 %@ 남음";
+"%@ a day" = "하루 %@";
+"Close to limit" = "한도 임박";
+"Resets %@" = "%@ 초기화";
+"tomorrow" = "내일";
+"Nothing spent yet" = "아직 지출 없음";
+"Over budget" = "예산 초과";
+"Net" = "순액";
+"Top categories" = "주요 카테고리";
+"Largest expenses" = "가장 큰 지출";
+"%lld%% of spending" = "지출의 %lld%%";
+"of spending" = "지출 비중";
+"of income" = "수입 비중";
+"avg " = "평균 ";
+"~%@ forecasted" = "예상 ~%@";
+"categories" = "카테고리";
+"category" = "카테고리";
+"Time Frames" = "기간";
+"Theme" = "테마";
+"App Icon" = "앱 아이콘";
+"Upcoming Logs" = "예정된 기록";
+"Shown" = "표시";
+"Hidden" = "숨김";
+"Display +/- Symbol" = "+/- 기호 표시";
+
 /* Delete category */
 "%@ has 1 transaction. What should happen to it?" = "'%@'에 거래가 1건 있습니다. 어떻게 할까요?";
 "%@ has %lld transactions. What should happen to them?" = "'%@'에 거래가 %lld건 있습니다. 어떻게 할까요?";

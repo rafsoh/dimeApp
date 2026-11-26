@@ -1,0 +1,8 @@
+Novedades de Dime 3.0.2
+
+• Traspaso de presupuesto: lo que sobra de un presupuesto, o lo que te has excedido, pasa al siguiente periodo. Actívalo al crear o editar un presupuesto.
+• Las plantillas de Añadido rápido ahora aparecen en una cuadrícula con el aspecto del widget. Mantén pulsada una plantilla y arrástrala para reordenarla.
+• Al eliminar una categoría, Dime te pregunta si quieres mover sus transacciones a otra categoría o eliminarlas.
+• Nuevas fuentes en Ajustes > Apariencia: SF Pro, Allo, Atkinson Hyperlegible, Fraunces y Geist Pixel.
+• Dime ya está disponible en español, alemán, portugués, italiano, neerlandés, turco, japonés, coreano y chino (simplificado y tradicional).
+• Los informes de errores anónimos ayudan a encontrar y corregir fallos. Nunca incluyen tus transacciones, importes, notas ni categorías.

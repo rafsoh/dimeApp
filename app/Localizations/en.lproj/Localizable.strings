@@ -529,6 +529,9 @@
 "Add %@" = "Add %@";
 "Show all accounts" = "Show all accounts";
 "Account filter" = "Account filter";
+// log
+"UPCOMING" = "UPCOMING";
+
 /* Delete category */
 "%@ has 1 transaction. What should happen to it?" = "%@ has 1 transaction. What should happen to it?";
 "%@ has %lld transactions. What should happen to them?" = "%@ has %lld transactions. What should happen to them?";

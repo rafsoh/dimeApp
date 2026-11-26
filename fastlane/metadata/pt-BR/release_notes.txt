@@ -1,0 +1,8 @@
+Novidades do Dime 3.0.2
+
+• Saldo acumulado do orçamento: o que sobrar de um orçamento, ou o que você gastar a mais, passa para o próximo período. Ative ao criar ou editar um orçamento.
+• Os modelos de Adição rápida agora aparecem em uma grade no estilo do widget. Toque e segure um modelo e arraste para reordenar.
+• Ao apagar uma categoria, o Dime pergunta se você quer mover as transações para outra categoria ou apagá-las.
+• Novas fontes em Ajustes > Aparência: SF Pro, Allo, Atkinson Hyperlegible, Fraunces e Geist Pixel.
+• O Dime agora está disponível em espanhol, alemão, português, italiano, holandês, turco, japonês, coreano e chinês (simplificado e tradicional).
+• Relatórios de falhas anônimos ajudam a encontrar e corrigir erros. Eles nunca incluem suas transações, valores, notas ou categorias.

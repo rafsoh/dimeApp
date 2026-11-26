@@ -515,6 +515,41 @@
 "Add %@" = "%@を追加";
 "Show all accounts" = "すべての口座を表示";
 "Account filter" = "口座フィルタ";
+// log
+"UPCOMING" = "予定";
+
+// budgets, insights and settings
+"Overall" = "全体";
+"%lld days to go" = "残り%lld日";
+"1 day to go" = "残り1日";
+"%lld hours to go" = "残り%lld時間";
+"1 hour to go" = "残り1時間";
+"%@ a day for %lld days" = "あと%2$lld日、1日%1$@";
+"%@ left today" = "今日あと%@";
+"%@ a day" = "1日%@";
+"Close to limit" = "上限間近";
+"Resets %@" = "%@にリセット";
+"tomorrow" = "明日";
+"Nothing spent yet" = "まだ支出なし";
+"Over budget" = "予算オーバー";
+"Net" = "収支";
+"Top categories" = "上位カテゴリ";
+"Largest expenses" = "大きな支出";
+"%lld%% of spending" = "支出の%lld%%";
+"of spending" = "支出比";
+"of income" = "収入比";
+"avg " = "平均 ";
+"~%@ forecasted" = "予測 ~%@";
+"categories" = "カテゴリ";
+"category" = "カテゴリ";
+"Time Frames" = "期間";
+"Theme" = "テーマ";
+"App Icon" = "Appアイコン";
+"Upcoming Logs" = "予定の記録";
+"Shown" = "表示";
+"Hidden" = "非表示";
+"Display +/- Symbol" = "+/-記号を表示";
+
 /* Delete category */
 "%@ has 1 transaction. What should happen to it?" = "「%@」には取引が1件あります。どうしますか？";
 "%@ has %lld transactions. What should happen to them?" = "「%@」には取引が%lld件あります。どうしますか？";

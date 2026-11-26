@@ -515,6 +515,41 @@
 "Add %@" = "Añadir %@";
 "Show all accounts" = "Mostrar todas las cuentas";
 "Account filter" = "Filtro de cuenta";
+// log
+"UPCOMING" = "PRÓXIMOS";
+
+// budgets, insights and settings
+"Overall" = "General";
+"%lld days to go" = "Quedan %lld días";
+"1 day to go" = "Queda 1 día";
+"%lld hours to go" = "Quedan %lld horas";
+"1 hour to go" = "Queda 1 hora";
+"%@ a day for %lld days" = "%@ al día durante %lld días";
+"%@ left today" = "Quedan %@ hoy";
+"%@ a day" = "%@ al día";
+"Close to limit" = "Cerca del límite";
+"Resets %@" = "Reinicio: %@";
+"tomorrow" = "mañana";
+"Nothing spent yet" = "Aún no has gastado nada";
+"Over budget" = "Presupuesto superado";
+"Net" = "Neto";
+"Top categories" = "Categorías principales";
+"Largest expenses" = "Mayores gastos";
+"%lld%% of spending" = "%lld %% del gasto";
+"of spending" = "del gasto";
+"of income" = "de los ingresos";
+"avg " = "media ";
+"~%@ forecasted" = "~%@ previsto";
+"categories" = "categorías";
+"category" = "categoría";
+"Time Frames" = "Periodos";
+"Theme" = "Tema";
+"App Icon" = "Icono de la app";
+"Upcoming Logs" = "Próximos registros";
+"Shown" = "Visibles";
+"Hidden" = "Ocultos";
+"Display +/- Symbol" = "Mostrar signo +/-";
+
 /* Delete category */
 "%@ has 1 transaction. What should happen to it?" = "%@ tiene 1 transacción. ¿Qué hacemos con ella?";
 "%@ has %lld transactions. What should happen to them?" = "%@ tiene %lld transacciones. ¿Qué hacemos con ellas?";

@@ -1,0 +1,8 @@
+Novità di Dime 3.0.2
+
+• Riporto del budget: ciò che avanza in un budget, o ciò che hai speso in eccesso, passa al periodo successivo. Attivalo quando crei o modifichi un budget.
+• I modelli di Aggiunta rapida ora appaiono in una griglia simile al widget. Tieni premuto un modello e trascinalo per riordinarlo.
+• Quando elimini una categoria, Dime ti chiede se spostare le sue transazioni in un'altra categoria o eliminarle.
+• Nuovi font in Impostazioni > Aspetto: SF Pro, Allo, Atkinson Hyperlegible, Fraunces e Geist Pixel.
+• Dime è ora disponibile in spagnolo, tedesco, portoghese, italiano, olandese, turco, giapponese, coreano e cinese (semplificato e tradizionale).
+• I rapporti anonimi sugli arresti anomali aiutano a trovare e correggere i bug. Non includono mai transazioni, importi, note o categorie.

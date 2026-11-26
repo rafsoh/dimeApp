@@ -1,0 +1,8 @@
+Dime 3.0.2'deki yenilikler
+
+• Bütçe devri: Bir bütçede kalan ya da aşılan tutar bir sonraki döneme aktarılır. Bütçe oluştururken veya düzenlerken açın.
+• Hızlı ekle şablonları artık widget'a benzeyen bir ızgarada görünüyor. Sıralamayı değiştirmek için bir şablonu basılı tutup sürükleyin.
+• Bir kategoriyi silerken Dime artık işlemlerini başka bir kategoriye taşımak mı yoksa silmek mi istediğinizi soruyor.
+• Ayarlar > Görünüm'de yeni yazı tipleri: SF Pro, Allo, Atkinson Hyperlegible, Fraunces ve Geist Pixel.
+• Dime artık İspanyolca, Almanca, Portekizce, İtalyanca, Felemenkçe, Türkçe, Japonca, Korece ve Çince (Basitleştirilmiş ve Geleneksel) dillerinde.
+• Anonim çökme raporları hataları bulup düzeltmeye yardımcı olur. İşlemlerinizi, tutarlarınızı, notlarınızı veya kategorilerinizi asla içermez.

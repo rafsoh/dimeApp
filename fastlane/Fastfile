@@ -1,0 +1,74 @@
+# App Store listing: text in fastlane/metadata/<locale>/, screenshots generated into
+# fastlane/screenshots/<locale>/ by scripts/appstore-screenshots/generate.sh.
+#
+# Uses the same App Store Connect API key as scripts/testflight.sh: ASC_KEY_ID and
+# ASC_ISSUER_ID in ~/.appstoreconnect/testflight.env, key at
+# ~/.appstoreconnect/private_keys/AuthKey_<ASC_KEY_ID>.p8.
+
+default_platform(:ios)
+
+def load_api_key
+  env_file = File.expand_path("~/.appstoreconnect/testflight.env")
+  if File.exist?(env_file)
+    File.readlines(env_file).each do |line|
+      next unless (match = line.match(/^\s*(?:export\s+)?(ASC_KEY_ID|ASC_ISSUER_ID)=["']?([^"'\s]+)/))
+      ENV[match[1]] ||= match[2]
+    end
+  end
+  UI.user_error!("ASC_KEY_ID and ASC_ISSUER_ID must be set in #{env_file}") unless ENV["ASC_KEY_ID"] && ENV["ASC_ISSUER_ID"]
+
+  app_store_connect_api_key(
+    key_id: ENV["ASC_KEY_ID"],
+    issuer_id: ENV["ASC_ISSUER_ID"],
+    key_filepath: File.expand_path("~/.appstoreconnect/private_keys/AuthKey_#{ENV['ASC_KEY_ID']}.p8")
+  )
+end
+
+platform :ios do
+  desc "Download the live listing text into fastlane/metadata (overwrites local files)"
+  lane :download_metadata do |options|
+    load_api_key
+    key_json = Tempfile.new(["asc_api_key", ".json"])
+    key_json.write(JSON.dump(
+      key_id: ENV["ASC_KEY_ID"],
+      issuer_id: ENV["ASC_ISSUER_ID"],
+      key: File.read(File.expand_path("~/.appstoreconnect/private_keys/AuthKey_#{ENV['ASC_KEY_ID']}.p8"))
+    ))
+    key_json.close
+    subcommand = options[:screenshots] ? "download_screenshots" : "download_metadata"
+    sh("cd .. && fastlane deliver #{subcommand} --force --use_live_version true --api_key_path #{key_json.path.shellescape}")
+  ensure
+    key_json&.unlink
+  end
+
+  # Both upload lanes edit the App Store version being prepared. Pass version:3.0.2 to create that version
+  # first if there isn't one; App Store Connect only accepts listing changes on a version not yet released.
+  desc "Upload listing text for every locale (version:X.Y.Z creates that version if needed)"
+  lane :upload_metadata do |options|
+    deliver(
+      api_key: load_api_key,
+      app_version: options[:version],
+      skip_app_version_update: options[:version].nil?,
+      skip_binary_upload: true,
+      skip_screenshots: true,
+      run_precheck_before_submit: false,
+      submit_for_review: false,
+      force: true
+    )
+  end
+
+  desc "Replace the screenshots for every locale with fastlane/screenshots (version:X.Y.Z as above)"
+  lane :upload_screenshots do |options|
+    deliver(
+      api_key: load_api_key,
+      app_version: options[:version],
+      skip_app_version_update: options[:version].nil?,
+      skip_binary_upload: true,
+      skip_metadata: true,
+      overwrite_screenshots: true,
+      run_precheck_before_submit: false,
+      submit_for_review: false,
+      force: true
+    )
+  end
+end

@@ -82,7 +82,7 @@ struct NumberPad: View {
                         Button {
                             isEditingDecimal = true
                         } label: {
-                            Text(".")
+                            Text(Locale.current.decimalSeparator ?? ".")
                                 .font(.app(size: 34, weight: .regular))
                                 .foregroundColor(Color.PrimaryText)
                                 .keyFrame(size: proxy.size)
@@ -301,6 +301,7 @@ struct NumberPadTextView: View {
 
     public var amount: String {
         AmountEntry.display(price, entryType: numberEntryType, isEditingDecimal: isEditingDecimal, assigned: decimalValuesAssigned.count, fractionDigits: fractionDigits)
+            .replacingOccurrences(of: ".", with: Locale.current.decimalSeparator ?? ".")
     }
 
     @Environment(\.dynamicTypeSize) var dynamicTypeSize

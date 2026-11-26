@@ -1,0 +1,1 @@
+dinheiro,economia,despesas,receitas,assinatura,carteira,planilha,contas,poupar,financeiro

@@ -1489,7 +1489,7 @@ struct SingleTransactionView: View {
             base = transaction.isTransfer ? String(localized: "Transfer") : transaction.wrappedCategoryName
         } else {
             let formatter = DateFormatter()
-            formatter.dateFormat = "h:mm a"
+            formatter.setLocalizedDateFormatFromTemplate("jmm")
 
             base = formatter.string(from: transaction.wrappedDate)
         }
@@ -2220,7 +2220,7 @@ func dateConverterAccessibilityLabel(date: Date) -> String {
 func timeConverterAccessibilityLabel(date: Date) -> String {
     let dateFormatter = DateFormatter()
 
-    dateFormatter.dateFormat = "h:mm a"
+    dateFormatter.setLocalizedDateFormatFromTemplate("jmm")
 
     return dateFormatter.string(from: date)
 }

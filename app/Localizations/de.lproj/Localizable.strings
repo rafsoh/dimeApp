@@ -306,7 +306,7 @@
 "Percent Spent" = "Ausgegeben in Prozent";
 "Create your overall budget in the app" = "Lege dein Gesamtbudget in der App an";
 "ADD BUDGET" = "BUDGET ANLEGEN";
-"over" = "überschritten";
+"over" = "zu viel";
 "SPENT: %@" = "AUSGEGEBEN: %@";
 "Select budget in widget options" = "Wähle ein Budget in den Widget-Optionen";
 "Budget no longer exists - please select new budget from widget options." = "Das Budget existiert nicht mehr – bitte wähle in den Widget-Optionen ein neues.";
@@ -515,6 +515,41 @@
 "Add %@" = "%@ hinzufügen";
 "Show all accounts" = "Alle Konten anzeigen";
 "Account filter" = "Kontofilter";
+// log
+"UPCOMING" = "ANSTEHEND";
+
+// budgets, insights and settings
+"Overall" = "Gesamt";
+"%lld days to go" = "Noch %lld Tage";
+"1 day to go" = "Noch 1 Tag";
+"%lld hours to go" = "Noch %lld Stunden";
+"1 hour to go" = "Noch 1 Stunde";
+"%@ a day for %lld days" = "%@ pro Tag für %lld Tage";
+"%@ left today" = "Heute noch %@";
+"%@ a day" = "%@ pro Tag";
+"Close to limit" = "Fast am Limit";
+"Resets %@" = "Neu ab %@";
+"tomorrow" = "morgen";
+"Nothing spent yet" = "Noch nichts ausgegeben";
+"Over budget" = "Budget überschritten";
+"Net" = "Saldo";
+"Top categories" = "Top-Kategorien";
+"Largest expenses" = "Größte Ausgaben";
+"%lld%% of spending" = "%lld %% der Ausgaben";
+"of spending" = "der Ausgaben";
+"of income" = "der Einnahmen";
+"avg " = "Ø ";
+"~%@ forecasted" = "~%@ prognostiziert";
+"categories" = "Kategorien";
+"category" = "Kategorie";
+"Time Frames" = "Zeiträume";
+"Theme" = "Design";
+"App Icon" = "App-Symbol";
+"Upcoming Logs" = "Anstehende Einträge";
+"Shown" = "Angezeigt";
+"Hidden" = "Ausgeblendet";
+"Display +/- Symbol" = "+/- Zeichen anzeigen";
+
 /* Delete category */
 "%@ has 1 transaction. What should happen to it?" = "%@ enthält 1 Buchung. Was soll damit passieren?";
 "%@ has %lld transactions. What should happen to them?" = "%@ enthält %lld Buchungen. Was soll damit passieren?";

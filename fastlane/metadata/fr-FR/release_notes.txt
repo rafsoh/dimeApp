@@ -1,0 +1,8 @@
+Nouveautés de Dime 3.0.2
+
+• Report de budget : ce qui reste d'un budget, ou ce que vous avez dépassé, est reporté sur la période suivante. Activez-le en créant ou en modifiant un budget.
+• Les modèles d'Ajout rapide s'affichent désormais dans une grille au style du widget. Maintenez un modèle et faites-le glisser pour le réorganiser.
+• Lorsque vous supprimez une catégorie, Dime vous demande de déplacer ses transactions vers une autre catégorie ou de les supprimer.
+• Nouvelles polices dans Paramètres > Apparence : SF Pro, Allo, Atkinson Hyperlegible, Fraunces et Geist Pixel.
+• Dime est désormais disponible en espagnol, allemand, portugais, italien, néerlandais, turc, japonais, coréen et chinois (simplifié et traditionnel).
+• Des rapports de plantage anonymes aident à trouver et corriger les bugs. Ils n'incluent jamais vos transactions, montants, notes ou catégories.

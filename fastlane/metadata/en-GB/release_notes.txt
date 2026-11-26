@@ -1,0 +1,8 @@
+New in Dime 3.0.2
+
+• Budget rollover: carry what's left in a budget, or what you overspent, into the next period. Turn it on when you create or edit a budget.
+• Quick Add templates now appear as a grid that looks like the widget. Hold and drag a template to reorder it.
+• Deleting a category now asks whether to move its transactions to another category or delete them.
+• New fonts in Settings > Appearance: SF Pro, Allo, Atkinson Hyperlegible, Fraunces and Geist Pixel.
+• Dime is now available in Spanish, German, Portuguese, Italian, Dutch, Turkish, Japanese, Korean and Chinese (Simplified and Traditional).
+• Anonymous crash reports help find and fix bugs. They never include your transactions, amounts, notes or categories.

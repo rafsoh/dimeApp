@@ -1,0 +1,8 @@
+Neu in Dime 3.0.2
+
+• Budget-Übertrag: Was in einem Budget übrig bleibt oder zu viel ausgegeben wurde, wird in den nächsten Zeitraum übertragen. Aktiviere es beim Erstellen oder Bearbeiten eines Budgets.
+• Vorlagen für „Schnell hinzufügen“ erscheinen jetzt als Raster im Stil des Widgets. Halte eine Vorlage gedrückt und ziehe sie, um die Reihenfolge zu ändern.
+• Beim Löschen einer Kategorie fragt Dime jetzt, ob ihre Transaktionen in eine andere Kategorie verschoben oder gelöscht werden sollen.
+• Neue Schriften unter Einstellungen > Darstellung: SF Pro, Allo, Atkinson Hyperlegible, Fraunces und Geist Pixel.
+• Dime gibt es jetzt auf Spanisch, Deutsch, Portugiesisch, Italienisch, Niederländisch, Türkisch, Japanisch, Koreanisch und Chinesisch (vereinfacht und traditionell).
+• Anonyme Absturzberichte helfen, Fehler zu finden und zu beheben. Sie enthalten nie deine Transaktionen, Beträge, Notizen oder Kategorien.

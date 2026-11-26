@@ -515,6 +515,41 @@
 "Add %@" = "%@ toevoegen";
 "Show all accounts" = "Alle rekeningen tonen";
 "Account filter" = "Rekeningfilter";
+// log
+"UPCOMING" = "AANKOMEND";
+
+// budgets, insights and settings
+"Overall" = "Totaal";
+"%lld days to go" = "Nog %lld dagen";
+"1 day to go" = "Nog 1 dag";
+"%lld hours to go" = "Nog %lld uur";
+"1 hour to go" = "Nog 1 uur";
+"%@ a day for %lld days" = "%@ per dag, nog %lld dagen";
+"%@ left today" = "Vandaag nog %@";
+"%@ a day" = "%@ per dag";
+"Close to limit" = "Bijna op de limiet";
+"Resets %@" = "Opnieuw vanaf %@";
+"tomorrow" = "morgen";
+"Nothing spent yet" = "Nog niets uitgegeven";
+"Over budget" = "Budget overschreden";
+"Net" = "Netto";
+"Top categories" = "Topcategorieën";
+"Largest expenses" = "Grootste uitgaven";
+"%lld%% of spending" = "%lld%% van de uitgaven";
+"of spending" = "van de uitgaven";
+"of income" = "van de inkomsten";
+"avg " = "gem. ";
+"~%@ forecasted" = "~%@ verwacht";
+"categories" = "categorieën";
+"category" = "categorie";
+"Time Frames" = "Periodes";
+"Theme" = "Thema";
+"App Icon" = "App-icoon";
+"Upcoming Logs" = "Aankomende posten";
+"Shown" = "Zichtbaar";
+"Hidden" = "Verborgen";
+"Display +/- Symbol" = "+/- teken tonen";
+
 /* Delete category */
 "%@ has 1 transaction. What should happen to it?" = "%@ heeft 1 transactie. Wat moet ermee gebeuren?";
 "%@ has %lld transactions. What should happen to them?" = "%@ heeft %lld transacties. Wat moet ermee gebeuren?";

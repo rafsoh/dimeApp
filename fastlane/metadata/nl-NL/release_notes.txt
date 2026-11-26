@@ -1,0 +1,8 @@
+Nieuw in Dime 3.0.2
+
+• Budget doorschuiven: wat er over is van een budget, of wat je te veel hebt uitgegeven, schuift door naar de volgende periode. Zet het aan bij het maken of bewerken van een budget.
+• Snel toevoegen-sjablonen verschijnen nu in een raster dat op de widget lijkt. Houd een sjabloon vast en sleep om de volgorde te wijzigen.
+• Bij het verwijderen van een categorie vraagt Dime nu of je de transacties naar een andere categorie wilt verplaatsen of wilt verwijderen.
+• Nieuwe lettertypen in Instellingen > Weergave: SF Pro, Allo, Atkinson Hyperlegible, Fraunces en Geist Pixel.
+• Dime is nu beschikbaar in het Spaans, Duits, Portugees, Italiaans, Nederlands, Turks, Japans, Koreaans en Chinees (vereenvoudigd en traditioneel).
+• Anonieme crashrapporten helpen bugs te vinden en op te lossen. Ze bevatten nooit je transacties, bedragen, notities of categorieën.
