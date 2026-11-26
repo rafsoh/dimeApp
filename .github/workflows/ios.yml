@@ -76,44 +76,20 @@ jobs:
           if [ -z "$UDID" ]; then echo "No iPhone simulator found"; exit 1; fi
           xcrun simctl list devices | grep "$UDID"
           echo "SIM_UDID=$UDID" >> "$GITHUB_ENV"
-          # A regular iPhone on the same runtime, for pull requests that ask for screenshots on both
-          # (the first iPhone is usually the iPhone Duo).
+          # A regular iPhone, for pull requests that ask for screenshots on both. The Duo comes on its own
+          # runtime (e.g. iOS-27-2-iPhone19-4), so take one from the newest runtime that has one.
           OTHER=$(xcrun simctl list devices available --json | python3 -c '
-          import json, sys
-          udid = sys.argv[1]
-          for devices in json.load(sys.stdin)["devices"].values():
-              if any(d["udid"] == udid for d in devices):
-                  others = [d for d in devices if d["name"].startswith("iPhone") and "Duo" not in d["name"] and d["udid"] != udid]
-                  pro = [d for d in others if "Pro" in d["name"] and "Max" not in d["name"]]
-                  if others:
-                      print((pro or others)[0]["udid"])
-                  break
-          ' "$UDID")
-          if [ -z "$OTHER" ]; then
-            # The runtime may only come with the Duo: create a regular iPhone on it, trying the
-            # newest device types first until the runtime accepts one.
-            RUNTIME=$(xcrun simctl list devices available --json | python3 -c '
-          import json, sys
-          for runtime, devices in json.load(sys.stdin)["devices"].items():
-              if any(d["udid"] == sys.argv[1] for d in devices):
-                  print(runtime)
-          ' "$UDID")
-            TYPES=$(xcrun simctl list devicetypes --json | python3 -c '
-          import json, sys
-          types = [t for t in json.load(sys.stdin)["devicetypes"] if t["name"].startswith("iPhone") and "Duo" not in t["name"]]
-          pro = [t for t in types if "Pro" in t["name"] and "Max" not in t["name"]]
-          for t in list(reversed(pro)) + list(reversed(types)):
-              print(t["identifier"])
+          import json, re, sys
+          data = json.load(sys.stdin)["devices"]
+          def version(key):
+              m = re.search(r"\.iOS-(\d+)-(\d+)", key)
+              return (int(m.group(1)), int(m.group(2))) if m else (0, 0)
+          for runtime in sorted(data, key=version, reverse=True):
+              phones = [d for d in data[runtime] if d["name"].startswith("iPhone") and "Duo" not in d["name"]]
+              pro = [d for d in phones if "Pro" in d["name"] and "Max" not in d["name"]]
+              if phones:
+                  print((pro or phones)[0]["udid"]); break
           ')
-            echo "Runtime $RUNTIME; candidate device types: $(echo $TYPES | head -c 400)"
-            for TYPE in $TYPES; do
-              if OTHER=$(xcrun simctl create "Screenshots iPhone" "$TYPE" "$RUNTIME" 2>/dev/null); then
-                echo "Created $TYPE"
-                break
-              fi
-              OTHER=""
-            done
-          fi
           if [ -n "$OTHER" ]; then
             xcrun simctl list devices | grep "$OTHER"
             echo "SIM_OTHER_UDID=$OTHER" >> "$GITHUB_ENV"
