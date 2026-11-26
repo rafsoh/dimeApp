@@ -29,6 +29,12 @@ struct SettingsCloudView: View {
       .settingsSectionRows()
 
       SettingsSectionFooter("Close and reload app for change to take effect.")
+        .onChange(of: iCloudStorage) { enabled in
+          DataIntegrityLog.breadcrumb(
+            "iCloud sync preference changed",
+            flags: ["enabled": enabled]
+          )
+        }
 
       if iCloudStorage && dataController.isCloudKitSyncEnabled {
         SyncStatusSection(status: dataController.syncStatus)
