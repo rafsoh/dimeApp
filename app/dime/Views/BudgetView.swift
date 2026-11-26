@@ -114,12 +114,6 @@ struct BudgetView: View {
         .background(Color.PrimaryBackground)
         .onAppear {
             dataController.updateBudgetDates()
-            #if DEBUG
-            sideBarShot("budget") {
-                detail = mainBudget.first.map { .overall($0) } ?? orderedBudgets.first.map { .category($0) }
-            }
-            sideBarShot("newBudget") { newBudget = true }
-            #endif
         }
         .onReceive(didSave) { _ in
             refreshID = UUID()

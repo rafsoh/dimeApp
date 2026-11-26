@@ -484,10 +484,6 @@ struct TransactionView: View {
                         isEditingDecimal = true
                         decimalValuesAssigned = AssignedDecimal(count: fractionDigits)
                     }
-
-                    sideBarShot("customInterval") { showPicker = true }
-                    sideBarShot("date") { showingDatePicker = true }
-                    sideBarShot("category") { showCategorySheet = true }
                 }
                 #endif
             }

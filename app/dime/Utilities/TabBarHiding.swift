@@ -167,15 +167,6 @@ struct SideBarConfirmItem: ToolbarContent {
     }
 }
 
-#if DEBUG
-// SCREENSHOT ONLY, remove before merging: `-sideBarShot <name>` opens that sheet.
-func sideBarShot(_ name: String, perform action: @escaping () -> Void) {
-    let arguments = ProcessInfo.processInfo.arguments
-    guard let index = arguments.firstIndex(of: "-sideBarShot"), index + 1 < arguments.count, arguments[index + 1] == name else { return }
-    DispatchQueue.main.asyncAfter(deadline: .now() + 0.8, execute: action)
-}
-#endif
-
 private struct VerticalBarReader: UIViewRepresentable {
     @Binding var usesVerticalBar: Bool
 

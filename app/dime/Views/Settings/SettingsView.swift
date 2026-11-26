@@ -486,13 +486,6 @@ struct SettingsView: View {
     .sheet(isPresented: $showTipJarMenu) {
       TipJarSheet()
     }
-    #if DEBUG
-    .onAppear {
-      sideBarShot("tipJar") { showTipJarMenu = true }
-      sideBarShot("export") { showExportSheet = true }
-      sideBarShot("import") { showImportGuide = true }
-    }
-    #endif
     .sheet(isPresented: $showUpdate) {
       WhatsNewSheet()
     }
