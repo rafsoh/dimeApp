@@ -489,12 +489,6 @@ struct BudgetMeter: View {
     }
 }
 
-extension NSManagedObject {
-    var isGone: Bool {
-        isDeleted || managedObjectContext == nil
-    }
-}
-
 func budgetPredicate(from start: Date, to end: Date, category: Category?) -> NSPredicate {
     var predicates = [
         NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), start as CVarArg),
