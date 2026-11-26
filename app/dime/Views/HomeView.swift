@@ -206,14 +206,6 @@ struct HomeView: View {
         }
         .confettiCannon(counter: $counter, num: 50, openingAngle: Angle(degrees: 0), closingAngle: Angle(degrees: 360), radius: 200)
         .onAppear {
-            #if DEBUG
-            // TEMPORARY (font PR screenshots): `-screenshotTab Insights` opens that tab. Remove before merging.
-            let arguments = ProcessInfo.processInfo.arguments
-            if let index = arguments.firstIndex(of: "-screenshotTab"), index + 1 < arguments.count {
-                currentTab = arguments[index + 1]
-            }
-            #endif
-
             if appLockVM.isAppLockEnabled && fromURL1 {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     launchAdd.toggle()
