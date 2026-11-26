@@ -592,6 +592,30 @@ class DataController: ObservableObject {
         }
     }
 
+    /// Deletes a category. Its transactions and Quick Add templates either move first (to another
+    /// category, or to none) or are deleted with it, per `fate`. Its budget is always deleted.
+    func deleteCategory(_ category: Category, fate: DeleteCategoryFate) {
+        guard category.managedObjectContext != nil, !category.isDeleted else {
+            return
+        }
+
+        if case let .move(to: destination) = fate {
+            // A destination deleted meanwhile (say, on another device) leaves them without a category.
+            let target = destination.flatMap { $0.managedObjectContext == nil || $0.isDeleted ? nil : $0 }
+
+            for transaction in category.transactions as? Set<Transaction> ?? [] {
+                transaction.category = target
+            }
+
+            for template in category.templates as? Set<TemplateTransaction> ?? [] {
+                template.category = target
+            }
+        }
+
+        container.viewContext.delete(category)
+        save()
+    }
+
     func deleteTransaction(_ transaction: Transaction) {
         guard transaction.managedObjectContext != nil else {
             return
@@ -2416,6 +2440,8 @@ extension DataController {
             let fun = category("Entertainment", "🎬", "#ED80A2")
             let bills = category("Bills", "💡", "#F3BF56")
             let health = category("Health", "💊", "#E34D63")
+            // No transactions, so the delete sheet can be shown without the move/delete choice.
+            _ = category("Travel", "✈️", "#61C7FA")
             let salary = category("Salary", "💼", "#5FAF9F", income: true)
             let freelance = category("Freelance", "🎨", "#61C7FA", income: true)
 

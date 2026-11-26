@@ -249,6 +249,8 @@ struct HomeView: View {
             let arguments = ProcessInfo.processInfo.arguments
             if arguments.contains("-budgetTab") || arguments.contains("-budgetSheet") || arguments.contains("-budgetEdit") {
                 currentTab = "Budget"
+            } else if arguments.contains("-deleteCategory") {
+                currentTab = "Settings"
             }
         }
         #endif

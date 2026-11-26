@@ -492,3 +492,11 @@
 "The new amount applies from this period on, and earlier periods keep the old one." = "Le nouveau montant s'applique à partir de cette période ; les périodes précédentes gardent l'ancien.";
 "The new reset day applies from this period on, and earlier periods keep the old one." = "Le nouveau jour de début s'applique à partir de cette période ; les périodes précédentes gardent l'ancien.";
 "The %@ from earlier periods is kept." = "Le %@ reporté jusqu'ici est conservé.";
+
+/* Delete category */
+"%@ has 1 transaction. What should happen to it?" = "%@ contient 1 transaction. Que faut-il en faire ?";
+"%@ has %lld transactions. What should happen to them?" = "%@ contient %lld transactions. Que faut-il en faire ?";
+"Move to" = "Déplacer vers";
+"Delete it" = "La supprimer";
+"Delete them" = "Les supprimer";
+"Delete Category" = "Supprimer la catégorie";

@@ -153,6 +153,14 @@ jobs:
           shot 10-rollover-alert-turn-off -budgetEdit Food -budgetEditStep disableRollover
           shot 11-rollover-alert-reset -budgetEdit Food -budgetEditStep changeFrequency
           shot 12-rollover-new-budget -budgetEdit new
+          # Delete-category sheet over Settings › Categories. Food has transactions, Travel has none.
+          shot 13-delete-category-move-none -deleteCategory Food
+          shot 14-delete-category-move-groceries -deleteCategory Food -deleteCategoryFate move:Groceries
+          shot 15-delete-category-delete-all -deleteCategory Food -deleteCategoryFate delete
+          shot 16-delete-category-no-transactions -deleteCategory Travel
+          xcrun simctl ui "$SIM_UDID" appearance dark
+          shot 17-delete-category-dark -deleteCategory Food -deleteCategoryFate move:Groceries
+          xcrun simctl ui "$SIM_UDID" appearance light
 
       - name: Show screenshots on the pull request
         # Pushes the images to the ci-screenshots branch (one folder per pull request) and keeps one
