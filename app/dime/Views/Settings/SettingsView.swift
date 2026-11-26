@@ -492,9 +492,6 @@ struct SettingsView: View {
     .sheet(isPresented: $showImportGuide) {
       ImportDataView()
     }
-    #if DEBUG
-    .modifier(DebugCategoriesRoute(tabBarManager: tabBarManager))
-    #endif
   }
 
   func shareExportIfNeeded() {
@@ -787,29 +784,3 @@ struct SettingsCategoryView: View {
       .background(Color.PrimaryBackground)
   }
 }
-
-#if DEBUG
-/// `-deleteCategory <name>` opens Settings › Categories on launch (CategoryListView then opens the delete sheet), for screenshots.
-private struct DebugCategoriesRoute: ViewModifier {
-  let tabBarManager: TabBarManager
-  @State private var showCategories = false
-
-  func body(content: Content) -> some View {
-    if #available(iOS 16.0, *) {
-      content
-        .navigationDestination(isPresented: $showCategories) {
-          SettingsCategoryView()
-            .onAppear { tabBarManager.navigationHideTab() }
-            .onDisappear { tabBarManager.navigationShowTab() }
-        }
-        .onAppear {
-          if ProcessInfo.processInfo.arguments.contains("-deleteCategory") {
-            showCategories = true
-          }
-        }
-    } else {
-      content
-    }
-  }
-}
-#endif

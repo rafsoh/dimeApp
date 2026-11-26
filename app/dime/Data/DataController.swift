@@ -2440,8 +2440,6 @@ extension DataController {
             let fun = category("Entertainment", "🎬", "#ED80A2")
             let bills = category("Bills", "💡", "#F3BF56")
             let health = category("Health", "💊", "#E34D63")
-            // No transactions, so the delete sheet can be shown without the move/delete choice.
-            _ = category("Travel", "✈️", "#61C7FA")
             let salary = category("Salary", "💼", "#5FAF9F", income: true)
             let freelance = category("Freelance", "🎨", "#61C7FA", income: true)
 

@@ -359,11 +359,8 @@ struct CategoryListView: View {
         .tint(Color.PrimaryText)
         .animation(.easeOut(duration: 0.2), value: showToast)
         .sheet(item: $toDelete) { category in
-            DeleteCategoryAlert(toDelete: category, deleted: .constant(false), initialFate: debugDeleteFate)
+            DeleteCategoryAlert(toDelete: category, deleted: .constant(false))
         }
-        #if DEBUG
-        .onAppear(perform: openDebugDeleteSheet)
-        #endif
         .sheet(item: $toEdit, onDismiss: {
             toEdit = nil
         }) { category in
@@ -391,38 +388,6 @@ struct CategoryListView: View {
             }
         }
     }
-
-    /// The choice the delete sheet starts on; only screenshots start anywhere but No Category.
-    private var debugDeleteFate: DeleteCategoryFate {
-        #if DEBUG
-        let arguments = ProcessInfo.processInfo.arguments
-        if let index = arguments.firstIndex(of: "-deleteCategoryFate"), index + 1 < arguments.count {
-            let value = arguments[index + 1]
-            if value == "delete" {
-                return .delete
-            } else if value.hasPrefix("move:") {
-                let name = String(value.dropFirst(5))
-                return .move(to: allCategories.first { $0.wrappedName == name })
-            }
-        }
-        #endif
-        return .move(to: nil)
-    }
-
-    #if DEBUG
-    /// `-deleteCategory <name>` opens the delete sheet for that category, for screenshots.
-    private func openDebugDeleteSheet() {
-        let arguments = ProcessInfo.processInfo.arguments
-        guard mode == .settings, let index = arguments.firstIndex(of: "-deleteCategory"), index + 1 < arguments.count else {
-            return
-        }
-
-        let name = arguments[index + 1]
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-            toDelete = allCategories.first { $0.wrappedName == name }
-        }
-    }
-    #endif
 
     private func moveItem(at sets: IndexSet, destination: Int) {
         let itemToMove = sets.first!
@@ -1058,16 +1023,11 @@ struct DeleteCategoryAlert: View {
     @State private var moveTarget: Category?
     @State private var deleting: Bool
 
-    init(toDelete: Category, deleted: Binding<Bool>, initialFate: DeleteCategoryFate = .move(to: nil)) {
+    init(toDelete: Category, deleted: Binding<Bool>) {
         self.toDelete = toDelete
         _deleted = deleted
-        if case let .move(to: category) = initialFate {
-            _moveTarget = State(initialValue: category)
-            _deleting = State(initialValue: false)
-        } else {
-            _moveTarget = State(initialValue: nil)
-            _deleting = State(initialValue: true)
-        }
+        _moveTarget = State(initialValue: nil)
+        _deleting = State(initialValue: false)
         _categories = FetchRequest(
             sortDescriptors: [SortDescriptor(\.order)],
             predicate: NSPredicate(format: "income = %d AND SELF != %@", toDelete.income, toDelete)
