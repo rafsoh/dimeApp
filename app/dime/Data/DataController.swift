@@ -2734,7 +2734,8 @@ class DataController: ObservableObject {
             "categories": count(of: "Category"),
             "budgets": count(of: "Budget"),
             "mainBudgets": count(of: "MainBudget"),
-            "templates": count(of: "TemplateTransaction")
+            "templates": count(of: "TemplateTransaction"),
+            "accounts": count(of: "Account")
         ]
     }
 
@@ -2830,7 +2831,7 @@ class DataController: ObservableObject {
             }
         }
 
-        let tracked = ["transactions", "categories", "budgets", "mainBudgets", "templates"]
+        let tracked = ["transactions", "categories", "budgets", "mainBudgets", "templates", "accounts"]
         let migrationDropped = migrationNeeded && countsBeforeMigration.map { before in
             tracked.contains { key in (counts[key] ?? 0) < (before[key] ?? 0) }
         } ?? false
