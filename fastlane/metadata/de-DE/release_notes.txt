@@ -1,17 +1,8 @@
-Neu in Dime 3.0.1
+Neu in Dime 3.0.2
 
-• Mehrere Währungen: Tippe auf das Währungssymbol, um in jeder Währung zu erfassen. Summen werden zum jeweiligen Tageskurs in deine Hauptwährung umgerechnet.
-• Schnell hinzufügen: Speichere bis zu 4 Vorlagen in den Einstellungen und erfasse sie mit einem Tipp über das neue Widget „Schnell hinzufügen“, ohne Dime zu öffnen.
-• Erinnerungen an anstehende Abbuchungen: Erhalte einen Hinweis, bevor eine wiederkehrende Ausgabe in deinen Verlauf eingetragen wird.
-• Neue Taste „Neue Ausgabe“ für Kontrollzentrum, Sperrbildschirm und Aktionstaste.
-• Die Kategorie ist jetzt optional: Erfasse eine Buchung ohne Kategorie, dann wird sie als Ausgabe oder Einnahme angezeigt.
-• Beginne deine Woche an einem beliebigen Tag.
-• Zeitraum exportieren: Wähle vor dem Export die Tage aus, die enthalten sein sollen.
-• Unbegrenzt viele Ausgabenkategorien, in deiner Reihenfolge.
-• Suche nach Beträgen, auch mit Währungssymbol oder Trennzeichen.
-• Dime gibt es jetzt auch auf Französisch und Russisch.
-
-Fehlerbehebungen
-• Du kannst jetzt eine Kategorie hinzufügen, auch wenn die Emoji-Tastatur nicht aktiviert ist.
-• Beim Eingeben einer Notiz auf dem iPhone Duo verschiebt sich der Hinzufügen-Bildschirm nicht mehr.
-• Kleine Layout-Korrekturen in den Einstellungen.
+• Budget-Übertrag: Was in einem Budget übrig bleibt oder zu viel ausgegeben wurde, wird in den nächsten Zeitraum übertragen. Aktiviere es beim Erstellen oder Bearbeiten eines Budgets.
+• Vorlagen für „Schnell hinzufügen“ erscheinen jetzt als Raster im Stil des Widgets. Halte eine Vorlage gedrückt und ziehe sie, um die Reihenfolge zu ändern.
+• Beim Löschen einer Kategorie fragt Dime jetzt, ob ihre Transaktionen in eine andere Kategorie verschoben oder gelöscht werden sollen.
+• Neue Schriften unter Einstellungen > Darstellung: SF Pro, Allo, Atkinson Hyperlegible, Fraunces und Geist Pixel.
+• Dime gibt es jetzt auf Spanisch, Deutsch, Portugiesisch, Italienisch, Niederländisch, Türkisch, Japanisch, Koreanisch und Chinesisch (vereinfacht und traditionell).
+• Anonyme Absturzberichte helfen, Fehler zu finden und zu beheben. Sie enthalten nie deine Transaktionen, Beträge, Notizen oder Kategorien.
