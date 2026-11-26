@@ -186,6 +186,8 @@ struct AccountsView: View {
                     .font(.system(.footnote, design: .rounded))
                     .foregroundColor(Color.SubtitleText)
                     .padding(.top, 4)
+                    // Keeps the footer with its own section, apart from the next one's header.
+                    .padding(.bottom, .settingsHeaderSpacing)
                     .listRowInsets(EdgeInsets(top: 0, leading: .settingsRowInset, bottom: 0, trailing: .settingsRowInset))
             }
 
@@ -503,8 +505,8 @@ struct AccountPickerSheet: View {
 
     @available(iOS 16.0, *)
     private var detents: Set<PresentationDetent> {
-        // Header, rows, the New Account button and margins.
-        let height = 84 + CGFloat(rowCount) * 60 + 84
+        // Header, rows and margins.
+        let height = 84 + CGFloat(rowCount) * 60 + 28
         return height <= UIScreen.main.bounds.height * 0.7 ? [.height(height), .large] : [.medium, .large]
     }
 
@@ -522,24 +524,6 @@ struct AccountPickerSheet: View {
                         select(choice)
                     }
                 }
-
-                Button {
-                    showNewAccount = true
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "plus")
-                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                        Text("New Account")
-                            .font(.system(.body, design: .rounded).weight(.semibold))
-                    }
-                    .foregroundColor(Color.PrimaryText)
-                    .padding(.horizontal, 18)
-                    .frame(height: 44)
-                    .contentShape(Capsule())
-                }
-                .buttonStyle(.plain)
-                .glassBackground(in: Capsule(), tint: Color.glassTint)
-                .padding(.top, 12)
             }
             .padding(.horizontal, 20)
             .padding(.top, 12)
@@ -547,11 +531,16 @@ struct AccountPickerSheet: View {
         }
         .tabHeader {
             HStack {
-                GlassIconButton(systemName: scope == nil ? "xmark" : "checkmark", accessibilityLabel: scope == nil ? "Close" : "Done") {
+                // Picks apply as they're made, so closing is all there is to do.
+                GlassIconButton(systemName: "xmark", accessibilityLabel: "Close") {
                     dismiss()
                 }
 
                 Spacer()
+
+                GlassIconButton(systemName: "plus", accessibilityLabel: "New Account") {
+                    showNewAccount = true
+                }
             }
             .frame(height: 44)
             .overlay {
