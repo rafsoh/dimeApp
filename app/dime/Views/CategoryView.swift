@@ -1164,6 +1164,8 @@ struct DeleteCategoryAlert: View {
                 MoveDestinationChip(category: destination, income: toDelete.income)
                     .opacity(moving ? 1 : 0.4)
             }
+            // The chip shows its whole label; "Move to" gives up the space.
+            .layoutPriority(1)
             .accessibilityLabel(Text("Move to"))
             .accessibilityValue(Text(destination?.wrappedName ?? Uncategorised.name))
         }
