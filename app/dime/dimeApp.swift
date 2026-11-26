@@ -95,7 +95,9 @@ struct StoreLoadFailedView: View {
                 .foregroundColor(Color.PrimaryText)
                 .multilineTextAlignment(.center)
 
-            Text("Your entries are still on this device, and nothing has been changed or deleted. Please don't delete Dime: that would remove them. Try again, or contact support if this keeps happening.")
+            Text(failure.isOutOfSpace
+                ? LocalizedStringKey("This device is out of storage, so Dime can't open your data. Your entries are still here. Free up some space in the Settings app, then try again. Please don't delete Dime: that would remove them.")
+                : LocalizedStringKey("Your entries are still on this device, and nothing has been changed or deleted. Please don't delete Dime: that would remove them. Try again, or contact support if this keeps happening."))
                 .font(.app(.body))
                 .foregroundColor(Color.SubtitleText)
                 .multilineTextAlignment(.center)

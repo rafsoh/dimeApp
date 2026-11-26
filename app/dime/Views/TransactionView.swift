@@ -38,9 +38,9 @@ struct TransactionView: View {
 
     @State var showCategorySheet = false
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode ?? "USD"
     var currencySymbol: String {
-        return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
+        return (Locale.current.localizedCurrencySymbol(forCurrencyCode: currency) ?? currency)
     }
 
     @State var showingDatePicker = false

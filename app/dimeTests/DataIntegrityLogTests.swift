@@ -8,6 +8,27 @@ import CloudKit
 import XCTest
 
 final class DataIntegrityLogTests: XCTestCase {
+    func testOutOfSpaceIsFoundAnywhereInTheErrorChain() {
+        // DIME-IOS-J arrived as SQLite's own error; Core Data saves usually wrap it.
+        XCTAssertTrue(DataIntegrityLog.isOutOfSpace(NSError(domain: "NSSQLiteErrorDomain", code: 13)))
+
+        let wrapped = NSError(domain: NSCocoaErrorDomain, code: 134_030, userInfo: [
+            NSUnderlyingErrorKey: NSError(domain: "NSSQLiteErrorDomain", code: 13)
+        ])
+        XCTAssertTrue(DataIntegrityLog.isOutOfSpace(wrapped))
+
+        let codeInUserInfo = NSError(domain: NSCocoaErrorDomain, code: 134_030, userInfo: ["NSSQLiteErrorDomain": NSNumber(value: 13)])
+        XCTAssertTrue(DataIntegrityLog.isOutOfSpace(codeInUserInfo))
+
+        XCTAssertTrue(DataIntegrityLog.isOutOfSpace(NSError(domain: NSCocoaErrorDomain, code: NSFileWriteOutOfSpaceError)))
+        XCTAssertTrue(DataIntegrityLog.isOutOfSpace(NSError(domain: NSCocoaErrorDomain, code: 512, userInfo: [
+            NSUnderlyingErrorKey: NSError(domain: NSPOSIXErrorDomain, code: Int(ENOSPC))
+        ])))
+
+        XCTAssertFalse(DataIntegrityLog.isOutOfSpace(NSError(domain: "NSSQLiteErrorDomain", code: 5)))
+        XCTAssertFalse(DataIntegrityLog.isOutOfSpace(NSError(domain: NSCocoaErrorDomain, code: 134_110)))
+    }
+
     func testExceptionReasonsLoseTheRecordTheyDescribe() {
         // The shape of a reason Sentry received, cut off partway through the note as Sentry cuts it.
         let reason = """

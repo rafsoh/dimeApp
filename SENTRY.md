@@ -53,9 +53,13 @@ Breadcrumbs (not their own issues) also cover: migration start and the pre-migra
 
 The empty-store and below-backup issues are sent once per app version so a launch loop cannot drain the quota. Erase Data suppresses the empty-store issue.
 
+## Out of storage
+
+Before migrating, the app copies the store only when the volume has room for the copy and for the migration after it (twice the store and its write-ahead log, plus 20 MB). Otherwise it skips the copy and leaves a `pre-migration snapshot skipped for lack of space` breadcrumb; a copy that fails partway is deleted. When a save fails, the changes stay in the view context and the person is told: "Dime couldn't save your changes", with a storage-specific message when the device is full. The save is tried again each time the app returns to the foreground. Each kind of save failure is sent once per launch; repeats are breadcrumbs, since a full disk fails every save after it.
+
 ## When the store won't open
 
-A store that fails to load no longer crashes the app. The app tries once more after a second, and if that fails too it shows a screen that says the data is still on the device, with Try Again and Contact Support, and the error's domain and code. Nothing is changed or deleted. Only the app migrates the store: the widget and intents extensions open it without migration, so they can't race the app (the cause of `NSMigrationError` 134110 on the first launch after an update) or be stopped partway through by their memory limit. Until the app has migrated the file, an extension leaves it closed and its widgets show nothing; the app reloads them once the migration finishes.
+A store that fails to load no longer crashes the app. The app tries once more after a second, and if that fails too it shows a screen that says the data is still on the device, with Try Again and Contact Support, and the error's domain and code. Nothing is changed or deleted. If the failure is the device running out of storage (SQLite code 13, a file write out of space, or ENOSPC anywhere in the error chain), the screen says so and asks the person to free up space first. Only the app migrates the store: the widget and intents extensions open it without migration, so they can't race the app (the cause of `NSMigrationError` 134110 on the first launch after an update) or be stopped partway through by their memory limit. Until the app has migrated the file, an extension leaves it closed and its widgets show nothing; the app reloads them once the migration finishes.
 
 ## Uploading dSYMs
 

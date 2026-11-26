@@ -282,6 +282,38 @@ enum DataIntegrityLog {
         return true
     }
 
+    /// Whether the device ran out of storage anywhere in the error chain: SQLite's "database or disk is full"
+    /// (code 13, which Core Data often reports under its own error), a file write out of space, or ENOSPC.
+    static func isOutOfSpace(_ error: Error) -> Bool {
+        var pending: [NSError] = [error as NSError]
+        var seen = 0
+
+        while let next = pending.popLast(), seen < 12 {
+            seen += 1
+
+            switch (next.domain, next.code) {
+            case ("NSSQLiteErrorDomain", 13), (NSCocoaErrorDomain, NSFileWriteOutOfSpaceError), (NSPOSIXErrorDomain, Int(ENOSPC)):
+                return true
+            default:
+                break
+            }
+
+            if (next.userInfo["NSSQLiteErrorDomain"] as? NSNumber)?.intValue == 13 {
+                return true
+            }
+
+            if let underlying = next.userInfo[NSUnderlyingErrorKey] as? Error {
+                pending.append(underlying as NSError)
+            }
+
+            if let multiple = next.userInfo[NSMultipleUnderlyingErrorsKey] as? [Any] {
+                pending.append(contentsOf: multiple.prefix(4).compactMap { $0 as? Error }.map { $0 as NSError })
+            }
+        }
+
+        return false
+    }
+
     /// Crash reasons can carry a whole record. Core Data's relationship and validation exceptions describe the
     /// objects involved: "(source = <Transaction: 0x…> (entity: Transaction; id: … <x-coredata://…>; data: {
     /// amount = 40; currencyCode = CHF; note = "…" … })". The sentence stays; the record, its store id and

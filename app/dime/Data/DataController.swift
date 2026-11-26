@@ -306,7 +306,22 @@ class DataController: ObservableObject {
     struct StoreLoadFailure: Equatable {
         let domain: String
         let code: Int
+        var isOutOfSpace = false
     }
+
+    /// A save that failed, shown once until a save succeeds or the app comes back to the foreground. The
+    /// changes stay in the view context and are saved again then; telling people matters because they're
+    /// lost if the app is closed first.
+    @Published private(set) var saveFailure: SaveFailure?
+
+    struct SaveFailure: Identifiable, Equatable {
+        let id = UUID()
+        let isOutOfSpace: Bool
+    }
+
+    private var isSaveFailureAcknowledged = false
+    /// Domain and code of save failures already sent this launch; a full disk fails every save after it.
+    private var reportedSaveFailures: Set<String> = []
 
     var isStoreLoaded: Bool {
         !container.persistentStoreCoordinator.persistentStores.isEmpty
@@ -476,6 +491,14 @@ class DataController: ObservableObject {
                     persist: true
                 )
             }
+        } catch StoreSnapshot.SnapshotError.notEnoughSpace {
+            logger.notice("Not saving the store before migrating it: too little free space")
+            DataIntegrityLog.breadcrumb(
+                "pre-migration snapshot skipped for lack of space",
+                numbers: countsBeforeMigration ?? [:],
+                flags: ["cloudKit": isCloudKitSyncEnabled],
+                persist: true
+            )
         } catch {
             let nsError = error as NSError
             logger.error("Saving the store before migrating it failed: \(nsError.domain, privacy: .public) \(nsError.code, privacy: .public)")
@@ -483,7 +506,7 @@ class DataController: ObservableObject {
                 error,
                 message: "Pre-migration snapshot failed",
                 numbers: countsBeforeMigration ?? [:],
-                flags: ["cloudKit": isCloudKitSyncEnabled]
+                flags: ["cloudKit": isCloudKitSyncEnabled, "outOfSpace": DataIntegrityLog.isOutOfSpace(error)]
             )
         }
 
@@ -529,7 +552,7 @@ class DataController: ObservableObject {
 
     private func storeFailedToLoad(_ error: NSError) {
         logger.error("Loading the persistent store failed: \(error.domain, privacy: .public) \(error.code, privacy: .public)")
-        storeLoadFailure = StoreLoadFailure(domain: error.domain, code: error.code)
+        storeLoadFailure = StoreLoadFailure(domain: error.domain, code: error.code, isOutOfSpace: DataIntegrityLog.isOutOfSpace(error))
 
         guard reportsIntegrity else {
             return
@@ -558,7 +581,8 @@ class DataController: ObservableObject {
             flags: [
                 "migrationNeeded": migrationNeededAtLaunch,
                 "cloudKit": isCloudKitSyncEnabled,
-                "fileExists": facts.exists
+                "fileExists": facts.exists,
+                "outOfSpace": DataIntegrityLog.isOutOfSpace(error)
             ]
         )
     }
@@ -770,6 +794,12 @@ class DataController: ObservableObject {
     }
 
     func applicationWillEnterForeground() {
+        // Changes a failed save left in the context, say before storage was freed up, get another try.
+        isSaveFailureAcknowledged = false
+        if container.viewContext.hasChanges {
+            save()
+        }
+
         mergeExtensionWrites()
 
         if isCloudKitSyncEnabled {
@@ -878,18 +908,40 @@ class DataController: ObservableObject {
         do {
             try context.save()
             WidgetCenter.shared.reloadAllTimelines()
+
+            isSaveFailureAcknowledged = false
+            if saveFailure != nil {
+                saveFailure = nil
+            }
         } catch {
             let nsError = error as NSError
+            let outOfSpace = DataIntegrityLog.isOutOfSpace(error)
             logger.error("Saving the view context failed: \(nsError.domain, privacy: .public) \(nsError.code, privacy: .public)")
-            DataIntegrityLog.capture(
-                nsError,
-                message: "Saving the view context failed",
-                numbers: [
-                    "transactions": deletedTransactions,
-                    "categories": deletedCategories
-                ]
-            )
+
+            let summary = DataIntegrityLog.failureSummary(for: error)
+            let numbers = [
+                "transactions": deletedTransactions,
+                "categories": deletedCategories,
+                "pendingObjects": context.insertedObjects.count + context.updatedObjects.count + context.deletedObjects.count
+            ]
+
+            if reportedSaveFailures.insert("\(summary.domain).\(summary.code)").inserted {
+                DataIntegrityLog.capture(nsError, message: "Saving the view context failed", numbers: numbers, flags: ["outOfSpace": outOfSpace])
+            } else {
+                DataIntegrityLog.breadcrumb("saving the view context failed again", numbers: numbers, flags: ["outOfSpace": outOfSpace])
+            }
+
+            // The app's own saves are on the main thread; an extension has no one to tell.
+            if !isAppExtension, Thread.isMainThread, !isSaveFailureAcknowledged, saveFailure == nil {
+                saveFailure = SaveFailure(isOutOfSpace: outOfSpace)
+            }
         }
+    }
+
+    /// The person has seen the save failure. It isn't shown again until a save succeeds or the app returns.
+    func acknowledgeSaveFailure() {
+        isSaveFailureAcknowledged = true
+        saveFailure = nil
     }
 
     /// Deletes a category. Its transactions and Quick Add templates either move first (to another

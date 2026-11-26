@@ -517,13 +517,14 @@ struct NewCategoryAlert: View {
             ZStack {
                 EmojiTextField(text: $newEmoji)
                     .focused($focusedField, equals: .emoji)
-                    .onReceive(Just(newEmoji), perform: { _ in
-                        if String(self.newEmoji.onlyEmoji().suffix(1)) != self.newEmoji.onlyEmoji().prefix(1) {
-                            self.newEmoji = String(self.newEmoji.onlyEmoji().suffix(1))
-                        } else {
-                            self.newEmoji = String(self.newEmoji.onlyEmoji().prefix(1))
+                    .onChange(of: newEmoji) { value in
+                        // Only the newest emoji stays. Written only when that changes anything, so the emoji
+                        // keyboard isn't handed its own text back while it works.
+                        let single = String(value.onlyEmoji().suffix(1))
+                        if single != value {
+                            newEmoji = single
                         }
-                    })
+                    }
                     .font(.system(size: 160))
                     .padding(8)
                     .frame(width: 96, height: 96, alignment: .center)
@@ -852,13 +853,14 @@ struct EditCategoryAlert: View {
             ZStack {
                 EmojiTextField(text: $newEmoji)
                     .focused($focusedField, equals: .emoji)
-                    .onReceive(Just(newEmoji), perform: { _ in
-                        if String(self.newEmoji.onlyEmoji().suffix(1)) != self.newEmoji.onlyEmoji().prefix(1) {
-                            self.newEmoji = String(self.newEmoji.onlyEmoji().suffix(1))
-                        } else {
-                            self.newEmoji = String(self.newEmoji.onlyEmoji().prefix(1))
+                    .onChange(of: newEmoji) { value in
+                        // Only the newest emoji stays. Written only when that changes anything, so the emoji
+                        // keyboard isn't handed its own text back while it works.
+                        let single = String(value.onlyEmoji().suffix(1))
+                        if single != value {
+                            newEmoji = single
                         }
-                    })
+                    }
                     .font(.system(size: 160))
                     .padding(8)
                     .frame(width: 96, height: 96, alignment: .center)
@@ -1489,12 +1491,22 @@ struct EmojiTextField: UIViewRepresentable {
         emojiTextField.font = UIFont(name: "HelveticaNeue", size: 50)
         emojiTextField.textAlignment = .center
         emojiTextField.endFloatingCursor()
-        emojiTextField.becomeFirstResponder()
         emojiTextField.keyboardType = .emoji ?? .default
+        emojiTextField.addTarget(context.coordinator, action: #selector(Coordinator.textChanged(_:)), for: .editingChanged)
+        emojiTextField.becomeFirstResponder()
         return emojiTextField
     }
 
-    func updateUIView(_ uiView: UIEmojiTextField, context _: Context) {
+    // Setting the text resets the field's input. The emoji keyboard (and its search) then starts over, and
+    // doing that on every update hung the main thread inside the keyboard. Only real changes are written,
+    // and never while the keyboard is still composing.
+    func updateUIView(_ uiView: UIEmojiTextField, context: Context) {
+        context.coordinator.parent = self
+
+        guard uiView.markedTextRange == nil, uiView.text != text else {
+            return
+        }
+
         uiView.text = text
     }
 
@@ -1509,10 +1521,22 @@ struct EmojiTextField: UIViewRepresentable {
             self.parent = parent
         }
 
-        func textFieldDidChangeSelection(_ textField: UITextField) {
-            DispatchQueue.main.async { [weak self] in
-                self?.parent.text = textField.text ?? ""
+        // Edits only. Selection changes, which the keyboard makes constantly, used to write the text back too.
+        @objc func textChanged(_ textField: UITextField) {
+            guard textField.markedTextRange == nil else {
+                return
             }
+
+            let newText = textField.text ?? ""
+
+            if parent.text != newText {
+                parent.text = newText
+            }
+        }
+
+        // Text committed from a composing keyboard arrives here at the latest.
+        func textFieldDidEndEditing(_ textField: UITextField) {
+            textChanged(textField)
         }
     }
 }
@@ -1533,6 +1557,7 @@ struct NormalTextField: UIViewRepresentable {
         textField.autocapitalizationType = .words
         textField.text = text
         textField.delegate = context.coordinator
+        textField.addTarget(context.coordinator, action: #selector(Coordinator.textChanged(_:)), for: .editingChanged)
 
         textField.font = UIFont.roundedSpecial(ofStyle: .title2, weight: .medium, size: 17)
 //
@@ -1540,7 +1565,14 @@ struct NormalTextField: UIViewRepresentable {
         return textField
     }
 
-    func updateUIView(_ uiView: UITextField, context _: Context) {
+    // As with the emoji field: only real changes are written, and not while the keyboard is composing.
+    func updateUIView(_ uiView: UITextField, context: Context) {
+        context.coordinator.parent = self
+
+        guard uiView.markedTextRange == nil, uiView.text != text else {
+            return
+        }
+
         uiView.text = text
     }
 
@@ -1555,10 +1587,21 @@ struct NormalTextField: UIViewRepresentable {
             self.parent = parent
         }
 
-        func textFieldDidChangeSelection(_ textField: UITextField) {
-            DispatchQueue.main.async { [weak self] in
-                self?.parent.text = textField.text ?? ""
+        @objc func textChanged(_ textField: UITextField) {
+            guard textField.markedTextRange == nil else {
+                return
             }
+
+            let newText = textField.text ?? ""
+
+            if parent.text != newText {
+                parent.text = newText
+            }
+        }
+
+        // Text committed from a composing keyboard arrives here at the latest.
+        func textFieldDidEndEditing(_ textField: UITextField) {
+            textChanged(textField)
         }
 
         func textFieldShouldReturn(_: UITextField) -> Bool {

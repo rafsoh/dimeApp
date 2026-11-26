@@ -89,6 +89,10 @@
 "Try Again" = "Erneut versuchen";
 "Trying Again…" = "Erneuter Versuch …";
 "Contact Support" = "Support kontaktieren";
+"Dime couldn't save your changes" = "Dime konnte deine Änderungen nicht sichern";
+"This device is out of storage. Free up some space in the Settings app, and Dime will save your changes when you come back." = "Auf diesem Gerät ist kein Speicherplatz mehr frei. Gib in der App „Einstellungen“ etwas Speicher frei, dann sichert Dime deine Änderungen, sobald du zurückkommst.";
+"Dime will try again. If this keeps happening, contact support." = "Dime versucht es erneut. Wenn das weiterhin passiert, wende dich an den Support.";
+"This device is out of storage, so Dime can't open your data. Your entries are still here. Free up some space in the Settings app, then try again. Please don't delete Dime: that would remove them." = "Auf diesem Gerät ist kein Speicherplatz mehr frei, daher kann Dime deine Daten nicht öffnen. Deine Einträge sind noch da. Gib in der App „Einstellungen“ etwas Speicher frei und versuche es dann erneut. Bitte lösche Dime nicht, sonst wären sie weg.";
 "Missing Category" = "Kategorie fehlt";
 "No Category" = "Keine Kategorie";
 "category-picker-none" = "Keine";

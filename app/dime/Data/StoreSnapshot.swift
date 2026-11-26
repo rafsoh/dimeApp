@@ -11,6 +11,25 @@ import Foundation
 enum StoreSnapshot {
     enum SnapshotError: Error {
         case unknownSourceModel
+        /// Too little free space for a copy and the migration after it. Copying would only use up the
+        /// space the migration needs, and a migration that runs out of space can't open the store at all.
+        case notEnoughSpace
+    }
+
+    /// Room for a copy of the store and its write-ahead log, and as much again for the migration.
+    static func bytesNeededForSnapshot(storeAt storeURL: URL) -> Int64 {
+        func size(_ url: URL) -> Int64 {
+            Int64((try? url.resourceValues(forKeys: [.fileSizeKey]))?.fileSize ?? 0)
+        }
+
+        let store = size(storeURL) + size(URL(fileURLWithPath: storeURL.path + "-wal"))
+        return store * 2 + 20 * 1024 * 1024
+    }
+
+    /// Free space on the store's volume, or nil when it can't be read.
+    static func availableCapacity(forStoreAt storeURL: URL) -> Int64? {
+        let values = try? storeURL.deletingLastPathComponent().resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey])
+        return values?.volumeAvailableCapacityForImportantUsage
     }
 
     private final class CountBox {
@@ -130,13 +149,24 @@ enum StoreSnapshot {
             throw SnapshotError.unknownSourceModel
         }
 
+        if let available = availableCapacity(forStoreAt: storeURL), available < bytesNeededForSnapshot(storeAt: storeURL) {
+            throw SnapshotError.notEnoughSpace
+        }
+
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let destination = directory.appendingPathComponent("Main-\(Int(date.timeIntervalSince1970)).sqlite")
         let options: [AnyHashable: Any] = [NSPersistentHistoryTrackingKey: true as NSNumber]
 
         // A SQLite-level copy that folds in the write-ahead log, unlike copying the files.
         let coordinator = NSPersistentStoreCoordinator(managedObjectModel: sourceModel)
-        try coordinator.replacePersistentStore(at: destination, destinationOptions: options, withPersistentStoreFrom: storeURL, sourceOptions: options, ofType: NSSQLiteStoreType)
+
+        do {
+            try coordinator.replacePersistentStore(at: destination, destinationOptions: options, withPersistentStoreFrom: storeURL, sourceOptions: options, ofType: NSSQLiteStoreType)
+        } catch {
+            // A copy cut short (for one, by a full disk) is useless and holds space the migration needs.
+            removeFiles(of: destination)
+            throw error
+        }
 
         prune(directory, keeping: destination)
         return destination
@@ -150,11 +180,15 @@ enum StoreSnapshot {
             .sorted { $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedDescending }
     }
 
+    private static func removeFiles(of storeURL: URL) {
+        for suffix in ["", "-wal", "-shm"] {
+            try? FileManager.default.removeItem(at: URL(fileURLWithPath: storeURL.path + suffix))
+        }
+    }
+
     private static func prune(_ directory: URL, keeping newest: URL) {
         for url in list(in: directory).filter({ $0 != newest }).dropFirst(maximumCount - 1) {
-            for suffix in ["", "-wal", "-shm"] {
-                try? FileManager.default.removeItem(at: URL(fileURLWithPath: url.path + suffix))
-            }
+            removeFiles(of: url)
         }
     }
 }

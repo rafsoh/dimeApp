@@ -89,6 +89,10 @@
 "Try Again" = "Tekrar Dene";
 "Trying Again…" = "Tekrar deneniyor…";
 "Contact Support" = "Destekle İletişime Geç";
+"Dime couldn't save your changes" = "Dime değişikliklerini kaydedemedi";
+"This device is out of storage. Free up some space in the Settings app, and Dime will save your changes when you come back." = "Bu cihazda depolama alanı kalmadı. Ayarlar uygulamasından biraz yer aç, geri döndüğünde Dime değişikliklerini kaydeder.";
+"Dime will try again. If this keeps happening, contact support." = "Dime tekrar deneyecek. Sorun devam ederse destekle iletişime geç.";
+"This device is out of storage, so Dime can't open your data. Your entries are still here. Free up some space in the Settings app, then try again. Please don't delete Dime: that would remove them." = "Bu cihazda depolama alanı kalmadığı için Dime verilerini açamıyor. Kayıtların hâlâ burada. Ayarlar uygulamasından biraz yer aç, sonra tekrar dene. Lütfen Dime'ı silme, yoksa kayıtların da silinir.";
 "Missing Category" = "Kategori eksik";
 "No Category" = "Kategorisiz";
 "category-picker-none" = "Yok";

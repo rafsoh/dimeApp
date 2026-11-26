@@ -26,7 +26,7 @@ struct ContentView: View {
     // converts category colors to hex codes
     @AppStorage("dataMigration2", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var dataMigration2: Bool = true
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode ?? "USD"
 
     @State var showIntro: Bool = false
     @State var showWhatsNew: Bool = false
@@ -59,6 +59,17 @@ struct ContentView: View {
                 }
                 .sheet(isPresented: $showWhatsNew) {
                     WhatsNewSheet(releases: whatsNewReleases)
+                }
+                .alert(item: Binding(get: { dataController.saveFailure }, set: { if $0 == nil { dataController.acknowledgeSaveFailure() } })) { failure in
+                    // The changes are still in memory and are saved again when Dime comes back to the
+                    // foreground; closing the app before then loses them.
+                    Alert(
+                        title: Text("Dime couldn't save your changes"),
+                        message: Text(failure.isOutOfSpace
+                            ? LocalizedStringKey("This device is out of storage. Free up some space in the Settings app, and Dime will save your changes when you come back.")
+                            : LocalizedStringKey("Dime will try again. If this keeps happening, contact support.")),
+                        dismissButton: .default(Text("OK"))
+                    )
                 }
                 .onAppear {
                     savedTopEdge = topEdge
@@ -117,7 +128,7 @@ struct ContentView: View {
                 if isUsingDemoData {
                     // Demo data sets its own currency, and must not reach iCloud's copy.
                 } else if NSUbiquitousKeyValueStore.default.string(forKey: "currency") == nil {
-                    NSUbiquitousKeyValueStore.default.set(Locale.current.currencyCode!, forKey: "currency")
+                    NSUbiquitousKeyValueStore.default.set(Locale.current.currencyCode ?? "USD", forKey: "currency")
                 } else {
                     currency = NSUbiquitousKeyValueStore.default.string(forKey: "currency")!
                 }
