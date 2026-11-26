@@ -248,11 +248,12 @@ struct InsightsView: View {
         .accessibilityLabel(Text("Account") + Text(", ") + Text(verbatim: name))
     }
 
-    /// Week, month or year, beside the stepper; its menu opens upwards.
+    /// A calendar button, since the stepper's dates already say whether it's a week, month or year.
     var periodMenu: some View {
-        GlassCapsuleButton(LocalizedStringKey(chartTypeString), trailingSystemImage: "chevron.up.chevron.down") {
+        GlassIconButton(systemName: "calendar", accessibilityLabel: "Time frame") {
             showTimeMenu = true
         }
+        .accessibilityValue(Text(LocalizedStringKey(chartTypeString)))
         .fixedSize()
         .popover(present: $showTimeMenu, attributes: {
             $0.position = .absolute(
