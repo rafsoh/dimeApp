@@ -1164,6 +1164,8 @@ struct DeleteCategoryAlert: View {
                 MoveDestinationChip(category: destination, income: toDelete.income)
                     .opacity(moving ? 1 : 0.4)
             }
+            // Offered the row's spare width first; "Move to" keeps its natural width (see FateRow).
+            .layoutPriority(1)
             .accessibilityLabel(Text("Move to"))
             .accessibilityValue(Text(destination?.wrappedName ?? Uncategorised.name))
         }
