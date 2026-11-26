@@ -358,15 +358,8 @@ struct CategoryListView: View {
         .toolbar { toolbarContent }
         .tint(Color.PrimaryText)
         .animation(.easeOut(duration: 0.2), value: showToast)
-        .confirmationSheet(
-            item: $toDelete,
-            title: { "Delete '\($0.wrappedName)'?" },
-            message: { "This action cannot be undone, and all \($0.wrappedName) transactions would be deleted." }
-        ) { category in
-            withAnimation {
-                moc.delete(category)
-                dataController.save()
-            }
+        .sheet(item: $toDelete) { category in
+            DeleteCategoryAlert(toDelete: category, deleted: .constant(false))
         }
         .sheet(item: $toEdit, onDismiss: {
             toEdit = nil
@@ -1016,34 +1009,216 @@ struct EditCategoryAlert: View {
     }
 }
 
+/// Confirms deleting a category. When it has transactions, also asks whether to move them
+/// (to another category of the same kind, or to No Category) or delete them with it.
 struct DeleteCategoryAlert: View {
-    @Environment(\.managedObjectContext) var moc
     @EnvironmentObject var dataController: DataController
     @Environment(\.dismiss) var dismiss
     let toDelete: Category
+    /// Set when the category is deleted, so a sheet that presented this one can close too.
     @Binding var deleted: Bool
 
-    var body: some View {
-        ConfirmationSheet(
-            title: "Delete '\(toDelete.wrappedName)'?",
-            message: "This action cannot be undone, and all \(toDelete.wrappedName) transactions would be deleted."
-        ) {
-            ConfirmationDestructiveButton {
-                deleted = true
-                dismiss()
+    @FetchRequest private var categories: FetchedResults<Category>
+    /// Where transactions go when moved; kept while Delete is picked so switching back restores it.
+    @State private var moveTarget: Category?
+    @State private var deleting: Bool
 
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    withAnimation {
-                        moc.delete(toDelete)
-                        dataController.save()
+    init(toDelete: Category, deleted: Binding<Bool>) {
+        self.toDelete = toDelete
+        _deleted = deleted
+        _moveTarget = State(initialValue: nil)
+        _deleting = State(initialValue: false)
+        _categories = FetchRequest(
+            sortDescriptors: [SortDescriptor(\.order)],
+            predicate: NSPredicate(format: "income = %d AND SELF != %@", toDelete.income, toDelete)
+        )
+    }
+
+    var body: some View {
+        let name = toDelete.wrappedName
+        let count = toDelete.transactionCount
+
+        if count == 0 {
+            ConfirmationSheet(title: "Delete '\(name)'?", message: "This action cannot be undone.") {
+                ConfirmationDestructiveButton(action: confirm)
+                ConfirmationCancelButton { dismiss() }
+            }
+        } else {
+            ConfirmationSheet(title: "Delete '\(name)'?", message: message(name: name, count: count)) {
+                VStack(spacing: 0) {
+                    moveRow
+
+                    Divider()
+                        .padding(.leading, 34)
+
+                    FateRow(title: rowTitle(count: count), selected: deleting, destructive: true) {
+                        deleting = true
                     }
                 }
+                .settingsSectionRows()
+                .padding(.bottom, 14)
+
+                ConfirmationDestructiveButton("Delete Category", action: confirm)
+                ConfirmationCancelButton { dismiss() }
+            }
+            .animation(.easeOut(duration: 0.2), value: deleting)
+        }
+    }
+
+    private func message(name: String, count: Int) -> LocalizedStringKey {
+        if count == 1 {
+            return "\(name) has 1 transaction. What should happen to it?"
+        }
+        return "\(name) has \(count) transactions. What should happen to them?"
+    }
+
+    private func rowTitle(count: Int) -> LocalizedStringKey {
+        count == 1 ? "Delete it" : "Delete them"
+    }
+
+    private var fate: DeleteCategoryFate {
+        deleting ? .delete : .move(to: moveTarget)
+    }
+
+    private func move(to category: Category?) {
+        moveTarget = category
+        deleting = false
+    }
+
+    private var moveRow: some View {
+        let moving = !deleting
+        let destination = moveTarget
+
+        return HStack(spacing: 12) {
+            FateRow(title: "Move to", selected: moving, destructive: false) {
+                deleting = false
             }
 
-            ConfirmationCancelButton {
-                dismiss()
+            Menu {
+                Button {
+                    move(to: nil)
+                } label: {
+                    if moving && destination == nil {
+                        Label("No Category", systemImage: "checkmark")
+                    } else {
+                        Label("No Category", systemImage: Uncategorised.symbol(income: toDelete.income))
+                    }
+                }
+
+                if !categories.isEmpty {
+                    Section(toDelete.income ? "Income Categories" : "Expense Categories") {
+                        ForEach(categories, id: \.self) { category in
+                            Button {
+                                move(to: category)
+                            } label: {
+                                if moving && destination == category {
+                                    Label(category.fullName, systemImage: "checkmark")
+                                } else {
+                                    Text(category.fullName)
+                                }
+                            }
+                        }
+                    }
+                }
+            } label: {
+                MoveDestinationChip(category: destination, income: toDelete.income)
+                    .opacity(moving ? 1 : 0.4)
+            }
+            // Offered the row's spare width first; "Move to" keeps its natural width (see FateRow).
+            .layoutPriority(1)
+            .accessibilityLabel(Text("Move to"))
+            .accessibilityValue(Text(destination?.wrappedName ?? Uncategorised.name))
+        }
+    }
+
+    private func confirm() {
+        let chosen = fate
+        let category = toDelete
+
+        deleted = true
+        dismiss()
+
+        // Wait for the sheet to close so the row's removal animates on the page underneath.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+            withAnimation {
+                dataController.deleteCategory(category, fate: chosen)
             }
         }
+    }
+}
+
+/// One choice in the delete sheet: a selection mark and a title, filling the row so the whole row is tappable.
+private struct FateRow: View {
+    let title: LocalizedStringKey
+    let selected: Bool
+    let destructive: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+                    .font(.system(.title3, design: .rounded))
+                    .foregroundColor(selected ? (destructive ? Color.AlertRed : Color.PrimaryText) : Color.SubtitleText.opacity(0.5))
+                    .frame(width: 22)
+
+                Text(title)
+                    .font(.system(.body, design: .rounded).weight(.medium))
+                    .foregroundColor(Color.PrimaryText)
+                    .lineLimit(1)
+                    // Titles are short; the chip beside "Move to" is what gives way when space runs out.
+                    .fixedSize(horizontal: true, vertical: false)
+
+                Spacer(minLength: 0)
+            }
+            .frame(maxWidth: .infinity, minHeight: .settingsRowHeight)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+}
+
+/// The chip showing where transactions will move, styled like the import flow's category chip.
+private struct MoveDestinationChip: View {
+    let category: Category?
+    let income: Bool
+
+    var body: some View {
+        HStack(spacing: 6) {
+            if let category {
+                Text(category.wrappedEmoji)
+                    .font(.system(.footnote, design: .rounded))
+
+                Text(category.wrappedName)
+                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .foregroundColor(Color(hex: category.wrappedColour))
+                    .lineLimit(1)
+            } else {
+                Image(systemName: Uncategorised.symbol(income: income))
+                    .font(.system(.footnote, design: .rounded).weight(.bold))
+                    .foregroundColor(Color(hex: Uncategorised.colour))
+
+                Text("No Category")
+                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .foregroundColor(Color.PrimaryText)
+                    .lineLimit(1)
+            }
+
+            Image(systemName: "chevron.up.chevron.down")
+                .font(.system(.caption, design: .rounded).weight(.semibold))
+                .foregroundColor(Color.SubtitleText)
+        }
+        .padding(.horizontal, 12)
+        .frame(height: 36)
+        .background {
+            if let category {
+                Capsule().fill(Color(hex: category.wrappedColour).opacity(0.18))
+            }
+        }
+        .glassBackground(in: Capsule(), tint: .glassTint)
+        .contentShape(Capsule())
+        .frame(maxWidth: 220, alignment: .trailing)
     }
 }
 

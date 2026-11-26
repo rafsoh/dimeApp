@@ -480,5 +480,14 @@
 "The new amount applies from this period on, and earlier periods keep the old one." = "新金額從本週期開始生效，之前的週期保留原金額。";
 "The new reset day applies from this period on, and earlier periods keep the old one." = "新的起始日從本週期開始生效，之前的週期保留原起始日。";
 "The %@ from earlier periods is kept." = "目前已結轉的%@將保留。";
+
+/* Delete category */
+"%@ has 1 transaction. What should happen to it?" = "「%@」中有 1 筆交易。要如何處理？";
+"%@ has %lld transactions. What should happen to them?" = "「%@」中有 %lld 筆交易。要如何處理？";
+"Move to" = "移至";
+"Delete it" = "刪除";
+"Delete them" = "全部刪除";
+"Delete Category" = "刪除類別";
+
 "Font" = "字體";
 "Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo 是 Josh Puckett 設計的字體，採用 SIL Open Font License 授權。";

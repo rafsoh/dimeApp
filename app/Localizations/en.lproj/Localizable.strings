@@ -494,5 +494,14 @@
 "The new amount applies from this period on, and earlier periods keep the old one." = "The new amount applies from this period on, and earlier periods keep the old one.";
 "The new reset day applies from this period on, and earlier periods keep the old one." = "The new reset day applies from this period on, and earlier periods keep the old one.";
 "The %@ from earlier periods is kept." = "The %@ from earlier periods is kept.";
+
+/* Delete category */
+"%@ has 1 transaction. What should happen to it?" = "%@ has 1 transaction. What should happen to it?";
+"%@ has %lld transactions. What should happen to them?" = "%@ has %lld transactions. What should happen to them?";
+"Move to" = "Move to";
+"Delete it" = "Delete it";
+"Delete them" = "Delete them";
+"Delete Category" = "Delete Category";
+
 "Font" = "Font";
 "Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License.";

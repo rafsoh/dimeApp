@@ -480,5 +480,14 @@
 "The new amount applies from this period on, and earlier periods keep the old one." = "Het nieuwe bedrag geldt vanaf deze periode; eerdere periodes houden het oude.";
 "The new reset day applies from this period on, and earlier periods keep the old one." = "De nieuwe startdag geldt vanaf deze periode; eerdere periodes houden de oude.";
 "The %@ from earlier periods is kept." = "Het tot nu toe overgedragen bedrag (%@) blijft behouden.";
+
+/* Delete category */
+"%@ has 1 transaction. What should happen to it?" = "%@ heeft 1 transactie. Wat moet ermee gebeuren?";
+"%@ has %lld transactions. What should happen to them?" = "%@ heeft %lld transacties. Wat moet ermee gebeuren?";
+"Move to" = "Verplaats naar";
+"Delete it" = "Verwijder deze";
+"Delete them" = "Verwijder ze";
+"Delete Category" = "Verwijder categorie";
+
 "Font" = "Lettertype";
 "Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo is een lettertype van Josh Puckett, gelicentieerd onder de SIL Open Font License.";
