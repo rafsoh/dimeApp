@@ -39,7 +39,8 @@ guard let captions = allCaptions[locale] else {
 
 let canvasW: CGFloat = 1290
 let canvasH: CGFloat = 2796
-let iPhoneSizes = [CGSize(width: 1320, height: 2868), CGSize(width: 1284, height: 2778), CGSize(width: 1206, height: 2622)]
+// App Store Connect's 6.3" iPhone size.
+let iPhoneSizes = [CGSize(width: 1206, height: 2622)]
 let ink = NSColor(srgbRed: 0.15, green: 0.15, blue: 0.15, alpha: 1)
 let cs = CGColorSpace(name: CGColorSpace.sRGB)!
 let ciContext = CIContext(options: [.workingColorSpace: cs, .outputColorSpace: cs])
@@ -116,7 +117,7 @@ func save(_ img: CGImage, _ name: String) {
     print("wrote", path)
 }
 
-/// Saves an iPhone screenshot at every App Store size, scaled to fill and centre-cropped (the aspect ratios differ by under 0.3%).
+/// Saves an iPhone screenshot at every size in `iPhoneSizes`, scaled to fill and centre-cropped (the aspect ratios differ by under 0.3%).
 func exportIPhone(_ img: CGImage, _ name: String) {
     for size in iPhoneSizes {
         let scale = max(size.width / CGFloat(img.width), size.height / CGFloat(img.height))

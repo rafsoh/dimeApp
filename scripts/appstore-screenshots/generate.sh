@@ -4,8 +4,8 @@
 #
 # Usage: scripts/appstore-screenshots/generate.sh [locale ...]   (defaults to every locale in locales.sh)
 #
-# The widgets screenshot needs a home screen with Dime's widgets, which capture.sh can't set up; put a
-# 1320x2868 capture at out/raw/<locale>/iphone/widgets.png to include it.
+# The widgets screenshot needs a home screen with Dime's widgets, which capture.sh can't set up, so those
+# captures are kept in widgets/<locale>.png (1320x2868); locales without one get no widgets screenshot.
 set -euo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -21,6 +21,9 @@ swiftc -O "$DIR/compose.swift" -o "$DIR/out/compose"
 for locale in "${LOCALES[@]}"; do
   out="$REPO/fastlane/screenshots/$locale"
   rm -rf "$out"
+  if [ -f "$DIR/widgets/$locale.png" ]; then
+    cp "$DIR/widgets/$locale.png" "$DIR/out/raw/$locale/iphone/widgets.png"
+  fi
   "$DIR/out/compose" "$locale" "$DIR/out/raw/$locale" "$out" "$DIR/captions.json" > /dev/null
   echo "$locale: $(find "$out" -name '*.png' | wc -l | tr -d ' ') screenshots"
 done
