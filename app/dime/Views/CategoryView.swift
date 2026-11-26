@@ -1164,8 +1164,6 @@ struct DeleteCategoryAlert: View {
                 MoveDestinationChip(category: destination, income: toDelete.income)
                     .opacity(moving ? 1 : 0.4)
             }
-            // The chip shows its whole label; "Move to" gives up the space.
-            .layoutPriority(1)
             .accessibilityLabel(Text("Move to"))
             .accessibilityValue(Text(destination?.wrappedName ?? Uncategorised.name))
         }
@@ -1206,6 +1204,8 @@ private struct FateRow: View {
                     .font(.system(.body, design: .rounded).weight(.medium))
                     .foregroundColor(Color.PrimaryText)
                     .lineLimit(1)
+                    // Titles are short; the chip beside "Move to" is what gives way when space runs out.
+                    .fixedSize(horizontal: true, vertical: false)
 
                 Spacer(minLength: 0)
             }
@@ -1256,7 +1256,7 @@ private struct MoveDestinationChip: View {
         }
         .glassBackground(in: Capsule(), tint: .glassTint)
         .contentShape(Capsule())
-        .frame(maxWidth: 190, alignment: .trailing)
+        .frame(maxWidth: 220, alignment: .trailing)
     }
 }
 
