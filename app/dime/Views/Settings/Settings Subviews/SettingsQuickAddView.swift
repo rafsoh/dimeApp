@@ -10,7 +10,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct SettingsQuickAddView: View {
-  @EnvironmentObject private var dataController: DataController
+  @ObservedObject private var dataController = DataController.shared
 
   @FetchRequest(sortDescriptors: [SortDescriptor(\.order)]) private var templates: FetchedResults<TemplateTransaction>
 

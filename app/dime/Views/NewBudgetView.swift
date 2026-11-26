@@ -34,7 +34,7 @@ private enum BudgetEditor: Hashable {
 
 struct BrandNewBudgetView: View {
     @Environment(\.managedObjectContext) var moc
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
     @Environment(\.dismiss) var dismiss
 
     @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!

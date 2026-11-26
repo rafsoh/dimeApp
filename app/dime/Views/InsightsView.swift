@@ -11,7 +11,7 @@ import Popovers
 import SwiftUI
 
 struct InsightsView: View {
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
     @EnvironmentObject var toastPresenter: OverallToastPresenter
     @EnvironmentObject var transactionManager: OverallTransactionManager
 
@@ -30,7 +30,7 @@ struct InsightsView: View {
     @State private var route: InsightsRoute?
     @State private var refreshID = UUID()
 
-    private var didSave = NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
+    private let didSave = NSManagedObjectContext.recordsDidSave
 
     var chartTypeString: String {
         if chartType == 1 {
@@ -1668,10 +1668,10 @@ struct InsightsDetailSheet: View {
     @State private var refreshID = UUID()
     @StateObject private var sheetManager = OverallTransactionManager()
 
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
     @Environment(\.dismiss) var dismiss
 
-    private var didSave = NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
+    private let didSave = NSManagedObjectContext.recordsDidSave
 
     var route: InsightsRoute {
         path.last ?? .allCategories
@@ -1961,7 +1961,7 @@ struct InsightsCashFlowDetail: View {
     let cashFlow: InsightsCashFlow
     let formatter: InsightsFormatter
 
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
     @EnvironmentObject var sheetManager: OverallTransactionManager
 
     @State private var selected: Int?

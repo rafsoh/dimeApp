@@ -282,6 +282,27 @@ enum DataIntegrityLog {
         return true
     }
 
+    /// Crash reasons can carry a whole record. Core Data's relationship and validation exceptions describe the
+    /// objects involved: "(source = <Transaction: 0x…> (entity: Transaction; id: … <x-coredata://…>; data: {
+    /// amount = 40; currencyCode = CHF; note = "…" … })". The sentence stays; the record, its store id and
+    /// anything quoted are removed.
+    static func redactedExceptionReason(_ reason: String) -> String {
+        var value = reason
+
+        if let range = value.range(of: "data: {") ?? value.range(of: "data: <") {
+            value = String(value[..<range.lowerBound]) + "data: <redacted>"
+        }
+
+        value = value.replacingOccurrences(of: #"x-coredata://[^\s>]*"#, with: "x-coredata://<redacted>", options: .regularExpression)
+        value = value.replacingOccurrences(of: #""[^"]*"?"#, with: "\"<redacted>\"", options: .regularExpression)
+
+        if value.count > 400 {
+            value = String(value.prefix(400)) + "…"
+        }
+
+        return value
+    }
+
     /// Keeps error domains and other tokens. Anything with spaces or punctuation is dropped,
     /// because that is where a note, name, or amount would show up.
     static func safeToken(_ value: String) -> String {

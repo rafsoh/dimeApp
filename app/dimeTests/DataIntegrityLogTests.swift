@@ -8,6 +8,33 @@ import CloudKit
 import XCTest
 
 final class DataIntegrityLogTests: XCTestCase {
+    func testExceptionReasonsLoseTheRecordTheyDescribe() {
+        // The shape of a reason Sentry received, cut off partway through the note as Sentry cuts it.
+        let reason = """
+        Illegal attempt to establish a relationship 'category' between objects in different contexts (source = <Transaction: 0x13b6f53b0> (entity: Transaction; id: 0xbdaf0d9217c9db13 <x-coredata://0472793F-6BEC-42E7-B004-43A646564D0F/Transaction/p5>; data: {
+            amount = 40;
+            currencyCode = CHF;
+            note = "Sta
+        """
+
+        let redacted = DataIntegrityLog.redactedExceptionReason(reason)
+
+        XCTAssertTrue(redacted.hasPrefix("Illegal attempt to establish a relationship 'category' between objects in different contexts"))
+        XCTAssertFalse(redacted.contains("40"))
+        XCTAssertFalse(redacted.contains("CHF"))
+        XCTAssertFalse(redacted.contains("Sta"))
+        XCTAssertFalse(redacted.contains("0472793F"))
+
+        let quoted = DataIntegrityLog.redactedExceptionReason(#"Unacceptable value "Rent for March" for key note"#)
+        XCTAssertFalse(quoted.contains("Rent"))
+        XCTAssertTrue(quoted.contains("for key note"))
+
+        XCTAssertEqual(
+            DataIntegrityLog.redactedExceptionReason("*** -[__NSArray0 objectAtIndex:]: index 0 beyond bounds for empty array"),
+            "*** -[__NSArray0 objectAtIndex:]: index 0 beyond bounds for empty array"
+        )
+    }
+
     func testFailureSummaryKeepsDomainsAndCodesOnly() {
         let underlying = NSError(
             domain: CKError.errorDomain,

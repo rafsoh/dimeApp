@@ -6,13 +6,17 @@
 //
 
 import Combine
+import CoreData
 import Foundation
 import Popovers
 import SwiftUI
 
 struct TransactionView: View {
-    @Environment(\.managedObjectContext) var moc
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
+    // Not the environment's context: a sheet SwiftUI shows without its environment would get an empty one.
+    private var moc: NSManagedObjectContext {
+        dataController.container.viewContext
+    }
     @Environment(\.dismiss) var dismiss
 
     @Environment(\.colorScheme) var colorScheme
@@ -720,15 +724,23 @@ struct TransactionView: View {
             return
         }
 
-        if let editedTransaction = toEdit {
+        // Deleted meanwhile, say by sync from another device. Saved as a new transaction below rather than lost.
+        if let editedTransaction = toEdit, editedTransaction.managedObjectContext == nil || editedTransaction.isDeleted {
+            DataIntegrityLog.breadcrumb("edited transaction was deleted meanwhile; saving it as new")
+        }
+
+        if let editedTransaction = toEdit, editedTransaction.managedObjectContext != nil, !editedTransaction.isDeleted {
+            // A category deleted while the sheet was open can't be linked; the edit is saved without one.
+            let chosenCategory = editedTransaction.sameContext(category)
+
             if note.trimmingCharacters(in: .whitespacesAndNewlines) == "" {
-                editedTransaction.note = category?.wrappedName ?? ""
+                editedTransaction.note = chosenCategory?.wrappedName ?? ""
             } else {
                 editedTransaction.note = note.trimmingCharacters(in: .whitespaces)
             }
 
             // Assigned even when nil, so an edit can remove the category.
-            editedTransaction.category = category
+            editedTransaction.category = chosenCategory
 
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 withAnimation(.easeInOut(duration: 0.5)) {
@@ -776,18 +788,16 @@ struct TransactionView: View {
         }
 
         let transaction = Transaction(context: moc)
+        let chosenCategory = transaction.sameContext(category)
 
         if note.trimmingCharacters(in: .whitespacesAndNewlines) == "" {
-            transaction.note = category?.wrappedName ?? ""
+            transaction.note = chosenCategory?.wrappedName ?? ""
         } else {
             transaction.note = note.trimmingCharacters(in: .whitespaces)
         }
 
         transaction.income = income
-
-        if let unwrappedCategory = category {
-            transaction.category = unwrappedCategory
-        }
+        transaction.category = chosenCategory
 
         transaction.amount = price
 
@@ -843,7 +853,7 @@ struct TransactionView: View {
         saved.note = note.trimmingCharacters(in: .whitespacesAndNewlines)
         saved.amount = price
         saved.income = income
-        saved.category = category
+        saved.category = saved.sameContext(category)
         saved.currencyCode = currencyCode
         saved.recurringType = 0
         saved.recurringCoefficient = 0

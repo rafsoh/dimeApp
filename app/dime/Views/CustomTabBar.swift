@@ -72,8 +72,7 @@ private struct AddTransactionSheet: ViewModifier {
     @Binding var counter: Int
     var launchAdd: Bool
 
-    @FetchRequest(sortDescriptors: []) private var transactions: FetchedResults<Transaction>
-
+    // A count query when the sheet opens and closes, rather than a live fetch of every transaction.
     @State private var count = 0
 
     @AppStorage("confetti", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var confetti: Bool = false
@@ -83,7 +82,7 @@ private struct AddTransactionSheet: ViewModifier {
         content
             .sheet(isPresented: $isPresented, onDismiss: {
                 if confetti {
-                    if count != transactions.count {
+                    if count != DataController.shared.transactionCount() {
                         counter += 1
                     }
                 }
@@ -100,7 +99,7 @@ private struct AddTransactionSheet: ViewModifier {
             }
             .onChange(of: isPresented) { _ in
                 if isPresented {
-                    count = transactions.count
+                    count = DataController.shared.transactionCount()
                 }
             }
             .onOpenURL { url in

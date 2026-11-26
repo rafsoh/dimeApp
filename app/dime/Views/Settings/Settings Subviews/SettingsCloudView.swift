@@ -10,7 +10,7 @@ import SwiftUI
 
 struct SettingsCloudView: View {
   @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
-  @EnvironmentObject var dataController: DataController
+  @ObservedObject var dataController = DataController.shared
   @AppStorage(DataController.iCloudSyncEnabledKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
   private var iCloudStorage: Bool = true
   @Namespace var animation

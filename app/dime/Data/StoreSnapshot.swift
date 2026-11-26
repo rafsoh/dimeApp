@@ -92,6 +92,12 @@ enum StoreSnapshot {
     }
 
     // Every version in the compiled model bundle, so the store can be opened with the model it was written by.
+    //
+    // Their entities are plain NSManagedObject. Each version otherwise also claims Transaction, Category and the
+    // other app classes, and while more than one model claiming a class is alive, +[Transaction entity] can't
+    // pick one and returns nil. Every @FetchRequest built from sort descriptors then crashes with "A fetch
+    // request must have an entity", which is what happened on the first launch after a migration.
+    // Class names aren't part of the version hashes, so these still match the store's metadata.
     static func modelVersions(named name: String = "MainModel", in bundle: Bundle = Bundle(for: DataController.self)) -> [NSManagedObjectModel] {
         guard let directory = bundle.url(forResource: name, withExtension: "momd"),
               let urls = try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
@@ -99,7 +105,16 @@ enum StoreSnapshot {
             return []
         }
 
-        return urls.filter { $0.pathExtension == "mom" }.compactMap(NSManagedObjectModel.init(contentsOf:))
+        let models = urls.filter { $0.pathExtension == "mom" }.compactMap(NSManagedObjectModel.init(contentsOf:))
+        let genericClassName = NSStringFromClass(NSManagedObject.self)
+
+        for model in models {
+            for entity in model.entities {
+                entity.managedObjectClassName = genericClassName
+            }
+        }
+
+        return models
     }
 
     // Call before loading the store. Returns the snapshot's location, or nil when no migration is pending.

@@ -11,9 +11,10 @@ import Popovers
 import SwiftUI
 
 struct LogView: View {
-    @FetchRequest(sortDescriptors: []) private var transactions: FetchedResults<Transaction>
+    // Only tells whether there are any transactions, so their values aren't loaded.
+    @FetchRequest(fetchRequest: Transaction.identifiersOnlyRequest) private var transactions: FetchedResults<Transaction>
 
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
     @Environment(\.managedObjectContext) var moc
 
     @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
@@ -439,7 +440,7 @@ struct LogListContent: View, Equatable {
 }
 
 struct LogInsightsView: View {
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
     @Environment(\.dynamicTypeSize) var dynamicTypeSize
 
     let showCents: Bool
@@ -823,7 +824,7 @@ struct TransactionsList: View {
     @AppStorage("showUpcomingTransactions", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showUpcoming: Bool = true
     @AppStorage("showUpcomingTransactionsWhenUpcoming", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showSoon: Bool = false
 
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
 
     @SectionedFetchRequest<Date?, Transaction>(sectionIdentifier: \.day, sortDescriptors: [
         SortDescriptor(\.day, order: .reverse),
@@ -931,25 +932,12 @@ struct ListView: View {
     }
 
     func filterOutDupes(day: SectionedFetchResults<Date?, Transaction>.Element) -> (transactions: [Transaction], string: String) {
-        var seen = [Transaction]()
+        var seen = Set<UUID?>()
         let filtered = day.filter { entity -> Bool in
-            if seen.contains(where: { $0.id == entity.id }) {
-                return false
-            } else {
-                seen.append(entity)
-                return true
-            }
+            seen.insert(entity.id).inserted
         }
 
-        let numberFormatter = NumberFormatter()
-        numberFormatter.numberStyle = .currency
-        numberFormatter.currencyCode = currency
-
-        if showCents {
-            numberFormatter.maximumFractionDigits = 2
-        } else {
-            numberFormatter.maximumFractionDigits = 0
-        }
+        let numberFormatter = CachedFormatter.currency(currency, maximumFractionDigits: showCents ? 2 : 0)
 
         let dayMoney = filtered.total(using: .current(), signed: true)
         let total = dayMoney.value
@@ -967,7 +955,7 @@ struct ListView: View {
 }
 
 struct FutureListView: View {
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
 
     @FetchRequest private var fetchedResults: FetchedResults<Transaction>
     var filterMode: Bool
@@ -1016,15 +1004,7 @@ struct FutureListView: View {
     @AppStorage("swapTimeLabel", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var swapTimeLabel: Bool = false
 
     var totalString: String {
-        let numberFormatter = NumberFormatter()
-        numberFormatter.numberStyle = .currency
-        numberFormatter.currencyCode = currency
-
-        if showCents {
-            numberFormatter.maximumFractionDigits = 2
-        } else {
-            numberFormatter.maximumFractionDigits = 0
-        }
+        let numberFormatter = CachedFormatter.currency(currency, maximumFractionDigits: showCents ? 2 : 0)
 
         let money = transactions.total(using: .current(), signed: true)
         let total = money.value
@@ -1095,7 +1075,7 @@ struct SingleTransactionView: View {
 
     @State var refreshID = UUID()
 
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
     @EnvironmentObject var transactionManager: OverallTransactionManager
 
     // delete mode
@@ -1136,15 +1116,7 @@ struct SingleTransactionView: View {
             return MoneyFormatter.string(transaction.amount, currencyCode: code, showCents: showCents)
         }
 
-        let numberFormatter = NumberFormatter()
-        numberFormatter.numberStyle = .currency
-        numberFormatter.currencyCode = currency
-
-        if showCents {
-            numberFormatter.maximumFractionDigits = 2
-        } else {
-            numberFormatter.maximumFractionDigits = 0
-        }
+        let numberFormatter = CachedFormatter.currency(currency, maximumFractionDigits: showCents ? 2 : 0)
 
         return numberFormatter.string(from: NSNumber(value: transaction.amount)) ?? "$0"
     }
@@ -1421,20 +1393,14 @@ struct SingleTransactionView: View {
             if swapTimeLabel {
                 return transaction.wrappedCategoryName
             } else {
-                let formatter = DateFormatter()
-                formatter.setLocalizedDateFormatFromTemplate("jmm")
-
-                return formatter.string(from: transaction.wrappedDate)
+                return CachedFormatter.date(template: "jmm").string(from: transaction.wrappedDate)
             }
         }
     }
 }
 
 func dateFormatter(date: Date) -> String {
-    let dateFormatter = DateFormatter()
-
-    dateFormatter.dateFormat = "d MMM"
-    return dateFormatter.string(from: date).uppercased()
+    CachedFormatter.date(format: "d MMM").string(from: date).uppercased()
 }
 
 struct EmojiLogView: View {
@@ -1503,7 +1469,7 @@ struct EmojiLogView: View {
 }
 
 struct DeleteTransactionAlert: View {
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
     @EnvironmentObject var transactionManager: OverallTransactionManager
 
     var stopRecurring: Bool {
@@ -1700,7 +1666,7 @@ struct FilteredDateView: View {
 
 struct CategoryStepperView: View {
     @Binding var categoryFilter: CategorySlice?
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
     @AppStorage("incomeTracking", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var incomeTracking: Bool = true
     @State var income = false
     @State var showPicker = false
@@ -1913,7 +1879,8 @@ struct WeekStepperView: View {
             calendar.firstWeekday = UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.integer(forKey: "firstWeekday") ?? 0
             calendar.minimumDaysInFirstWeek = 4
 
-            let date = transactionsReversed[0].day ?? Date.now
+            // Every transaction can be in the future (upcoming or recurring), leaving none before now.
+            let date = transactionsReversed.first?.day ?? Date.now
 
             let dateComponents = calendar.dateComponents([.weekOfYear, .yearForWeekOfYear], from: date)
 
@@ -1979,7 +1946,8 @@ struct MonthStepperView: View {
         .onAppear {
             let calendar = Calendar(identifier: .gregorian)
 
-            let date = transactionsReversed[0].day ?? Date.now
+            // Every transaction can be in the future (upcoming or recurring), leaving none before now.
+            let date = transactionsReversed.first?.day ?? Date.now
 
             let dateComponents = calendar.dateComponents([.month, .year], from: date)
 
@@ -2002,20 +1970,12 @@ func dateConverter(date: Date) -> String {
     } else if calendar.isDateInYesterday(date) {
         return String(localized: "yesterday")
     } else if startOfCurrentYear > date {
-        let dateFormatter = DateFormatter()
-
-        dateFormatter.dateFormat = "EEE, d MMM yy"
-
-        var string = dateFormatter.string(from: date)
+        var string = CachedFormatter.date(format: "EEE, d MMM yy").string(from: date)
         string.insert("'", at: string.index(string.endIndex, offsetBy: -2))
 
         return string
     } else {
-        let dateFormatter = DateFormatter()
-
-        dateFormatter.dateFormat = "EEE, d MMM"
-
-        return dateFormatter.string(from: date)
+        return CachedFormatter.date(format: "EEE, d MMM").string(from: date)
     }
 }
 
@@ -2027,20 +1987,12 @@ func dateConverterAccessibilityLabel(date: Date) -> String {
     } else if calendar.isDateInYesterday(date) {
         return "yesterday"
     } else {
-        let dateFormatter = DateFormatter()
-
-        dateFormatter.dateFormat = "EEE, d MMM yyyy"
-
-        return "on " + dateFormatter.string(from: date)
+        return "on " + CachedFormatter.date(format: "EEE, d MMM yyyy").string(from: date)
     }
 }
 
 func timeConverterAccessibilityLabel(date: Date) -> String {
-    let dateFormatter = DateFormatter()
-
-    dateFormatter.setLocalizedDateFormatFromTemplate("jmm")
-
-    return dateFormatter.string(from: date)
+    CachedFormatter.date(template: "jmm").string(from: date)
 }
 
 func dayTotal(dayTransaction: [Transaction]) -> Double {

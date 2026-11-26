@@ -99,7 +99,7 @@ struct CategoryListView: View {
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
     @Environment(\.dismiss) var dismiss
     @Environment(\.managedObjectContext) var moc
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
 
     @AppStorage("categorySuggestions", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showSuggestions: Bool = true
     @State var suggestionsToast = false
@@ -446,7 +446,7 @@ struct NewCategoryAlert: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.managedObjectContext) var moc
     @Environment(\.colorScheme) var systemColorScheme
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
 
     // existing categories
 
@@ -781,7 +781,7 @@ struct EditCategoryAlert: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.managedObjectContext) var moc
     @Environment(\.colorScheme) var systemColorScheme
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
 
     @Namespace var animation
 
@@ -1029,7 +1029,7 @@ struct EditCategoryAlert: View {
 /// Confirms deleting a category. When it has transactions, also asks whether to move them
 /// (to another category of the same kind, or to No Category) or delete them with it.
 struct DeleteCategoryAlert: View {
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
     @Environment(\.dismiss) var dismiss
     let toDelete: Category
     /// Set when the category is deleted, so a sheet that presented this one can close too.
@@ -1246,7 +1246,7 @@ struct SuggestedCategoriesView: View {
     @AppStorage("categorySuggestions", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showSuggestions: Bool = true
 
     @Environment(\.managedObjectContext) var moc
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
 
     var nameArray: [String] {
         var emptyArray = [String]()

@@ -18,12 +18,21 @@ struct dimeApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environment(\.managedObjectContext, dataController.container.viewContext)
-                .environmentObject(appLockVM)
-                .environmentObject(dataController)
-                .environmentObject(unlockManager)
-                .environmentObject(tabBarManager)
+            Group {
+                if let failure = dataController.storeLoadFailure {
+                    // Never a crash: people whose store won't open would otherwise delete the app to get past it.
+                    StoreLoadFailedView(failure: failure) {
+                        dataController.retryLoadingStore()
+                    }
+                } else {
+                    ContentView()
+                }
+            }
+            .environment(\.managedObjectContext, dataController.container.viewContext)
+            .environmentObject(appLockVM)
+            .environmentObject(dataController)
+            .environmentObject(unlockManager)
+            .environmentObject(tabBarManager)
         }
     }
 
@@ -63,5 +72,71 @@ struct dimeApp: App {
         NewExpenseLauncher.open = {
             UIApplication.shared.open(NewExpenseLauncher.url)
         }
+    }
+}
+
+/// Shown when the store can't be opened. Nothing is changed or deleted; the file stays as it was.
+struct StoreLoadFailedView: View {
+    let failure: DataController.StoreLoadFailure
+    let retry: () -> Void
+
+    @Environment(\.openURL) private var openURL
+    @State private var isRetrying = false
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "externaldrive.badge.exclamationmark")
+                .font(.system(size: 44, weight: .regular))
+                .foregroundColor(Color.SubtitleText)
+                .accessibilityHidden(true)
+
+            Text("Dime couldn't open your data")
+                .font(.app(.title3, weight: .semibold))
+                .foregroundColor(Color.PrimaryText)
+                .multilineTextAlignment(.center)
+
+            Text("Your entries are still on this device, and nothing has been changed or deleted. Please don't delete Dime: that would remove them. Try again, or contact support if this keeps happening.")
+                .font(.app(.body))
+                .foregroundColor(Color.SubtitleText)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Button {
+                isRetrying = true
+                // Lets the button show its state before the main thread opens the store.
+                DispatchQueue.main.async {
+                    retry()
+                    isRetrying = false
+                }
+            } label: {
+                Text(isRetrying ? "Trying Again…" : "Try Again")
+                    .font(.app(.body, weight: .semibold))
+                    .foregroundColor(Color.PrimaryBackground)
+                    .frame(maxWidth: .infinity, minHeight: 50)
+                    .background(Color.DarkBackground, in: Capsule())
+            }
+            .buttonStyle(.plain)
+            .disabled(isRetrying)
+            .padding(.top, 8)
+
+            Button {
+                SupportEmail(toAddress: "rafasohhh@gmail.com", subject: "Dime couldn't open my data (\(failure.domain) \(failure.code))").send(openURL: openURL)
+            } label: {
+                Text("Contact Support")
+                    .font(.app(.body, weight: .semibold))
+                    .foregroundColor(Color.PrimaryText)
+                    .frame(maxWidth: .infinity, minHeight: 44)
+            }
+            .buttonStyle(.plain)
+
+            Text("\(failure.domain) \(String(failure.code))")
+                .font(.app(.caption))
+                .foregroundColor(Color.SubtitleText)
+                .textSelection(.enabled)
+        }
+        .frame(maxWidth: 420)
+        .padding(.horizontal, 28)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.PrimaryBackground.ignoresSafeArea())
     }
 }

@@ -10,7 +10,7 @@ import WidgetKit
 
 struct ContentView: View {
     @EnvironmentObject var appLockVM: AppLockViewModel
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
     @ObservedObject private var backupManager = BackupManager.shared
 
     @AppStorage("colourScheme", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var colourScheme: Int = 0

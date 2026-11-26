@@ -30,7 +30,7 @@ struct HomeView: View {
 
     @StateObject var toastPresenter = OverallToastPresenter()
     @StateObject var transactionManager = OverallTransactionManager()
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
 
     @State var currentTab = "Log"
 
