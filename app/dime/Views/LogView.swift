@@ -1748,7 +1748,7 @@ struct FilteredAccountView: View {
 
     var body: some View {
         if transactions.isEmpty {
-            EmptyStateView(systemImage: AccountSymbol.outline, title: "No logs in this account")
+            EmptyStateView(systemImage: "tray", title: "No logs in this account")
                 .fillsScrollViewport()
         } else {
             ListView(transactions: _transactions, countsTransfers: true)
@@ -1782,9 +1782,6 @@ struct AccountFilterView: View {
             showPicker = true
         } label: {
             HStack(spacing: 6) {
-                Image(systemName: AccountSymbol.filled)
-                    .foregroundColor(Color.SubtitleText)
-
                 Text(account.name)
                     .foregroundColor(Color.PrimaryText)
                     .lineLimit(1)

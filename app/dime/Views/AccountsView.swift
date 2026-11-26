@@ -676,19 +676,11 @@ struct AccountPickerSheet: View {
 struct AccountToken: View {
     let name: String
     var isError = false
-    /// Transfers leave the icon off, so the arrow between their two accounts reads clearly.
-    var showsIcon = true
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: 5) {
-                if showsIcon {
-                    Image(systemName: AccountSymbol.outline)
-                        .font(.app(.subheadline, weight: .semibold))
-                        .accessibilityHidden(true)
-                }
-
                 Text(name)
                     .font(.app(.body, weight: .semibold))
                     .lineLimit(1)
