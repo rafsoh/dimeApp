@@ -722,7 +722,29 @@ struct BrandNewBudgetView: View {
         }
     }
 
+    /// What this page edits, or the category picked on it, can be deleted while the page is open, most often
+    /// by a change synced from another device. Linking a deleted category throws "Illegal attempt to establish
+    /// a relationship ... between objects in different contexts". Flags it and returns true.
+    private func flagDeletedMeanwhile() -> Bool {
+        if toEditBudget?.isGone == true || toEditMainBudget?.isGone == true {
+            flagError(title: "Budget Was Deleted", image: "trash", tokens: [])
+            return true
+        }
+
+        if let chosen = selectedCategory, chosen.isGone {
+            selectedCategory = nil
+            flagError(title: "Category Was Deleted", image: "tray", tokens: [.category])
+            return true
+        }
+
+        return false
+    }
+
     func submit() {
+        if flagDeletedMeanwhile() {
+            return
+        }
+
         let missingCategory = !isOverall && selectedCategory == nil
 
         if price == 0 && missingCategory {
@@ -872,6 +894,11 @@ struct BrandNewBudgetView: View {
     }
 
     func save(rolloverChange change: RolloverChange) {
+        // The rollover notice can stay up long enough for sync to delete either.
+        if flagDeletedMeanwhile() {
+            return
+        }
+
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
 
         // Worked out under the saved settings, before they change.

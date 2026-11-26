@@ -157,8 +157,7 @@ struct BudgetView: View {
 
     func delete(_ object: NSManagedObject) {
         withAnimation {
-            moc.delete(object)
-            dataController.save()
+            dataController.delete(object)
         }
     }
 }
@@ -585,8 +584,7 @@ struct BudgetDetailSheet: View {
         dismiss()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
             withAnimation {
-                moc.delete(object)
-                dataController.save()
+                dataController.delete(object)
             }
         }
     }
