@@ -336,7 +336,7 @@ struct InsightsWidgetEntryView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     InsightsCardTitle(verbatim: title)
 
-                    InsightsAmountText(amount: entry.amount, sign: entry.conversion.approximatePrefix, formatter: formatter, font: .system(.title2, design: .rounded).weight(.semibold))
+                    InsightsAmountText(amount: entry.amount, sign: entry.conversion.approximatePrefix, formatter: formatter, font: .app(.title2, weight: .semibold))
                         .padding(.top, 2)
 
                     WidgetBarChart(buckets: buckets, average: entry.average, colour: entry.income ? Color.IncomeGreen : Color.PrimaryText, formatter: formatter)
@@ -432,7 +432,7 @@ struct WidgetBarChart: View {
             HStack(spacing: spacing) {
                 ForEach(buckets) { bucket in
                     Text(bucket.label)
-                        .font(.system(.caption2, design: .rounded).weight(.medium))
+                        .font(.app(.caption2, weight: .medium))
                         .foregroundColor(bucket.isCurrent ? Color.PrimaryText : Color.SubtitleText)
                         .fixedSize()
                         .frame(maxWidth: .infinity)
@@ -472,7 +472,7 @@ struct WidgetBarChart: View {
                 .offset(y: averageY)
 
             (Text("avg ") + Text(formatter.compact(average)).fontWeight(.semibold))
-                .font(.system(.caption2, design: .rounded).weight(.medium))
+                .font(.app(.caption2, weight: .medium))
                 .foregroundColor(Color.SubtitleText)
                 .lineLimit(1)
                 .fixedSize()
@@ -503,7 +503,7 @@ struct InsightsWidgetCategories: View {
         VStack(alignment: .leading, spacing: 10) {
             if categories.isEmpty {
                 Text("No transactions")
-                    .font(.system(.subheadline, design: .rounded).weight(.medium))
+                    .font(.app(.subheadline, weight: .medium))
                     .foregroundColor(Color.SubtitleText)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -516,13 +516,13 @@ struct InsightsWidgetCategories: View {
                             WidgetEmojiTile(emoji: category.emoji, colour: colour(for: category), size: 20, symbol: category.uncategorised ? Uncategorised.symbol(income: income) : nil)
 
                             Text(category.name)
-                                .font(.system(.footnote, design: .rounded).weight(.medium))
+                                .font(.app(.footnote, weight: .medium))
                                 .foregroundColor(Color.PrimaryText)
                                 .lineLimit(1)
                                 .frame(maxWidth: .infinity, alignment: .leading)
 
                             Text("\(Int((category.percent * 100).rounded()))%")
-                                .font(.system(.footnote, design: .rounded).weight(.medium))
+                                .font(.app(.footnote, weight: .medium))
                                 .foregroundColor(Color.SubtitleText)
                                 .lineLimit(1)
                                 .layoutPriority(1)

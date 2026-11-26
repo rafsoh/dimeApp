@@ -111,16 +111,16 @@ struct LineGraph: View {
                     VStack(spacing: 1) {
                         if type < 4 {
                             Text(currentPlot?.dateString ?? "")
-                                .font(.system(size: 10, weight: .medium, design: .rounded))
+                                .font(.app(size: 10, weight: .medium))
                                 .foregroundColor(Color.SubtitleText)
                         } else {
                             Text(currentPlot?.monthString ?? "")
-                                .font(.system(size: 10, weight: .medium, design: .rounded))
+                                .font(.app(size: 10, weight: .medium))
                                 .foregroundColor(Color.SubtitleText)
                         }
 
                         Text(currentPlot?.amountString ?? "")
-                            .font(.system(size: 12, weight: .semibold, design: .rounded))
+                            .font(.app(size: 12, weight: .semibold))
                             .foregroundColor(Color.PrimaryText)
                     }
                     .frame(height: 33)

@@ -57,18 +57,18 @@ struct ConfirmationSheet<Actions: View>: View {
             HStack(spacing: 7) {
                 if let systemImage {
                     Image(systemName: systemImage)
-                        .font(.system(.callout, design: .rounded).weight(.semibold))
+                        .font(.app(.callout, weight: .semibold))
                 }
 
                 Text(title)
-                    .font(.system(.title3, design: .rounded).weight(.semibold))
+                    .font(.app(.title3, weight: .semibold))
             }
             .foregroundColor(Color.PrimaryText)
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isHeader)
 
             Text(message)
-                .font(.system(.body, design: .rounded))
+                .font(.app(.body))
                 .foregroundColor(Color.SubtitleText)
                 .multilineTextAlignment(.leading)
                 .fixedSize(horizontal: false, vertical: true)
@@ -110,7 +110,7 @@ struct ConfirmationDestructiveButton: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.system(.body, design: .rounded).weight(.semibold))
+                .font(.app(.body, weight: .semibold))
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
                 .frame(height: 50)
@@ -133,7 +133,7 @@ struct ConfirmationCancelButton: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.system(.body, design: .rounded).weight(.semibold))
+                .font(.app(.body, weight: .semibold))
                 .foregroundColor(Color.PrimaryText)
                 .frame(maxWidth: .infinity)
                 .frame(height: 50)

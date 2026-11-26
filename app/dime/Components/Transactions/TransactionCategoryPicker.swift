@@ -42,7 +42,7 @@ struct CategoryToken: View {
                         .lineLimit(1)
                 }
             }
-            .font(.system(.body, design: .rounded).weight(.semibold))
+            .font(.app(.body, weight: .semibold))
             .foregroundColor(colour)
             .padding(.vertical, 11)
             .padding(.horizontal, 4)
@@ -173,7 +173,7 @@ struct CategoryPickerSheet: View {
     var emptyState: some View {
         VStack(spacing: 16) {
             Text(income ? LocalizedStringKey("no_income_categories") : LocalizedStringKey("no_expense_categories"))
-                .font(.system(.body, design: .rounded).weight(.medium))
+                .font(.app(.body, weight: .medium))
                 .foregroundColor(Color.SubtitleText)
                 .multilineTextAlignment(.center)
 
@@ -239,9 +239,9 @@ struct NewCategoryCapsule: View {
         Button(action: action) {
             HStack(spacing: 6) {
                 Image(systemName: "plus")
-                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .font(.app(.subheadline, weight: .semibold))
                 Text("New Category")
-                    .font(.system(.body, design: .rounded).weight(.semibold))
+                    .font(.app(.body, weight: .semibold))
             }
             .foregroundColor(Color.PrimaryText)
             .padding(.horizontal, 18)
@@ -343,7 +343,7 @@ struct CategoryTileGrid<Categories: RandomAccessCollection>: View where Categori
                     .font(.system(.title2))
 
                 Text(item.wrappedName)
-                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .font(.app(.subheadline, weight: .semibold))
                     .foregroundColor(Color.PrimaryText)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
@@ -376,11 +376,11 @@ struct CategoryTileGrid<Categories: RandomAccessCollection>: View where Categori
         } label: {
             VStack(spacing: 6) {
                 Image(systemName: "square.grid.2x2.fill")
-                    .font(.system(.title2, design: .rounded))
+                    .font(.app(.title2))
                     .foregroundColor(Color.PrimaryText)
 
                 Text("Everything")
-                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .font(.app(.subheadline, weight: .semibold))
                     .foregroundColor(Color.PrimaryText)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
@@ -412,11 +412,11 @@ struct CategoryTileGrid<Categories: RandomAccessCollection>: View where Categori
         } label: {
             VStack(spacing: 6) {
                 Image(systemName: Uncategorised.symbol(income: income))
-                    .font(.system(.title2, design: .rounded).weight(.semibold))
+                    .font(.app(.title2, weight: .semibold))
                     .foregroundColor(Color.PrimaryText)
 
                 Text("category-picker-none")
-                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .font(.app(.subheadline, weight: .semibold))
                     .foregroundColor(Color.PrimaryText)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
@@ -443,11 +443,11 @@ struct CategoryTileGrid<Categories: RandomAccessCollection>: View where Categori
         } label: {
             VStack(spacing: 6) {
                 Image(systemName: "plus")
-                    .font(.system(.title2, design: .rounded).weight(.medium))
+                    .font(.app(.title2, weight: .medium))
                     .foregroundColor(Color.SubtitleText)
 
                 Text("New")
-                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .font(.app(.subheadline, weight: .semibold))
                     .foregroundColor(Color.SubtitleText)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)

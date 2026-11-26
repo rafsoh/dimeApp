@@ -480,3 +480,5 @@
 "The new amount applies from this period on, and earlier periods keep the old one." = "新しい金額はこの期間から適用され、以前の期間は元の金額のままです。";
 "The new reset day applies from this period on, and earlier periods keep the old one." = "新しい開始日はこの期間から適用され、以前の期間は元の開始日のままです。";
 "The %@ from earlier periods is kept." = "これまでに繰り越された%@は保持されます。";
+"Font" = "フォント";
+"Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "AlloはJosh Puckettによる書体で、SIL Open Font Licenseのもとで提供されています。";

@@ -43,7 +43,7 @@ struct SettingsBackupsView: View {
       } label: {
         HStack {
           Text("Back Up Now")
-            .font(.system(.body, design: .rounded))
+            .font(.app(.body))
             .foregroundColor(Color.PrimaryText)
 
           Spacer()
@@ -67,11 +67,11 @@ struct SettingsBackupsView: View {
             HStack(spacing: 12) {
               VStack(alignment: .leading, spacing: 2) {
                 Text(backup.createdAt.formatted(date: .abbreviated, time: .shortened))
-                  .font(.system(.body, design: .rounded))
+                  .font(.app(.body))
                   .foregroundColor(Color.PrimaryText)
 
                 Text("\(backup.transactionCount) transactions")
-                  .font(.system(.footnote, design: .rounded))
+                  .font(.app(.footnote))
                   .foregroundColor(Color.SubtitleText)
               }
 
@@ -80,7 +80,7 @@ struct SettingsBackupsView: View {
               Button("Restore") {
                 alert = .confirmRestore(backup)
               }
-              .font(.system(.body, design: .rounded).weight(.medium))
+              .font(.app(.body, weight: .medium))
               .foregroundColor(Color.IncomeGreen)
               .buttonStyle(.borderless)
               .disabled(backupManager.isWorking)

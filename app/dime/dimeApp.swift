@@ -37,6 +37,14 @@ struct dimeApp: App {
 
         UITableView.appearance().backgroundColor = .clear
 
+        #if DEBUG
+        // Launch with `-appFont 1` for Allo, `-appFont 0` for SF Pro Rounded.
+        let arguments = ProcessInfo.processInfo.arguments
+        if let index = arguments.firstIndex(of: "-appFont"), index + 1 < arguments.count, let font = Int(arguments[index + 1]) {
+            UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.set(font, forKey: AppFont.storageKey)
+        }
+        #endif
+
         UINavigationBar.appearance().largeTitleTextAttributes = [
             .font: UIFontMetrics(forTextStyle: .largeTitle).scaledFont(for: UIFont.rounded(ofSize: 34, weight: .bold))
         ]

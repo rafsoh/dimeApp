@@ -19,7 +19,7 @@ struct SettingsEraseView: View {
         showAlert = true
       } label: {
         Text("Permanently Delete Everythin'")
-          .font(.system(.body, design: .rounded))
+          .font(.app(.body))
           .foregroundColor(Color.AlertRed)
           .frame(maxWidth: .infinity, alignment: .leading)
           .frame(minHeight: .settingsRowHeight)
@@ -56,7 +56,7 @@ struct DeleteAllAlert: View {
             .animation(.easeInOut(duration: 2), value: isDetectingLongPress)
 
           Text("Delete Literally Everything")
-            .font(.system(.body, design: .rounded).weight(.semibold))
+            .font(.app(.body, weight: .semibold))
             .foregroundColor(.white)
             .frame(width: proxy.size.width, alignment: .center)
         }

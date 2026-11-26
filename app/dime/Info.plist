@@ -45,5 +45,12 @@
 	<array>
 		<string>remote-notification</string>
 	</array>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Allo-Regular.ttf</string>
+		<string>Allo-Medium.ttf</string>
+		<string>Allo-SemiBold.ttf</string>
+		<string>Allo-Bold.ttf</string>
+	</array>
 </dict>
 </plist>

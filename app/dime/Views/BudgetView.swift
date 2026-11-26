@@ -195,7 +195,7 @@ struct BudgetOverallCard: View {
                     HStack(alignment: .firstTextBaseline, spacing: 6) {
                         // Styled like the category tiles' names, so the rollover icon sits the same way beside it.
                         Text("Overall")
-                            .font(.system(.body, design: .rounded).weight(.semibold))
+                            .font(.app(.body, weight: .semibold))
                             .foregroundColor(Color.PrimaryText)
                             .lineLimit(1)
                             .accessibilityAddTraits(.isHeader)
@@ -204,7 +204,7 @@ struct BudgetOverallCard: View {
                         }
                         Spacer(minLength: 8)
                         Text(snapshot.overallTrailing)
-                            .font(.system(.subheadline, design: .rounded).weight(.medium))
+                            .font(.app(.subheadline, weight: .medium))
                             .foregroundColor(Color.SubtitleText)
                             .lineLimit(1)
                         if snapshot.isOver {
@@ -213,11 +213,11 @@ struct BudgetOverallCard: View {
                     }
 
                     HStack(alignment: .firstTextBaseline, spacing: 6) {
-                        BudgetAmountText(amount: snapshot.difference, font: .system(.largeTitle, design: .rounded).weight(.semibold), formatter: formatter)
+                        BudgetAmountText(amount: snapshot.difference, font: .app(.largeTitle, weight: .semibold), formatter: formatter)
                             .layoutPriority(1)
 
                         Text(snapshot.overallAmountWord(formatter))
-                            .font(.system(.body, design: .rounded).weight(.medium))
+                            .font(.app(.body, weight: .medium))
                             .foregroundColor(Color.SubtitleText)
                             .lineLimit(1)
                             .minimumScaleFactor(0.8)
@@ -228,7 +228,7 @@ struct BudgetOverallCard: View {
                         .padding(.top, 14)
 
                     snapshot.overallLine(formatter)
-                        .font(.system(.subheadline, design: .rounded).weight(.medium))
+                        .font(.app(.subheadline, weight: .medium))
                         .foregroundColor(Color.SubtitleText)
                         .padding(.top, 12)
 
@@ -272,9 +272,9 @@ struct BudgetCategoryTile: View {
                 VStack(alignment: .leading, spacing: 0) {
                     HStack(spacing: 6) {
                         Text(budget.wrappedEmoji)
-                            .font(.system(.body, design: .rounded))
+                            .font(.app(.body))
                         Text(budget.wrappedName)
-                            .font(.system(.body, design: .rounded).weight(.semibold))
+                            .font(.app(.body, weight: .semibold))
                             .foregroundColor(Color.PrimaryText)
                             .lineLimit(1)
                         if rollover != nil {
@@ -288,11 +288,11 @@ struct BudgetCategoryTile: View {
                     }
 
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        BudgetAmountText(amount: snapshot.difference, font: .system(.title, design: .rounded).weight(.semibold), formatter: formatter)
+                        BudgetAmountText(amount: snapshot.difference, font: .app(.title, weight: .semibold), formatter: formatter)
                             .layoutPriority(1)
 
                         Text(snapshot.resultWord)
-                            .font(.system(.body, design: .rounded).weight(.medium))
+                            .font(.app(.body, weight: .medium))
                             .foregroundColor(Color.SubtitleText)
                             .lineLimit(1)
                     }
@@ -301,7 +301,7 @@ struct BudgetCategoryTile: View {
                     ConversionNote(report: spending.report)
 
                     snapshot.tileStatus()
-                        .font(.system(.subheadline, design: .rounded).weight(.medium))
+                        .font(.app(.subheadline, weight: .medium))
                         .foregroundColor(Color.SubtitleText)
                         .lineLimit(1)
                         .minimumScaleFactor(0.8)
@@ -510,7 +510,7 @@ struct BudgetDetailSheet: View {
                 }
             } label: {
                 Image(systemName: "ellipsis")
-                    .font(.system(.body, design: .rounded).weight(.semibold))
+                    .font(.app(.body, weight: .semibold))
                     .foregroundColor(Color.PrimaryText)
                     .frame(width: 44, height: 44)
                     .contentShape(Circle())
@@ -521,7 +521,7 @@ struct BudgetDetailSheet: View {
         .frame(height: 44)
         .overlay {
             title
-                .font(.system(.title3, design: .rounded).weight(.semibold))
+                .font(.app(.title3, weight: .semibold))
                 .foregroundColor(Color.PrimaryText)
                 .lineLimit(1)
                 .padding(.horizontal, route.category != nil ? 108 : 56)
@@ -640,10 +640,10 @@ struct BudgetDetailContent: View {
 
     func hero(_ snapshot: BudgetSnapshot, transactions: [Transaction]) -> some View {
         ArcRing(segments: ringSegments(snapshot, transactions: transactions), showsTrack: true, tick: snapshot.showsTick ? period.elapsed : nil) {
-            BudgetAmountText(amount: snapshot.difference, font: .system(.title, design: .rounded).weight(.semibold), formatter: formatter)
+            BudgetAmountText(amount: snapshot.difference, font: .app(.title, weight: .semibold), formatter: formatter)
 
             Text(snapshot.overallAmountWord(formatter))
-                .font(.system(.subheadline, design: .rounded).weight(.medium))
+                .font(.app(.subheadline, weight: .medium))
                 .foregroundColor(Color.SubtitleText)
 
             // Inside the ring, so it stays in view when the sheet is at half height.
@@ -659,7 +659,7 @@ struct BudgetDetailContent: View {
         let sign = carry < 0 ? "−" : "+"
         let total = (snapshot.amount < 0 ? "−" : "") + formatter.money(snapshot.amount)
         return Text(String(localized: "\(formatter.whole(snapshot.base)) budget \(sign) \(formatter.money(carry)) = \(total)"))
-            .font(.system(.footnote, design: .rounded).weight(.medium))
+            .font(.app(.footnote, weight: .medium))
             .foregroundColor(Color.SubtitleText)
             .monospacedDigit()
     }
@@ -723,7 +723,7 @@ struct BudgetDetailContent: View {
                     Text(String(localized: "~\(formatter.approx(forecast)) forecasted"))
                 }
             }
-            .font(.system(.subheadline, design: .rounded).weight(.medium))
+            .font(.app(.subheadline, weight: .medium))
             .foregroundColor(Color.SubtitleText)
             .lineLimit(1)
             .minimumScaleFactor(0.8)

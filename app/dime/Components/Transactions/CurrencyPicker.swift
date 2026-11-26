@@ -63,12 +63,12 @@ struct CurrencyPickerSheet: View {
         } label: {
             HStack(spacing: 10) {
                 Text(currency.code)
-                    .font(.system(.body, design: .rounded).weight(.semibold))
+                    .font(.app(.body, weight: .semibold))
                     .foregroundColor(Color.SubtitleText)
                     .frame(width: 50, alignment: .leading)
 
                 Text(currency.name)
-                    .font(.system(.body, design: .rounded))
+                    .font(.app(.body))
                     .foregroundColor(Color.PrimaryText)
                     .lineLimit(1)
 
@@ -76,7 +76,7 @@ struct CurrencyPickerSheet: View {
 
                 if currency.code == currencyCode {
                     Image(systemName: "checkmark")
-                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                        .font(.app(.subheadline, weight: .semibold))
                         .foregroundColor(Color.PrimaryText)
                 }
             }

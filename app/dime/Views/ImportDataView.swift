@@ -252,17 +252,17 @@ struct ImportDataView: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(LocalizedStringKey(field.title))
-                    .font(.system(.body, design: .rounded).weight(.medium))
+                    .font(.app(.body, weight: .medium))
                     .foregroundColor(Color.PrimaryText)
 
                 if let column = selection.wrappedValue, let sample = sampleValue(in: column) {
                     Text(sample)
-                        .font(.system(.footnote, design: .rounded))
+                        .font(.app(.footnote))
                         .foregroundColor(Color.SubtitleText)
                         .lineLimit(1)
                 } else {
                     Text(field.isRequired ? "Required" : "Optional")
-                        .font(.system(.footnote, design: .rounded))
+                        .font(.app(.footnote))
                         .foregroundColor(field.isRequired ? Color.AlertRed : Color.SubtitleText)
                 }
             }
@@ -296,18 +296,18 @@ struct ImportDataView: View {
                 HStack(spacing: 12) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Date Format")
-                            .font(.system(.body, design: .rounded).weight(.medium))
+                            .font(.app(.body, weight: .medium))
                             .foregroundColor(Color.PrimaryText)
 
                         if let sample = dateSample {
                             if let reading = ImportParsing.date(sample, format: dateFormat) {
                                 Text("Reads as \(reading.formatted(.dateTime.day().month(.abbreviated).year()))")
-                                    .font(.system(.footnote, design: .rounded))
+                                    .font(.app(.footnote))
                                     .foregroundColor(Color.SubtitleText)
                                     .lineLimit(1)
                             } else {
                                 Text("Dime can't read \(sample)")
-                                    .font(.system(.footnote, design: .rounded))
+                                    .font(.app(.footnote))
                                     .foregroundColor(Color.AlertRed)
                                     .lineLimit(1)
                             }
@@ -347,7 +347,7 @@ struct ImportDataView: View {
                     Divider()
 
                     TextField("e.g. dd/MM/yyyy HH:mm", text: $customDateFormat)
-                        .font(.system(.body, design: .rounded).weight(.medium))
+                        .font(.app(.body, weight: .medium))
                         .foregroundColor(Color.PrimaryText)
                         .disableAutocorrection(true)
                         .textInputAutocapitalization(.never)
@@ -362,7 +362,7 @@ struct ImportDataView: View {
 
             if editingCustomFormat || dateFormatOptions.isEmpty {
                 Text("Use d for day, M for month, y for year, H for hour and m for minute, with the same separators as the file.")
-                    .font(.system(.footnote, design: .rounded))
+                    .font(.app(.footnote))
                     .foregroundColor(Color.SubtitleText)
                     .padding(.horizontal, .settingsRowInset)
             }
@@ -402,7 +402,7 @@ struct ImportDataView: View {
         return HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(key.name.isEmpty ? Uncategorised.name : key.name)
-                    .font(.system(.body, design: .rounded).weight(.medium))
+                    .font(.app(.body, weight: .medium))
                     .foregroundColor(Color.PrimaryText)
                     .lineLimit(1)
 
@@ -423,7 +423,7 @@ struct ImportDataView: View {
                             HStack(spacing: 3) {
                                 Text(income ? "Income" : "Expense")
                                 Image(systemName: "chevron.up.chevron.down")
-                                    .font(.system(.caption2, design: .rounded).weight(.semibold))
+                                    .font(.app(.caption2, weight: .semibold))
                             }
                             .foregroundColor(Color.PrimaryText)
                         }
@@ -431,7 +431,7 @@ struct ImportDataView: View {
                         Text(income ? "Income" : "Expense")
                     }
                 }
-                .font(.system(.footnote, design: .rounded))
+                .font(.app(.footnote))
                 .foregroundColor(Color.SubtitleText)
                 .lineLimit(1)
             }
@@ -517,11 +517,11 @@ struct ImportDataView: View {
                         Toggle(isOn: $skipDuplicates.animation()) {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Skip Duplicates")
-                                    .font(.system(.body, design: .rounded).weight(.medium))
+                                    .font(.app(.body, weight: .medium))
                                     .foregroundColor(Color.PrimaryText)
 
                                 Text(duplicateRows.count == 1 ? "1 transaction is already in Dime" : "\(duplicateRows.count) transactions are already in Dime")
-                                    .font(.system(.footnote, design: .rounded))
+                                    .font(.app(.footnote))
                                     .foregroundColor(Color.SubtitleText)
                             }
                         }
@@ -538,7 +538,7 @@ struct ImportDataView: View {
                             Text(count == 1 ? "1 row \(NSLocalizedString(reason.description, comment: "")) will be skipped." : "\(count) rows \(NSLocalizedString(reason.description, comment: "")) will be skipped.")
                         }
                     }
-                    .font(.system(.footnote, design: .rounded))
+                    .font(.app(.footnote))
                     .foregroundColor(Color.SubtitleText)
                     .padding(.horizontal, .settingsRowInset)
                     .padding(.top, -16)
@@ -559,22 +559,22 @@ struct ImportDataView: View {
                     .controlSize(.large)
 
                 Text("Importing")
-                    .font(.system(.title2, design: .rounded).weight(.semibold))
+                    .font(.app(.title2, weight: .semibold))
                     .foregroundColor(Color.SubtitleText)
             } else {
                 Image(systemName: "checkmark")
-                    .font(.system(size: 30, weight: .semibold, design: .rounded))
+                    .font(.app(size: 30, weight: .semibold))
                     .foregroundColor(Color.IncomeGreen)
                     .frame(width: 72, height: 72)
                     .glassBackground(in: Circle(), tint: Color.IncomeGreen.opacity(0.25), interactive: false, fallback: Color.IncomeGreen.opacity(0.23))
 
                 VStack(spacing: 6) {
                     Text("Import Complete")
-                        .font(.system(.title2, design: .rounded).weight(.semibold))
+                        .font(.app(.title2, weight: .semibold))
                         .foregroundColor(Color.PrimaryText)
 
                     Text(importedCount == 1 ? "1 transaction was added to Dime." : "\(importedCount) transactions were added to Dime.")
-                        .font(.system(.body, design: .rounded))
+                        .font(.app(.body))
                         .foregroundColor(Color.SubtitleText)
                         .multilineTextAlignment(.center)
                 }
@@ -908,7 +908,7 @@ private struct PrimaryImportButton: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.system(.headline, design: .rounded))
+                .font(.app(.headline))
                 .foregroundColor(.black)
                 .frame(maxWidth: .infinity)
                 .frame(height: 50)
@@ -927,12 +927,12 @@ private struct StepTitle: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
-                .font(.system(.title, design: .rounded).weight(.semibold))
+                .font(.app(.title, weight: .semibold))
                 .foregroundColor(Color.PrimaryText)
                 .accessibilityAddTraits(.isHeader)
 
             Text(subtitle)
-                .font(.system(.body, design: .rounded))
+                .font(.app(.body))
                 .foregroundColor(Color.SubtitleText)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -946,7 +946,7 @@ private struct StepLabel: View {
 
     var body: some View {
         Text("Step \(current)/\(total)")
-            .font(.system(.subheadline, design: .rounded).weight(.semibold))
+            .font(.app(.subheadline, weight: .semibold))
             .foregroundColor(Color.PrimaryText)
             .monospacedDigit()
             .padding(.horizontal, 16)
@@ -961,7 +961,7 @@ private struct FieldIcon: View {
 
     var body: some View {
         Image(systemName: systemImage)
-            .font(.system(.body, design: .rounded).weight(.medium))
+            .font(.app(.body, weight: .medium))
             .foregroundColor(Color.PrimaryText)
             .frame(width: 30, height: 30)
             .glassBackground(in: RoundedRectangle(cornerRadius: 8, style: .continuous), tint: .glassTint, interactive: false)
@@ -985,11 +985,11 @@ private struct RequirementRow: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.system(.body, design: .rounded).weight(.semibold))
+                    .font(.app(.body, weight: .semibold))
                     .foregroundColor(Color.PrimaryText)
 
                 Text(subtitle)
-                    .font(.system(.subheadline, design: .rounded))
+                    .font(.app(.subheadline))
                     .foregroundColor(Color.SubtitleText)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -1006,12 +1006,12 @@ private struct MenuChip: View {
     var body: some View {
         HStack(spacing: 6) {
             Text(title)
-                .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                .font(.app(.subheadline, weight: .semibold))
                 .foregroundColor(dimmed ? Color.SubtitleText : Color.PrimaryText)
                 .lineLimit(1)
 
             Image(systemName: "chevron.up.chevron.down")
-                .font(.system(.caption, design: .rounded).weight(.semibold))
+                .font(.app(.caption, weight: .semibold))
                 .foregroundColor(Color.SubtitleText)
         }
         .padding(.horizontal, 12)
@@ -1033,31 +1033,31 @@ private struct CategoryChip: View {
             case let .existing(category):
                 let colour = Color(hex: category.wrappedColour)
                 Text(category.wrappedEmoji)
-                    .font(.system(.footnote, design: .rounded))
+                    .font(.app(.footnote))
 
                 Text(category.wrappedName)
-                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .font(.app(.subheadline, weight: .semibold))
                     .foregroundColor(colour)
                     .lineLimit(1)
             case .create:
                 Text(ImportCategoryDefaults.emoji(for: name, income: income))
-                    .font(.system(.footnote, design: .rounded))
+                    .font(.app(.footnote))
 
                 Text("New")
-                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .font(.app(.subheadline, weight: .semibold))
                     .foregroundColor(Color.PrimaryText)
             case .uncategorised:
                 Image(systemName: Uncategorised.symbol(income: income))
-                    .font(.system(.footnote, design: .rounded).weight(.bold))
+                    .font(.app(.footnote, weight: .bold))
                     .foregroundColor(Color(hex: Uncategorised.colour))
 
                 Text("None")
-                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .font(.app(.subheadline, weight: .semibold))
                     .foregroundColor(Color.PrimaryText)
             }
 
             Image(systemName: "chevron.up.chevron.down")
-                .font(.system(.caption, design: .rounded).weight(.semibold))
+                .font(.app(.caption, weight: .semibold))
                 .foregroundColor(Color.SubtitleText)
         }
         .padding(.horizontal, 12)
@@ -1081,13 +1081,13 @@ private struct SummaryRow: View {
     var body: some View {
         HStack {
             Text(title)
-                .font(.system(.body, design: .rounded).weight(.medium))
+                .font(.app(.body, weight: .medium))
                 .foregroundColor(Color.PrimaryText)
 
             Spacer(minLength: 8)
 
             Text(value)
-                .font(.system(.body, design: .rounded).weight(.semibold))
+                .font(.app(.body, weight: .semibold))
                 .foregroundColor(color)
                 .monospacedDigit()
                 .lineLimit(1)

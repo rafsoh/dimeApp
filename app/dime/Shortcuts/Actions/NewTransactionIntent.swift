@@ -266,26 +266,26 @@ struct ShortcutTransactionView: View {
 
             VStack(alignment: .leading) {
                 Text(transaction.displayTitle)
-                    .font(.system(size: 16, weight: .medium, design: .rounded))
+                    .font(.app(size: 16, weight: .medium))
                     .foregroundColor(Color.PrimaryText)
                     .lineLimit(1)
 
                 Text(transaction.wrappedDate, format: .dateTime.hour().minute())
-                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .font(.app(size: 12, weight: .medium))
                     .foregroundColor(Color.SubtitleText)
                     .lineLimit(1)
             }
             Spacer()
             if transaction.income {
                 Text("+\(transactionAmountString)")
-                    .font(.system(size: 19, weight: .medium, design: .rounded))
+                    .font(.app(size: 19, weight: .medium))
                     .foregroundColor(Color.IncomeGreen)
                     .minimumScaleFactor(0.7)
                     .lineLimit(1)
                     .layoutPriority(1)
             } else {
                 Text("-\(transactionAmountString)")
-                    .font(.system(size: 19, weight: .medium, design: .rounded))
+                    .font(.app(size: 19, weight: .medium))
                     .foregroundColor(Color.PrimaryText)
                     .minimumScaleFactor(0.7)
                     .lineLimit(1)

@@ -23,13 +23,7 @@ extension String {
     }
 
     func widthOfRoundedString(size: CGFloat, weight: UIFont.Weight) -> CGFloat {
-        let systemFont = UIFont.systemFont(ofSize: size, weight: weight)
-        let roundedFont: UIFont
-        if let descriptor = systemFont.fontDescriptor.withDesign(.rounded) {
-            roundedFont = UIFont(descriptor: descriptor, size: size)
-        } else {
-            roundedFont = systemFont
-        }
+        let roundedFont = UIFont.rounded(ofSize: size, weight: weight)
 
         let fontAttributes = [NSAttributedString.Key.font: roundedFont]
         let size = self.size(withAttributes: fontAttributes)
@@ -37,13 +31,7 @@ extension String {
     }
 
     func heightOfRoundedString(size: CGFloat, weight: UIFont.Weight) -> CGFloat {
-        let systemFont = UIFont.systemFont(ofSize: size, weight: weight)
-        let roundedFont: UIFont
-        if let descriptor = systemFont.fontDescriptor.withDesign(.rounded) {
-            roundedFont = UIFont(descriptor: descriptor, size: size)
-        } else {
-            roundedFont = systemFont
-        }
+        let roundedFont = UIFont.rounded(ofSize: size, weight: weight)
 
         let fontAttributes = [NSAttributedString.Key.font: roundedFont]
         let size = self.size(withAttributes: fontAttributes)
