@@ -2779,6 +2779,14 @@ extension DataController {
 
         let morning = min(calendar.date(bySettingHour: 8, minute: 5, second: 0, of: now) ?? now, now.addingTimeInterval(-300))
         saveTransfer(from: .main, to: .account(cash), amount: 100, currencyCode: currencyCode, date: morning, note: "ATM")
+
+        // `-insightsAccount <name>` starts Insights on one account and `-insightsAccount all` on every account.
+        // Set here, before any view reads it.
+        let arguments = ProcessInfo.processInfo.arguments
+        if let index = arguments.firstIndex(of: "-insightsAccount"), index + 1 < arguments.count {
+            let key = [card, cash, savings].first { $0.wrappedName == arguments[index + 1] }?.key ?? ""
+            UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.set(key, forKey: "insightsAccount")
+        }
     }
 
     /// Budgets sized from the seeded spending so each lands in a known state: overall and Food on track,
