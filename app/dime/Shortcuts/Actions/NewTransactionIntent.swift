@@ -78,13 +78,7 @@ struct NewTransactionIntent: AppIntent {
         let dataController = DataController.shared
 
         // Without a store the save below would fail after the dialog had already said it was logged.
-        if !dataController.isStoreLoaded {
-            dataController.retryLoadingStore()
-        }
-
-        guard dataController.isStoreLoaded else {
-            throw CustomError.storeUnavailable
-        }
+        try dataController.requireLoadedStore()
 
         let repeatType: Int
         var currency: String?

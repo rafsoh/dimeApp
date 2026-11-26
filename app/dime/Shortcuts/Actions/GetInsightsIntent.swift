@@ -31,6 +31,8 @@ struct GetInsightsIntent: AppIntent {
     @MainActor
     func perform() async throws -> some ReturnsValue<Double> & ShowsSnippetView & ProvidesDialog {
         let dataController = DataController.shared
+        // Without a store every total would read as zero.
+        try dataController.requireLoadedStore()
 //        let dataController = DataController()
 
         let categories: [Category]

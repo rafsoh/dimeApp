@@ -587,6 +587,19 @@ class DataController: ObservableObject {
         )
     }
 
+    /// For Shortcuts actions: tries once more to open the store, and throws if it still can't be opened, so an
+    /// action doesn't report a total of zero or a transaction logged when nothing was read or saved.
+    @available(iOS 16, *)
+    func requireLoadedStore() throws {
+        if !isStoreLoaded {
+            retryLoadingStore()
+        }
+
+        guard isStoreLoaded else {
+            throw CustomError.storeUnavailable
+        }
+    }
+
     /// Tries again to open a store that failed to load. Main thread only.
     func retryLoadingStore() {
         guard !isStoreLoaded else {

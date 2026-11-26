@@ -31,6 +31,8 @@ struct BudgetIntent: AppIntent {
 //        let dataController = DataController()
 
         let dataController = DataController.shared
+        // Without a store every total would read as zero.
+        try dataController.requireLoadedStore()
 
         var amount: Double = 0
         var report = ConversionReport()
