@@ -611,6 +611,7 @@ struct TipJarSheet: View {
         GlassIconButton(systemName: "xmark", accessibilityLabel: "Close") {
           dismiss()
         }
+        .hiddenInSideBar()
 
         Spacer()
       }
@@ -682,6 +683,9 @@ struct TipJarSheet: View {
     }
     .onChange(of: unlockManager.purchaseCount) { _ in
       confetti += 1
+    }
+    .sideBarSheet {
+      SideBarCloseItem { dismiss() }
     }
   }
 

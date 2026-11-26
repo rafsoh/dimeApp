@@ -1949,13 +1949,7 @@ struct InsightsDetailSheet: View {
         }
         .tabHeader {
             GlassSheetHeader(title: title, showsBack: path.count > 1) {
-                if path.count > 1 {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        _ = path.removeLast()
-                    }
-                } else {
-                    dismiss()
-                }
+                goBack()
             }
         }
         .frame(maxHeight: .infinity, alignment: .top)
@@ -1972,6 +1966,19 @@ struct InsightsDetailSheet: View {
         .environmentObject(sheetManager)
         .onReceive(didSave) { _ in
             refreshID = UUID()
+        }
+        .sideBarSheet {
+            SideBarCloseItem(isBack: path.count > 1) { goBack() }
+        }
+    }
+
+    func goBack() {
+        if path.count > 1 {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                _ = path.removeLast()
+            }
+        } else {
+            dismiss()
         }
     }
 

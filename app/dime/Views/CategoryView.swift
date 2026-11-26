@@ -496,6 +496,7 @@ struct NewCategoryAlert: View {
                 GlassIconButton(systemName: "xmark", accessibilityLabel: "Close") {
                     dismiss()
                 }
+                .hiddenInSideBar()
 
                 Spacer()
             }
@@ -611,6 +612,9 @@ struct NewCategoryAlert: View {
                     selectedColour = availableColours[0]
                 }
             }
+        }
+        .sideBarSheet {
+            SideBarCloseItem { dismiss() }
         }
     }
 
@@ -823,6 +827,7 @@ struct EditCategoryAlert: View {
                 GlassIconButton(systemName: "xmark", accessibilityLabel: "Close") {
                     dismiss()
                 }
+                .hiddenInSideBar()
 
                 Spacer()
 
@@ -835,6 +840,7 @@ struct EditCategoryAlert: View {
                 ) {
                     toDelete = toEdit
                 }
+                .hiddenInSideBar()
             }
             .frame(height: 44)
             .overlay {
@@ -940,6 +946,17 @@ struct EditCategoryAlert: View {
             newName = toEdit.wrappedName
             newEmoji = toEdit.wrappedEmoji
             selectedColour = toEdit.wrappedColour
+        }
+        .sideBarSheet {
+            SideBarCloseItem { dismiss() }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(role: .destructive) {
+                    toDelete = toEdit
+                } label: {
+                    Label("Delete", systemImage: "trash.fill")
+                }
+                .tint(Color.AlertRed)
+            }
         }
     }
 
