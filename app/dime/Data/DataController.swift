@@ -511,8 +511,8 @@ class DataController: ObservableObject {
             if let transactionsBefore {
                 numbers["transactionsBefore"] = transactionsBefore
             }
-            if let start = event.startDate, let end = event.endDate {
-                numbers["durationMs"] = Int(end.timeIntervalSince(start) * 1000)
+            if let end = event.endDate {
+                numbers["durationMs"] = Int(end.timeIntervalSince(event.startDate) * 1000)
             }
 
             if let error = event.error {
