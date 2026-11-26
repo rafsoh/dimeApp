@@ -89,6 +89,29 @@ jobs:
                       print((pro or others)[0]["udid"])
                   break
           ' "$UDID")
+          if [ -z "$OTHER" ]; then
+            # The runtime may only come with the Duo: create a regular iPhone on it.
+            read -r RUNTIME TYPE NAME <<< "$(xcrun simctl list runtimes available --json | python3 -c '
+          import json, sys
+          udid_runtime = sys.argv[1]
+          for r in json.load(sys.stdin)["runtimes"]:
+              if r["identifier"] != udid_runtime:
+                  continue
+              phones = [t for t in r.get("supportedDeviceTypes", []) if t["name"].startswith("iPhone") and "Duo" not in t["name"]]
+              pro = [t for t in phones if "Pro" in t["name"] and "Max" not in t["name"]]
+              if phones:
+                  t = (pro or phones)[-1]
+                  print(r["identifier"], t["identifier"], t["name"].replace(" ", "_"))
+          ' "$(xcrun simctl list devices available --json | python3 -c '
+          import json, sys
+          for runtime, devices in json.load(sys.stdin)["devices"].items():
+              if any(d["udid"] == sys.argv[1] for d in devices):
+                  print(runtime)
+          ' "$UDID")")"
+            if [ -n "$TYPE" ]; then
+              OTHER=$(xcrun simctl create "${NAME//_/ } (screenshots)" "$TYPE" "$RUNTIME" || true)
+            fi
+          fi
           if [ -n "$OTHER" ]; then
             xcrun simctl list devices | grep "$OTHER"
             echo "SIM_OTHER_UDID=$OTHER" >> "$GITHUB_ENV"
