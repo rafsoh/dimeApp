@@ -525,7 +525,7 @@ struct GlassPopoverRow: View {
     init(verbatim title: String, isSelected: Bool = false, action: @escaping () -> Void) {
         self.title = Text(verbatim: title)
         self.systemImage = nil
-        self.detail = detail
+        self.detail = nil
         self.isSelected = isSelected
         self.action = action
     }
