@@ -2730,6 +2730,12 @@ extension DataController {
 
             seedDemoAccounts(groceries: groceries, shopping: shopping, coffee: coffee, firstOfMonth: firstOfMonth)
             seedDemoBudgets(food: food, groceries: groceries, coffee: coffee, shopping: shopping, health: health)
+
+            // Groceries all go on the card, so limiting its budget to the card shows the account line
+            // without changing what it has spent.
+            if let budget = groceries.budget, let card = accounts().first(where: { $0.wrappedName == "Card" }) {
+                budget.countedAccounts = AccountScope([.account(card)])
+            }
         }
 
         save()

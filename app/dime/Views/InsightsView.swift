@@ -200,55 +200,34 @@ struct InsightsView: View {
         }
     }
 
-    /// Which account the dashboard shows. Hidden until there's an account besides Main.
+    /// Which account the dashboard shows, as a quiet line under the title. Hidden until there's an account besides Main.
     var accountScopeChip: some View {
         HStack {
             Button {
                 showAccountPicker = true
             } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "creditcard.fill")
-                        .foregroundColor(Color.SubtitleText)
-
+                HStack(spacing: 5) {
                     Text(selectedAccount?.name ?? String(localized: "All Accounts"))
-                        .foregroundColor(Color.PrimaryText)
                         .lineLimit(1)
 
                     Image(systemName: "chevron.down")
                         .font(.app(.caption, weight: .bold))
-                        .foregroundColor(Color.SubtitleText)
                 }
-                .font(.app(.subheadline, weight: .semibold))
-                .padding(.horizontal, 14)
-                .frame(height: 36)
-                .contentShape(Capsule())
+                .font(.app(.headline, weight: .semibold))
+                .foregroundColor(selectedAccount == nil ? Color.SubtitleText : Color.PrimaryText)
+                .padding(.vertical, 6)
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .glassBackground(in: Capsule(), tint: selectedAccount == nil ? .glassTint : Color.PrimaryText.opacity(0.16))
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(Text("Account") + Text(", ") + Text(selectedAccount?.name ?? String(localized: "All Accounts")))
             .accessibilityAddTraits(.isButton)
 
-            if selectedAccount != nil {
-                Button {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        insightsAccount = ""
-                    }
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.app(.caption, weight: .bold))
-                        .foregroundColor(Color.SubtitleText)
-                        .frame(width: 36, height: 36)
-                        .contentShape(Circle())
-                }
-                .buttonStyle(.plain)
-                .glassBackground(in: Circle(), tint: .glassTint)
-                .accessibilityLabel("Show all accounts")
-                .transition(.scale.combined(with: .opacity))
-            }
-
             Spacer(minLength: 0)
         }
+        // Lines up with the title above it.
+        .padding(.horizontal, 14)
+        .padding(.top, -10)
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     }
 

@@ -115,6 +115,27 @@ struct BudgetView: View {
         .onAppear {
             dataController.updateBudgetDates()
         }
+        #if DEBUG
+        .onAppear {
+            // Accounts screenshots, removed before merging: `-accountsBudget detail` opens the budget limited
+            // to an account, `edit` and `picker` the overall budget's editor.
+            let arguments = ProcessInfo.processInfo.arguments
+            guard let index = arguments.firstIndex(of: "-accountsBudget"), index + 1 < arguments.count else { return }
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                switch arguments[index + 1] {
+                case "detail":
+                    if let scoped = budgets.first(where: { $0.accountScope != nil }) {
+                        detail = .category(scoped)
+                    }
+                case "edit", "picker":
+                    toEditMain = mainBudget.first
+                default:
+                    break
+                }
+            }
+        }
+        #endif
         .onReceive(didSave) { _ in
             refreshID = UUID()
         }
@@ -634,7 +655,7 @@ struct BudgetDetailContent: View {
                 ConversionNote(report: spending.report)
 
                 if let accounts = budgetAccountsSummary(route.budget) {
-                    Label(accounts, systemImage: "creditcard")
+                    Label(accounts, systemImage: AccountSymbol.outline)
                         .font(.app(.footnote, weight: .medium))
                         .foregroundColor(Color.SubtitleText)
                         .frame(maxWidth: .infinity)

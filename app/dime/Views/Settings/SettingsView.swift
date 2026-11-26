@@ -340,7 +340,7 @@ struct SettingsView: View {
                     }
                   }
               ) {
-                SettingsRowView(systemImage: "creditcard.fill", title: "Accounts", colour: 105)
+                SettingsRowView(systemImage: AccountSymbol.filled, title: "Accounts", colour: 105)
               }
 
               NavigationLink(destination: SettingsQuickAddView()) {

@@ -282,6 +282,10 @@ struct HomeView: View {
             if arguments.contains("-insightsTab") || arguments.contains("-insightsSheet") || arguments.contains("-insightsAccount") {
                 currentTab = "Insights"
             }
+            // `-accountsBudget overview|detail|edit|picker` (see BudgetView) starts on the Budget tab.
+            if arguments.contains("-accountsBudget") {
+                currentTab = "Budget"
+            }
             // `-accountsScreen settings|welcome` opens the accounts page as Settings or onboarding shows it.
             if let index = arguments.firstIndex(of: "-accountsScreen"), index + 1 < arguments.count {
                 debugAccountsScreen = arguments[index + 1]

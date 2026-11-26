@@ -8,6 +8,23 @@
 import CoreData
 import SwiftUI
 
+/// The symbol for accounts: a wallet, since accounts hold cash and savings as much as cards.
+enum AccountSymbol {
+    static var outline: String {
+        if #available(iOS 17.0, *) {
+            return "wallet.bifold"
+        }
+        return "banknote"
+    }
+
+    static var filled: String {
+        if #available(iOS 17.0, *) {
+            return "wallet.bifold.fill"
+        }
+        return "banknote.fill"
+    }
+}
+
 enum AccountsViewMode {
     case settings, welcome
 }
@@ -667,7 +684,7 @@ struct AccountToken: View {
         Button(action: action) {
             HStack(spacing: 5) {
                 if showsIcon {
-                    Image(systemName: "creditcard")
+                    Image(systemName: AccountSymbol.outline)
                         .font(.app(.subheadline, weight: .semibold))
                         .accessibilityHidden(true)
                 }

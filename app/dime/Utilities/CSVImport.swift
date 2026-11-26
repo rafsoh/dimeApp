@@ -163,7 +163,7 @@ enum ImportField: CaseIterable, Hashable {
         case .note: return "doc.plaintext.fill"
         case .type: return "plusminus"
         case .currency: return "coloncurrencysign.circle.fill"
-        case .account: return "creditcard.fill"
+        case .account: return AccountSymbol.filled
         }
     }
 

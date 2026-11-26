@@ -171,6 +171,17 @@ struct BrandNewBudgetView: View {
         .sheet(isPresented: $showStartDateSheet) {
             BudgetStartDateSheet(date: $chosenDayYear, range: oneYearAgo ... Date.now)
         }
+        #if DEBUG
+        .onAppear {
+            // Accounts screenshots, removed before merging: `-accountsBudget picker` opens the accounts picker.
+            let arguments = ProcessInfo.processInfo.arguments
+            if let index = arguments.firstIndex(of: "-accountsBudget"), index + 1 < arguments.count, arguments[index + 1] == "picker" {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                    showAccountPicker = true
+                }
+            }
+        }
+        #endif
         .sheet(isPresented: $showAccountPicker) {
             AccountPickerSheet(title: "Accounts", scope: $accountScope)
                 .environmentObject(dataController)
