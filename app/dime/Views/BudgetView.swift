@@ -19,7 +19,7 @@ struct BudgetView: View {
 
     @Environment(\.managedObjectContext) var moc
     @Environment(\.dynamicTypeSize) var dynamicTypeSize
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
     @EnvironmentObject var toastPresenter: OverallToastPresenter
 
     @AppStorage("budgetViewStyle", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var budgetRows: Bool = false
@@ -32,7 +32,7 @@ struct BudgetView: View {
     @State private var detail: BudgetDetailRoute?
     @State private var refreshID = UUID()
 
-    private var didSave = NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
+    private let didSave = NSManagedObjectContext.recordsDidSave
 
     private var orderedBudgets: [Budget] {
         budgets.sorted { lhs, rhs in
@@ -178,8 +178,7 @@ struct BudgetView: View {
 
     func delete(_ object: NSManagedObject) {
         withAnimation {
-            moc.delete(object)
-            dataController.save()
+            dataController.delete(object)
         }
     }
 }
@@ -421,7 +420,7 @@ struct BudgetDetailSheet: View {
 
     @Environment(\.managedObjectContext) var moc
     @Environment(\.dismiss) var dismiss
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
     @StateObject private var sheetManager = OverallTransactionManager()
 
     /// How many periods back from the current one the sheet shows.
@@ -430,7 +429,7 @@ struct BudgetDetailSheet: View {
     @State private var showEdit = false
     @State private var showDelete = false
     @State private var confirmedDelete = false
-    private var didSave = NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
+    private let didSave = NSManagedObjectContext.recordsDidSave
 
     init(route: BudgetDetailRoute) {
         self.route = route
@@ -621,8 +620,7 @@ struct BudgetDetailSheet: View {
         dismiss()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
             withAnimation {
-                moc.delete(object)
-                dataController.save()
+                dataController.delete(object)
             }
         }
     }

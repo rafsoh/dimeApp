@@ -154,7 +154,7 @@ private struct ExportSheetHeightKey: PreferenceKey {
 struct ExportPeriodSheet: View {
     let onExport: (URL) -> Void
 
-    @EnvironmentObject private var dataController: DataController
+    @ObservedObject private var dataController = DataController.shared
     @Environment(\.dismiss) private var dismiss
 
     @State private var transactions: [Transaction] = []

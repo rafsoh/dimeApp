@@ -10,7 +10,7 @@ import SwiftUI
 
 struct SettingsCloudView: View {
   @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
-  @EnvironmentObject var dataController: DataController
+  @ObservedObject var dataController = DataController.shared
   @AppStorage(DataController.iCloudSyncEnabledKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
   private var iCloudStorage: Bool = true
   @Namespace var animation
@@ -36,7 +36,8 @@ struct SettingsCloudView: View {
           )
         }
 
-      if iCloudStorage && dataController.isCloudKitSyncEnabled {
+      // Also while sync is paused because iCloud has no account: the status then says to sign in.
+      if iCloudStorage && dataController.syncStatus.isEnabled {
         SyncStatusSection(status: dataController.syncStatus)
           .padding(.top, .settingsHeaderSpacing)
       }

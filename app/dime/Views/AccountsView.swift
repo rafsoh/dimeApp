@@ -119,7 +119,7 @@ enum AccountsIntro {
 
 /// The accounts list as a half sheet, with a note above it saying what's new; it can be pulled up to full height.
 struct AccountsIntroSheet: View {
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
 
     var body: some View {
         if #available(iOS 16.0, *) {
@@ -178,7 +178,7 @@ struct OnboardingAccountsStep: ViewModifier {
 struct AccountsView: View {
     let mode: AccountsViewMode
 
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
     @Environment(\.dismiss) private var dismiss
     @Environment(\.finishOnboarding) private var finishOnboarding
 
@@ -464,7 +464,7 @@ struct AccountsView: View {
 private struct AccountSuggestionsSection: View {
     let existingNames: [String]
 
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
 
     static var all: [String] {
         [String(localized: "Cash"), String(localized: "Debit Card"), String(localized: "Credit Card"), String(localized: "Savings")]
@@ -551,7 +551,7 @@ struct AccountEditorSheet: View {
     /// Called with the account a new one created, so a picker can select it.
     var onCreate: ((AccountChoice) -> Void)?
 
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
     @Environment(\.dismiss) private var dismiss
 
     @State private var name: String
@@ -758,7 +758,7 @@ struct AccountPickerSheet: View {
     /// An account that can't be picked, such as where a transfer comes from when picking where it goes.
     private var unavailable: AccountChoice?
 
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
     @Environment(\.dismiss) private var dismiss
 
     @FetchRequest(sortDescriptors: [SortDescriptor(\.order), SortDescriptor(\.dateCreated)]) private var accounts: FetchedResults<Account>

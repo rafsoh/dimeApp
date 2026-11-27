@@ -10,7 +10,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct SettingsQuickAddView: View {
-  @EnvironmentObject private var dataController: DataController
+  @ObservedObject private var dataController = DataController.shared
 
   @FetchRequest(sortDescriptors: [SortDescriptor(\.order)]) private var templates: FetchedResults<TemplateTransaction>
 
@@ -175,7 +175,7 @@ private struct QuickAddTile: View {
 
   let template: TemplateTransaction
 
-  @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var currency: String = Locale.current.currencyCode!
+  @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var currency: String = Locale.current.currencyCode ?? "USD"
   @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var showCents: Bool = true
 
   init(template: TemplateTransaction) {
@@ -265,7 +265,7 @@ private struct QuickAddRow: View {
   let currencyCode: String?
   let accessory: String
 
-  @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var currency: String = Locale.current.currencyCode!
+  @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var currency: String = Locale.current.currencyCode ?? "USD"
   @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var showCents: Bool = true
 
   init(title: String, category: Category?, income: Bool, amount: Double, currencyCode: String?, accessory: String = "chevron.forward") {

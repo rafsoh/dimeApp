@@ -8,6 +8,90 @@ import CloudKit
 import XCTest
 
 final class DataIntegrityLogTests: XCTestCase {
+    func testPartialFailuresReportTheirDistinctRecordCodes() {
+        let partial = NSError(domain: CKError.errorDomain, code: CKError.Code.partialFailure.rawValue, userInfo: [
+            CKPartialErrorsByItemIDKey: [
+                "a": NSError(domain: CKError.errorDomain, code: CKError.Code.zoneNotFound.rawValue),
+                "b": NSError(domain: CKError.errorDomain, code: CKError.Code.serverRecordChanged.rawValue),
+                "c": NSError(domain: CKError.errorDomain, code: CKError.Code.zoneNotFound.rawValue)
+            ]
+        ])
+        let wrapped = NSError(domain: NSCocoaErrorDomain, code: 134_400, userInfo: [NSUnderlyingErrorKey: partial])
+
+        let codes = [CKError.Code.serverRecordChanged.rawValue, CKError.Code.zoneNotFound.rawValue].sorted().map(String.init).joined(separator: "_")
+        XCTAssertEqual(DataIntegrityLog.partialErrorCodes(in: wrapped), codes)
+        XCTAssertEqual(DataIntegrityLog.safeToken(codes), codes)
+        XCTAssertEqual(DataIntegrityLog.partialErrorCodes(in: NSError(domain: NSCocoaErrorDomain, code: 134_419)), "")
+    }
+
+    func testNoICloudAccountAtTheLastCheckPausesMirroring() {
+        let defaults = UserDefaults(suiteName: "group.com.rafaelsoh.dime")
+        let key = DataController.lastICloudAccountStatusKey
+        let saved = defaults?.object(forKey: key)
+        defer { defaults?.set(saved, forKey: key) }
+
+        defaults?.removeObject(forKey: key)
+        XCTAssertFalse(DataController.lastKnownICloudAccountIsUnavailable, "Never asked: mirror as before")
+
+        for status in [CKAccountStatus.noAccount, .restricted] {
+            defaults?.set(status.rawValue, forKey: key)
+            XCTAssertTrue(DataController.lastKnownICloudAccountIsUnavailable)
+        }
+
+        for status in [CKAccountStatus.available, .couldNotDetermine, .temporarilyUnavailable] {
+            defaults?.set(status.rawValue, forKey: key)
+            XCTAssertFalse(DataController.lastKnownICloudAccountIsUnavailable)
+        }
+    }
+
+    func testOutOfSpaceIsFoundAnywhereInTheErrorChain() {
+        // DIME-IOS-J arrived as SQLite's own error; Core Data saves usually wrap it.
+        XCTAssertTrue(DataIntegrityLog.isOutOfSpace(NSError(domain: "NSSQLiteErrorDomain", code: 13)))
+
+        let wrapped = NSError(domain: NSCocoaErrorDomain, code: 134_030, userInfo: [
+            NSUnderlyingErrorKey: NSError(domain: "NSSQLiteErrorDomain", code: 13)
+        ])
+        XCTAssertTrue(DataIntegrityLog.isOutOfSpace(wrapped))
+
+        let codeInUserInfo = NSError(domain: NSCocoaErrorDomain, code: 134_030, userInfo: ["NSSQLiteErrorDomain": NSNumber(value: 13)])
+        XCTAssertTrue(DataIntegrityLog.isOutOfSpace(codeInUserInfo))
+
+        XCTAssertTrue(DataIntegrityLog.isOutOfSpace(NSError(domain: NSCocoaErrorDomain, code: NSFileWriteOutOfSpaceError)))
+        XCTAssertTrue(DataIntegrityLog.isOutOfSpace(NSError(domain: NSCocoaErrorDomain, code: 512, userInfo: [
+            NSUnderlyingErrorKey: NSError(domain: NSPOSIXErrorDomain, code: Int(ENOSPC))
+        ])))
+
+        XCTAssertFalse(DataIntegrityLog.isOutOfSpace(NSError(domain: "NSSQLiteErrorDomain", code: 5)))
+        XCTAssertFalse(DataIntegrityLog.isOutOfSpace(NSError(domain: NSCocoaErrorDomain, code: 134_110)))
+    }
+
+    func testExceptionReasonsLoseTheRecordTheyDescribe() {
+        // The shape of a reason Sentry received, cut off partway through the note as Sentry cuts it.
+        let reason = """
+        Illegal attempt to establish a relationship 'category' between objects in different contexts (source = <Transaction: 0x13b6f53b0> (entity: Transaction; id: 0xbdaf0d9217c9db13 <x-coredata://0472793F-6BEC-42E7-B004-43A646564D0F/Transaction/p5>; data: {
+            amount = 40;
+            currencyCode = CHF;
+            note = "Sta
+        """
+
+        let redacted = DataIntegrityLog.redactedExceptionReason(reason)
+
+        XCTAssertTrue(redacted.hasPrefix("Illegal attempt to establish a relationship 'category' between objects in different contexts"))
+        XCTAssertFalse(redacted.contains("40"))
+        XCTAssertFalse(redacted.contains("CHF"))
+        XCTAssertFalse(redacted.contains("Sta"))
+        XCTAssertFalse(redacted.contains("0472793F"))
+
+        let quoted = DataIntegrityLog.redactedExceptionReason(#"Unacceptable value "Rent for March" for key note"#)
+        XCTAssertFalse(quoted.contains("Rent"))
+        XCTAssertTrue(quoted.contains("for key note"))
+
+        XCTAssertEqual(
+            DataIntegrityLog.redactedExceptionReason("*** -[__NSArray0 objectAtIndex:]: index 0 beyond bounds for empty array"),
+            "*** -[__NSArray0 objectAtIndex:]: index 0 beyond bounds for empty array"
+        )
+    }
+
     func testFailureSummaryKeepsDomainsAndCodesOnly() {
         let underlying = NSError(
             domain: CKError.errorDomain,

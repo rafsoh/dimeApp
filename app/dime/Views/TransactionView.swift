@@ -6,13 +6,17 @@
 //
 
 import Combine
+import CoreData
 import Foundation
 import Popovers
 import SwiftUI
 
 struct TransactionView: View {
-    @Environment(\.managedObjectContext) var moc
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
+    // Not the environment's context: a sheet SwiftUI shows without its environment would get an empty one.
+    private var moc: NSManagedObjectContext {
+        dataController.container.viewContext
+    }
     @Environment(\.dismiss) var dismiss
 
     @Environment(\.colorScheme) var colorScheme
@@ -103,9 +107,9 @@ struct TransactionView: View {
         ([.main] + accountObjects.map(AccountChoice.account)).first { $0 != account }
     }
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode ?? "USD"
     var currencySymbol: String {
-        return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
+        return (Locale.current.localizedCurrencySymbol(forCurrencyCode: currency) ?? currency)
     }
 
     @State var showingDatePicker = false
@@ -146,6 +150,14 @@ struct TransactionView: View {
         return nil
     }
 
+    /// The saved transaction or template this page edits, if any.
+    var editedObject: NSManagedObject? {
+        if let toEdit {
+            return toEdit
+        }
+        return editedTemplate
+    }
+
     var isEditing: Bool {
         toEdit != nil || editedTemplate != nil
     }
@@ -176,9 +188,7 @@ struct TransactionView: View {
     }
 
     var dateString: String {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "d MMM yyyy"
-        return dateFormatter.string(from: date)
+        CachedFormatter.date(format: "d MMM yyyy").string(from: date)
     }
 
     @State var showPicker = false
@@ -903,6 +913,25 @@ struct TransactionView: View {
             return
         }
 
+        // What this page edits, or the category picked on it, can be deleted while the page is open,
+        // most often by a change synced from another device. Linking a deleted object throws
+        // "Illegal attempt to establish a relationship ... between objects in different contexts".
+        let targetContext: NSManagedObjectContext?
+
+        if let edited = editedObject {
+            targetContext = edited.isDeleted ? nil : edited.managedObjectContext
+        } else {
+            targetContext = moc
+        }
+
+        guard let saveContext = targetContext else {
+            toastImage = "trash"
+            toastTitle = isTemplate ? "Template Was Deleted" : "Expense Was Deleted"
+            showToast = true
+            generator.notificationOccurred(.error)
+            return
+        }
+
         // An account picked here can be deleted while the page is open, most often by a change synced from
         // another device. Linking a deleted account throws "Illegal attempt to establish a relationship ...
         // between objects in different contexts", so it's flagged and put back before anything is saved.
@@ -917,6 +946,15 @@ struct TransactionView: View {
 
             toastImage = AccountSymbol.outline
             toastTitle = "Account Was Deleted"
+            showToast = true
+            generator.notificationOccurred(.error)
+            return
+        }
+
+        if !isTransfer, let chosen = category, chosen.isDeleted || chosen.managedObjectContext !== saveContext {
+            category = nil
+            toastImage = "tray"
+            toastTitle = "Category Was Deleted"
             showToast = true
             generator.notificationOccurred(.error)
             return
@@ -943,6 +981,11 @@ struct TransactionView: View {
 
             // Edits wait for the sheet to start closing, like other edits, so the list animates the change.
             DispatchQueue.main.asyncAfter(deadline: .now() + (edited == nil ? 0 : 0.3)) {
+                // Sync can still delete the leg being edited during this delay.
+                guard edited?.isGone != true else {
+                    return
+                }
+
                 withAnimation(.easeInOut(duration: 0.5)) {
                     _ = dataController.saveTransfer(editing: edited, from: from, to: destination, amount: amount, currencyCode: chosenCurrency, date: transferDate, note: transferNote)
                 }
@@ -984,6 +1027,11 @@ struct TransactionView: View {
             editedTransaction.category = category
 
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                // Sync can still delete it during this delay.
+                guard !editedTransaction.isGone else {
+                    return
+                }
+
                 withAnimation(.easeInOut(duration: 0.5)) {
                     editedTransaction.amount = price
 

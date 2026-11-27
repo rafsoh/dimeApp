@@ -1,0 +1,555 @@
+/*
+  Localizable.strings
+  dime
+
+  Thai
+*/
+
+// welcome sheet
+
+"dime_name" = "Dime";
+"welcome_header_1" = "ติดตามการเงินของคุณ";
+"welcome_subtitle_1" = "เพิ่มรายการใหม่ได้ง่ายและตรงไปตรงมา";
+"welcome_header_2" = "วิเคราะห์รายจ่าย";
+"welcome_subtitle_2" = "เข้าใจการใช้จ่ายของคุณในช่วงเวลาต่างๆ";
+"welcome_header_3" = "ใช้จ่ายตามงบประมาณ";
+"welcome_subtitle_3" = "ตั้งเป้าหมายตามหมวดหมู่และช่วงเวลาเพื่อจำกัดการใช้จ่าย";
+"Get Started" = "เริ่มต้นใช้งาน";
+
+// categories
+
+"Categories" = "หมวดหมู่";
+"no_income_categories" = "ไม่มีหมวดหมู่รายรับ";
+"no_expense_categories" = "ไม่มีหมวดหมู่รายจ่าย";
+"Suggestions Hidden" = "ซ่อนคำแนะนำแล้ว";
+"Successfully Edited" = "แก้ไขแล้ว";
+"Income Categories" = "หมวดหมู่รายรับ";
+"Expense Categories" = "หมวดหมู่รายจ่าย";
+"Suggested" = "แนะนำ";
+"Income Category" = "หมวดหมู่รายรับ";
+"Expense Category" = "หมวดหมู่รายจ่าย";
+"New" = "ใหม่";
+"Expense" = "รายจ่าย";
+"Income" = "รายรับ";
+"Delete" = "ลบ";
+"Cancel" = "ยกเลิก";
+"Delete '%@'?" = "ลบ '%@' หรือไม่";
+"This action cannot be undone, and all %@ transactions would be deleted." = "การดำเนินการนี้ไม่สามารถเลิกทำได้ และรายการทั้งหมดใน %@ จะถูกลบ";
+"Category Name" = "ชื่อหมวดหมู่";
+"Missing Name" = "ไม่มีชื่อ";
+"Missing Emoji" = "ไม่มีอีโมจิ";
+"Incomplete Entry" = "รายการไม่ครบถ้วน";
+"Missing Information" = "ข้อมูลไม่ครบถ้วน";
+"This action cannot be undone." = "การดำเนินการนี้ไม่สามารถเลิกทำได้";
+"Duplicate Found" = "มีอยู่แล้ว";
+"Please Edit Accordingly" = "โปรดแก้ไขให้ถูกต้อง";
+"Please Change Emoji" = "โปรดเปลี่ยนอีโมจิ";
+"Please Change Name" = "โปรดเปลี่ยนชื่อ";
+"Food" = "อาหาร";
+"Transport" = "การเดินทาง";
+"Rent" = "ค่าเช่า";
+"Subscriptions" = "ค่าสมาชิก";
+"Groceries" = "ของใช้ในบ้าน";
+"Family" = "ครอบครัว";
+"Utilities" = "ค่าน้ำค่าไฟ";
+"Fashion" = "แฟชั่น";
+"Healthcare" = "สุขภาพ";
+"Pets" = "สัตว์เลี้ยง";
+"Sneakers" = "รองเท้าผ้าใบ";
+"Gifts" = "ของขวัญ";
+"Paycheck" = "เงินเดือน";
+"Allowance" = "ค่าขนม";
+"Part-Time" = "งานพาร์ตไทม์";
+"Investments" = "การลงทุน";
+"Tips" = "ทิป";
+"Successfully Added" = "เพิ่มแล้ว";
+
+// new transaction page
+"Today, %@" = "วันนี้ %@";
+"Add Note" = "เพิ่มโน้ต";
+"Category" = "หมวดหมู่";
+"none" = "ไม่ทำซ้ำ";
+"daily" = "ทุกวัน";
+"weekly" = "ทุกสัปดาห์";
+"monthly" = "ทุกเดือน";
+"custom" = "กำหนดเอง";
+"Custom Interval" = "ระยะห่างที่กำหนดเอง";
+"Repeats every" = "ทำซ้ำทุก";
+"days" = "วัน";
+"weeks" = "สัปดาห์";
+"months" = "เดือน";
+"Edit" = "แก้ไข";
+"Delete Expense?" = "ลบรายจ่ายนี้หรือไม่";
+"Missing Amount" = "ไม่มีจำนวนเงิน";
+"Expense Was Deleted" = "รายจ่ายนี้ถูกลบแล้ว";
+"Template Was Deleted" = "เทมเพลตนี้ถูกลบแล้ว";
+"Budget Was Deleted" = "งบประมาณนี้ถูกลบแล้ว";
+"Category Was Deleted" = "หมวดหมู่นี้ถูกลบแล้ว";
+"Dime couldn't open your data" = "Dime เปิดข้อมูลของคุณไม่ได้";
+"Your entries are still on this device, and nothing has been changed or deleted. Please don't delete Dime: that would remove them. Try again, or contact support if this keeps happening." = "รายการของคุณยังอยู่บนอุปกรณ์นี้ และไม่มีอะไรถูกเปลี่ยนหรือลบ โปรดอย่าลบ Dime เพราะจะทำให้รายการเหล่านั้นหายไป ลองอีกครั้ง หรือติดต่อฝ่ายสนับสนุนหากยังเกิดขึ้นอยู่";
+"Try Again" = "ลองอีกครั้ง";
+"Trying Again…" = "กำลังลองอีกครั้ง…";
+"Contact Support" = "ติดต่อฝ่ายสนับสนุน";
+"Dime couldn't save your changes" = "Dime บันทึกการเปลี่ยนแปลงของคุณไม่ได้";
+"This device is out of storage. Free up some space in the Settings app, and Dime will save your changes when you come back." = "พื้นที่จัดเก็บของอุปกรณ์นี้เต็ม เพิ่มพื้นที่ว่างในแอปการตั้งค่า แล้ว Dime จะบันทึกการเปลี่ยนแปลงเมื่อคุณกลับมา";
+"Dime will try again. If this keeps happening, contact support." = "Dime จะลองอีกครั้ง หากยังเกิดขึ้นอยู่ โปรดติดต่อฝ่ายสนับสนุน";
+"This device is out of storage, so Dime can't open your data. Your entries are still here. Free up some space in the Settings app, then try again. Please don't delete Dime: that would remove them." = "พื้นที่จัดเก็บของอุปกรณ์นี้เต็ม Dime จึงเปิดข้อมูลของคุณไม่ได้ รายการของคุณยังอยู่ที่นี่ เพิ่มพื้นที่ว่างในแอปการตั้งค่า แล้วลองอีกครั้ง โปรดอย่าลบ Dime เพราะจะทำให้รายการเหล่านั้นหายไป";
+"Missing Category" = "ไม่มีหมวดหมู่";
+"No Category" = "ไม่มีหมวดหมู่";
+"category-picker-none" = "ไม่มี";
+"transaction-view-income-picker" = "รายรับ";
+
+// log view
+"Your Log is Empty" = "ยังไม่มีบันทึก";
+"Press the plus button to add your first entry" = "แตะปุ่มบวกเพื่อเพิ่มรายการแรกของคุณ";
+"Search entry by note" = "ค้นหารายการจากโน้ต";
+"Search by note, category, amount or date" = "ค้นหาจากโน้ต หมวดหมู่ จำนวนเงิน หรือวันที่";
+"Search" = "ค้นหา";
+"all entries" = "ทุกรายการ";
+"by type" = "ตามประเภท";
+"by day" = "รายวัน";
+"by week" = "รายสัปดาห์";
+"by month" = "รายเดือน";
+"by category" = "ตามหมวดหมู่";
+"recurring" = "ประจำ";
+"filter-tag-type" = "ตามประเภท";
+"filter-tag-day" = "รายวัน";
+"filter-tag-category" = "ตามหมวดหมู่";
+"filter-tag-week" = "รายสัปดาห์";
+"filter-tag-month" = "รายเดือน";
+"filter-tag-recurring" = "ประจำ";
+"filter-picker-income" = "รายรับ";
+"filter-tag-upcoming" = "กำลังจะมาถึง";
+"Total Spent" = "จ่ายทั้งหมด";
+"Total Income" = "รายรับทั้งหมด";
+"Net Total" = "ยอดสุทธิ";
+"Net total" = "ยอดสุทธิ";
+"Spent" = "จ่ายไป";
+"Earned" = "ได้รับ";
+"today" = "วันนี้";
+"this week" = "สัปดาห์นี้";
+"this month" = "เดือนนี้";
+"this year" = "ปีนี้";
+"No entries found." = "ไม่พบรายการ";
+"Try a different search query!" = "ลองค้นหาด้วยคำอื่นดู";
+"yesterday" = "เมื่อวาน";
+
+
+// insights
+"Insights" = "ข้อมูลเชิงลึก";
+"Analyse Your Expenditure" = "วิเคราะห์รายจ่ายของคุณ";
+"As transactions start piling up" = "เมื่อมีรายการมากขึ้น";
+"Expenses" = "รายจ่าย";
+"SPENT/DAY" = "จ่าย/วัน";
+"INCOME/DAY" = "รับ/วัน";
+"SPENT/MTH" = "จ่าย/เดือน";
+"INCOME/MTH" = "รับ/เดือน";
+"AVG/DAY" = "เฉลี่ย/วัน";
+"AVG/MTH" = "เฉลี่ย/เดือน";
+"That's all, buddy." = "หมดแล้วเพื่อน";
+"Into the unknown." = "สู่สิ่งที่ยังไม่รู้";
+"week" = "สัปดาห์";
+"month" = "เดือน";
+"year" = "ปี";
+"Jan" = "ม.ค.";
+"Apr" = "เม.ย.";
+"Jul" = "ก.ค.";
+"Oct" = "ต.ค.";
+
+// budgets
+"Budgets" = "งบประมาณ";
+"Budget Your Finances" = "วางงบประมาณการเงิน";
+"Link budgets to categories and set appropriate expenditure goals" = "เชื่อมงบประมาณกับหมวดหมู่และตั้งเป้าหมายการใช้จ่ายที่เหมาะสม";
+"No Budgets Found" = "ไม่มีงบประมาณ";
+"Add your first budget today!" = "เพิ่มงบประมาณแรกของคุณวันนี้เลย";
+"category budget" = "งบตามหมวดหมู่";
+"overall budget" = "งบรวม";
+"new" = "ใหม่";
+"New Budget" = "งบประมาณใหม่";
+"Overall Budget" = "งบรวม";
+"Select a category" = "เลือกหมวดหมู่";
+"Begin by linking this budget to an existing category." = "เริ่มจากเชื่อมงบประมาณนี้กับหมวดหมู่ที่มีอยู่";
+"Choose a time frame" = "เลือกช่วงเวลา";
+"The budget will periodically refresh according to your preference." = "งบประมาณจะรีเซ็ตเป็นระยะตามที่คุณเลือก";
+"Continue" = "ดำเนินการต่อ";
+"Pick a start date" = "เลือกวันเริ่มต้น";
+"Daily" = "รายวัน";
+"Weekly" = "รายสัปดาห์";
+"Monthly" = "รายเดือน";
+"Yearly" = "รายปี";
+"Which day of the %@ do you want your budget to start from?" = "ต้องการให้งบประมาณเริ่มวันไหนของ%@";
+"weekNewBudget" = "สัปดาห์";
+"monthNewBudget" = "เดือน";
+"yearNewBudget" = "ปี";
+"Sunday" = "วันอาทิตย์";
+"Monday" = "วันจันทร์";
+"Tuesday" = "วันอังคาร";
+"Wednesday" = "วันพุธ";
+"Thursday" = "วันพฤหัสบดี";
+"Friday" = "วันศุกร์";
+"Saturday" = "วันเสาร์";
+"Start of month" = "ต้นเดือน";
+"%@ of month" = "วัน%@ ของเดือน";
+"Set budget amount" = "ตั้งจำนวนงบประมาณ";
+"Feel free to edit this in the future." = "คุณแก้ไขได้ตลอดในภายหลัง";
+"%@ SPENT" = "จ่ายไป %@";
+"left %@" = "เหลือ (%@)";
+"over %@" = "เกิน (%@)";
+"left of %@" = "เหลือจาก %@";
+"widget-log-button" = "บันทึก";
+"left today" = "เหลือวันนี้";
+"left on %@" = "เหลือใน%@";
+"over today" = "เกินวันนี้";
+"over on %@" = "เกินใน%@";
+"left this week" = "เหลือสัปดาห์นี้";
+"over this week" = "เกินสัปดาห์นี้";
+"left each day" = "เหลือต่อวัน";
+"left this month" = "เหลือเดือนนี้";
+"over this month" = "เกินเดือนนี้";
+"left this year" = "เหลือปีนี้";
+"over this year" = "เกินปีนี้";
+"%lldd left" = "เหลือ %lld วัน";
+"%lldh left" = "เหลือ %lld ชม.";
+"%@ • %@ spent" = "%@ • จ่ายไป %@";
+"Back" = "ย้อนกลับ";
+"Delete the '%@' budget?" = "ลบงบประมาณ '%@' หรือไม่";
+"OVERALL SPENT: %@" = "จ่ายรวม: %@";
+"Delete your overall budget?" = "ลบงบรวมหรือไม่";
+
+// Settings
+"Settings" = "การตั้งค่า";
+"General" = "ทั่วไป";
+"Data" = "ข้อมูล";
+"Others" = "อื่นๆ";
+"Appearance" = "ลักษณะที่แสดง";
+"Start of Week" = "วันเริ่มต้นสัปดาห์";
+"Notifications" = "การแจ้งเตือน";
+"Currency" = "สกุลเงิน";
+"Number Entry" = "การป้อนตัวเลข";
+"Authentication" = "การยืนยันตัวตน";
+"Income Tracking" = "ติดตามรายรับ";
+"Display Cents" = "แสดงทศนิยม";
+"iCloud Sync" = "ซิงค์ iCloud";
+"Export Data" = "ส่งออกข้อมูล";
+"Erase Data" = "ลบข้อมูล";
+"Animated Charts" = "แผนภูมิแบบเคลื่อนไหว";
+"Feature Lab" = "ห้องทดลองฟีเจอร์";
+"Tip Jar" = "ให้ทิป";
+"Report Bug" = "รายงานข้อบกพร่อง";
+"Rate on App Store" = "ให้คะแนนใน App Store";
+"Share with Friends" = "แชร์ให้เพื่อน";
+"Follow Dime on Twitter" = "ติดตาม Dime บน Twitter";
+"Follow Rafael on Instagram" = "ติดตาม Rafael บน Instagram";
+"Light" = "สว่าง";
+"Dark" = "มืด";
+"System" = "ตามระบบ";
+"Mornings" = "ตอนเช้า";
+"Evenings" = "ตอนเย็น";
+"Custom" = "กำหนดเอง";
+"Off" = "ปิด";
+"On" = "เปิด";
+"Type 1" = "แบบที่ 1";
+"Type 2" = "แบบที่ 2";
+"Close and reload app for change to take effect." = "ปิดแล้วเปิดแอปใหม่เพื่อให้การเปลี่ยนแปลงมีผล";
+"Enable Notifications" = "เปิดการแจ้งเตือน";
+"Every morning (8:00 AM)" = "ทุกเช้า (8:00 น.)";
+"Every evening (8:00 PM)" = "ทุกเย็น (20:00 น.)";
+"Custom Time" = "เวลาที่กำหนดเอง";
+"Currencies" = "สกุลเงิน";
+"Number Entry Method" = "วิธีป้อนตัวเลข";
+"\"Pre-dotted\"" = "\"มีจุดทศนิยมให้\"";
+"If you're too lazy to add a decimal point, I gotchu covered." = "ขี้เกียจกดจุดทศนิยมใช่ไหม ปล่อยให้เราจัดการเอง";
+"\"Cent-less\"" = "\"ไม่มีทศนิยม\"";
+"If your transactions usually amount to whole numbers - this one is for you." = "ถ้ารายการของคุณมักเป็นจำนวนเต็ม - ตัวเลือกนี้เหมาะกับคุณ";
+"Enable Sync" = "เปิดการซิงค์";
+"Permanently Delete Everythin'" = "ลบทุกอย่างอย่างถาวร";
+"This action would delete all existing transactions, categories, and budgets, and cannot be undone." = "การดำเนินการนี้จะลบรายการ หมวดหมู่ และงบประมาณทั้งหมด และไม่สามารถเลิกทำได้";
+"Danger Zone" = "โซนอันตราย";
+"This action genuinely cannot be undone. Long press to confirm." = "การดำเนินการนี้ไม่สามารถเลิกทำได้จริงๆ กดค้างเพื่อยืนยัน";
+"Delete Literally Everything" = "ลบทุกอย่างจริงๆ";
+"Back Out" = "ไม่เอาแล้ว";
+"Celebrate Expenses" = "ฉลองรายจ่าย";
+"Show Line Graph" = "แสดงกราฟเส้น";
+"Budget Rows" = "งบประมาณแบบแถว";
+"Experimental features - proceed with caution." = "ฟีเจอร์ทดลอง - โปรดใช้อย่างระมัดระวัง";
+"Replace Time Label" = "แทนป้ายเวลา";
+"Swaps the time label of each transaction with its category name. However, if you do not manually input a note for each transaction - in which case the note is the category name by default - duplicate text will appear." = "แสดงชื่อหมวดหมู่แทนเวลาของแต่ละรายการ แต่ถ้าคุณไม่ได้พิมพ์โน้ตเองในแต่ละรายการ ซึ่งโน้ตจะเป็นชื่อหมวดหมู่โดยอัตโนมัติ ข้อความจะแสดงซ้ำกัน";
+"Keep the streak going!" = "บันทึกต่อเนื่องแบบนี้ต่อไปนะ";
+"Remember to input your expenses today." = "อย่าลืมบันทึกรายจ่ายของวันนี้";
+"Loading" = "กำลังโหลด";
+"Unable to load tip options, please try again later 🥲" = "โหลดตัวเลือกทิปไม่ได้ โปรดลองอีกครั้งภายหลัง 🥲";
+"Hey! Dime was built by a solo student developer, and is intended to be completely free-of-charge, with no paywalls or ads. If you enjoy using Dime and want to support development, please consider a small tip." = "สวัสดี Dime สร้างโดยนักพัฒนาที่เป็นนักศึกษาเพียงคนเดียว และตั้งใจให้ใช้ฟรีทั้งหมด ไม่มีการเก็บเงินหรือโฆษณา ถ้าคุณชอบใช้ Dime และอยากสนับสนุนการพัฒนา ลองให้ทิปเล็กๆ น้อยๆ ดูนะ";
+"Tip failed to go through, please try again!" = "ส่งทิปไม่สำเร็จ โปรดลองอีกครั้ง";
+"Thanks a million, %@ Rafael" = "ขอบคุณมากๆ %@ Rafael";
+"Have a great day ahead!" = "ขอให้เป็นวันที่ดี";
+"Version %@ (%@)" = "เวอร์ชัน %@ (%@)";
+"Made with ❤️ by %@ from 🇸🇬" = "สร้างด้วย ❤️ โดย %@ จาก 🇸🇬";
+"☕ Coffee-Sized Tip" = "☕ ทิปเท่ากาแฟหนึ่งแก้ว";
+"🌮 Taco-Sized Tip" = "🌮 ทิปเท่าทาโก้หนึ่งชิ้น";
+"🍕 Pizza-Sized Tip" = "🍕 ทิปเท่าพิซซ่าหนึ่งถาด";
+
+// Widgets
+
+// Labels
+"Recent Transactions" = "รายการล่าสุด";
+"View your latest expenses." = "ดูรายจ่ายล่าสุดของคุณ";
+"Analyse your expenditure breakdowns over various time periods." = "วิเคราะห์รายละเอียดรายจ่ายในช่วงเวลาต่างๆ";
+"Monitor how you are sticking to your overall budgets." = "ติดตามว่าคุณใช้จ่ายตามงบรวมได้ดีแค่ไหน";
+"Budget" = "งบประมาณ";
+"Monitor how you are sticking to your budgets." = "ติดตามว่าคุณใช้จ่ายตามงบประมาณได้ดีแค่ไหน";
+"New Expense" = "รายจ่ายใหม่";
+"A convenient button to log new purchases." = "ปุ่มลัดสำหรับบันทึกการซื้อใหม่";
+
+"%lld%% spent" = "จ่ายไป %lld%%";
+"NO RECENT EXPENSES" = "ไม่มีรายจ่ายล่าสุด";
+"RECENT EXPENSES" = "รายจ่ายล่าสุด";
+"Recent expenses" = "รายจ่ายล่าสุด";
+"No recent expenses" = "ไม่มีรายจ่ายล่าสุด";
+"in %@" = "ใน %@";
+"net" = "สุทธิ";
+"earned" = "ได้รับ";
+"spent" = "จ่ายไป";
+"Time Period" = "ช่วงเวลา";
+"NO TRANSACTIONS\n%@" = "ไม่มีรายการ\n%@";
+"THIS WEEK" = "สัปดาห์นี้";
+"THIS MONTH" = "เดือนนี้";
+"THIS YEAR" = "ปีนี้";
+"EARNED " = "ได้รับ ";
+"SPENT " = "จ่ายไป ";
+"ADD OVERALL BUDGET" = "เพิ่มงบรวม";
+"Percent Spent" = "เปอร์เซ็นต์ที่จ่ายไป";
+"Create your overall budget in the app" = "สร้างงบรวมในแอป";
+"ADD BUDGET" = "เพิ่มงบประมาณ";
+"over" = "เกิน";
+"SPENT: %@" = "จ่ายไป: %@";
+"Select budget in widget options" = "เลือกงบประมาณในตัวเลือกวิดเจ็ต";
+"Budget no longer exists - please select new budget from widget options." = "งบประมาณนี้ไม่มีอยู่แล้ว - โปรดเลือกงบประมาณใหม่จากตัวเลือกวิดเจ็ต";
+"left" = "เหลือ";
+"SELECT BUDGET" = "เลือกงบประมาณ";
+"SELECT BUDGET IN WIDGET OPTIONS" = "เลือกงบประมาณในตัวเลือกวิดเจ็ต";
+
+// iCloud sync status
+"Up to date" = "เป็นปัจจุบัน";
+"Syncing…" = "กำลังซิงค์…";
+"Not Syncing" = "ไม่ได้ซิงค์";
+"Waiting to sync" = "กำลังรอซิงค์";
+"Checking iCloud…" = "กำลังตรวจสอบ iCloud…";
+"Last synced %@" = "ซิงค์ล่าสุด %@";
+"Sign in to iCloud in the Settings app to back up and sync your data." = "ลงชื่อเข้า iCloud ในแอปการตั้งค่าเพื่อสำรองและซิงค์ข้อมูลของคุณ";
+"iCloud is restricted on this device, so your data isn't being backed up." = "iCloud ถูกจำกัดบนอุปกรณ์นี้ ข้อมูลของคุณจึงไม่ได้รับการสำรอง";
+"iCloud is temporarily unavailable. Check your Apple Account in the Settings app." = "iCloud ไม่พร้อมใช้งานชั่วคราว ตรวจสอบบัญชี Apple ในแอปการตั้งค่า";
+"Couldn't check your iCloud account." = "ตรวจสอบบัญชี iCloud ไม่ได้";
+"Your iCloud storage is full, so new changes aren't being backed up or synced. Free up space in the Settings app." = "พื้นที่จัดเก็บ iCloud เต็ม การเปลี่ยนแปลงใหม่จึงไม่ได้รับการสำรองหรือซิงค์ เพิ่มพื้นที่ว่างในแอปการตั้งค่า";
+"You're offline. Changes will sync when you're back online." = "คุณออฟไลน์อยู่ การเปลี่ยนแปลงจะซิงค์เมื่อคุณกลับมาออนไลน์";
+"Dime's data was deleted from iCloud in the Settings app." = "ข้อมูล Dime ถูกลบออกจาก iCloud ในแอปการตั้งค่า";
+"iCloud is busy right now. Dime will try again automatically." = "iCloud ไม่ว่างในขณะนี้ Dime จะลองอีกครั้งโดยอัตโนมัติ";
+"Sync ran into a problem and will try again." = "การซิงค์พบปัญหาและจะลองอีกครั้ง";
+
+// Backups
+"Backups" = "ข้อมูลสำรอง";
+"Back Up Now" = "สำรองข้อมูลเดี๋ยวนี้";
+"Dime backs up your data on this device once a day and keeps the last 14 backups. Restoring adds back anything that's missing and never removes or changes what you have now. Backups are deleted if you delete Dime." = "Dime สำรองข้อมูลของคุณบนอุปกรณ์นี้วันละครั้งและเก็บข้อมูลสำรอง 14 ชุดล่าสุด การกู้คืนจะเพิ่มสิ่งที่หายไปกลับมา โดยไม่ลบหรือเปลี่ยนข้อมูลที่คุณมีอยู่ ข้อมูลสำรองจะถูกลบหากคุณลบ Dime";
+"No backups yet" = "ยังไม่มีข้อมูลสำรอง";
+"Restore" = "กู้คืน";
+"Restore this backup?" = "กู้คืนข้อมูลสำรองนี้หรือไม่";
+"Anything missing from Dime will be added back from the backup made %@. Nothing you have now will be removed or changed." = "สิ่งที่หายไปจาก Dime จะถูกเพิ่มกลับจากข้อมูลสำรองที่สร้างเมื่อ %@ ข้อมูลที่คุณมีอยู่ตอนนี้จะไม่ถูกลบหรือเปลี่ยนแปลง";
+"Nothing was missing" = "ไม่มีอะไรหายไป";
+"Restore complete" = "กู้คืนเสร็จแล้ว";
+"Everything in this backup is already in Dime." = "ทุกอย่างในข้อมูลสำรองนี้มีอยู่ใน Dime แล้ว";
+"Items added back: %lld." = "รายการที่เพิ่มกลับ: %lld";
+"Waiting for iCloud" = "กำลังรอ iCloud";
+"You can restore once iCloud finishes syncing, so nothing gets added twice." = "คุณกู้คืนได้เมื่อ iCloud ซิงค์เสร็จ เพื่อไม่ให้มีอะไรถูกเพิ่มซ้ำ";
+"Something went wrong" = "เกิดข้อผิดพลาด";
+"Dime couldn't finish. Please try again." = "Dime ทำไม่สำเร็จ โปรดลองอีกครั้ง";
+"OK" = "ตกลง";
+"Some of your data may be missing" = "ข้อมูลบางส่วนของคุณอาจหายไป";
+"Backup from %@: %lld transactions. On this device now: %lld. Restore what's missing? Nothing you have now will be removed or changed." = "ข้อมูลสำรองจาก %@: %lld รายการ ตอนนี้บนอุปกรณ์นี้: %lld กู้คืนสิ่งที่หายไปหรือไม่ ข้อมูลที่คุณมีอยู่ตอนนี้จะไม่ถูกลบหรือเปลี่ยนแปลง";
+"Not Now" = "ไว้ภายหลัง";
+
+/* Multiple currencies */
+"No exchange rate yet" = "ยังไม่มีอัตราแลกเปลี่ยน";
+"Currency, %@" = "สกุลเงิน %@";
+"Recent" = "ล่าสุด";
+"All Currencies" = "สกุลเงินทั้งหมด";
+"Exchange Rates" = "อัตราแลกเปลี่ยน";
+"None yet" = "ยังไม่มี";
+"Never" = "ไม่เคย";
+"Source" = "แหล่งที่มา";
+"Last Updated" = "อัปเดตล่าสุด";
+"Days Saved" = "จำนวนวันที่บันทึกไว้";
+"Refresh Rates" = "รีเฟรชอัตรา";
+"Rates come from fawazahmed0/exchange-api, and from Frankfurter (European Central Bank) for dates before March 2024. Each transaction is converted at the rate on its own date. Rates are kept on this device only and are never added to your data or iCloud." = "อัตรามาจาก fawazahmed0/exchange-api และจาก Frankfurter (ธนาคารกลางยุโรป) สำหรับวันที่ก่อนเดือนมีนาคม 2024 แต่ละรายการจะแปลงตามอัตราของวันที่ของรายการนั้น อัตราจะเก็บไว้บนอุปกรณ์นี้เท่านั้นและไม่ถูกเพิ่มลงในข้อมูลของคุณหรือ iCloud";
+"Some rates couldn't be downloaded. Dime will try again later, and amounts without a rate are left out of totals until then." = "ดาวน์โหลดอัตราบางรายการไม่ได้ Dime จะลองอีกครั้งภายหลัง และจนกว่าจะถึงตอนนั้น จำนวนเงินที่ไม่มีอัตราจะไม่ถูกนับรวมในยอดรวม";
+"with an unknown currency" = "ที่มีสกุลเงินไม่รู้จัก";
+"Change your primary currency?" = "เปลี่ยนสกุลเงินหลักหรือไม่";
+"Primary Currency" = "สกุลเงินหลัก";
+"Can't restore yet" = "ยังกู้คืนไม่ได้";
+"Changes the currency of this transaction" = "เปลี่ยนสกุลเงินของรายการนี้";
+"My transactions were actually in %@" = "จริงๆ แล้วรายการของฉันเป็น %@";
+"Convert to %@" = "แปลงเป็น %@";
+"Relabelling keeps every amount as it is and treats your %@ transactions as %@. Converting keeps them in %@ and shows them in %@ at each day's rate. Budgets and templates keep their amounts. Dime backs up your data first." = "การเปลี่ยนป้ายจะคงจำนวนเงินทุกรายการไว้และถือว่ารายการ %1$@ ของคุณเป็น %2$@ การแปลงจะเก็บรายการไว้เป็น %3$@ และแสดงเป็น %4$@ ตามอัตราของแต่ละวัน จำนวนเงินของงบประมาณและเทมเพลตจะไม่เปลี่ยน Dime จะสำรองข้อมูลของคุณก่อน";
+"Currency not changed" = "ไม่ได้เปลี่ยนสกุลเงิน";
+"Dime is still finishing your last currency change. Try again in a moment." = "Dime ยังเปลี่ยนสกุลเงินครั้งก่อนไม่เสร็จ โปรดลองอีกครั้งในอีกสักครู่";
+"Dime is still catching up with iCloud. Try again once it's up to date." = "Dime ยังซิงค์กับ iCloud อยู่ โปรดลองอีกครั้งเมื่อเป็นปัจจุบันแล้ว";
+"Dime couldn't back up your data first, so nothing was changed. Please try again." = "Dime สำรองข้อมูลของคุณก่อนไม่ได้ จึงไม่มีอะไรถูกเปลี่ยน โปรดลองอีกครั้ง";
+"Dime couldn't finish changing your currency. Nothing was lost, and it will finish the next time you open Dime." = "Dime เปลี่ยนสกุลเงินไม่เสร็จ ไม่มีข้อมูลสูญหาย และจะทำต่อจนเสร็จเมื่อคุณเปิด Dime ครั้งถัดไป";
+"Here you go! %@" = "นี่เลย %@";
+"A three-letter code such as EUR. Leave it empty to use the currency Dime picks for new transactions." = "รหัสสามตัวอักษร เช่น THB เว้นว่างไว้เพื่อใช้สกุลเงินที่ Dime เลือกสำหรับรายการใหม่";
+"Which currency? Use a three-letter code such as EUR." = "สกุลเงินใด ใช้รหัสสามตัวอักษร เช่น THB";
+"Export" = "ส่งออก";
+"All time" = "ทั้งหมด";
+"No transactions to export" = "ไม่มีรายการให้ส่งออก";
+
+/* Feature tips */
+"Log in Any Currency" = "บันทึกได้ทุกสกุลเงิน";
+"Tap the symbol to change this transaction's currency." = "แตะสัญลักษณ์เพื่อเปลี่ยนสกุลเงินของรายการนี้";
+
+/* What's New 3.0.1 */
+"Version %@" = "เวอร์ชัน %@";
+"Multiple Currencies" = "หลายสกุลเงิน";
+"Tap the currency symbol to log in any currency. Totals are converted to your primary currency at each day's rate." = "แตะสัญลักษณ์สกุลเงินเพื่อบันทึกเป็นสกุลเงินใดก็ได้ ยอดรวมจะแปลงเป็นสกุลเงินหลักตามอัตราของแต่ละวัน";
+"Start Your Week Any Day" = "เริ่มสัปดาห์วันไหนก็ได้";
+"Weeks can now begin on any weekday. Pick yours in Settings." = "ตอนนี้สัปดาห์เริ่มวันไหนก็ได้แล้ว เลือกได้ในการตั้งค่า";
+"Export a Period" = "ส่งออกเป็นช่วงเวลา";
+"Choose the dates to include before exporting your transactions." = "เลือกวันที่ที่จะรวมไว้ก่อนส่งออกรายการ";
+"Unlimited Categories" = "หมวดหมู่ไม่จำกัด";
+"Add as many expense categories as you like, shown in the order you set." = "เพิ่มหมวดหมู่รายจ่ายได้มากเท่าที่ต้องการ โดยแสดงตามลำดับที่คุณจัดไว้";
+"Search by Amount" = "ค้นหาตามจำนวนเงิน";
+"Find a transaction by its amount, even with a currency symbol or separators." = "ค้นหารายการตามจำนวนเงิน แม้จะมีสัญลักษณ์สกุลเงินหรือตัวคั่น";
+"Français and Русский" = "Français และ Русский";
+"Dime is now available in French and Russian." = "ตอนนี้ Dime มีภาษาฝรั่งเศสและภาษารัสเซียแล้ว";
+
+// quick add
+"Quick Add" = "เพิ่มด่วน";
+"Templates" = "เทมเพลต";
+"%lld/%lld" = "%lld/%lld";
+"%lld of %lld templates" = "เทมเพลต %lld จาก %lld";
+"New Template" = "เทมเพลตใหม่";
+"You can have up to 4 templates" = "มีเทมเพลตได้สูงสุด 4 รายการ";
+"Log a template with one tap from the Quick Add widget, without opening Dime. Each one becomes its own transaction, so editing or deleting a template never changes what you've logged." = "บันทึกเทมเพลตได้ในแตะเดียวจากวิดเจ็ตเพิ่มด่วน โดยไม่ต้องเปิด Dime แต่ละครั้งจะเป็นรายการแยกกัน การแก้ไขหรือลบเทมเพลตจึงไม่เปลี่ยนสิ่งที่คุณบันทึกไปแล้ว";
+"Add From Recent" = "เพิ่มจากรายการล่าสุด";
+"Adds a template" = "เพิ่มเทมเพลต";
+"Delete Template?" = "ลบเทมเพลตหรือไม่";
+"Transactions you've logged with it stay as they are." = "รายการที่บันทึกด้วยเทมเพลตนี้จะยังคงอยู่เหมือนเดิม";
+"Log your templates with one tap, without opening Dime." = "บันทึกเทมเพลตได้ในแตะเดียว โดยไม่ต้องเปิด Dime";
+"Add templates in Settings to log them from here." = "เพิ่มเทมเพลตในการตั้งค่าเพื่อบันทึกจากตรงนี้";
+"Add a template" = "เพิ่มเทมเพลต";
+"Log %@, %@" = "บันทึก %@ %@";
+"Logged %@, %@" = "บันทึก %@ แล้ว %@";
+"Log Quick Add Template" = "บันทึกเทมเพลตเพิ่มด่วน";
+"Template" = "เทมเพลต";
+"Coffee" = "กาแฟ";
+"Lunch" = "มื้อกลางวัน";
+"Bus" = "รถเมล์";
+
+/* Notifications */
+"Reminders" = "การเตือน";
+"Daily Check-in" = "เตือนรายวัน";
+"A nudge to log the day's spending" = "เตือนให้บันทึกรายจ่ายของวัน";
+"Upcoming Charges" = "รายการที่จะเรียกเก็บ";
+"A heads-up before a recurring expense is logged" = "แจ้งล่วงหน้าก่อนบันทึกรายจ่ายประจำ";
+"Time" = "เวลา";
+"Remind Me" = "เตือนฉัน";
+"On the day" = "ในวันนั้น";
+"1 day before" = "1 วันก่อน";
+"%lld days before" = "%lld วันก่อน";
+"Fewer days" = "ลดจำนวนวัน";
+"More days" = "เพิ่มจำนวนวัน";
+"Check-ins and charge reminders both arrive at this time." = "การเตือนรายวันและการเตือนรายการเรียกเก็บจะมาถึงในเวลานี้";
+"Your check-in arrives at this time every day." = "การเตือนรายวันจะมาถึงในเวลานี้ทุกวัน";
+"Charge reminders arrive at this time." = "การเตือนรายการเรียกเก็บจะมาถึงในเวลานี้";
+"Covers recurring expenses. Reminders are planned a couple of months ahead and refresh whenever you open Dime." = "ใช้กับรายจ่ายประจำ การเตือนจะวางแผนล่วงหน้าสองสามเดือนและรีเฟรชทุกครั้งที่คุณเปิด Dime";
+"Due today: %@" = "ครบกำหนดวันนี้: %@";
+"Due tomorrow: %@" = "ครบกำหนดพรุ่งนี้: %@";
+"Due in %lld days: %@" = "ครบกำหนดในอีก %lld วัน: %@";
+"%@ will be added to your log today." = "%@ จะถูกเพิ่มในบันทึกของคุณวันนี้";
+"%@ will be added to your log tomorrow." = "%@ จะถูกเพิ่มในบันทึกของคุณพรุ่งนี้";
+"%@ will be added to your log on %@." = "%@ จะถูกเพิ่มในบันทึกของคุณใน%@";
+
+// shortcuts
+"Category for an income. Choose No Category to log it without one." = "หมวดหมู่ของรายรับ เลือกไม่มีหมวดหมู่เพื่อบันทึกโดยไม่ระบุหมวดหมู่";
+"Category for an expense. Choose No Category to log it without one." = "หมวดหมู่ของรายจ่าย เลือกไม่มีหมวดหมู่เพื่อบันทึกโดยไม่ระบุหมวดหมู่";
+
+// quick add grid
+"Tap a template to edit it, or hold and drag it to a new spot. The Quick Add widget logs each one with one tap, without opening Dime, and editing or deleting a template never changes what you've logged." = "แตะเทมเพลตเพื่อแก้ไข หรือกดค้างแล้วลากไปตำแหน่งใหม่ วิดเจ็ตเพิ่มด่วนจะบันทึกแต่ละรายการในแตะเดียวโดยไม่ต้องเปิด Dime และการแก้ไขหรือลบเทมเพลตจะไม่เปลี่ยนสิ่งที่คุณบันทึกไปแล้ว";
+"Move Earlier" = "ย้ายขึ้น";
+"Move Later" = "ย้ายลง";
+"Edits the template" = "แก้ไขเทมเพลต";
+
+// budget rollover
+"with" = "และ";
+"rollover" = "ยกยอดไป";
+"no rollover" = "ไม่ยกยอด";
+"+%@ rolled over" = "ยกยอดมา +%@";
+"−%@ rolled over" = "ยกยอดมา −%@";
+"Leftover rolls over %@" = "ยอดคงเหลือจะยกไป%@";
+"Nothing rolled over" = "ไม่มียอดยกมา";
+"Rolls over" = "ยกยอด";
+"%@ budget %@ %@ = %@" = "งบ %@ %@ %@ = %@";
+"Rollover" = "ยกยอด";
+"Whether what's left, or overspent, carries into the next period" = "ให้ยอดคงเหลือหรือยอดที่ใช้เกินยกไปงวดถัดไปหรือไม่";
+"%@ overspend" = "ใช้เกิน %@";
+"%@ left over" = "เหลือ %@";
+"Rollover starts this period" = "เริ่มยกยอดตั้งแต่งวดนี้";
+"What's left at the end of this period, or overspent, carries into the next one. Earlier periods aren't counted." = "ยอดคงเหลือหรือยอดที่ใช้เกินเมื่อสิ้นงวดนี้จะยกไปงวดถัดไป งวดก่อนหน้าไม่นับรวม";
+"Turn On Rollover" = "เปิดการยกยอด";
+"Turn off rollover?" = "ปิดการยกยอดหรือไม่";
+"The %@ from earlier periods will be cleared. Turning rollover back on starts fresh." = "%@จากงวดก่อนหน้าจะถูกล้าง การเปิดยกยอดอีกครั้งจะเริ่มใหม่";
+"Leftovers will stop carrying over. Turning rollover back on starts fresh." = "ยอดคงเหลือจะไม่ยกไปอีก การเปิดยกยอดอีกครั้งจะเริ่มใหม่";
+"Turn Off" = "ปิด";
+"Reset rollover?" = "รีเซ็ตการยกยอดหรือไม่";
+"Changing how often this budget repeats clears the %@ from earlier periods. Rollover starts again from this period." = "การเปลี่ยนความถี่ของงบประมาณนี้จะล้าง%@จากงวดก่อนหน้า การยกยอดจะเริ่มใหม่ตั้งแต่งวดนี้";
+"Changing the category clears the %@ from earlier periods. Rollover starts again from this period." = "การเปลี่ยนหมวดหมู่จะล้าง%@จากงวดก่อนหน้า การยกยอดจะเริ่มใหม่ตั้งแต่งวดนี้";
+"Changing how often this budget repeats restarts rollover from this period." = "การเปลี่ยนความถี่ของงบประมาณนี้จะเริ่มการยกยอดใหม่ตั้งแต่งวดนี้";
+"Changing the category restarts rollover from this period." = "การเปลี่ยนหมวดหมู่จะเริ่มการยกยอดใหม่ตั้งแต่งวดนี้";
+"Apply from this period?" = "ใช้ตั้งแต่งวดนี้หรือไม่";
+"Your changes apply from this period on, and earlier periods keep their old settings." = "การเปลี่ยนแปลงจะมีผลตั้งแต่งวดนี้ไป ส่วนงวดก่อนหน้าจะใช้การตั้งค่าเดิม";
+"The new amount applies from this period on, and earlier periods keep the old one." = "จำนวนเงินใหม่จะมีผลตั้งแต่งวดนี้ไป ส่วนงวดก่อนหน้าจะใช้จำนวนเดิม";
+"The new reset day applies from this period on, and earlier periods keep the old one." = "วันรีเซ็ตใหม่จะมีผลตั้งแต่งวดนี้ไป ส่วนงวดก่อนหน้าจะใช้วันเดิม";
+"The %@ from earlier periods is kept." = "%@จากงวดก่อนหน้าจะยังคงอยู่";
+
+// log
+"UPCOMING" = "กำลังจะมาถึง";
+
+// budgets, insights and settings
+"Overall" = "รวม";
+"%lld days to go" = "อีก %lld วัน";
+"1 day to go" = "อีก 1 วัน";
+"%lld hours to go" = "อีก %lld ชั่วโมง";
+"1 hour to go" = "อีก 1 ชั่วโมง";
+"%@ a day for %lld days" = "วันละ %@ เป็นเวลา %lld วัน";
+"%@ left today" = "วันนี้เหลือ %@";
+"%@ a day" = "วันละ %@";
+"Close to limit" = "ใกล้ถึงขีดจำกัด";
+"Resets %@" = "รีเซ็ต%@";
+"tomorrow" = "พรุ่งนี้";
+"Nothing spent yet" = "ยังไม่มีรายจ่าย";
+"Over budget" = "เกินงบ";
+"Net" = "สุทธิ";
+"Top categories" = "หมวดหมู่สูงสุด";
+"Largest expenses" = "รายจ่ายก้อนใหญ่";
+"%lld%% of spending" = "%lld%% ของรายจ่าย";
+"of spending" = "ของรายจ่าย";
+"of income" = "ของรายรับ";
+"avg " = "เฉลี่ย ";
+"~%@ forecasted" = "คาดการณ์ ~%@";
+"categories" = "หมวดหมู่";
+"category" = "หมวดหมู่";
+"Time Frames" = "ช่วงเวลา";
+"Theme" = "ธีม";
+"App Icon" = "ไอคอนแอป";
+"Upcoming Logs" = "รายการที่กำลังจะมาถึง";
+"Shown" = "แสดง";
+"Hidden" = "ซ่อน";
+"Display +/- Symbol" = "แสดงเครื่องหมาย +/-";
+
+/* Delete category */
+"%@ has 1 transaction. What should happen to it?" = "%@ มี 1 รายการ ต้องการจัดการอย่างไร";
+"%@ has %lld transactions. What should happen to them?" = "%@ มี %lld รายการ ต้องการจัดการอย่างไร";
+"Move to" = "ย้ายไปที่";
+"Delete it" = "ลบรายการ";
+"Delete them" = "ลบทั้งหมด";
+"Delete Category" = "ลบหมวดหมู่";
+
+"Font" = "แบบอักษร";
+"Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo เป็นแบบอักษรโดย Josh Puckett ซึ่งได้รับอนุญาตภายใต้ SIL Open Font License";

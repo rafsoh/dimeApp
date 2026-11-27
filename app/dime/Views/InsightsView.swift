@@ -11,7 +11,7 @@ import Popovers
 import SwiftUI
 
 struct InsightsView: View {
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
     @EnvironmentObject var toastPresenter: OverallToastPresenter
     @EnvironmentObject var transactionManager: OverallTransactionManager
 
@@ -23,7 +23,7 @@ struct InsightsView: View {
     @AppStorage("chartTimeFrame", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var chartType = 1
     @AppStorage("firstDayOfMonth", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var firstDayOfMonth: Int = 1
     @AppStorage("incomeTracking", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var incomeTracking: Bool = true
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode ?? "USD"
     @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
 
     @State private var periodStart: Date?
@@ -48,7 +48,7 @@ struct InsightsView: View {
         InsightsAccountFilter.choice(among: accountChoices)
     }
 
-    private var didSave = NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
+    private let didSave = NSManagedObjectContext.recordsDidSave
 
     var chartTypeString: String {
         if chartType == 1 {
@@ -1591,7 +1591,7 @@ struct InsightsLogRow: View {
     let subtitle: String
 
     @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode ?? "USD"
     @AppStorage("showExpenseOrIncomeSign", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showExpenseOrIncomeSign: Bool = true
 
     var body: some View {
@@ -1928,10 +1928,10 @@ struct InsightsDetailSheet: View {
     @State private var refreshID = UUID()
     @StateObject private var sheetManager = OverallTransactionManager()
 
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
     @Environment(\.dismiss) var dismiss
 
-    private var didSave = NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
+    private let didSave = NSManagedObjectContext.recordsDidSave
 
     var route: InsightsRoute {
         path.last ?? .allCategories
@@ -2221,7 +2221,7 @@ struct InsightsCashFlowDetail: View {
     let cashFlow: InsightsCashFlow
     let formatter: InsightsFormatter
 
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
     @EnvironmentObject var sheetManager: OverallTransactionManager
 
     @State private var selected: Int?

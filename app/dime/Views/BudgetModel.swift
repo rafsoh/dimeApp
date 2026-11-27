@@ -489,12 +489,6 @@ struct BudgetMeter: View {
     }
 }
 
-extension NSManagedObject {
-    var isGone: Bool {
-        isDeleted || managedObjectContext == nil
-    }
-}
-
 /// "Only Card and Cash" for a budget limited to some accounts, or nil when it counts every account.
 func budgetAccountsSummary(_ budget: RolloverBudget) -> String? {
     guard let context = budget.managedObjectContext else { return nil }

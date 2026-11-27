@@ -11,19 +11,20 @@ import Popovers
 import SwiftUI
 
 struct LogView: View {
-    @FetchRequest(sortDescriptors: []) private var transactions: FetchedResults<Transaction>
+    // Only tells whether there are any transactions, so their values aren't loaded.
+    @FetchRequest(fetchRequest: Transaction.identifiersOnlyRequest) private var transactions: FetchedResults<Transaction>
     @FetchRequest(sortDescriptors: []) private var accounts: FetchedResults<Account>
 
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
     @Environment(\.managedObjectContext) var moc
 
     @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
 
     var topEdge: CGFloat
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode ?? "USD"
     var currencySymbol: String {
-        return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
+        return (Locale.current.localizedCurrencySymbol(forCurrencyCode: currency) ?? currency)
     }
 
     @State var addTransaction = false
@@ -385,9 +386,9 @@ struct NumberView: AnimatableModifier {
 
     @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode ?? "USD"
     var currencySymbol: String {
-        return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
+        return (Locale.current.localizedCurrencySymbol(forCurrencyCode: currency) ?? currency)
     }
 
     var fontSize: CGFloat {
@@ -463,7 +464,7 @@ struct LogListContent: View, Equatable {
 }
 
 struct LogInsightsView: View {
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
     @Environment(\.dynamicTypeSize) var dynamicTypeSize
 
     let showCents: Bool
@@ -856,7 +857,7 @@ struct TransactionsList: View {
     @AppStorage("showUpcomingTransactions", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showUpcoming: Bool = true
     @AppStorage("showUpcomingTransactionsWhenUpcoming", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showSoon: Bool = false
 
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
 
     @SectionedFetchRequest<Date?, Transaction>(sectionIdentifier: \.day, sortDescriptors: [
         SortDescriptor(\.day, order: .reverse),
@@ -903,9 +904,9 @@ struct ListView: View {
 
     @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode ?? "USD"
     var currencySymbol: String {
-        return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
+        return (Locale.current.localizedCurrencySymbol(forCurrencyCode: currency) ?? currency)
     }
     
     @AppStorage("showExpenseOrIncomeSign", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
@@ -915,10 +916,21 @@ struct ListView: View {
 
     @EnvironmentObject var toastPresenter: OverallToastPresenter
 
+    /// One day of the list as a plain value. SwiftUI's display-link thread lays out lazy stacks, and reading
+    /// SectionedFetchResults there trips its main-actor check (DIME-IOS-7/8/D), so the ForEach is given an
+    /// array built here on the main thread instead.
+    private struct DaySection: Identifiable {
+        let id: Date?
+        let transactions: [Transaction]
+    }
+
     var body: some View {
+        // Collects object references only; the dedupe and totals stay per visible day.
+        let days = transactions.map { DaySection(id: $0.id, transactions: Array($0)) }
+
         LazyVStack(spacing: 0) {
-            ForEach(transactions) { day in
-                let filtered = filterOutDupes(day: day)
+            ForEach(days) { day in
+                let filtered = filterOutDupes(day.transactions)
                 let dateText = dateConverter(date: day.id ?? Date.now).uppercased()
 
                 VStack(spacing: 0) {
@@ -968,29 +980,16 @@ struct ListView: View {
         }
     }
 
-    func filterOutDupes(day: SectionedFetchResults<Date?, Transaction>.Element) -> (transactions: [Transaction], string: String) {
-        var seen = [Transaction]()
+    func filterOutDupes(_ day: [Transaction]) -> (transactions: [Transaction], string: String) {
+        var seen = Set<UUID?>()
         let unique = day.filter { entity -> Bool in
-            if seen.contains(where: { $0.id == entity.id }) {
-                return false
-            } else {
-                seen.append(entity)
-                return true
-            }
+            seen.insert(entity.id).inserted
         }
 
         // An account's own list shows its own side of each transfer; every other list shows each transfer once.
         let filtered = countsTransfers ? unique : unique.oneLegPerTransfer()
 
-        let numberFormatter = NumberFormatter()
-        numberFormatter.numberStyle = .currency
-        numberFormatter.currencyCode = currency
-
-        if showCents {
-            numberFormatter.maximumFractionDigits = 2
-        } else {
-            numberFormatter.maximumFractionDigits = 0
-        }
+        let numberFormatter = CachedFormatter.currency(currency, maximumFractionDigits: showCents ? 2 : 0)
 
         let counted = filtered.filter { countsTransfers || !$0.isTransfer }
 
@@ -1015,7 +1014,7 @@ struct ListView: View {
 }
 
 struct FutureListView: View {
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
 
     @FetchRequest private var fetchedResults: FetchedResults<Transaction>
     var filterMode: Bool
@@ -1056,9 +1055,9 @@ struct FutureListView: View {
 
     @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode ?? "USD"
     var currencySymbol: String {
-        return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
+        return (Locale.current.localizedCurrencySymbol(forCurrencyCode: currency) ?? currency)
     }
     
     @AppStorage("showExpenseOrIncomeSign", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
@@ -1067,15 +1066,7 @@ struct FutureListView: View {
     @AppStorage("swapTimeLabel", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var swapTimeLabel: Bool = false
 
     var totalString: String {
-        let numberFormatter = NumberFormatter()
-        numberFormatter.numberStyle = .currency
-        numberFormatter.currencyCode = currency
-
-        if showCents {
-            numberFormatter.maximumFractionDigits = 2
-        } else {
-            numberFormatter.maximumFractionDigits = 0
-        }
+        let numberFormatter = CachedFormatter.currency(currency, maximumFractionDigits: showCents ? 2 : 0)
 
         // Transfers are neither spending nor income, so upcoming ones show without counting.
         let counted = transactions.filter { !$0.isTransfer }
@@ -1153,7 +1144,7 @@ struct SingleTransactionView: View {
 
     @State var refreshID = UUID()
 
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
     @EnvironmentObject var transactionManager: OverallTransactionManager
 
     @Environment(\.logAccount) private var logAccount
@@ -1203,15 +1194,7 @@ struct SingleTransactionView: View {
             return MoneyFormatter.string(transaction.amount, currencyCode: code, showCents: showCents)
         }
 
-        let numberFormatter = NumberFormatter()
-        numberFormatter.numberStyle = .currency
-        numberFormatter.currencyCode = currency
-
-        if showCents {
-            numberFormatter.maximumFractionDigits = 2
-        } else {
-            numberFormatter.maximumFractionDigits = 0
-        }
+        let numberFormatter = CachedFormatter.currency(currency, maximumFractionDigits: showCents ? 2 : 0)
 
         return numberFormatter.string(from: NSNumber(value: transaction.amount)) ?? "$0"
     }
@@ -1497,10 +1480,7 @@ struct SingleTransactionView: View {
         } else if swapTimeLabel {
             base = transaction.isTransfer ? String(localized: "Transfer") : transaction.wrappedCategoryName
         } else {
-            let formatter = DateFormatter()
-            formatter.setLocalizedDateFormatFromTemplate("jmm")
-
-            base = formatter.string(from: transaction.wrappedDate)
+            base = CachedFormatter.date(template: "jmm").string(from: transaction.wrappedDate)
         }
 
         return base + accountSuffix
@@ -1521,10 +1501,7 @@ struct SingleTransactionView: View {
 }
 
 func dateFormatter(date: Date) -> String {
-    let dateFormatter = DateFormatter()
-
-    dateFormatter.dateFormat = "d MMM"
-    return dateFormatter.string(from: date).uppercased()
+    CachedFormatter.date(format: "d MMM").string(from: date).uppercased()
 }
 
 struct EmojiLogView: View {
@@ -1598,7 +1575,7 @@ struct EmojiLogView: View {
 }
 
 struct DeleteTransactionAlert: View {
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
     @EnvironmentObject var transactionManager: OverallTransactionManager
 
     var stopRecurring: Bool {
@@ -1781,7 +1758,7 @@ struct FilteredAccountView: View {
 /// The account the log is filtered to.
 struct AccountFilterView: View {
     @Binding var account: AccountChoice
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
     @FetchRequest(sortDescriptors: []) private var accounts: FetchedResults<Account>
     @AppStorage(MainAccount.nameKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var mainAccountName = ""
     @AppStorage(MainAccount.symbolKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var mainAccountSymbol = ""
@@ -1855,9 +1832,9 @@ struct FilteredDateView: View {
 
     var date: Date
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode ?? "USD"
     var currencySymbol: String {
-        return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
+        return (Locale.current.localizedCurrencySymbol(forCurrencyCode: currency) ?? currency)
     }
 
     @AppStorage("swapTimeLabel", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var swapTimeLabel: Bool = false
@@ -1901,7 +1878,7 @@ struct FilteredDateView: View {
 
 struct CategoryStepperView: View {
     @Binding var categoryFilter: CategorySlice?
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
     @AppStorage("incomeTracking", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var incomeTracking: Bool = true
     @State var income = false
     @State var showPicker = false
@@ -2009,11 +1986,7 @@ struct DateStepperView: View {
     let currentDate = Calendar.current.date(bySettingHour: 0, minute: 0, second: 0, of: Date.now) ?? Date.now
 
     func dateString(_ date: Date) -> String {
-        let dateFormatter = DateFormatter()
-
-        dateFormatter.dateFormat = "d MMM yyyy"
-
-        return dateFormatter.string(from: date)
+        CachedFormatter.date(format: "d MMM yyyy").string(from: date)
     }
 
     func shifted(by days: Int) -> Date? {
@@ -2069,9 +2042,7 @@ struct WeekStepperView: View {
     @State var startDate = Date.now
 
     func dateString(_ weekStart: Date) -> String {
-        let dateFormatter = DateFormatter()
-
-        dateFormatter.dateFormat = "d MMM"
+        let dateFormatter = CachedFormatter.date(format: "d MMM")
 
         let endComponents = DateComponents(day: 7, second: -1)
         let endWeekDate = Calendar.current.date(byAdding: endComponents, to: weekStart) ?? Date.now
@@ -2086,9 +2057,7 @@ struct WeekStepperView: View {
     }
 
     var accessibilityDateString: String {
-        let dateFormatter = DateFormatter()
-
-        dateFormatter.dateFormat = "d MMM"
+        let dateFormatter = CachedFormatter.date(format: "d MMM")
 
         let endComponents = DateComponents(day: 7, second: -1)
         let endWeekDate = Calendar.current.date(byAdding: endComponents, to: showingDate) ?? Date.now
@@ -2114,7 +2083,8 @@ struct WeekStepperView: View {
             calendar.firstWeekday = UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.integer(forKey: "firstWeekday") ?? 0
             calendar.minimumDaysInFirstWeek = 4
 
-            let date = transactionsReversed[0].day ?? Date.now
+            // Every transaction can be in the future (upcoming or recurring), leaving none before now.
+            let date = transactionsReversed.first?.day ?? Date.now
 
             let dateComponents = calendar.dateComponents([.weekOfYear, .yearForWeekOfYear], from: date)
 
@@ -2152,11 +2122,7 @@ struct MonthStepperView: View {
     @State var startDate = Date.now
 
     func dateString(_ month: Date) -> String {
-        let dateFormatter = DateFormatter()
-
-        dateFormatter.dateFormat = "MMM yyyy"
-
-        return dateFormatter.string(from: month)
+        CachedFormatter.date(format: "MMM yyyy").string(from: month)
     }
 
     func shifted(by months: Int) -> Date? {
@@ -2180,7 +2146,8 @@ struct MonthStepperView: View {
         .onAppear {
             let calendar = Calendar(identifier: .gregorian)
 
-            let date = transactionsReversed[0].day ?? Date.now
+            // Every transaction can be in the future (upcoming or recurring), leaving none before now.
+            let date = transactionsReversed.first?.day ?? Date.now
 
             let dateComponents = calendar.dateComponents([.month, .year], from: date)
 
@@ -2203,20 +2170,12 @@ func dateConverter(date: Date) -> String {
     } else if calendar.isDateInYesterday(date) {
         return String(localized: "yesterday")
     } else if startOfCurrentYear > date {
-        let dateFormatter = DateFormatter()
-
-        dateFormatter.dateFormat = "EEE, d MMM yy"
-
-        var string = dateFormatter.string(from: date)
+        var string = CachedFormatter.date(format: "EEE, d MMM yy").string(from: date)
         string.insert("'", at: string.index(string.endIndex, offsetBy: -2))
 
         return string
     } else {
-        let dateFormatter = DateFormatter()
-
-        dateFormatter.dateFormat = "EEE, d MMM"
-
-        return dateFormatter.string(from: date)
+        return CachedFormatter.date(format: "EEE, d MMM").string(from: date)
     }
 }
 
@@ -2228,20 +2187,12 @@ func dateConverterAccessibilityLabel(date: Date) -> String {
     } else if calendar.isDateInYesterday(date) {
         return "yesterday"
     } else {
-        let dateFormatter = DateFormatter()
-
-        dateFormatter.dateFormat = "EEE, d MMM yyyy"
-
-        return "on " + dateFormatter.string(from: date)
+        return "on " + CachedFormatter.date(format: "EEE, d MMM yyyy").string(from: date)
     }
 }
 
 func timeConverterAccessibilityLabel(date: Date) -> String {
-    let dateFormatter = DateFormatter()
-
-    dateFormatter.setLocalizedDateFormatFromTemplate("jmm")
-
-    return dateFormatter.string(from: date)
+    CachedFormatter.date(template: "jmm").string(from: date)
 }
 
 func dayTotal(dayTransaction: [Transaction]) -> Double {
