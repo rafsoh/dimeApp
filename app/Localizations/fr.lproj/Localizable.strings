@@ -86,6 +86,15 @@
 "Template Was Deleted" = "Modèle supprimé";
 "Budget Was Deleted" = "Budget supprimé";
 "Category Was Deleted" = "Catégorie supprimée";
+"Dime couldn't open your data" = "Dime n’a pas pu ouvrir vos données";
+"Your entries are still on this device, and nothing has been changed or deleted. Please don't delete Dime: that would remove them. Try again, or contact support if this keeps happening." = "Vos entrées sont toujours sur cet appareil, et rien n’a été modifié ni supprimé. Ne supprimez pas Dime : elles seraient effacées. Réessayez, ou contactez l’assistance si le problème persiste.";
+"Try Again" = "Réessayer";
+"Trying Again…" = "Nouvel essai…";
+"Contact Support" = "Contacter l’assistance";
+"Dime couldn't save your changes" = "Dime n’a pas pu enregistrer vos modifications";
+"This device is out of storage. Free up some space in the Settings app, and Dime will save your changes when you come back." = "Cet appareil n’a plus d’espace de stockage. Libérez de l’espace dans l’app Réglages, et Dime enregistrera vos modifications à votre retour.";
+"Dime will try again. If this keeps happening, contact support." = "Dime va réessayer. Si le problème persiste, contactez l’assistance.";
+"This device is out of storage, so Dime can't open your data. Your entries are still here. Free up some space in the Settings app, then try again. Please don't delete Dime: that would remove them." = "Cet appareil n’a plus d’espace de stockage, Dime ne peut donc pas ouvrir vos données. Vos entrées sont toujours là. Libérez de l’espace dans l’app Réglages, puis réessayez. Ne supprimez pas Dime : elles seraient effacées.";
 "Missing Category" = "Catégorie manquante";
 "No Category" = "Sans catégorie";
 "category-picker-none" = "Aucune";

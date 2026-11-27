@@ -27,9 +27,9 @@ private enum ImportCategoryChoice: Hashable {
 
 struct ImportDataView: View {
     @Environment(\.dismiss) var dismiss
-    @EnvironmentObject var dataController: DataController
+    @ObservedObject var dataController = DataController.shared
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode ?? "USD"
 
     @State private var step = ImportStep.start
     @State private var movingForward = true

@@ -84,6 +84,15 @@
 "Template Was Deleted" = "Шаблон удалён";
 "Budget Was Deleted" = "Бюджет удалён";
 "Category Was Deleted" = "Категория удалена";
+"Dime couldn't open your data" = "Dime не удалось открыть ваши данные";
+"Your entries are still on this device, and nothing has been changed or deleted. Please don't delete Dime: that would remove them. Try again, or contact support if this keeps happening." = "Ваши записи по-прежнему на этом устройстве, ничего не изменено и не удалено. Не удаляйте Dime: вместе с приложением удалятся и записи. Попробуйте ещё раз или напишите в поддержку, если это повторяется.";
+"Try Again" = "Повторить";
+"Trying Again…" = "Повторная попытка…";
+"Contact Support" = "Написать в поддержку";
+"Dime couldn't save your changes" = "Dime не удалось сохранить изменения";
+"This device is out of storage. Free up some space in the Settings app, and Dime will save your changes when you come back." = "На этом устройстве закончилось место. Освободите место в приложении «Настройки», и Dime сохранит изменения, когда вы вернётесь.";
+"Dime will try again. If this keeps happening, contact support." = "Dime попробует ещё раз. Если это повторяется, напишите в поддержку.";
+"This device is out of storage, so Dime can't open your data. Your entries are still here. Free up some space in the Settings app, then try again. Please don't delete Dime: that would remove them." = "На этом устройстве закончилось место, поэтому Dime не может открыть ваши данные. Ваши записи на месте. Освободите место в приложении «Настройки» и попробуйте ещё раз. Не удаляйте Dime: вместе с приложением удалятся и записи.";
 "Missing Category" = "Нет категории";
 "No Category" = "Без категории";
 "category-picker-none" = "Нет";

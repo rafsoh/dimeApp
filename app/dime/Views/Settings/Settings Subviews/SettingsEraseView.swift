@@ -36,7 +36,7 @@ struct SettingsEraseView: View {
 }
 
 struct DeleteAllAlert: View {
-  @EnvironmentObject var dataController: DataController
+  @ObservedObject var dataController = DataController.shared
   @Environment(\.dismiss) var dismiss
 
   @GestureState var isDetectingLongPress = false

@@ -85,6 +85,15 @@
 "Template Was Deleted" = "此範本已被刪除";
 "Budget Was Deleted" = "此預算已被刪除";
 "Category Was Deleted" = "此類別已被刪除";
+"Dime couldn't open your data" = "Dime 無法開啟你的資料";
+"Your entries are still on this device, and nothing has been changed or deleted. Please don't delete Dime: that would remove them. Try again, or contact support if this keeps happening." = "你的記錄仍在此裝置上，沒有任何內容被更改或刪除。請不要刪除 Dime，否則這些記錄也會被刪除。請再試一次；若問題持續發生，請聯絡支援。";
+"Try Again" = "再試一次";
+"Trying Again…" = "正在重試…";
+"Contact Support" = "聯絡支援";
+"Dime couldn't save your changes" = "Dime 無法儲存你的更改";
+"This device is out of storage. Free up some space in the Settings app, and Dime will save your changes when you come back." = "此裝置的儲存空間已滿。請在「設定」App 中釋放一些空間，你回來時 Dime 會儲存你的更改。";
+"Dime will try again. If this keeps happening, contact support." = "Dime 會再試一次。若問題持續發生，請聯絡支援。";
+"This device is out of storage, so Dime can't open your data. Your entries are still here. Free up some space in the Settings app, then try again. Please don't delete Dime: that would remove them." = "此裝置的儲存空間已滿，因此 Dime 無法開啟你的資料。你的記錄仍在。請在「設定」App 中釋放一些空間，然後再試一次。請不要刪除 Dime，否則這些記錄也會被刪除。";
 "Missing Category" = "缺少類別";
 "No Category" = "無類別";
 "category-picker-none" = "無";

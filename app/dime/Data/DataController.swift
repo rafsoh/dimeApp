@@ -6,6 +6,7 @@
 //
 
 import CloudKit
+import Combine
 import CoreData
 import Foundation
 import Network
@@ -17,6 +18,7 @@ import WidgetKit
 enum CustomError: Swift.Error, CustomLocalizedStringResourceConvertible {
     case notFound,
          coreDataSave,
+         storeUnavailable,
          unknownId(id: String),
          unknownError(message: String)
 
@@ -26,6 +28,7 @@ enum CustomError: Swift.Error, CustomLocalizedStringResourceConvertible {
         case let .unknownId(id): return "No category with an ID matching: \(id)"
         case .notFound: return "Category not found"
         case .coreDataSave: return "Couldn't save to CoreData"
+        case .storeUnavailable: return "Dime couldn't open your data. Open Dime and try again."
         }
     }
 }
@@ -297,6 +300,38 @@ class DataController: ObservableObject {
     let isCloudKitSyncEnabled: Bool
     let syncStatus: CloudSyncStatus
 
+    /// Why the store couldn't be opened, shown instead of the app until a retry succeeds. Nil once it's loaded.
+    @Published private(set) var storeLoadFailure: StoreLoadFailure?
+
+    struct StoreLoadFailure: Equatable {
+        let domain: String
+        let code: Int
+        var isOutOfSpace = false
+    }
+
+    /// A save that failed, shown once until a save succeeds or the app comes back to the foreground. The
+    /// changes stay in the view context and are saved again then; telling people matters because they're
+    /// lost if the app is closed first.
+    @Published private(set) var saveFailure: SaveFailure?
+
+    struct SaveFailure: Identifiable, Equatable {
+        let id = UUID()
+        let isOutOfSpace: Bool
+    }
+
+    private var isSaveFailureAcknowledged = false
+    /// Domain and code of save failures already sent this launch; a full disk fails every save after it.
+    private var reportedSaveFailures: Set<String> = []
+
+    var isStoreLoaded: Bool {
+        !container.persistentStoreCoordinator.persistentStores.isEmpty
+    }
+
+    private var isAppExtension = false
+    private var reportsIntegrity = false
+    private var migrationNeededAtLaunch = false
+    private var countsBeforeMigration: [String: Int]?
+
     private let logger = Logger(subsystem: "com.rafaelsoh.dime", category: "DataController")
 
     // Main thread only.
@@ -315,17 +350,22 @@ class DataController: ObservableObject {
         let usesDemoData = false
         #endif
 
-        let description = NSPersistentStoreDescription()
-
-        description.shouldMigrateStoreAutomatically = true
-        description.shouldInferMappingModelAutomatically = true
-        description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
-        description.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
-
         // The widget and intents extensions open this same file through the app group. CloudKit mirroring
         // does not support several processes syncing one store, so only the app mirrors it and exports
         // whatever the extensions write from persistent history.
         let isAppExtension = Bundle.main.bundleURL.pathExtension == "appex"
+        self.isAppExtension = isAppExtension
+
+        let description = NSPersistentStoreDescription()
+
+        // Only the app migrates the store. After an update the widget is often started at the same moment as
+        // the app, and two processes migrating one file make one of them fail (NSMigrationError 134110). A
+        // widget can also be stopped by its memory limit partway through. Until the app has migrated the
+        // file, an extension simply doesn't open it.
+        description.shouldMigrateStoreAutomatically = !isAppExtension
+        description.shouldInferMappingModelAutomatically = !isAppExtension
+        description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
+        description.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
 
         if !isAppExtension {
             Self.migrateLegacyICloudSyncSetting()
@@ -353,93 +393,43 @@ class DataController: ObservableObject {
         container.persistentStoreDescriptions = [description]
 
         let storeURL = description.url
-        let migrationNeeded = !usesDemoData && storeURL.map {
+        let migrationNeeded = !usesDemoData && !isAppExtension && storeURL.map {
             StoreSnapshot.needsMigration(storeAt: $0, to: container.managedObjectModel)
         } ?? false
         var countsBeforeMigration: [String: Int]?
 
         if migrationNeeded, let storeURL {
-            let sourceModel = StoreSnapshot.sourceModel(forStoreAt: storeURL)
-            if let sourceModel {
-                countsBeforeMigration = StoreSnapshot.recordCounts(storeAt: storeURL, model: sourceModel)
-            }
-
-            var startingNumbers = countsBeforeMigration ?? [:]
-            let facts = Self.storeFileFacts(storeURL)
-            startingNumbers["fileBytes"] = facts.bytes
-            startingNumbers["walBytes"] = facts.walBytes
-            DataIntegrityLog.breadcrumb(
-                "migration starting",
-                numbers: startingNumbers,
-                flags: [
-                    "sourceModelFound": sourceModel != nil,
-                    "counted": countsBeforeMigration != nil,
-                    "cloudKit": isCloudKitSyncEnabled
-                ],
-                persist: true
-            )
-
-            do {
-                if let snapshot = try StoreSnapshot.snapshotIfMigrationNeeded(storeAt: storeURL, to: container.managedObjectModel, in: StoreSnapshot.directory(forStoreAt: storeURL)) {
-                    logger.notice("Saved the store before migrating it")
-                    let bytes = (try? snapshot.resourceValues(forKeys: [.fileSizeKey]))?.fileSize ?? 0
-                    DataIntegrityLog.breadcrumb(
-                        "pre-migration snapshot saved",
-                        numbers: ["bytes": bytes],
-                        flags: ["cloudKit": isCloudKitSyncEnabled],
-                        persist: true
-                    )
-                }
-            } catch {
-                let nsError = error as NSError
-                logger.error("Saving the store before migrating it failed: \(nsError.domain, privacy: .public) \(nsError.code, privacy: .public)")
-                DataIntegrityLog.capture(
-                    error,
-                    message: "Pre-migration snapshot failed",
-                    numbers: countsBeforeMigration ?? [:],
-                    flags: ["cloudKit": isCloudKitSyncEnabled]
-                )
+            // The earlier model versions and their coordinators are released before any view runs.
+            autoreleasepool {
+                countsBeforeMigration = prepareForMigration(storeAt: storeURL)
             }
         }
 
-        let shouldReportIntegrity = !usesDemoData
-        let countsBeforeMigrationForLoad = countsBeforeMigration
+        reportsIntegrity = !usesDemoData
+        migrationNeededAtLaunch = migrationNeeded
+        self.countsBeforeMigration = countsBeforeMigration
 
-        container.loadPersistentStores { description, error in
-            if let error = error as NSError? {
-                if shouldReportIntegrity {
-                    var numbers = countsBeforeMigrationForLoad ?? [:]
-                    let facts = Self.storeFileFacts(description.url)
-                    numbers["fileBytes"] = facts.bytes
-                    numbers["walBytes"] = facts.walBytes
-                    numbers["snapshotCount"] = facts.snapshotCount
-                    DataIntegrityLog.capture(
-                        error,
-                        message: "Persistent store failed to load",
-                        numbers: numbers,
-                        flags: [
-                            "migrationNeeded": migrationNeeded,
-                            "cloudKit": self.isCloudKitSyncEnabled,
-                            "fileExists": facts.exists
-                        ]
-                    )
-                }
+        var firstError = loadStore()
 
-                // Domain and code only. userInfo can include validation values and the store path.
-                fatalError("Unresolved persistent store error \(error.domain) \(error.code)")
+        if firstError != nil, !isAppExtension {
+            // Another process holding the file, or finishing what it was doing with it, often lets go within
+            // a moment. One more attempt is cheaper than a launch that shows nothing.
+            Thread.sleep(forTimeInterval: 1)
+
+            if let secondError = loadStore() {
+                firstError = secondError
+            } else if let recovered = firstError {
+                DataIntegrityLog.capture(
+                    recovered,
+                    message: "Persistent store loaded on the second attempt",
+                    flags: ["migrationNeeded": migrationNeeded, "cloudKit": isCloudKitSyncEnabled]
+                )
+                firstError = nil
             }
+        }
 
-            if shouldReportIntegrity {
-                // The completion is not guaranteed to be on the view context's queue.
-                let loadedURL = description.url
-                DispatchQueue.main.async {
-                    self.noteStoreLoaded(
-                        storeURL: loadedURL,
-                        migrationNeeded: migrationNeeded,
-                        countsBeforeMigration: countsBeforeMigrationForLoad
-                    )
-                }
-            }
+        if let firstError {
+            storeFailedToLoad(firstError)
         }
 
         container.viewContext.automaticallyMergesChangesFromParent = true
@@ -462,6 +452,170 @@ class DataController: ObservableObject {
             seedDemoData(demoDataset)
         }
         #endif
+    }
+
+    // MARK: Loading the store
+
+    /// Counts the records and keeps a copy of the file before Core Data migrates it. Returns the counts.
+    private func prepareForMigration(storeAt storeURL: URL) -> [String: Int]? {
+        var countsBeforeMigration: [String: Int]?
+        let sourceModel = StoreSnapshot.sourceModel(forStoreAt: storeURL)
+
+        if let sourceModel {
+            countsBeforeMigration = StoreSnapshot.recordCounts(storeAt: storeURL, model: sourceModel)
+        }
+
+        var startingNumbers = countsBeforeMigration ?? [:]
+        let facts = Self.storeFileFacts(storeURL)
+        startingNumbers["fileBytes"] = facts.bytes
+        startingNumbers["walBytes"] = facts.walBytes
+        DataIntegrityLog.breadcrumb(
+            "migration starting",
+            numbers: startingNumbers,
+            flags: [
+                "sourceModelFound": sourceModel != nil,
+                "counted": countsBeforeMigration != nil,
+                "cloudKit": isCloudKitSyncEnabled
+            ],
+            persist: true
+        )
+
+        do {
+            if let snapshot = try StoreSnapshot.snapshotIfMigrationNeeded(storeAt: storeURL, to: container.managedObjectModel, in: StoreSnapshot.directory(forStoreAt: storeURL)) {
+                logger.notice("Saved the store before migrating it")
+                let bytes = (try? snapshot.resourceValues(forKeys: [.fileSizeKey]))?.fileSize ?? 0
+                DataIntegrityLog.breadcrumb(
+                    "pre-migration snapshot saved",
+                    numbers: ["bytes": bytes],
+                    flags: ["cloudKit": isCloudKitSyncEnabled],
+                    persist: true
+                )
+            }
+        } catch StoreSnapshot.SnapshotError.notEnoughSpace {
+            logger.notice("Not saving the store before migrating it: too little free space")
+            DataIntegrityLog.breadcrumb(
+                "pre-migration snapshot skipped for lack of space",
+                numbers: countsBeforeMigration ?? [:],
+                flags: ["cloudKit": isCloudKitSyncEnabled],
+                persist: true
+            )
+        } catch {
+            let nsError = error as NSError
+            logger.error("Saving the store before migrating it failed: \(nsError.domain, privacy: .public) \(nsError.code, privacy: .public)")
+            DataIntegrityLog.capture(
+                error,
+                message: "Pre-migration snapshot failed",
+                numbers: countsBeforeMigration ?? [:],
+                flags: ["cloudKit": isCloudKitSyncEnabled, "outOfSpace": DataIntegrityLog.isOutOfSpace(error)]
+            )
+        }
+
+        return countsBeforeMigration
+    }
+
+    /// Adds the store to the coordinator. Returns the error when it can't be opened; never crashes, because
+    /// a crash on launch leaves people with no way to their data short of deleting the app.
+    private func loadStore() -> NSError? {
+        var loadError: NSError?
+        let migrationNeeded = migrationNeededAtLaunch
+        let countsBefore = self.countsBeforeMigration
+
+        // With the default shouldAddStoreAsynchronously, the completion runs before this returns.
+        container.loadPersistentStores { description, error in
+            if let error = error as NSError? {
+                loadError = error
+                return
+            }
+
+            guard self.reportsIntegrity else {
+                return
+            }
+
+            // The completion is not guaranteed to be on the view context's queue.
+            let loadedURL = description.url
+            DispatchQueue.main.async {
+                self.noteStoreLoaded(
+                    storeURL: loadedURL,
+                    migrationNeeded: migrationNeeded,
+                    countsBeforeMigration: countsBefore
+                )
+
+                if migrationNeeded {
+                    // Extensions don't open a store that still needs migrating, so widgets show nothing until now.
+                    WidgetCenter.shared.reloadAllTimelines()
+                }
+            }
+        }
+
+        return loadError
+    }
+
+    private func storeFailedToLoad(_ error: NSError) {
+        logger.error("Loading the persistent store failed: \(error.domain, privacy: .public) \(error.code, privacy: .public)")
+        storeLoadFailure = StoreLoadFailure(domain: error.domain, code: error.code, isOutOfSpace: DataIntegrityLog.isOutOfSpace(error))
+
+        guard reportsIntegrity else {
+            return
+        }
+
+        let storeURL = container.persistentStoreDescriptions.first?.url
+
+        // Expected in an extension until the app has migrated the file after an update.
+        if isAppExtension, let storeURL, StoreSnapshot.needsMigration(storeAt: storeURL, to: container.managedObjectModel) {
+            DataIntegrityLog.breadcrumb(
+                "store waiting for the app to migrate it",
+                flags: ["migrationNeeded": true]
+            )
+            return
+        }
+
+        var numbers = countsBeforeMigration ?? [:]
+        let facts = Self.storeFileFacts(storeURL)
+        numbers["fileBytes"] = facts.bytes
+        numbers["walBytes"] = facts.walBytes
+        numbers["snapshotCount"] = facts.snapshotCount
+        DataIntegrityLog.capture(
+            error,
+            message: "Persistent store failed to load",
+            numbers: numbers,
+            flags: [
+                "migrationNeeded": migrationNeededAtLaunch,
+                "cloudKit": isCloudKitSyncEnabled,
+                "fileExists": facts.exists,
+                "outOfSpace": DataIntegrityLog.isOutOfSpace(error)
+            ]
+        )
+    }
+
+    /// For Shortcuts actions: tries once more to open the store, and throws if it still can't be opened, so an
+    /// action doesn't report a total of zero or a transaction logged when nothing was read or saved.
+    @available(iOS 16, *)
+    func requireLoadedStore() throws {
+        if !isStoreLoaded {
+            retryLoadingStore()
+        }
+
+        guard isStoreLoaded else {
+            throw CustomError.storeUnavailable
+        }
+    }
+
+    /// Tries again to open a store that failed to load. Main thread only.
+    func retryLoadingStore() {
+        guard !isStoreLoaded else {
+            storeLoadFailure = nil
+            return
+        }
+
+        if let error = loadStore() {
+            storeFailedToLoad(error)
+            return
+        }
+
+        DataIntegrityLog.breadcrumb("store loaded after retrying", flags: ["migrationNeeded": migrationNeededAtLaunch], persist: true)
+        extensionHistoryToken = container.persistentStoreCoordinator.currentPersistentHistoryToken(fromStores: nil)
+        storeLoadFailure = nil
+        updateRecurringTransactionsIfReady()
     }
 
     #if DEBUG
@@ -653,6 +807,12 @@ class DataController: ObservableObject {
     }
 
     func applicationWillEnterForeground() {
+        // Changes a failed save left in the context, say before storage was freed up, get another try.
+        isSaveFailureAcknowledged = false
+        if container.viewContext.hasChanges {
+            save()
+        }
+
         mergeExtensionWrites()
 
         if isCloudKitSyncEnabled {
@@ -761,18 +921,40 @@ class DataController: ObservableObject {
         do {
             try context.save()
             WidgetCenter.shared.reloadAllTimelines()
+
+            isSaveFailureAcknowledged = false
+            if saveFailure != nil {
+                saveFailure = nil
+            }
         } catch {
             let nsError = error as NSError
+            let outOfSpace = DataIntegrityLog.isOutOfSpace(error)
             logger.error("Saving the view context failed: \(nsError.domain, privacy: .public) \(nsError.code, privacy: .public)")
-            DataIntegrityLog.capture(
-                nsError,
-                message: "Saving the view context failed",
-                numbers: [
-                    "transactions": deletedTransactions,
-                    "categories": deletedCategories
-                ]
-            )
+
+            let summary = DataIntegrityLog.failureSummary(for: error)
+            let numbers = [
+                "transactions": deletedTransactions,
+                "categories": deletedCategories,
+                "pendingObjects": context.insertedObjects.count + context.updatedObjects.count + context.deletedObjects.count
+            ]
+
+            if reportedSaveFailures.insert("\(summary.domain).\(summary.code)").inserted {
+                DataIntegrityLog.capture(nsError, message: "Saving the view context failed", numbers: numbers, flags: ["outOfSpace": outOfSpace])
+            } else {
+                DataIntegrityLog.breadcrumb("saving the view context failed again", numbers: numbers, flags: ["outOfSpace": outOfSpace])
+            }
+
+            // The app's own saves are on the main thread; an extension has no one to tell.
+            if !isAppExtension, Thread.isMainThread, !isSaveFailureAcknowledged, saveFailure == nil {
+                saveFailure = SaveFailure(isOutOfSpace: outOfSpace)
+            }
         }
+    }
+
+    /// The person has seen the save failure. It isn't shown again until a save succeeds or the app returns.
+    func acknowledgeSaveFailure() {
+        isSaveFailureAcknowledged = true
+        saveFailure = nil
     }
 
     /// Deletes a category. Its transactions and Quick Add templates either move first (to another
@@ -2623,6 +2805,44 @@ class DataController: ObservableObject {
     func results<T: NSManagedObject>(for fetchRequest: NSFetchRequest<T>) -> [T] {
         return (try? container.viewContext.fetch(fetchRequest)) ?? []
     }
+}
+
+extension Transaction {
+    /// Every transaction as a fault, without its values: for views that only check whether there are any.
+    static var identifiersOnlyRequest: NSFetchRequest<Transaction> {
+        let request: NSFetchRequest<Transaction> = Transaction.fetchRequest()
+        request.sortDescriptors = []
+        request.includesPropertyValues = false
+        return request
+    }
+}
+
+extension NSManagedObjectContext {
+    private static let recordEntityNames: Set<String> = ["Transaction", "Category", "Budget", "MainBudget", "TemplateTransaction"]
+
+    /// A save in any context that changed Dime's records, delivered on the main queue.
+    ///
+    /// NSManagedObjectContextDidSave is posted on the saving context's queue: CloudKit imports and exports,
+    /// backups and currency changes all save on background queues. A view's onReceive runs on that queue,
+    /// and updating view state there crashed in MainActor.assumeIsolated. The objects are inspected before
+    /// the hop, on the queue they belong to, and CloudKit's metadata-only saves are left out.
+    static let recordsDidSave = NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
+        .filter { notification in
+            guard let userInfo = notification.userInfo else {
+                return false
+            }
+
+            return [NSInsertedObjectsKey, NSUpdatedObjectsKey, NSDeletedObjectsKey].contains { key in
+                guard let objects = userInfo[key] as? Set<NSManagedObject> else {
+                    return false
+                }
+
+                return objects.contains { NSManagedObjectContext.recordEntityNames.contains($0.entity.name ?? "") }
+            }
+        }
+        .map { _ in () }
+        .receive(on: DispatchQueue.main)
+        .share()
 }
 
 extension NSManagedObject {

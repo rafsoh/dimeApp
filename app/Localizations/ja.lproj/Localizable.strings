@@ -85,6 +85,15 @@
 "Template Was Deleted" = "このテンプレートは削除されました";
 "Budget Was Deleted" = "この予算は削除されました";
 "Category Was Deleted" = "このカテゴリは削除されました";
+"Dime couldn't open your data" = "Dimeでデータを開けませんでした";
+"Your entries are still on this device, and nothing has been changed or deleted. Please don't delete Dime: that would remove them. Try again, or contact support if this keeps happening." = "記録はこのデバイスに残っており、何も変更・削除されていません。Dimeを削除すると記録も消えてしまうため、削除しないでください。もう一度お試しいただき、問題が続く場合はサポートにお問い合わせください。";
+"Try Again" = "もう一度試す";
+"Trying Again…" = "再試行中…";
+"Contact Support" = "サポートに問い合わせる";
+"Dime couldn't save your changes" = "変更を保存できませんでした";
+"This device is out of storage. Free up some space in the Settings app, and Dime will save your changes when you come back." = "このデバイスのストレージがいっぱいです。「設定」アプリで空き容量を増やしていただくと、次にDimeを開いたときに変更が保存されます。";
+"Dime will try again. If this keeps happening, contact support." = "Dimeが再度保存を試みます。問題が続く場合はサポートにお問い合わせください。";
+"This device is out of storage, so Dime can't open your data. Your entries are still here. Free up some space in the Settings app, then try again. Please don't delete Dime: that would remove them." = "このデバイスのストレージがいっぱいのため、Dimeでデータを開けません。記録はこのデバイスに残っています。「設定」アプリで空き容量を増やしてから、もう一度お試しください。Dimeを削除すると記録も消えてしまうため、削除しないでください。";
 "Missing Category" = "カテゴリがありません";
 "No Category" = "カテゴリなし";
 "category-picker-none" = "なし";

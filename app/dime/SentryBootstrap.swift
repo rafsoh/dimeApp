@@ -107,6 +107,13 @@ enum SentryBootstrap {
             event.context = context
         }
 
+        // An exception's reason can describe the record involved, with its amount, note and dates.
+        for exception in event.exceptions ?? [] {
+            if let value = exception.value as String? {
+                exception.value = DataIntegrityLog.redactedExceptionReason(value)
+            }
+        }
+
         event.breadcrumbs = event.breadcrumbs?.compactMap { scrub(breadcrumb: $0) }
         return event
     }

@@ -86,6 +86,15 @@
 "Template Was Deleted" = "Template Was Deleted";
 "Budget Was Deleted" = "Budget Was Deleted";
 "Category Was Deleted" = "Category Was Deleted";
+"Dime couldn't open your data" = "Dime couldn't open your data";
+"Your entries are still on this device, and nothing has been changed or deleted. Please don't delete Dime: that would remove them. Try again, or contact support if this keeps happening." = "Your entries are still on this device, and nothing has been changed or deleted. Please don't delete Dime: that would remove them. Try again, or contact support if this keeps happening.";
+"Try Again" = "Try Again";
+"Trying Again…" = "Trying Again…";
+"Contact Support" = "Contact Support";
+"Dime couldn't save your changes" = "Dime couldn't save your changes";
+"This device is out of storage. Free up some space in the Settings app, and Dime will save your changes when you come back." = "This device is out of storage. Free up some space in the Settings app, and Dime will save your changes when you come back.";
+"Dime will try again. If this keeps happening, contact support." = "Dime will try again. If this keeps happening, contact support.";
+"This device is out of storage, so Dime can't open your data. Your entries are still here. Free up some space in the Settings app, then try again. Please don't delete Dime: that would remove them." = "This device is out of storage, so Dime can't open your data. Your entries are still here. Free up some space in the Settings app, then try again. Please don't delete Dime: that would remove them.";
 "Missing Category" = "Missing Category";
 "No Category" = "No Category";
 "category-picker-none" = "None";

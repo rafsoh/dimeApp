@@ -13,7 +13,7 @@ struct SettingsUpcomingView: View {
   @State private var showFuture: Bool = true
 
   @State private var showSoon: Bool = false
-  @EnvironmentObject var dataController: DataController
+  @ObservedObject var dataController = DataController.shared
 
   @Namespace var animation
 

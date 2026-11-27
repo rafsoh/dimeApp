@@ -31,6 +31,8 @@ struct GetInsightsIntent: AppIntent {
     @MainActor
     func perform() async throws -> some ReturnsValue<Double> & ShowsSnippetView & ProvidesDialog {
         let dataController = DataController.shared
+        // Without a store every total would read as zero.
+        try dataController.requireLoadedStore()
 //        let dataController = DataController()
 
         let categories: [Category]
@@ -143,7 +145,7 @@ struct ShortcutInsightsView: View {
 
     @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode ?? "USD"
 
     var leftText: String {
         switch type {
