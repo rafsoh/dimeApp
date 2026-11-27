@@ -360,6 +360,17 @@ struct CategoryListView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbarContent }
         .modifier(OnboardingAccountsStep(isPresented: $showsAccountsStep))
+        #if DEBUG
+        .onAppear {
+            // `-onboarding accounts` goes on to onboarding's accounts step, for screenshots (see ContentView).
+            let arguments = ProcessInfo.processInfo.arguments
+            if mode == .welcome, let index = arguments.firstIndex(of: "-onboarding"), index + 1 < arguments.count, arguments[index + 1] == "accounts" {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                    showsAccountsStep = true
+                }
+            }
+        }
+        #endif
         .tint(Color.PrimaryText)
         .animation(.easeOut(duration: 0.2), value: showToast)
         .sheet(item: $toDelete) { category in

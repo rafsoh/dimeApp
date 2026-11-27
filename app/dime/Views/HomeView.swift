@@ -43,10 +43,7 @@ struct HomeView: View {
 
     @ViewBuilder
     private func debugAccountsSheet(_ mode: String) -> some View {
-        if mode == "intro" {
-            AccountsIntroSheet()
-                .environmentObject(dataController)
-        } else if #available(iOS 16.0, *) {
+        if #available(iOS 16.0, *) {
             NavigationStack {
                 AccountsView(mode: mode == "welcome" ? .welcome : .settings)
             }
@@ -282,7 +279,8 @@ struct HomeView: View {
                 currentTab = "Budget"
             }
             // `-accountsScreen settings|welcome` opens the accounts page as Settings or onboarding shows it.
-            if let index = arguments.firstIndex(of: "-accountsScreen"), index + 1 < arguments.count {
+            // `intro` is ContentView's own introduction sheet.
+            if let index = arguments.firstIndex(of: "-accountsScreen"), index + 1 < arguments.count, arguments[index + 1] != "intro" {
                 debugAccountsScreen = arguments[index + 1]
             }
             // `-budgetTab`, `-budgetSheet` and `-budgetEdit` (see BudgetView) start on the Budget tab,

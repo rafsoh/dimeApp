@@ -3291,7 +3291,10 @@ extension DataController {
             streaming.recurringCoefficient = 1
             updateRecurringTransaction(transaction: streaming)
 
-            seedDemoAccounts(groceries: groceries, shopping: shopping, coffee: coffee, firstOfMonth: firstOfMonth)
+            // `-demoAccounts none` leaves everything in Main, as for someone updating from before accounts.
+            if !ProcessInfo.processInfo.arguments.contains("-demoAccounts") {
+                seedDemoAccounts(groceries: groceries, shopping: shopping, coffee: coffee, firstOfMonth: firstOfMonth)
+            }
             seedDemoBudgets(food: food, groceries: groceries, coffee: coffee, shopping: shopping, health: health)
 
             // Groceries all go on the card, so limiting its budget to the card shows the account line

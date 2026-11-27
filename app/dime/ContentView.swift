@@ -179,6 +179,20 @@ struct ContentView: View {
 
             whatsNewReleases = WhatsNew.unseenReleases
             whatsNewPending = !whatsNewReleases.isEmpty || !AccountsIntro.isSeen
+
+            #if DEBUG
+            // Screenshots, removed with the other accounts launch arguments: `-accountsScreen intro` shows the
+            // accounts introduction people updating see, and `-onboarding welcome|categories|accounts` the
+            // onboarding a new install sees, at that page.
+            let arguments = ProcessInfo.processInfo.arguments
+            if let index = arguments.firstIndex(of: "-accountsScreen"), index + 1 < arguments.count, arguments[index + 1] == "intro" {
+                showAccountsIntro = true
+            }
+            if arguments.contains("-onboarding") {
+                showIntro = true
+            }
+            #endif
+
             presentWhatsNewIfReady()
 
             center.getNotificationSettings { settings in
