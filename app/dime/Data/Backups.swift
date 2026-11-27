@@ -26,13 +26,20 @@ struct RestoreResult {
     var categories = 0
     var budgets = 0
     var templates = 0
+    var accounts = 0
+    /// Transactions and templates still in the store that had lost their account, put back in it.
+    var relinked = 0
+    /// Main's name and icon in the backup. Main has no object to restore, so the manager adopts them
+    /// where this device hasn't set its own.
+    var mainAccountName: String?
+    var mainAccountSymbol: String?
 
-    var total: Int { transactions + categories + budgets + templates }
+    var total: Int { transactions + categories + budgets + templates + accounts + relinked }
 }
 
 private struct BackupFile: Codable {
-    // 2 added Transaction.currencyCode.
-    static let currentVersion = 2
+    // 2 added Transaction.currencyCode. 3 added accounts, transfers and budget account scopes.
+    static let currentVersion = 3
 
     var version = BackupFile.currentVersion
     var createdAt: Date
@@ -43,6 +50,22 @@ private struct BackupFile: Codable {
     var budgets: [BudgetRecord]
     var mainBudgets: [MainBudgetRecord]
     var templates: [TemplateRecord]
+    /// Missing from backups made before accounts; everything in those is in Main.
+    var accounts: [AccountRecord]?
+    /// Main's own name, when the user renamed it.
+    var mainAccountName: String?
+    /// Main's own icon, when the user changed it.
+    var mainAccountSymbol: String?
+}
+
+private struct AccountRecord: Codable {
+    var ref: String
+    var id: UUID?
+    var name: String?
+    var order: Int64
+    var dateCreated: Date?
+    /// Missing from backups made before accounts had icons; those guess one from their name.
+    var symbol: String?
 }
 
 private struct CategoryRecord: Codable {
@@ -69,6 +92,9 @@ private struct TransactionRecord: Codable {
     var recurringCoefficient: Int16
     var categoryRef: String?
     var currencyCode: String?
+    /// Nil for Main.
+    var accountRef: String?
+    var transferID: UUID?
 
     // Matches transactions from versions that didn't assign ids. Leaves out the currency so backups
     // written before it existed still match.
@@ -89,6 +115,8 @@ private struct BudgetRecord: Codable {
     var rolloverEnabled: Bool?
     var rolloverAnchor: Date?
     var rolloverBalance: Double?
+    /// Account refs (and "main"); nil counts every account.
+    var accountScope: String?
 }
 
 private struct MainBudgetRecord: Codable {
@@ -100,6 +128,7 @@ private struct MainBudgetRecord: Codable {
     var rolloverEnabled: Bool?
     var rolloverAnchor: Date?
     var rolloverBalance: Double?
+    var accountScope: String?
 }
 
 private struct TemplateRecord: Codable {
@@ -113,6 +142,7 @@ private struct TemplateRecord: Codable {
     var categoryRef: String?
     /// Missing from backups made before templates had a currency; those templates use the main currency.
     var currencyCode: String?
+    var accountRef: String?
 }
 
 // Backups are plain JSON rather than copies of the SQLite file, so restoring never touches the CloudKit
@@ -167,6 +197,7 @@ struct BackupStore {
         let budgets: [Budget] = try context.fetch(Budget.fetchRequest())
         let mainBudgets: [MainBudget] = try context.fetch(MainBudget.fetchRequest())
         let templates: [TemplateTransaction] = try context.fetch(TemplateTransaction.fetchRequest())
+        let accounts: [Account] = try context.fetch(Account.fetchRequest())
 
         let file = BackupFile(
             createdAt: date,
@@ -175,17 +206,22 @@ struct BackupStore {
                 CategoryRecord(ref: Self.reference(for: $0), id: $0.id, name: $0.name, emoji: $0.emoji, colour: $0.colour, income: $0.income, order: $0.order, dateCreated: $0.dateCreated)
             },
             transactions: transactions.map {
-                TransactionRecord(id: $0.id, note: $0.note, amount: $0.amount, date: $0.date, day: $0.day, month: $0.month, income: $0.income, onceRecurring: $0.onceRecurring, recurringType: $0.recurringType, recurringCoefficient: $0.recurringCoefficient, categoryRef: $0.category.map(Self.reference(for:)), currencyCode: $0.currencyCode)
+                TransactionRecord(id: $0.id, note: $0.note, amount: $0.amount, date: $0.date, day: $0.day, month: $0.month, income: $0.income, onceRecurring: $0.onceRecurring, recurringType: $0.recurringType, recurringCoefficient: $0.recurringCoefficient, categoryRef: $0.category.map(Self.reference(for:)), currencyCode: $0.currencyCode, accountRef: $0.account?.key, transferID: $0.transferID)
             },
             budgets: budgets.map {
-                BudgetRecord(id: $0.id, amount: $0.amount, dateCreated: $0.dateCreated, green: $0.green, startDate: $0.startDate, type: $0.type, categoryRef: $0.category.map(Self.reference(for:)), rolloverEnabled: $0.rolloverEnabled, rolloverAnchor: $0.rolloverAnchor, rolloverBalance: $0.rolloverBalance)
+                BudgetRecord(id: $0.id, amount: $0.amount, dateCreated: $0.dateCreated, green: $0.green, startDate: $0.startDate, type: $0.type, categoryRef: $0.category.map(Self.reference(for:)), rolloverEnabled: $0.rolloverEnabled, rolloverAnchor: $0.rolloverAnchor, rolloverBalance: $0.rolloverBalance, accountScope: $0.accountScope)
             },
             mainBudgets: mainBudgets.map {
-                MainBudgetRecord(amount: $0.amount, dateCreated: $0.dateCreated, green: $0.green, startDate: $0.startDate, type: $0.type, rolloverEnabled: $0.rolloverEnabled, rolloverAnchor: $0.rolloverAnchor, rolloverBalance: $0.rolloverBalance)
+                MainBudgetRecord(amount: $0.amount, dateCreated: $0.dateCreated, green: $0.green, startDate: $0.startDate, type: $0.type, rolloverEnabled: $0.rolloverEnabled, rolloverAnchor: $0.rolloverAnchor, rolloverBalance: $0.rolloverBalance, accountScope: $0.accountScope)
             },
             templates: templates.map {
-                TemplateRecord(id: $0.id, amount: $0.amount, income: $0.income, note: $0.note, order: $0.order, recurringCoefficient: $0.recurringCoefficient, recurringType: $0.recurringType, categoryRef: $0.category.map(Self.reference(for:)), currencyCode: $0.currencyCode)
-            }
+                TemplateRecord(id: $0.id, amount: $0.amount, income: $0.income, note: $0.note, order: $0.order, recurringCoefficient: $0.recurringCoefficient, recurringType: $0.recurringType, categoryRef: $0.category.map(Self.reference(for:)), currencyCode: $0.currencyCode, accountRef: $0.account?.key)
+            },
+            accounts: accounts.map {
+                AccountRecord(ref: $0.key, id: $0.id, name: $0.name, order: $0.order, dateCreated: $0.dateCreated, symbol: $0.symbol)
+            },
+            mainAccountName: UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.string(forKey: MainAccount.nameKey),
+            mainAccountSymbol: UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.string(forKey: MainAccount.symbolKey)
         )
 
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -203,7 +239,7 @@ struct BackupStore {
     }
 
     // Adds back whatever the backup has and the store lacks, matched by id. Existing objects are never
-    // changed or removed. Call on the context's queue; the caller saves.
+    // removed, and only ever changed to fill in an account they've lost. Call on the context's queue; the caller saves.
     func restore(_ backup: BackupSummary, into context: NSManagedObjectContext) throws -> RestoreResult {
         let file = try JSONDecoder().decode(BackupFile.self, from: Data(contentsOf: backup.url))
 
@@ -213,6 +249,41 @@ struct BackupStore {
         }
 
         var result = RestoreResult()
+        result.mainAccountName = file.mainAccountName
+        result.mainAccountSymbol = file.mainAccountSymbol
+
+        var accounts: [Account] = try context.fetch(Account.fetchRequest())
+        var accountsByRef: [String: Account] = [:]
+        let nextAccountOrder = (accounts.map(\.order).max() ?? -1) + 1
+
+        for record in file.accounts ?? [] {
+            // An account recreated after data loss has a new id; accounts are unique by name.
+            let match = accounts.first { record.id != nil && $0.id == record.id }
+                ?? accounts.first { record.name != nil && $0.name?.caseInsensitiveCompare(record.name ?? "") == .orderedSame }
+
+            if let match {
+                accountsByRef[record.ref] = match
+                continue
+            }
+
+            let account = Account(context: context)
+            account.id = record.id ?? UUID()
+            account.name = record.name
+            account.symbol = record.symbol ?? record.name.map(AccountIcons.guess(for:))
+            account.dateCreated = record.dateCreated
+            // After the store's own accounts, in the backup's order.
+            account.order = nextAccountOrder + record.order
+            accountsByRef[record.ref] = account
+            accounts.append(account)
+            result.accounts += 1
+        }
+
+        // Budget scopes name accounts by ref; a matched account may have another id in this store.
+        func restoredScope(_ storage: String?) -> String? {
+            guard let keys = AccountScope(storage: storage).keys else { return nil }
+            let mapped = keys.map { key in key == MainAccount.key ? key : (accountsByRef[key]?.key ?? key) }
+            return AccountScope(keys: Set(mapped)).storage
+        }
 
         var categories: [Category] = try context.fetch(Category.fetchRequest())
         var categoriesByRef: [String: Category] = [:]
@@ -243,6 +314,7 @@ struct BackupStore {
 
         let existingTransactions: [Transaction] = try context.fetch(Transaction.fetchRequest())
         var transactionIDs = Set(existingTransactions.compactMap(\.id))
+        let existingTransactionsByID = Dictionary(existingTransactions.compactMap { transaction in transaction.id.map { ($0, transaction) } }, uniquingKeysWith: { first, _ in first })
         var transactionKeys = Set(existingTransactions.map {
             TransactionRecord.contentKey(date: $0.date, amount: $0.amount, note: $0.note, income: $0.income)
         })
@@ -250,6 +322,13 @@ struct BackupStore {
         for record in file.transactions {
             if let id = record.id {
                 guard transactionIDs.insert(id).inserted else {
+                    // Already here, so left as it is, except that one which lost its account, such as to a sync
+                    // problem, goes back into it. A link is only ever filled in, never changed.
+                    if let existing = existingTransactionsByID[id], existing.account == nil,
+                       let account = record.accountRef.flatMap({ accountsByRef[$0] }) {
+                        existing.account = account
+                        result.relinked += 1
+                    }
                     continue
                 }
             } else {
@@ -272,6 +351,8 @@ struct BackupStore {
             transaction.recurringType = record.recurringType
             transaction.recurringCoefficient = record.recurringCoefficient
             transaction.category = record.categoryRef.flatMap { categoriesByRef[$0] }
+            transaction.account = record.accountRef.flatMap { accountsByRef[$0] }
+            transaction.transferID = record.transferID
             result.transactions += 1
         }
 
@@ -301,6 +382,7 @@ struct BackupStore {
             budget.rolloverEnabled = record.rolloverEnabled ?? false
             budget.rolloverAnchor = record.rolloverAnchor
             budget.rolloverBalance = record.rolloverBalance ?? 0
+            budget.accountScope = restoredScope(record.accountScope)
             budgetIDs.insert(id)
             result.budgets += 1
         }
@@ -317,15 +399,23 @@ struct BackupStore {
             mainBudget.rolloverEnabled = record.rolloverEnabled ?? false
             mainBudget.rolloverAnchor = record.rolloverAnchor
             mainBudget.rolloverBalance = record.rolloverBalance ?? 0
+            mainBudget.accountScope = restoredScope(record.accountScope)
             result.budgets += 1
         }
 
         let existingTemplates: [TemplateTransaction] = try context.fetch(TemplateTransaction.fetchRequest())
         var templateIDs = Set(existingTemplates.compactMap(\.id))
         var templateOrders = Set(existingTemplates.map(\.order))
+        let existingTemplatesByID = Dictionary(existingTemplates.compactMap { template in template.id.map { ($0, template) } }, uniquingKeysWith: { first, _ in first })
 
         for record in file.templates {
             if let id = record.id, templateIDs.contains(id) {
+                // Like transactions: a template that lost its account goes back into it.
+                if let existing = existingTemplatesByID[id], existing.account == nil,
+                   let account = record.accountRef.flatMap({ accountsByRef[$0] }) {
+                    existing.account = account
+                    result.relinked += 1
+                }
                 continue
             }
 
@@ -344,6 +434,7 @@ struct BackupStore {
             template.recurringType = record.recurringType
             template.category = record.categoryRef.flatMap { categoriesByRef[$0] }
             template.currencyCode = record.currencyCode
+            template.account = record.accountRef.flatMap { accountsByRef[$0] }
             templateIDs.insert(id)
             result.templates += 1
         }
@@ -584,6 +675,16 @@ final class BackupManager: ObservableObject {
                 case let .success(restored):
                     self.defaults?.set(backup.url.lastPathComponent, forKey: Self.handledBackupKey)
                     self.suggestedRestore = nil
+
+                    // Like everything else a restore adds, Main's name and icon only fill in what's missing.
+                    if let name = restored.mainAccountName, self.defaults?.string(forKey: MainAccount.nameKey) == nil {
+                        self.dataController.renameAccount(.main, to: name)
+                    }
+
+                    if let symbol = restored.mainAccountSymbol, self.defaults?.string(forKey: MainAccount.symbolKey) == nil {
+                        self.dataController.setMainAccountSymbol(symbol)
+                    }
+
                     WidgetCenter.shared.reloadAllTimelines()
                     DataIntegrityLog.breadcrumb(
                         "restore finished",
@@ -592,6 +693,8 @@ final class BackupManager: ObservableObject {
                             "categories": restored.categories,
                             "budgets": restored.budgets,
                             "templates": restored.templates,
+                            "accounts": restored.accounts,
+                            "relinked": restored.relinked,
                             "backupTransactions": backup.transactionCount
                         ]
                     )

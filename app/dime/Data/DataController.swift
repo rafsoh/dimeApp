@@ -481,6 +481,10 @@ class DataController: ObservableObject {
 
         observeExtensionWrites(isAppExtension: isAppExtension)
 
+        if !isAppExtension && !usesDemoData {
+            observeMainAccountName()
+        }
+
         if isCloudKitSyncEnabled {
             observeCloudKitSync()
         }
@@ -728,6 +732,27 @@ class DataController: ObservableObject {
         self.pathMonitor = pathMonitor
 
         scheduleRecurringFallback()
+    }
+
+    // MARK: Main account's name and icon
+
+    /// Main's name and icon sync through iCloud key-value storage, since Main has no object in the store.
+    private func observeMainAccountName() {
+        MainAccount.adoptFromICloud(clearingIfMissing: false)
+
+        NotificationCenter.default.addObserver(forName: NSUbiquitousKeyValueStore.didChangeExternallyNotification, object: NSUbiquitousKeyValueStore.default, queue: .main) { [weak self] notification in
+            let changed = notification.userInfo?[NSUbiquitousKeyValueStoreChangedKeysKey] as? [String] ?? []
+
+            guard changed.contains(MainAccount.nameKey) || changed.contains(MainAccount.symbolKey) else {
+                return
+            }
+
+            MainAccount.adoptFromICloud(clearingIfMissing: true)
+            self?.objectWillChange.send()
+            WidgetCenter.shared.reloadAllTimelines()
+        }
+
+        NSUbiquitousKeyValueStore.default.synchronize()
     }
 
     // MARK: CloudKit events
@@ -1059,7 +1084,8 @@ class DataController: ObservableObject {
             TemplateTransaction.fetchRequest(),
             Budget.fetchRequest(),
             MainBudget.fetchRequest(),
-            Category.fetchRequest()
+            Category.fetchRequest(),
+            Account.fetchRequest()
         ]
 
         for fetchRequest in fetchRequests {
@@ -1068,6 +1094,8 @@ class DataController: ObservableObject {
             objects.forEach(context.delete)
         }
 
+        MainAccount.rename(to: "")
+        MainAccount.setSymbol(nil)
         save()
     }
 
@@ -1178,7 +1206,14 @@ class DataController: ObservableObject {
         save()
     }
 
+    /// Deletes a transaction, and both legs when it's a transfer: one leg alone would show money
+    /// leaving or arriving in an account with nothing on the other side.
     func deleteTransaction(_ transaction: Transaction) {
+        // The other leg may already be gone, such as deleted by sync; only one that's still here is deleted.
+        if !transaction.isGone, let counterpart = transaction.transferCounterpart, !counterpart.isGone {
+            container.viewContext.delete(counterpart)
+        }
+
         delete(transaction)
     }
 
@@ -1231,6 +1266,7 @@ class DataController: ObservableObject {
         let occurrence = Transaction(context: container.viewContext)
         occurrence.note = transaction.wrappedNote
         occurrence.category = transaction.category
+        occurrence.account = transaction.account
         occurrence.amount = transaction.wrappedAmount
         // A missing currency would follow later changes of the main currency, so new rows always name one.
         occurrence.currencyCode = transaction.currencyCode ?? currencyConverter.mainCurrency
@@ -1315,16 +1351,16 @@ class DataController: ObservableObject {
         save()
     }
 
-    func newTransaction(note: String, category: Category?, income: Bool, amount: Double, currencyCode: String? = nil, date: Date, repeatType: Int, repeatCoefficient: Int, delay _: Bool) -> Transaction {
-        let transaction = insertTransaction(note: note, category: category, income: income, amount: amount, currencyCode: currencyCode, date: date, repeatType: repeatType, repeatCoefficient: repeatCoefficient)
+    func newTransaction(note: String, category: Category?, income: Bool, amount: Double, currencyCode: String? = nil, account: Account? = nil, date: Date, repeatType: Int, repeatCoefficient: Int, delay _: Bool) -> Transaction {
+        let transaction = insertTransaction(note: note, category: category, income: income, amount: amount, currencyCode: currencyCode, account: account, date: date, repeatType: repeatType, repeatCoefficient: repeatCoefficient)
 
         save()
 
         return transaction
     }
 
-    /// Inserts a transaction without saving, so imports can save many at once.
-    func insertTransaction(note: String, category: Category?, income: Bool, amount: Double, currencyCode: String? = nil, date: Date, repeatType: Int = 0, repeatCoefficient: Int = 1) -> Transaction {
+    /// Inserts a transaction without saving, so imports can save many at once. No account means Main.
+    func insertTransaction(note: String, category: Category?, income: Bool, amount: Double, currencyCode: String? = nil, account: Account? = nil, date: Date, repeatType: Int = 0, repeatCoefficient: Int = 1) -> Transaction {
         let transaction = Transaction(context: container.viewContext)
 
         if note.trimmingCharacters(in: .whitespacesAndNewlines) == "" {
@@ -1335,6 +1371,7 @@ class DataController: ObservableObject {
 
         transaction.income = income
         transaction.category = category
+        transaction.account = account
 
         transaction.amount = amount
         transaction.currencyCode = currencyCode ?? currencyForNewTransaction()
@@ -1412,6 +1449,7 @@ class DataController: ObservableObject {
         template.income = transaction.income
         template.category = transaction.category
         template.currencyCode = transaction.currencyCode
+        template.account = transaction.account
 
         save()
 
@@ -1448,17 +1486,246 @@ class DataController: ObservableObject {
     /// Logs a transaction now with the template's details. It keeps no link to the template.
     @discardableResult
     func logQuickAddTemplate(_ template: TemplateTransaction) -> Transaction {
-        newTransaction(note: template.wrappedNote, category: template.category, income: template.income, amount: template.amount, currencyCode: template.currencyCode ?? currencyConverter.mainCurrency, date: Date.now, repeatType: 0, repeatCoefficient: 1, delay: false)
+        newTransaction(note: template.wrappedNote, category: template.category, income: template.income, amount: template.amount, currencyCode: template.currencyCode ?? currencyConverter.mainCurrency, account: template.account, date: Date.now, repeatType: 0, repeatCoefficient: 1, delay: false)
+    }
+
+    // MARK: Accounts
+
+    /// The user's accounts in their order. Main isn't one of them: it's every transaction without an account.
+    func accounts() -> [Account] {
+        let request: NSFetchRequest<Account> = Account.fetchRequest()
+
+        // Several devices can sync accounts with the same order, so the key breaks ties the same way on each.
+        return results(for: request).sorted {
+            ($0.order, $0.key) < ($1.order, $1.key)
+        }
+    }
+
+    /// Main first, then the user's accounts.
+    func accountChoices() -> [AccountChoice] {
+        [.main] + accounts().map(AccountChoice.account)
+    }
+
+    func accountCount() -> Int {
+        let request: NSFetchRequest<Account> = Account.fetchRequest()
+        return (try? container.viewContext.count(for: request)) ?? 0
+    }
+
+    enum AccountNameError {
+        case none, missingName, duplicateName
+    }
+
+    func accountNameCheck(_ name: String, editing: AccountChoice? = nil) -> AccountNameError {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !trimmed.isEmpty else {
+            return .missingName
+        }
+
+        let taken = accountChoices()
+            .filter { $0 != editing }
+            .contains { $0.name.compare(trimmed, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame }
+
+        return taken ? .duplicateName : .none
+    }
+
+    /// Adds an account. Without `symbol`, its icon is guessed from its name.
+    @discardableResult
+    func addAccount(named name: String, symbol: String? = nil) -> Account {
+        // Worked out before inserting, or the new account counts itself.
+        let order = (accounts().map(\.order).max() ?? -1) + 1
+
+        let account = Account(context: container.viewContext)
+        account.id = UUID()
+        account.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        account.symbol = symbol ?? AccountIcons.guess(for: name)
+        account.dateCreated = Date.now
+        account.order = order
+
+        save()
+
+        return account
+    }
+
+    /// Renames an account and, with `symbol`, changes its icon.
+    func renameAccount(_ choice: AccountChoice, to name: String, symbol: String? = nil) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        switch choice {
+        case .main:
+            MainAccount.rename(to: trimmed)
+            if let symbol {
+                MainAccount.setSymbol(symbol)
+            }
+            objectWillChange.send()
+            WidgetCenter.shared.reloadAllTimelines()
+        case let .account(account):
+            // Sync can delete it while its editor is open.
+            guard !account.isDeleted, account.managedObjectContext != nil else { return }
+            account.name = trimmed
+            if let symbol {
+                account.symbol = symbol
+            }
+            save()
+        }
+    }
+
+    /// Changes Main's icon alone, such as when a backup brings it back.
+    func setMainAccountSymbol(_ symbol: String) {
+        MainAccount.setSymbol(symbol)
+        objectWillChange.send()
+    }
+
+    /// The transfers between an account and Main, as the legs in the account. Once the account is deleted and
+    /// its side moves to Main, each would move money from Main to Main.
+    func transfersWithMain(of account: Account) -> [Transaction] {
+        let legs = (account.transactions as? Set<Transaction> ?? []).filter { $0.isTransfer && !$0.isDeleted }
+
+        return legs.filter { leg in
+            guard let other = leg.transferCounterpart else { return false }
+            return other.account == nil || other.account == account
+        }
+    }
+
+    /// Deletes an account. Its transactions and Quick Add templates move to Main. The only thing deleted with it
+    /// is its transfers with Main, which would be from Main to Main, and the confirmation says so first.
+    ///
+    /// The model's delete rule would also leave the rest in Main, but they're moved here first so that no
+    /// transaction ever depends on a delete rule to survive.
+    func deleteAccount(_ account: Account) {
+        // Sync can delete it while the confirmation is up, and deleting an object with no context throws.
+        guard !account.isDeleted, account.managedObjectContext != nil else { return }
+
+        for leg in transfersWithMain(of: account) where !leg.isDeleted {
+            if let other = leg.transferCounterpart {
+                container.viewContext.delete(other)
+            }
+            container.viewContext.delete(leg)
+        }
+
+        for transaction in account.transactions as? Set<Transaction> ?? [] where !transaction.isDeleted {
+            transaction.account = nil
+        }
+
+        for template in account.templates as? Set<TemplateTransaction> ?? [] {
+            template.account = nil
+        }
+
+        if AccountPreferences.lastUsed(among: accounts()) == .account(account) {
+            AccountPreferences.record(.main)
+        }
+
+        container.viewContext.delete(account)
+        save()
+    }
+
+    /// Moves accounts the way `List.onMove` describes, then numbers them all from 0. Main always stays first.
+    /// `displayed` is the list the offsets refer to; it defaults to `accounts()`.
+    func moveAccounts(_ displayed: [Account]? = nil, fromOffsets source: IndexSet, toOffset destination: Int) {
+        var ordered = displayed ?? accounts()
+        ordered.move(fromOffsets: source, toOffset: destination)
+
+        for (index, account) in ordered.enumerated() where account.order != Int64(index) {
+            account.order = Int64(index)
+        }
+
+        save()
+    }
+
+    /// How many transactions an account has, transfers included.
+    func transactionCount(in choice: AccountChoice) -> Int {
+        let request: NSFetchRequest<Transaction> = Transaction.fetchRequest()
+        request.predicate = choice.predicate
+        return (try? container.viewContext.count(for: request)) ?? 0
+    }
+
+    // MARK: Transfers
+
+    /// Saves a transfer between two accounts as an outgoing and an incoming leg sharing a transfer id.
+    ///
+    /// With `editing`, that transaction becomes one of the legs: a transfer keeps its id, an ordinary transaction
+    /// becomes the outgoing leg of a new transfer. A missing other leg is recreated, so a transfer that lost
+    /// its other half ends up whole again.
+    @discardableResult
+    func saveTransfer(editing leg: Transaction? = nil, from: AccountChoice, to: AccountChoice, amount: Double, currencyCode: String, date: Date, note: String) -> (outgoing: Transaction, incoming: Transaction) {
+        let context = container.viewContext
+        let transferID = leg?.transferID ?? UUID()
+        let counterpart = leg?.transferCounterpart
+
+        let outgoing: Transaction
+        let incoming: Transaction
+
+        if let leg, leg.isTransfer, leg.income {
+            incoming = leg
+            outgoing = counterpart ?? Transaction(context: context)
+        } else if let leg {
+            outgoing = leg
+            incoming = counterpart ?? Transaction(context: context)
+        } else {
+            outgoing = Transaction(context: context)
+            incoming = Transaction(context: context)
+        }
+
+        let trimmedNote = note.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // An account deleted meanwhile, such as by sync, can't be linked; what was in it is in Main now.
+        func linkable(_ choice: AccountChoice) -> Account? {
+            choice.account.flatMap { ($0.isDeleted || $0.managedObjectContext == nil) ? nil : $0 }
+        }
+
+        for (transaction, isIncoming, account) in [(outgoing, false, linkable(from)), (incoming, true, linkable(to))] {
+            if transaction.id == nil {
+                transaction.id = UUID()
+            }
+
+            transaction.transferID = transferID
+            transaction.income = isIncoming
+            transaction.account = account
+            transaction.category = nil
+            transaction.note = trimmedNote
+            transaction.amount = amount
+            transaction.currencyCode = currencyCode
+            setDate(date, on: transaction)
+
+            // Transfers don't repeat: the legs would each log their own occurrences.
+            transaction.recurringType = 0
+            transaction.recurringCoefficient = 1
+            transaction.onceRecurring = false
+        }
+
+        save()
+
+        return (outgoing, incoming)
+    }
+
+    /// Turns one leg of a transfer back into an ordinary transaction in its own account, deleting the other leg.
+    func endTransfer(keeping leg: Transaction) {
+        if let counterpart = leg.transferCounterpart {
+            container.viewContext.delete(counterpart)
+        }
+
+        leg.transferID = nil
+    }
+
+    /// Sets a transaction's date and the day and month it's grouped under.
+    func setDate(_ date: Date, on transaction: Transaction) {
+        let calendar = Calendar(identifier: .gregorian)
+
+        transaction.date = date
+        transaction.day = calendar.date(bySettingHour: 0, minute: 0, second: 0, of: date) ?? Date.now
+        transaction.month = calendar.date(from: calendar.dateComponents([.month, .year], from: date)) ?? Date.now
     }
 
     // fetching
 
+    // Transfers never repeat, but a leg could reach here from an older backup or a bad sync; it must not log copies.
     func fetchRequestForRecurringTransactions() -> NSFetchRequest<Transaction> {
         let itemRequest: NSFetchRequest<Transaction> = Transaction.fetchRequest()
-        itemRequest.predicate = NSPredicate(format: "%K > %i", #keyPath(Transaction.recurringType), 0)
+        itemRequest.predicate = TransferPredicate.excluding(NSPredicate(format: "%K > %i", #keyPath(Transaction.recurringType), 0))
         return itemRequest
     }
 
+    /// Both legs of each transfer; a list shows each once with `oneLegPerTransfer()`.
     func fetchRequestForRecentTransactions(type: TimePeriod) -> NSFetchRequest<Transaction> {
         let itemRequest: NSFetchRequest<Transaction> = Transaction.fetchRequest()
 
@@ -1585,11 +1852,11 @@ class DataController: ObservableObject {
         if let unwrappedCategory = category {
             let categoryPredicate = NSPredicate(format: "%K == %@", #keyPath(Transaction.category), unwrappedCategory)
 
-            let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [compound, categoryPredicate, incomePredicate])
+            let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [compound, categoryPredicate, incomePredicate, TransferPredicate.excluded])
 
             itemRequest.predicate = andPredicate
         } else {
-            let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [compound, incomePredicate])
+            let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [compound, incomePredicate, TransferPredicate.excluded])
             itemRequest.predicate = andPredicate
         }
 
@@ -1782,7 +2049,14 @@ class DataController: ObservableObject {
         return itemRequest
     }
 
+    /// Totals for the log and Shortcuts. Transfers are neither spending nor income.
     func fetchRequestForLogView(type: Int, optionalIncome: Bool?, categoryFilters: [Category] = []) -> NSFetchRequest<Transaction> {
+        let request = fetchRequestForLogViewIncludingTransfers(type: type, optionalIncome: optionalIncome, categoryFilters: categoryFilters)
+        request.predicate = TransferPredicate.excluding(request.predicate)
+        return request
+    }
+
+    private func fetchRequestForLogViewIncludingTransfers(type: Int, optionalIncome: Bool?, categoryFilters: [Category] = []) -> NSFetchRequest<Transaction> {
         let itemRequest: NSFetchRequest<Transaction> = Transaction.fetchRequest()
 
         var calendar = Calendar(identifier: .gregorian)
@@ -2335,7 +2609,7 @@ class DataController: ObservableObject {
     func rolloverCarryIn(for budget: RolloverBudget, category: Category?, at start: Date) -> Double? {
         guard let rollover = BudgetRollover(budget), rollover.periods(until: start) != nil else { return nil }
         let request: NSFetchRequest<Transaction> = Transaction.fetchRequest()
-        request.predicate = BudgetRollover.spendingPredicate(rollover, before: start, category: category)
+        request.predicate = BudgetRollover.spendingPredicate(rollover, before: start, category: category, accounts: budget.accountPredicate)
         let spent = results(for: request).total(using: currencyConverter).value
         return rollover.carryIn(at: start, spentSinceAnchor: spent)
     }
@@ -2347,9 +2621,9 @@ class DataController: ObservableObject {
         let endPredicate = NSPredicate(format: "%K <= %@", #keyPath(Transaction.date), Date.now as CVarArg)
         let incomePredicate = NSPredicate(format: "income = %d", false)
 
-        let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate, incomePredicate])
+        let predicates = [startPredicate, endPredicate, incomePredicate, TransferPredicate.excluded] + [budget.accountPredicate].compactMap { $0 }
 
-        itemRequest.predicate = andPredicate
+        itemRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
 
         return itemRequest
     }
@@ -2362,14 +2636,21 @@ class DataController: ObservableObject {
         let categoryPredicate = NSPredicate(format: "%K == %@", #keyPath(Transaction.category), budget.category!)
         let incomePredicate = NSPredicate(format: "income = %d", false)
 
-        let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate, categoryPredicate, incomePredicate])
+        let predicates = [startPredicate, endPredicate, categoryPredicate, incomePredicate, TransferPredicate.excluded] + [budget.accountPredicate].compactMap { $0 }
 
-        itemRequest.predicate = andPredicate
+        itemRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
 
         return itemRequest
     }
 
+    /// Transfers are neither spending nor income.
     func fetchRequestForLineGraph(optionalIncome: Bool?) -> NSFetchRequest<Transaction> {
+        let request = fetchRequestForLineGraphIncludingTransfers(optionalIncome: optionalIncome)
+        request.predicate = TransferPredicate.excluding(request.predicate)
+        return request
+    }
+
+    private func fetchRequestForLineGraphIncludingTransfers(optionalIncome: Bool?) -> NSFetchRequest<Transaction> {
         let itemRequest: NSFetchRequest<Transaction> = Transaction.fetchRequest()
         itemRequest.sortDescriptors = [NSSortDescriptor(keyPath: \Transaction.date, ascending: true)]
 
@@ -2383,12 +2664,12 @@ class DataController: ObservableObject {
 
     func fetchRequestForLogViewCategoryFilter(income: Bool) -> NSFetchRequest<Transaction> {
         let itemRequest: NSFetchRequest<Transaction> = Transaction.fetchRequest()
-        itemRequest.predicate = NSPredicate(format: "income = %d", income)
+        itemRequest.predicate = TransferPredicate.excluding(NSPredicate(format: "income = %d", income))
         return itemRequest
     }
 
-    func getInsights(type: Int, date: Date, income: Bool) -> (amount: Double, maximum: Double, average: Double, numberOfDays: Int, dates: [Date], dateDictionary: [Date: Double], report: ConversionReport) {
-        let currentItemRequest: NSFetchRequest<Transaction> = fetchRequestForInsights(type: type, date: date, income: income)
+    func getInsights(type: Int, date: Date, income: Bool, accounts: NSPredicate? = nil) -> (amount: Double, maximum: Double, average: Double, numberOfDays: Int, dates: [Date], dateDictionary: [Date: Double], report: ConversionReport) {
+        let currentItemRequest: NSFetchRequest<Transaction> = fetchRequestForInsights(type: type, date: date, income: income, accounts: accounts)
         let currentTransactions = results(for: currentItemRequest)
         let converter = currencyConverter
         var report = ConversionReport()
@@ -2566,7 +2847,8 @@ class DataController: ObservableObject {
         }
     }
 
-    func fetchRequestForInsights(type: Int, date: Date, income: Bool? = nil) -> NSFetchRequest<Transaction> {
+    /// Transfers are neither spending nor income. `accounts` limits it to some accounts.
+    func fetchRequestForInsights(type: Int, date: Date, income: Bool? = nil, accounts: NSPredicate? = nil) -> NSFetchRequest<Transaction> {
         let itemRequest: NSFetchRequest<Transaction> = Transaction.fetchRequest()
 
         var calendar = Calendar(identifier: .gregorian)
@@ -2616,9 +2898,9 @@ class DataController: ObservableObject {
         if let unwrappedIncome = income {
             let incomePredicate = NSPredicate(format: "income = %d", unwrappedIncome)
 
-            andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, incomePredicate, endPredicate])
+            andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, incomePredicate, endPredicate, TransferPredicate.excluded] + [accounts].compactMap { $0 })
         } else {
-            andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate])
+            andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate, TransferPredicate.excluded] + [accounts].compactMap { $0 })
         }
 
         itemRequest.predicate = andPredicate
@@ -2729,7 +3011,7 @@ class DataController: ObservableObject {
             startPredicate = NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), startDate as CVarArg)
         }
 
-        let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate, incomePredicate])
+        let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate, incomePredicate, TransferPredicate.excluded])
 
         itemRequest.predicate = andPredicate
         itemRequest.sortDescriptors = [
@@ -2739,7 +3021,17 @@ class DataController: ObservableObject {
         return (itemRequest, startDate)
     }
 
+    /// Both legs of each transfer, so twice `count` rows: a list shows each transfer once with
+    /// `oneLegPerTransfer()`, then takes `count`.
     func fetchRequestForRecentTransactionsWithCount(type: TimePeriod, count: Int) -> NSFetchRequest<Transaction> {
+        let request = fetchRequestForRecentTransactionsWithCountIncludingTransfers(type: type, count: count)
+        if request.fetchLimit > 0 {
+            request.fetchLimit = count * 2
+        }
+        return request
+    }
+
+    private func fetchRequestForRecentTransactionsWithCountIncludingTransfers(type: TimePeriod, count: Int) -> NSFetchRequest<Transaction> {
         let itemRequest: NSFetchRequest<Transaction> = Transaction.fetchRequest()
 
         var calendar = Calendar(identifier: .gregorian)
@@ -2870,7 +3162,8 @@ class DataController: ObservableObject {
             "Category": "categories",
             "Budget": "budgets",
             "MainBudget": "mainBudgets",
-            "TemplateTransaction": "templates"
+            "TemplateTransaction": "templates",
+            "Account": "accounts"
         ]
 
         var counts: [String: Int] = [:]
@@ -2981,7 +3274,7 @@ class DataController: ObservableObject {
         }
 
         // A count that couldn't be read is left out rather than compared as 0.
-        let tracked = ["transactions", "categories", "budgets", "mainBudgets", "templates"]
+        let tracked = ["transactions", "categories", "budgets", "mainBudgets", "templates", "accounts"]
         let migrationDropped = migrationNeeded && countsBeforeMigration.map { before in
             tracked.contains { key in
                 guard let now = counts[key], let earlier = before[key] else {
@@ -3138,10 +3431,12 @@ func calculateStartOfMonthPeriod(earliestDate: Date, startOfMonthDay: Int) -> Da
 }
 
 #if DEBUG
-// Launch with `-demoData minimal` or `-demoData varied` to run against a seeded in-memory store.
+// Launch with `-demoData minimal` or `-demoData varied` to run against a seeded in-memory store, or
+// `-demoData empty` against an empty one, as on a new install.
 enum DemoDataset: String {
     case minimal
     case varied
+    case empty
 
     init?(arguments: [String]) {
         guard let index = arguments.firstIndex(of: "-demoData"), index + 1 < arguments.count else {
@@ -3401,6 +3696,8 @@ extension DataController {
         }
 
         switch dataset {
+        case .empty:
+            return
         case .minimal:
             let food = category("Food", "🍜", "#EC7A58")
             _ = category("Transport", "🚇", "#279AF4")
@@ -3481,10 +3778,75 @@ extension DataController {
             streaming.recurringCoefficient = 1
             updateRecurringTransaction(transaction: streaming)
 
+            // `-demoAccounts none` leaves everything in Main, as for someone updating from before accounts.
+            if !ProcessInfo.processInfo.arguments.contains("-demoAccounts") {
+                seedDemoAccounts(groceries: groceries, shopping: shopping, coffee: coffee, firstOfMonth: firstOfMonth)
+            }
             seedDemoBudgets(food: food, groceries: groceries, coffee: coffee, shopping: shopping, health: health)
+
+            // Groceries all go on the card, so limiting its budget to the card shows the account line
+            // without changing what it has spent.
+            if let budget = groceries.budget, let card = accounts().first(where: { $0.wrappedName == "Card" }) {
+                budget.countedAccounts = AccountScope([.account(card)])
+            }
         }
 
         save()
+    }
+
+    /// Groceries and shopping go on a card and coffee is paid in cash; the rest stays in Main. Savings is fed
+    /// by a transfer on the 2nd of each month, and cash was topped up this morning, so the log shows a transfer.
+    /// Transfers aren't spending, so the budgets below come out the same.
+    private func seedDemoAccounts(groceries: Category, shopping: Category, coffee: Category, firstOfMonth: Date) {
+        let context = container.viewContext
+        let calendar = Calendar.current
+        let now = Date.now
+
+        func account(_ name: String, symbol: String, order: Int64) -> Account {
+            let account = Account(context: context)
+            account.id = UUID()
+            account.name = name
+            account.symbol = symbol
+            account.order = order
+            account.dateCreated = now
+            return account
+        }
+
+        let card = account("Card", symbol: "creditcard", order: 0)
+        let cash = account("Cash", symbol: "banknote", order: 1)
+        let savings = account("Savings", symbol: "building.columns", order: 2)
+
+        // Earlier seeding saved along the way, so the transactions are fetched rather than taken from the inserted objects.
+        for transaction in results(for: Transaction.fetchRequest() as NSFetchRequest<Transaction>) {
+            if transaction.category == groceries || transaction.category == shopping {
+                transaction.account = card
+            } else if transaction.category == coffee {
+                transaction.account = cash
+            }
+        }
+
+        let currencyCode = currencyConverter.mainCurrency
+
+        for monthsAgo in 0 ... 3 {
+            let month = calendar.date(byAdding: .month, value: -monthsAgo, to: firstOfMonth) ?? firstOfMonth
+            guard let second = calendar.date(byAdding: .day, value: 1, to: month),
+                  let date = calendar.date(bySettingHour: 9, minute: 30, second: 0, of: second),
+                  date < now
+            else { continue }
+
+            saveTransfer(from: .main, to: .account(savings), amount: 500, currencyCode: currencyCode, date: date, note: "")
+        }
+
+        let morning = min(calendar.date(bySettingHour: 8, minute: 5, second: 0, of: now) ?? now, now.addingTimeInterval(-300))
+        saveTransfer(from: .main, to: .account(cash), amount: 100, currencyCode: currencyCode, date: morning, note: "ATM")
+
+        // `-insightsAccount <name>` starts Insights on one account and `-insightsAccount all` on every account.
+        // Set here, before any view reads it.
+        let arguments = ProcessInfo.processInfo.arguments
+        if let index = arguments.firstIndex(of: "-insightsAccount"), index + 1 < arguments.count {
+            let key = [card, cash, savings].first { $0.wrappedName == arguments[index + 1] }?.key ?? ""
+            UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.set(key, forKey: "insightsAccount")
+        }
     }
 
     /// Budgets sized from the seeded spending so each lands in a known state: overall and Food on track,

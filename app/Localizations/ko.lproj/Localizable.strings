@@ -494,6 +494,41 @@
 "The new reset day applies from this period on, and earlier periods keep the old one." = "새 시작일은 이번 기간부터 적용되며, 이전 기간은 기존 시작일을 유지합니다.";
 "The %@ from earlier periods is kept." = "지금까지 이월된 %@은(는) 유지됩니다.";
 
+/* Accounts and transfers */
+"by account" = "계좌별";
+"filter-tag-account" = "계좌별";
+"Accounts" = "계좌";
+"Account" = "계좌";
+"Transfer" = "이체";
+"Main" = "기본";
+"New Account" = "새 계좌";
+"Edit Account" = "계좌 편집";
+"Account Name" = "계좌 이름";
+"Add Account" = "계좌 추가";
+"All Accounts" = "모든 계좌";
+"all accounts" = "모든 계좌";
+"From" = "출금";
+"To" = "입금";
+"Cash" = "현금";
+"Debit Card" = "체크카드";
+"Credit Card" = "신용카드";
+"Savings" = "저축";
+"Duplicate Name" = "이미 있는 이름";
+"Pick Two Accounts" = "계좌 두 개를 선택하세요";
+"Delete Transfer?" = "이체를 삭제할까요?";
+"Both of its accounts lose it. This action cannot be undone." = "두 계좌 모두에서 삭제됩니다. 이 작업은 취소할 수 없습니다.";
+"No logs in this account" = "이 계좌에 기록이 없습니다";
+"Spending by account" = "계좌별 지출";
+"Its transactions and Quick Add templates move to %@. Nothing else is deleted." = "거래와 빠른 추가 템플릿은 '%@'(으)로 이동합니다. 다른 것은 삭제되지 않습니다.";
+"Its transactions and Quick Add templates move to %@. Its transfers with %@ are deleted, since both sides would be %@." = "거래와 빠른 추가 템플릿은 '%1$@'(으)로 이동합니다. '%2$@'과(와)의 이체는 양쪽 모두 '%3$@'이(가) 되므로 삭제됩니다.";
+"Transactions not in another account are in %@. You can rename %@, but not delete it." = "다른 계좌에 없는 거래는 '%@'에 있습니다. '%@'의 이름은 바꿀 수 있지만 삭제할 수는 없습니다.";
+"Only %@" = "%@만";
+"%lld accounts" = "계좌 %lld개";
+"Changing which accounts count clears the %@ from earlier periods. Rollover starts again from this period." = "포함할 계좌를 바꾸면 지금까지 이월된 %@이(가) 지워집니다. 이월은 이번 기간부터 다시 시작됩니다.";
+"Changing which accounts count restarts rollover from this period." = "포함할 계좌를 바꾸면 이월이 이번 기간부터 다시 시작됩니다.";
+"Add %@" = "%@ 추가";
+"Show all accounts" = "모든 계좌 보기";
+"Account filter" = "계좌 필터";
 // log
 "UPCOMING" = "예정";
 
@@ -539,3 +574,15 @@
 
 "Font" = "서체";
 "Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo는 Josh Puckett이 만든 서체로, SIL Open Font License에 따라 제공됩니다.";
+"Keep cash, cards and savings apart" = "현금, 카드, 저축을 따로 관리하세요";
+"Everything you've logged so far is in %@. Tap it to rename it, or add an account below." = "지금까지 기록한 내용은 모두 %@에 있습니다. 탭하여 이름을 바꾸거나 아래에서 계좌를 추가하세요.";
+"Time frame" = "기간";
+"Account Was Deleted" = "계좌가 삭제됨";
+"Type" = "유형";
+"Shows insights for this account" = "이 계좌의 분석을 표시합니다";
+"Which accounts' spending counts towards this budget" = "이 예산에 포함할 계좌";
+"Renames the account" = "계좌 이름을 변경합니다";
+"Edits the account" = "계좌를 편집합니다";
+"%@, %@, %lld percent of spending" = "%1$@, %2$@, 지출의 %3$lld%%";
+"Import from Another App" = "다른 앱에서 가져오기";
+"Icon" = "아이콘";

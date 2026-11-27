@@ -168,6 +168,7 @@ private struct FloatingAboveTabBarModifier<Bar: View>: ViewModifier {
 
     @Environment(\.tabBarTop) private var tabBarTop
     @State private var containerBottom: CGFloat?
+    @State private var containerWidth: CGFloat?
     @State private var barHeight: CGFloat = 0
 
     private var bottomPadding: CGFloat {
@@ -182,13 +183,19 @@ private struct FloatingAboveTabBarModifier<Bar: View>: ViewModifier {
                 ZStack(alignment: .bottom) {
                     GeometryReader { proxy in
                         let bottom = proxy.frame(in: .global).maxY
+                        let width = proxy.size.width
                         Color.clear
-                            .onAppear { containerBottom = bottom }
+                            .onAppear {
+                                containerBottom = bottom
+                                containerWidth = width
+                            }
                             .onChange(of: bottom) { containerBottom = $0 }
+                            .onChange(of: width) { containerWidth = $0 }
                     }
                     .allowsHitTesting(false)
 
                     bar
+                        .environment(\.floatingBarWidth, containerWidth)
                         .background {
                             GeometryReader { proxy in
                                 Color.clear
@@ -506,7 +513,7 @@ struct GlassPopoverMenu<Content: View>: View {
 }
 
 struct GlassPopoverRow: View {
-    let title: LocalizedStringKey
+    let title: Text
     var systemImage: String?
     var detail: LocalizedStringKey?
     var isSelected: Bool
@@ -515,9 +522,18 @@ struct GlassPopoverRow: View {
     @ScaledMetric(relativeTo: .body) private var titleSize: CGFloat = 18.5
 
     init(_ title: LocalizedStringKey, systemImage: String? = nil, detail: LocalizedStringKey? = nil, isSelected: Bool = false, action: @escaping () -> Void) {
-        self.title = title
+        self.title = Text(title)
         self.systemImage = systemImage
         self.detail = detail
+        self.isSelected = isSelected
+        self.action = action
+    }
+
+    /// A row for a name the user typed, such as an account's, shown as written.
+    init(verbatim title: String, systemImage: String? = nil, isSelected: Bool = false, action: @escaping () -> Void) {
+        self.title = Text(verbatim: title)
+        self.systemImage = systemImage
+        self.detail = nil
         self.isSelected = isSelected
         self.action = action
     }
@@ -532,7 +548,7 @@ struct GlassPopoverRow: View {
                         .frame(width: 24)
                 }
 
-                Text(title)
+                title
                     .font(.app(size: titleSize, weight: .medium))
                     .foregroundColor(Color.PrimaryText)
                     .lineLimit(1)
@@ -590,13 +606,21 @@ private struct GlassCapsuleGlyph: View {
 }
 
 struct GlassCapsuleButton: View {
-    let title: LocalizedStringKey
+    let title: Text
     let trailingSystemImage: String
     let font: Font
     let action: () -> Void
 
     init(_ title: LocalizedStringKey, trailingSystemImage: String, font: Font = .app(.body, weight: .medium), action: @escaping () -> Void) {
-        self.title = title
+        self.title = Text(title)
+        self.trailingSystemImage = trailingSystemImage
+        self.font = font
+        self.action = action
+    }
+
+    /// A capsule for a name the user typed, such as an account's, shown as written.
+    init(verbatim title: String, trailingSystemImage: String, font: Font = .app(.body, weight: .medium), action: @escaping () -> Void) {
+        self.title = Text(verbatim: title)
         self.trailingSystemImage = trailingSystemImage
         self.font = font
         self.action = action
@@ -605,7 +629,7 @@ struct GlassCapsuleButton: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 8) {
-                Text(title)
+                title
                     .font(font)
                     .foregroundColor(Color.PrimaryText)
                     .lineLimit(1)
@@ -654,13 +678,18 @@ struct GlassCapsuleTag: View {
 }
 
 struct GlassStepperCapsule: View {
+    @Environment(\.floatingBarWidth) private var floatingBarWidth
     var accessibilityTitle: String?
+    /// The width of whatever shares its row, so the two fit between the margins; it then grows leftward while scrubbing, over what sits beside it.
+    var reservedWidth: CGFloat = 0
     let previousLabel: LocalizedStringKey
     let nextLabel: LocalizedStringKey
     /// The title `offset` steps from the current one (negative is earlier), or nil past either end.
     let title: (Int) -> String?
     /// Moves by a number of steps; called once per tap, or once when a drag is released.
     let onStep: (Int) -> Void
+    /// Told when a drag scrub starts and ends, so a control beside the capsule can make way.
+    var onScrubbingChange: ((Bool) -> Void)?
 
     @ScaledMetric(relativeTo: .body) private var capsuleWidth: CGFloat = 288
 
@@ -691,8 +720,10 @@ struct GlassStepperCapsule: View {
     private let scrubSpring = Animation.spring(response: 0.38, dampingFraction: 0.78)
 
     var body: some View {
-        let restingWidth = min(capsuleWidth, UIScreen.main.bounds.width - 32)
-        let scrubbingWidth = min(capsuleWidth + 56, UIScreen.main.bounds.width - 32)
+        // The space the floating bar actually has, which on the Duo excludes the side tab bar, less 16pt margins.
+        let availableWidth = (floatingBarWidth ?? UIScreen.main.bounds.width) - 32
+        let restingWidth = max(0, min(capsuleWidth, availableWidth - reservedWidth))
+        let scrubbingWidth = min(restingWidth + 56, availableWidth)
         let currentTitle = title(0) ?? ""
 
         HStack(spacing: 8) {
@@ -722,8 +753,11 @@ struct GlassStepperCapsule: View {
         .glassBackground(in: Capsule(), tint: .glassTint)
         .contentShape(Capsule())
         .simultaneousGesture(scrubGesture)
-        .frame(width: restingWidth, height: 44, alignment: .bottom)
+        .frame(width: restingWidth, height: 44, alignment: reservedWidth == 0 ? .bottom : .bottomTrailing)
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+        .onChange(of: isScrubbing) { scrubbing in
+            onScrubbingChange?(scrubbing)
+        }
     }
 
     var gauge: some View {
@@ -1006,6 +1040,8 @@ struct SectionHeaderButton: View {
 struct GlassSegmentedPicker<Value: Hashable>: View {
     @Binding var selection: Value
     let options: [(value: Value, title: LocalizedStringKey)]
+    /// Each segment's side padding. Three segments use less, so they fit between a sheet's corner buttons.
+    var segmentPadding: CGFloat = 16
 
     @Namespace private var namespace
 
@@ -1024,8 +1060,9 @@ struct GlassSegmentedPicker<Value: Hashable>: View {
                         .font(.app(.body, weight: .semibold))
                         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.8)
                         .foregroundColor(isSelected ? Color.PrimaryText : Color.SubtitleText)
-                        .padding(.horizontal, 16)
+                        .padding(.horizontal, segmentPadding)
                         .frame(height: 36)
                         .background {
                             if isSelected {
@@ -1348,5 +1385,17 @@ class Utilities {
 
         (UIApplication.shared.connectedScenes.first as?
             UIWindowScene)?.windows.first!.overrideUserInterfaceStyle = userInterfaceStyle
+    }
+}
+
+private struct FloatingBarWidthKey: EnvironmentKey {
+    static let defaultValue: CGFloat? = nil
+}
+
+extension EnvironmentValues {
+    /// How wide the view a floating bar sits over is, which is narrower than the screen beside the Duo's side tab bar.
+    var floatingBarWidth: CGFloat? {
+        get { self[FloatingBarWidthKey.self] }
+        set { self[FloatingBarWidthKey.self] = newValue }
     }
 }

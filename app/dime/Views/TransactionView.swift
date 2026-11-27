@@ -38,6 +38,75 @@ struct TransactionView: View {
 
     @State var showCategorySheet = false
 
+    // accounts and transfers
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.order), SortDescriptor(\.dateCreated)]) private var accountObjects: FetchedResults<Account>
+    /// Redraws account names and icons when Main is renamed or given another icon.
+    @AppStorage(MainAccount.nameKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var mainAccountName = ""
+    @AppStorage(MainAccount.symbolKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var mainAccountSymbol = ""
+    /// The account an expense or income goes into, or where a transfer comes from.
+    @State private var account: AccountChoice = .main
+    @State private var isTransfer = false
+    /// Where a transfer goes.
+    @State private var transferTo: AccountChoice?
+    @State private var accountPicker: AccountPickerTarget?
+
+    enum AccountPickerTarget: String, Identifiable {
+        case account, from, to
+
+        var id: String { rawValue }
+    }
+
+    enum EntryKind: Hashable {
+        case expense, income, transfer
+    }
+
+    /// Accounts only show once there's one besides Main. A transfer being edited always shows, so it can be changed.
+    var showsAccounts: Bool {
+        !accountObjects.isEmpty || toEdit?.isTransfer == true
+    }
+
+    var allowsTransfer: Bool {
+        showsAccounts && !isTemplate
+    }
+
+    var kindSelection: Binding<EntryKind> {
+        Binding {
+            isTransfer ? .transfer : (income ? .income : .expense)
+        } set: { kind in
+            let becomesTransfer = kind == .transfer
+
+            if becomesTransfer && !isTransfer {
+                // Transfers don't repeat, and go somewhere other than where they come from.
+                repeatType = 0
+                if transferTo == nil || transferTo == account {
+                    transferTo = defaultTransferDestination
+                }
+            }
+
+            isTransfer = becomesTransfer
+            income = kind == .income
+        }
+    }
+
+    var kindOptions: [(value: EntryKind, title: LocalizedStringKey)] {
+        var options: [(value: EntryKind, title: LocalizedStringKey)] = [(value: .expense, title: "Expense")]
+
+        if showsIncomeControls {
+            options.append((value: .income, title: "transaction-view-income-picker"))
+        }
+
+        if allowsTransfer {
+            options.append((value: .transfer, title: "Transfer"))
+        }
+
+        return options
+    }
+
+    /// The first account that isn't where the transfer comes from.
+    var defaultTransferDestination: AccountChoice? {
+        ([.main] + accountObjects.map(AccountChoice.account)).first { $0 != account }
+    }
+
     @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode ?? "USD"
     var currencySymbol: String {
         return (Locale.current.localizedCurrencySymbol(forCurrencyCode: currency) ?? currency)
@@ -219,7 +288,7 @@ struct TransactionView: View {
 
                             Spacer()
 
-                            if !isTemplate {
+                            if !isTemplate && !isTransfer {
                                 RecurringMenu(
                                     repeatType: $repeatType, repeatCoefficient: $repeatCoefficient,
                                     showPicker: $showPicker, accessibilityLabel: repeatButtonAccessibility)
@@ -231,11 +300,11 @@ struct TransactionView: View {
                     .overlay {
                         if showToast {
                             GlassToast(title: toastTitle, systemImage: toastImage, color: Color.AlertRed)
-                        } else if showsIncomeControls {
-                            GlassSegmentedPicker(selection: $income, options: [
-                                (value: false, title: "Expense"),
-                                (value: true, title: "transaction-view-income-picker")
-                            ])
+                        } else if kindOptions.count > 1 && usesVerticalBar {
+                            // The Duo's sheet has room for every choice side by side.
+                            GlassSegmentedPicker(selection: kindSelection, options: kindOptions, segmentPadding: kindOptions.count > 2 ? 12 : 16)
+                        } else if kindOptions.count > 1 {
+                            EntryKindMenu(selection: kindSelection, options: kindOptions)
                         } else {
                             CategoryEditorTitle(title: "Expense")
                         }
@@ -273,7 +342,7 @@ struct TransactionView: View {
                                     .onChanged { gesture in
                                         let swipe = gesture.translation.width
 
-                                        guard showsIncomeControls, abs(swipe) > abs(gesture.translation.height) else { return }
+                                        guard showsIncomeControls, !isTransfer, abs(swipe) > abs(gesture.translation.height) else { return }
 
                                         if income {
                                             if swipe < 0 {
@@ -287,6 +356,8 @@ struct TransactionView: View {
                                         }
                                     }
                                     .onEnded { _ in
+                                        guard !isTransfer else { return }
+
                                         if income {
                                             if swipingOffset < (capsuleWidth / 2) {
                                                 withAnimation {
@@ -404,17 +475,16 @@ struct TransactionView: View {
                 }
                 .confirmationSheet(
                     isPresented: $deleteMode,
-                    title: isTemplate ? "Delete Template?" : "Delete Expense?",
-                    message: isTemplate ? "Transactions you've logged with it stay as they are." : "This action cannot be undone.",
+                    title: isTemplate ? "Delete Template?" : (toEdit?.isTransfer == true ? "Delete Transfer?" : "Delete Expense?"),
+                    message: isTemplate ? "Transactions you've logged with it stay as they are." : (toEdit?.isTransfer == true ? "Both of its accounts lose it. This action cannot be undone." : "This action cannot be undone."),
                     onDismiss: { toDelete = nil }
                 ) {
                     withAnimation {
                         if let editedTemplate {
                             dataController.deleteQuickAddTemplate(editedTemplate)
-                        } else {
-                            if let itemToDelete = toDelete {
-                                dataController.deleteTransaction(itemToDelete)
-                            }
+                        } else if let itemToDelete = toDelete {
+                            // Deletes both legs of a transfer.
+                            dataController.deleteTransaction(itemToDelete)
                         }
                     }
 
@@ -458,6 +528,10 @@ struct TransactionView: View {
             }
         }
         .onAppear {
+            #if DEBUG
+            runScreenshotStep()
+            #endif
+
             DispatchQueue.main.async {
                 if let transaction = toEdit {
                     repeatType = Int(transaction.recurringType)
@@ -500,6 +574,10 @@ struct TransactionView: View {
         .sheet(isPresented: $showCategorySheet) {
             CategoryPickerSheet(category: $category, income: income, allowsNone: true)
         }
+        .sheet(item: $accountPicker) { target in
+            accountPickerSheet(for: target)
+                .environmentObject(dataController)
+        }
         .sheet(isPresented: $showPicker) {
             if #available(iOS 16.0, *) {
                 CustomRecurringView(
@@ -528,21 +606,61 @@ struct TransactionView: View {
         }
     }
 
+    #if DEBUG
+    /// `-entryKind transfer` opens on a transfer, and `-entrySheet account` opens the account picker, for screenshots.
+    func runScreenshotStep() {
+        let arguments = ProcessInfo.processInfo.arguments
+
+        func value(after flag: String) -> String? {
+            guard let index = arguments.firstIndex(of: flag), index + 1 < arguments.count else { return nil }
+            return arguments[index + 1]
+        }
+
+        if value(after: "-entryKind") == "transfer", allowsTransfer {
+            kindSelection.wrappedValue = .transfer
+            price = 250
+        } else if arguments.contains("-entryKind") {
+            price = 18.4
+            note = "Groceries"
+        }
+
+        if value(after: "-entrySheet") == "account" {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                accountPicker = isTransfer ? .to : .account
+            }
+        }
+    }
+    #endif
+
+    /// Whether the edit changes what the transaction is filed under: its kind, category or accounts.
+    func filingChanged(from transaction: Transaction) -> Bool {
+        if isTransfer != transaction.isTransfer {
+            return true
+        }
+
+        if isTransfer {
+            let saved = transaction.transferAccounts
+            return account != saved?.from || transferTo != saved?.to
+        }
+
+        return category != transaction.category || income != transaction.income || account != transaction.accountChoice
+    }
+
     var hasUnsavedInput: Bool {
         if let editedTemplate {
             return price != editedTemplate.wrappedAmount
                 || note != editedTemplate.wrappedNote
                 || category != editedTemplate.category
+                || account != editedTemplate.accountChoice
                 || income != editedTemplate.income
                 || !CurrencyPreferences.isSameCurrency(editedTemplate.currencyCode, as: transactionCurrency, mainCurrency: currency)
         } else if let transaction = toEdit {
             return price != transaction.wrappedAmount
                 || note != transaction.wrappedNote
-                || category != transaction.category
-                || income != transaction.income
                 || date != (transaction.date ?? date)
                 || repeatType != Int(transaction.recurringType)
                 || repeatCoefficient != Int(transaction.recurringCoefficient)
+                || filingChanged(from: transaction)
                 || !CurrencyPreferences.isSameCurrency(transaction.currencyCode, as: transactionCurrency, mainCurrency: currency)
         } else {
             return price > 0 || !note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -582,25 +700,35 @@ struct TransactionView: View {
         }
     }
 
+    /// The date, then what the entry is filed under: a category and, with accounts, an account; or for a
+    /// transfer, the two accounts. Wraps onto more lines when it doesn't fit.
     @ViewBuilder var dateCategoryLine: some View {
         if #available(iOS 16.0, *) {
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 8) {
                     leadingToken
                     lineSeparator
-                    categoryToken
+                    filingTokens
                 }
                 .fixedSize(horizontal: true, vertical: false)
 
                 VStack(spacing: 0) {
                     leadingToken
-                    categoryToken
+                    HStack(spacing: 8) {
+                        filingTokens
+                    }
+                    .fixedSize(horizontal: true, vertical: false)
+                }
+
+                VStack(spacing: 0) {
+                    leadingToken
+                    stackedFilingTokens
                 }
             }
-        } else if dynamicTypeSize > .xLarge {
+        } else if dynamicTypeSize > .xLarge || showsAccounts {
             VStack(spacing: 0) {
                 leadingToken
-                categoryToken
+                stackedFilingTokens
             }
         } else {
             HStack(spacing: 8) {
@@ -608,6 +736,72 @@ struct TransactionView: View {
                 lineSeparator
                 categoryToken
             }
+        }
+    }
+
+    /// Side by side, separated by dots.
+    @ViewBuilder var filingTokens: some View {
+        if isTransfer {
+            transferTokens
+        } else if showsAccounts {
+            categoryToken
+            lineSeparator
+            accountToken
+        } else {
+            categoryToken
+        }
+    }
+
+    /// One under the other, for when they don't fit side by side.
+    @ViewBuilder var stackedFilingTokens: some View {
+        if isTransfer {
+            transferTokens
+        } else {
+            categoryToken
+            if showsAccounts {
+                accountToken
+            }
+        }
+    }
+
+    var accountToken: some View {
+        AccountToken(name: account.name, symbol: account.symbol) {
+            UIApplication.shared.endEditing()
+            accountPicker = .account
+        }
+    }
+
+    /// "Main → Savings", each side tappable.
+    var transferTokens: some View {
+        HStack(spacing: 2) {
+            AccountToken(name: account.name, symbol: account.symbol, isError: account == transferTo) {
+                UIApplication.shared.endEditing()
+                accountPicker = .from
+            }
+            .accessibilityLabel(Text("From") + Text(", ") + Text(account.name))
+
+            Image(systemName: "arrow.right")
+                .font(.app(.subheadline, weight: .bold))
+                .foregroundColor(Color.SubtitleText.opacity(0.6))
+                .accessibilityHidden(true)
+
+            AccountToken(name: transferTo?.name ?? String(localized: "Account"), symbol: transferTo?.symbol, isError: account == transferTo) {
+                UIApplication.shared.endEditing()
+                accountPicker = .to
+            }
+            .accessibilityLabel(Text("To") + Text(", ") + Text(transferTo?.name ?? ""))
+        }
+    }
+
+    @ViewBuilder
+    func accountPickerSheet(for target: AccountPickerTarget) -> some View {
+        switch target {
+        case .account:
+            AccountPickerSheet(title: "Account", selection: Binding(get: { account }, set: { account = $0 ?? .main }))
+        case .from:
+            AccountPickerSheet(title: "From", selection: Binding(get: { account }, set: { account = $0 ?? .main }), unavailable: transferTo)
+        case .to:
+            AccountPickerSheet(title: "To", selection: $transferTo, unavailable: account)
         }
     }
 
@@ -738,7 +932,26 @@ struct TransactionView: View {
             return
         }
 
-        if let chosen = category, chosen.isDeleted || chosen.managedObjectContext !== saveContext {
+        // An account picked here can be deleted while the page is open, most often by a change synced from
+        // another device. Linking a deleted account throws "Illegal attempt to establish a relationship ...
+        // between objects in different contexts", so it's flagged and put back before anything is saved.
+        if account.account?.isGone == true || (isTransfer && transferTo?.account?.isGone == true) {
+            if account.account?.isGone == true {
+                account = .main
+            }
+
+            if transferTo?.account?.isGone == true {
+                transferTo = nil
+            }
+
+            toastImage = AccountSymbol.outline
+            toastTitle = "Account Was Deleted"
+            showToast = true
+            generator.notificationOccurred(.error)
+            return
+        }
+
+        if !isTransfer, let chosen = category, chosen.isDeleted || chosen.managedObjectContext !== saveContext {
             category = nil
             toastImage = "tray"
             toastTitle = "Category Was Deleted"
@@ -747,9 +960,48 @@ struct TransactionView: View {
             return
         }
 
-        generator.notificationOccurred(.success)
-
         let chosenCurrency = transactionCurrency
+
+        if isTransfer {
+            guard let destination = transferTo, destination != account else {
+                toastImage = "arrow.left.arrow.right"
+                toastTitle = "Pick Two Accounts"
+                showToast = true
+                generator.notificationOccurred(.error)
+                return
+            }
+
+            generator.notificationOccurred(.success)
+
+            let edited = toEdit
+            let from = account
+            let amount = price
+            let transferDate = date
+            let transferNote = note
+
+            // Edits wait for the sheet to start closing, like other edits, so the list animates the change.
+            DispatchQueue.main.asyncAfter(deadline: .now() + (edited == nil ? 0 : 0.3)) {
+                // Sync can still delete the leg being edited during this delay.
+                guard edited?.isGone != true else {
+                    return
+                }
+
+                withAnimation(.easeInOut(duration: 0.5)) {
+                    _ = dataController.saveTransfer(editing: edited, from: from, to: destination, amount: amount, currencyCode: chosenCurrency, date: transferDate, note: transferNote)
+                }
+            }
+
+            CurrencyPreferences.record(chosenCurrency, in: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+
+            if !CurrencyPreferences.isSameCurrency(chosenCurrency, as: nil, mainCurrency: currency) {
+                dataController.refreshExchangeRates()
+            }
+
+            dismiss()
+            return
+        }
+
+        generator.notificationOccurred(.success)
 
         if let template {
             saveTemplate(template, currencyCode: chosenCurrency)
@@ -758,6 +1010,13 @@ struct TransactionView: View {
         }
 
         if let editedTransaction = toEdit {
+            // A transfer edited into an expense or income keeps this leg and drops the other.
+            if editedTransaction.isTransfer {
+                dataController.endTransfer(keeping: editedTransaction)
+            }
+
+            editedTransaction.account = account.account
+
             if note.trimmingCharacters(in: .whitespacesAndNewlines) == "" {
                 editedTransaction.note = category?.wrappedName ?? ""
             } else {
@@ -831,6 +1090,9 @@ struct TransactionView: View {
             transaction.category = unwrappedCategory
         }
 
+        transaction.account = account.account
+        AccountPreferences.record(account)
+
         transaction.amount = price
 
         transaction.currencyCode = chosenCurrency
@@ -886,6 +1148,7 @@ struct TransactionView: View {
         saved.amount = price
         saved.income = income
         saved.category = category
+        saved.account = account.account
         saved.currencyCode = currencyCode
         saved.recurringType = 0
         saved.recurringCoefficient = 0
@@ -902,13 +1165,24 @@ struct TransactionView: View {
                 _category = State(initialValue: unwrappedCategory)
             }
 
-            _income = State(initialValue: transaction.income)
+            if let accounts = transaction.transferAccounts {
+                // A leg whose other half hasn't synced still opens with its own side filled in.
+                _isTransfer = State(initialValue: true)
+                _account = State(initialValue: accounts.from ?? .main)
+                _transferTo = State(initialValue: accounts.to)
+                _income = State(initialValue: false)
+            } else {
+                _account = State(initialValue: transaction.accountChoice)
+                _income = State(initialValue: transaction.income)
 
-            if transaction.income {
-                _swipingOffset = State(initialValue: 100)
+                if transaction.income {
+                    _swipingOffset = State(initialValue: 100)
+                }
             }
 
             _date = State(initialValue: transaction.date ?? Date.now)
+        } else {
+            _account = State(initialValue: AccountPreferences.lastUsed(among: DataController.shared.accounts()))
         }
         self.toEdit = toEdit
         template = nil
@@ -920,6 +1194,7 @@ struct TransactionView: View {
             _category = State(initialValue: unwrappedCategory)
         }
 
+        _account = State(initialValue: AccountPreferences.lastUsed(among: DataController.shared.accounts()))
         toEdit = nil
         template = nil
     }
@@ -929,10 +1204,13 @@ struct TransactionView: View {
             _note = State(initialValue: existing.wrappedNote)
             _category = State(initialValue: existing.category)
             _income = State(initialValue: existing.income)
+            _account = State(initialValue: existing.accountChoice)
 
             if existing.income {
                 _swipingOffset = State(initialValue: 100)
             }
+        } else {
+            _account = State(initialValue: AccountPreferences.lastUsed(among: DataController.shared.accounts()))
         }
 
         toEdit = nil
@@ -1019,7 +1297,7 @@ struct FilteredSearchNewTransactionView: View {
                 format: "%K == %@", #keyPath(Transaction.category), unwrappedCategory)
 
             let andPredicate = NSCompoundPredicate(
-                type: .and, subpredicates: [compound, categoryPredicate])
+                type: .and, subpredicates: [compound, categoryPredicate, TransferPredicate.excluded])
 
             _transactions = FetchRequest<Transaction>(
                 sortDescriptors: [
@@ -1029,7 +1307,7 @@ struct FilteredSearchNewTransactionView: View {
             _transactions = FetchRequest<Transaction>(
                 sortDescriptors: [
                     SortDescriptor(\.date, order: .reverse)
-                ], predicate: compound)
+                ], predicate: TransferPredicate.excluding(compound))
         }
 
         self.searchQuery = searchQuery
@@ -1154,6 +1432,52 @@ private struct RecurringToolbarMenu: View {
         }
         .tint(repeatType > 0 ? Color.IncomeGreen : Color.PrimaryText)
         .accessibilityLabel(accessibilityLabel)
+    }
+}
+
+/// Expense, Income or Transfer as a menu, like the repeat menu, so the top bar stays uncluttered.
+private struct EntryKindMenu: View {
+    @Binding var selection: TransactionView.EntryKind
+    let options: [(value: TransactionView.EntryKind, title: LocalizedStringKey)]
+
+    @State private var showMenu = false
+
+    var selectedTitle: LocalizedStringKey {
+        options.first { $0.value == selection }?.title ?? "Expense"
+    }
+
+    var body: some View {
+        GlassCapsuleButton(selectedTitle, trailingSystemImage: "chevron.up.chevron.down", font: .app(.body, weight: .semibold)) {
+            showMenu = true
+        }
+        .accessibilityLabel(Text("Type") + Text(", ") + Text(selectedTitle))
+        .popover(present: $showMenu, attributes: {
+            $0.position = .absolute(
+                originAnchor: .bottom,
+                popoverAnchor: .top
+            )
+            $0.rubberBandingMode = .none
+            $0.sourceFrameInset = UIEdgeInsets(top: 0, left: 0, bottom: -10, right: 0)
+            $0.presentation.animation = .easeInOut(duration: 0.2)
+            $0.dismissal.animation = .easeInOut(duration: 0.3)
+        }) {
+            GlassPopoverMenu {
+                ForEach(options.indices, id: \.self) { index in
+                    GlassPopoverRow(options[index].title, isSelected: options[index].value == selection) {
+                        if options[index].value != selection {
+                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                selection = options[index].value
+                            }
+                        }
+
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                            showMenu = false
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

@@ -489,15 +489,37 @@ struct BudgetMeter: View {
     }
 }
 
-func budgetPredicate(from start: Date, to end: Date, category: Category?) -> NSPredicate {
+/// "Only Card and Cash" for a budget limited to some accounts, or nil when it counts every account.
+func budgetAccountsSummary(_ budget: RolloverBudget) -> String? {
+    guard let context = budget.managedObjectContext else { return nil }
+
+    let request: NSFetchRequest<Account> = Account.fetchRequest()
+    let accounts = ((try? context.fetch(request)) ?? []).sorted { ($0.order, $0.key) < ($1.order, $1.key) }
+    let scope = budget.countedAccounts.resolved(existingAccountKeys: Set(accounts.map(\.key)))
+
+    guard let keys = scope.keys else { return nil }
+
+    let names = ([AccountChoice.main] + accounts.map(AccountChoice.account)).filter { keys.contains($0.key) }.map(\.name)
+
+    guard !names.isEmpty else { return nil }
+
+    return String(localized: "Only \(ListFormatter.localizedString(byJoining: names))")
+}
+
+/// A budget's spending in a period. Transfers are never spending; `accounts` limits it to the budget's accounts.
+func budgetPredicate(from start: Date, to end: Date, category: Category?, accounts: NSPredicate? = nil) -> NSPredicate {
     var predicates = [
         NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), start as CVarArg),
         NSPredicate(format: "%K < %@", #keyPath(Transaction.date), end as CVarArg),
         NSPredicate(format: "%K <= %@", #keyPath(Transaction.date), Date.now as CVarArg),
-        NSPredicate(format: "income = %d", false)
+        NSPredicate(format: "income = %d", false),
+        TransferPredicate.excluded
     ]
     if let category {
         predicates.append(NSPredicate(format: "%K == %@", #keyPath(Transaction.category), category))
+    }
+    if let accounts {
+        predicates.append(accounts)
     }
     return NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
 }

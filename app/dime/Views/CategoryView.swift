@@ -110,6 +110,9 @@ struct CategoryListView: View {
 
     @FetchRequest(sortDescriptors: [SortDescriptor(\.order)]) private var allCategories: FetchedResults<Category>
 
+    /// Onboarding goes on from categories to accounts.
+    @State private var showsAccountsStep = false
+
     // delete mode
     @State private var toDelete: Category?
     var alertMessage: String {
@@ -186,7 +189,7 @@ struct CategoryListView: View {
             switch mode {
             case .welcome:
                 Button {
-                    dismiss()
+                    showsAccountsStep = true
                 } label: {
                     Label("Continue", systemImage: "arrow.right")
                 }
@@ -356,6 +359,18 @@ struct CategoryListView: View {
         .navigationTitle(mode == .settings ? Text(verbatim: "") : Text("Categories"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbarContent }
+        .modifier(OnboardingAccountsStep(isPresented: $showsAccountsStep))
+        #if DEBUG
+        .onAppear {
+            // `-onboarding accounts` goes on to onboarding's accounts step, for screenshots (see ContentView).
+            let arguments = ProcessInfo.processInfo.arguments
+            if mode == .welcome, let index = arguments.firstIndex(of: "-onboarding"), index + 1 < arguments.count, arguments[index + 1] == "accounts" {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                    showsAccountsStep = true
+                }
+            }
+        }
+        #endif
         .tint(Color.PrimaryText)
         .animation(.easeOut(duration: 0.2), value: showToast)
         .sheet(item: $toDelete) { category in
@@ -1548,6 +1563,8 @@ extension UIKeyboardType {
 struct NormalTextField: UIViewRepresentable {
     @Binding var text: String
     var placeholder: String = ""
+    /// Brings up the keyboard as soon as the field appears.
+    var autofocus = false
     var action: () -> Void
 
     func makeUIView(context: Context) -> UITextField {
@@ -1562,6 +1579,13 @@ struct NormalTextField: UIViewRepresentable {
         textField.font = UIFont.roundedSpecial(ofStyle: .title2, weight: .medium, size: 17)
 //
 //        UIFont.rounded(ofSize: 20, weight: .medium)
+
+        if autofocus {
+            DispatchQueue.main.async {
+                textField.becomeFirstResponder()
+            }
+        }
+
         return textField
     }
 
@@ -1744,7 +1768,7 @@ struct OpenAICompletionsOptions: Decodable {
     let text: String
 }
 
-private extension View {
+extension View {
     /// A List uses a side safe area, like the iPhone Duo's vertical bar, in place of its margin rather than adding
     /// to it, so its sections run up to the bar. Widen the safe area by the page inset so they clear it like other pages.
     @ViewBuilder func settingsListMargins() -> some View {

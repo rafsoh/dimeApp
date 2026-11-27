@@ -494,6 +494,41 @@
 "The new reset day applies from this period on, and earlier periods keep the old one." = "新しい開始日はこの期間から適用され、以前の期間は元の開始日のままです。";
 "The %@ from earlier periods is kept." = "これまでに繰り越された%@は保持されます。";
 
+/* Accounts and transfers */
+"by account" = "口座別";
+"filter-tag-account" = "口座別";
+"Accounts" = "口座";
+"Account" = "口座";
+"Transfer" = "振替";
+"Main" = "メイン";
+"New Account" = "新しい口座";
+"Edit Account" = "口座を編集";
+"Account Name" = "口座名";
+"Add Account" = "口座を追加";
+"All Accounts" = "すべての口座";
+"all accounts" = "すべての口座";
+"From" = "振替元";
+"To" = "振替先";
+"Cash" = "現金";
+"Debit Card" = "デビットカード";
+"Credit Card" = "クレジットカード";
+"Savings" = "貯金";
+"Duplicate Name" = "同じ名前があります";
+"Pick Two Accounts" = "2つの口座を選択";
+"Delete Transfer?" = "振替を削除しますか？";
+"Both of its accounts lose it. This action cannot be undone." = "両方の口座から削除されます。この操作は取り消せません。";
+"No logs in this account" = "この口座には記録がありません";
+"Spending by account" = "口座別の支出";
+"Its transactions and Quick Add templates move to %@. Nothing else is deleted." = "取引とクイック追加テンプレートは「%@」に移動します。ほかには何も削除されません。";
+"Its transactions and Quick Add templates move to %@. Its transfers with %@ are deleted, since both sides would be %@." = "取引とクイック追加テンプレートは「%1$@」に移動します。「%2$@」との振替は、両側とも「%3$@」になるため削除されます。";
+"Transactions not in another account are in %@. You can rename %@, but not delete it." = "ほかの口座にない取引は「%@」にあります。「%@」は名前を変更できますが、削除はできません。";
+"Only %@" = "%@のみ";
+"%lld accounts" = "%lld口座";
+"Changing which accounts count clears the %@ from earlier periods. Rollover starts again from this period." = "対象の口座を変えると、これまでに繰り越された%@は消去されます。繰り越しはこの期間から再スタートします。";
+"Changing which accounts count restarts rollover from this period." = "対象の口座を変えると、繰り越しはこの期間から再スタートします。";
+"Add %@" = "%@を追加";
+"Show all accounts" = "すべての口座を表示";
+"Account filter" = "口座フィルタ";
 // log
 "UPCOMING" = "予定";
 
@@ -539,3 +574,15 @@
 
 "Font" = "フォント";
 "Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "AlloはJosh Puckettによる書体で、SIL Open Font Licenseのもとで提供されています。";
+"Keep cash, cards and savings apart" = "現金、カード、貯金を分けて管理";
+"Everything you've logged so far is in %@. Tap it to rename it, or add an account below." = "これまでの記録はすべて「%@」にあります。タップして名前を変更するか、下で口座を追加してください。";
+"Time frame" = "期間";
+"Account Was Deleted" = "この口座は削除されました";
+"Type" = "種類";
+"Shows insights for this account" = "この口座の分析を表示します";
+"Which accounts' spending counts towards this budget" = "どの口座の支出をこの予算に含めるか";
+"Renames the account" = "口座の名前を変更します";
+"Edits the account" = "口座を編集します";
+"%@, %@, %lld percent of spending" = "%1$@、%2$@、支出の%3$lld%%";
+"Import from Another App" = "ほかのアプリから読み込む";
+"Icon" = "アイコン";

@@ -65,6 +65,12 @@ struct BrandNewBudgetView: View {
     @State private var rollover: Bool
     @State private var rolloverNotice: RolloverNotice?
 
+    /// Which accounts the budget counts. Only offered once there's an account besides Main.
+    @State private var accountScope: AccountScope
+    @State private var showAccountPicker = false
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.order), SortDescriptor(\.dateCreated)]) private var accounts: FetchedResults<Account>
+    @AppStorage(MainAccount.nameKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var mainAccountName = ""
+
     @State private var showToast = false
     @State private var toastTitle = ""
     @State private var toastImage = ""
@@ -164,6 +170,21 @@ struct BrandNewBudgetView: View {
         }
         .sheet(isPresented: $showStartDateSheet) {
             BudgetStartDateSheet(date: $chosenDayYear, range: oneYearAgo ... Date.now)
+        }
+        #if DEBUG
+        .onAppear {
+            // Accounts screenshots, removed before merging: `-accountsBudget picker` opens the accounts picker.
+            let arguments = ProcessInfo.processInfo.arguments
+            if let index = arguments.firstIndex(of: "-accountsBudget"), index + 1 < arguments.count, arguments[index + 1] == "picker" {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                    showAccountPicker = true
+                }
+            }
+        }
+        #endif
+        .sheet(isPresented: $showAccountPicker) {
+            AccountPickerSheet(title: "Accounts", scope: $accountScope)
+                .environmentObject(dataController)
         }
         .alert(rolloverNotice?.title ?? "", isPresented: Binding(get: { rolloverNotice != nil }, set: { if !$0 { rolloverNotice = nil } }), presenting: rolloverNotice) { notice in
             Button(notice.confirm, role: notice.isDestructive ? ButtonRole.destructive : nil) {
@@ -289,6 +310,11 @@ struct BrandNewBudgetView: View {
                     lead("on").layoutValue(key: KeepWithNext.self, value: true)
                     categoryToken
 
+                    if !accounts.isEmpty {
+                        lead("from").layoutValue(key: KeepWithNext.self, value: true)
+                        accountsToken
+                    }
+
                     lead("every").layoutValue(key: KeepWithNext.self, value: true)
                     periodToken
 
@@ -304,6 +330,11 @@ struct BrandNewBudgetView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     clause("Spend at most") { amountToken }
                     clause("on") { categoryToken }
+
+                    if !accounts.isEmpty {
+                        clause("from") { accountsToken }
+                    }
+
                     clause("every") { periodToken }
 
                     if timeFrame != .day {
@@ -386,6 +417,44 @@ struct BrandNewBudgetView: View {
         }
         .disabled(!canChooseCategory)
         .opacity(canChooseCategory ? 1 : 0.6)
+    }
+
+    /// "all accounts", "Card", "Card + Cash" or "3 accounts".
+    var accountsText: String {
+        guard let keys = accountScope.keys else {
+            return String(localized: "all accounts")
+        }
+
+        let names = ([AccountChoice.main] + accounts.map(AccountChoice.account)).filter { keys.contains($0.key) }.map(\.name)
+
+        switch names.count {
+        case 0:
+            return String(localized: "all accounts")
+        case 1:
+            return names[0]
+        case 2:
+            return names[0] + " + " + names[1]
+        default:
+            return String(localized: "\(names.count) accounts")
+        }
+    }
+
+    var accountsToken: some View {
+        SentenceTokenButton(
+            text: accountsText,
+            font: sentenceFont,
+            foreground: Color.PrimaryText,
+            tint: nil,
+            isFocused: false,
+            isError: false,
+            shake: false,
+            accessibilityLabel: Text("Accounts") + Text(", ") + Text(accountsText)
+        ) {
+            closeEditor {
+                showAccountPicker = true
+            }
+        }
+        .accessibilityHint("Which accounts' spending counts towards this budget")
     }
 
     var periodToken: some View {
@@ -803,10 +872,22 @@ struct BrandNewBudgetView: View {
             isEnabled: rollover,
             isNew: false,
             typeChanged: Int(budget.type) != budgetTypeInteger(timeFrame),
-            categoryChanged: toEditBudget != nil && toEditBudget?.category != selectedCategory,
+            // Counting other accounts changes what was spent before, like another category would.
+            categoryChanged: (toEditBudget != nil && toEditBudget?.category != selectedCategory) || accountsChanged,
             amountChanged: budget.amount != price,
             startChanged: originalCurrentStart != newCurrentStart
         )
+    }
+
+    /// Whether the edited budget will count other accounts than it does now.
+    var accountsChanged: Bool {
+        guard let budget = editedBudget else { return false }
+        return Self.resolvedScope(of: budget) != accountScope
+    }
+
+    static func resolvedScope(of budget: RolloverBudget) -> AccountScope {
+        guard let context = budget.managedObjectContext else { return budget.countedAccounts }
+        return budget.countedAccounts.resolved(existingAccountKeys: AccountScope.accountKeys(in: context))
     }
 
     /// What has rolled into the edited budget's current period so far, under its saved settings.
@@ -854,14 +935,23 @@ struct BrandNewBudgetView: View {
             guard hasCarry || !startedThisPeriod else { return nil }
             let typeChanged = Int(budget.type) != budgetTypeInteger(timeFrame)
             let message: String
+            let categoryChanged = toEditBudget != nil && toEditBudget?.category != selectedCategory
             if hasCarry {
-                message = typeChanged
-                    ? String(localized: "Changing how often this budget repeats clears the \(carryPhrase(carry)) from earlier periods. Rollover starts again from this period.")
-                    : String(localized: "Changing the category clears the \(carryPhrase(carry)) from earlier periods. Rollover starts again from this period.")
+                if typeChanged {
+                    message = String(localized: "Changing how often this budget repeats clears the \(carryPhrase(carry)) from earlier periods. Rollover starts again from this period.")
+                } else if categoryChanged {
+                    message = String(localized: "Changing the category clears the \(carryPhrase(carry)) from earlier periods. Rollover starts again from this period.")
+                } else {
+                    message = String(localized: "Changing which accounts count clears the \(carryPhrase(carry)) from earlier periods. Rollover starts again from this period.")
+                }
             } else {
-                message = typeChanged
-                    ? String(localized: "Changing how often this budget repeats restarts rollover from this period.")
-                    : String(localized: "Changing the category restarts rollover from this period.")
+                if typeChanged {
+                    message = String(localized: "Changing how often this budget repeats restarts rollover from this period.")
+                } else if categoryChanged {
+                    message = String(localized: "Changing the category restarts rollover from this period.")
+                } else {
+                    message = String(localized: "Changing which accounts count restarts rollover from this period.")
+                }
             }
             return RolloverNotice(
                 change: change,
@@ -912,11 +1002,13 @@ struct BrandNewBudgetView: View {
             budget.startDate = startDate
             budget.amount = price
             budget.type = budgetType
+            budget.countedAccounts = accountScope
             change.apply(to: budget, currentStart: currentStart, carry: carry)
         } else if let budget = toEditMainBudget {
             budget.startDate = startDate
             budget.amount = price
             budget.type = budgetType
+            budget.countedAccounts = accountScope
             change.apply(to: budget, currentStart: currentStart, carry: carry)
         } else if isOverall {
             guard !overallBudgetCreated else {
@@ -928,6 +1020,7 @@ struct BrandNewBudgetView: View {
             budget.startDate = startDate
             budget.amount = price
             budget.type = budgetType
+            budget.countedAccounts = accountScope
             change.apply(to: budget, currentStart: currentStart, carry: 0)
         } else if let category = selectedCategory, category.budget == nil {
             let budget = Budget(context: moc)
@@ -937,6 +1030,7 @@ struct BrandNewBudgetView: View {
             budget.dateCreated = Date.now
             budget.type = budgetType
             budget.id = UUID()
+            budget.countedAccounts = accountScope
             change.apply(to: budget, currentStart: currentStart, carry: 0)
         }
 
@@ -1051,6 +1145,14 @@ struct BrandNewBudgetView: View {
         _chosenDayYear = State(initialValue: yearDate)
         _activeEditor = State(initialValue: toEditBudget == nil && toEditMainBudget == nil ? .amount : nil)
         _rollover = State(initialValue: toEditBudget?.rolloverEnabled ?? toEditMainBudget?.rolloverEnabled ?? false)
+
+        if let budget = toEditBudget {
+            _accountScope = State(initialValue: Self.resolvedScope(of: budget))
+        } else if let budget = toEditMainBudget {
+            _accountScope = State(initialValue: Self.resolvedScope(of: budget))
+        } else {
+            _accountScope = State(initialValue: .all)
+        }
     }
 }
 

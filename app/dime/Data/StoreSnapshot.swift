@@ -62,7 +62,8 @@ enum StoreSnapshot {
             "Category": "categories",
             "Budget": "budgets",
             "MainBudget": "mainBudgets",
-            "TemplateTransaction": "templates"
+            "TemplateTransaction": "templates",
+            "Account": "accounts"
         ]
         let coordinator = NSPersistentStoreCoordinator(managedObjectModel: model)
 

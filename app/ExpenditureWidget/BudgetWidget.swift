@@ -110,7 +110,7 @@ struct BudgetWidgetData {
         else { return nil }
 
         let period = BudgetPeriod(type: Int(budget.type), start: budget.wrappedDate).current
-        let spending = transactions(in: period, category: budget.category).total(using: dataController.currencyConverter)
+        let spending = transactions(in: period, category: budget.category, accounts: budget.accountPredicate).total(using: dataController.currencyConverter)
         let carry = dataController.rolloverCarryIn(for: budget, category: budget.category, at: period.start)
         let snapshot = BudgetSnapshot(amount: budget.amount, spent: spending.value, period: period, carryIn: carry)
 
@@ -125,7 +125,7 @@ struct BudgetWidgetData {
         guard let budget = dataController.results(for: dataController.fetchRequestForMainBudget()).first else { return nil }
 
         let period = BudgetPeriod(type: Int(budget.type), start: budget.wrappedDate).current
-        let transactions = transactions(in: period, category: nil)
+        let transactions = transactions(in: period, category: nil, accounts: budget.accountPredicate)
         let spending = transactions.total(using: dataController.currencyConverter)
         let carry = dataController.rolloverCarryIn(for: budget, category: nil, at: period.start)
         let snapshot = BudgetSnapshot(amount: budget.amount, spent: spending.value, period: period, carryIn: carry)
@@ -135,9 +135,9 @@ struct BudgetWidgetData {
                             conversion: spending.report)
     }
 
-    private static func transactions(in period: BudgetPeriod, category: Category?) -> [Transaction] {
+    private static func transactions(in period: BudgetPeriod, category: Category?, accounts: NSPredicate?) -> [Transaction] {
         let request: NSFetchRequest<Transaction> = Transaction.fetchRequest()
-        request.predicate = budgetPredicate(from: period.start, to: period.end, category: category)
+        request.predicate = budgetPredicate(from: period.start, to: period.end, category: category, accounts: accounts)
         return DataController.shared.results(for: request)
     }
 }

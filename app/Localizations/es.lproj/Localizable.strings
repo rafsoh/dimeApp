@@ -494,6 +494,41 @@
 "The new reset day applies from this period on, and earlier periods keep the old one." = "El nuevo día de reinicio se aplica desde este periodo y los anteriores conservan el anterior.";
 "The %@ from earlier periods is kept." = "Se conserva el %@ transferido hasta ahora.";
 
+/* Accounts and transfers */
+"by account" = "por cuenta";
+"filter-tag-account" = "por cuenta";
+"Accounts" = "Cuentas";
+"Account" = "Cuenta";
+"Transfer" = "Transferencia";
+"Main" = "Principal";
+"New Account" = "Nueva cuenta";
+"Edit Account" = "Editar cuenta";
+"Account Name" = "Nombre de la cuenta";
+"Add Account" = "Añadir cuenta";
+"All Accounts" = "Todas las cuentas";
+"all accounts" = "todas las cuentas";
+"From" = "Desde";
+"To" = "A";
+"Cash" = "Efectivo";
+"Debit Card" = "Tarjeta de débito";
+"Credit Card" = "Tarjeta de crédito";
+"Savings" = "Ahorros";
+"Duplicate Name" = "Nombre repetido";
+"Pick Two Accounts" = "Elige dos cuentas";
+"Delete Transfer?" = "¿Eliminar transferencia?";
+"Both of its accounts lose it. This action cannot be undone." = "Desaparecerá de ambas cuentas. Esta acción no se puede deshacer.";
+"No logs in this account" = "No hay registros en esta cuenta";
+"Spending by account" = "Gasto por cuenta";
+"Its transactions and Quick Add templates move to %@. Nothing else is deleted." = "Sus transacciones y plantillas de añadido rápido pasan a «%@». No se elimina nada más.";
+"Its transactions and Quick Add templates move to %@. Its transfers with %@ are deleted, since both sides would be %@." = "Sus transacciones y plantillas de añadido rápido pasan a «%1$@». Sus transferencias con «%2$@» se eliminan, ya que ambos lados serían «%3$@».";
+"Transactions not in another account are in %@. You can rename %@, but not delete it." = "Las transacciones sin otra cuenta están en «%@». Puedes cambiar el nombre de «%@», pero no eliminarla.";
+"Only %@" = "Solo %@";
+"%lld accounts" = "%lld cuentas";
+"Changing which accounts count clears the %@ from earlier periods. Rollover starts again from this period." = "Cambiar qué cuentas cuentan borra el %@ transferido hasta ahora. El traspaso empieza de nuevo en este periodo.";
+"Changing which accounts count restarts rollover from this period." = "Cambiar qué cuentas cuentan reinicia el traspaso desde este periodo.";
+"Add %@" = "Añadir %@";
+"Show all accounts" = "Mostrar todas las cuentas";
+"Account filter" = "Filtro de cuenta";
 // log
 "UPCOMING" = "PRÓXIMOS";
 
@@ -539,3 +574,15 @@
 
 "Font" = "Fuente";
 "Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo es una tipografía de Josh Puckett, con licencia SIL Open Font License.";
+"Keep cash, cards and savings apart" = "Separa efectivo, tarjetas y ahorros";
+"Everything you've logged so far is in %@. Tap it to rename it, or add an account below." = "Todo lo que has registrado hasta ahora está en %@. Tócala para cambiarle el nombre o añade una cuenta abajo.";
+"Time frame" = "Periodo";
+"Account Was Deleted" = "Cuenta eliminada";
+"Type" = "Tipo";
+"Shows insights for this account" = "Muestra el análisis de esta cuenta";
+"Which accounts' spending counts towards this budget" = "Qué cuentas cuentan para este presupuesto";
+"Renames the account" = "Cambia el nombre de la cuenta";
+"Edits the account" = "Edita la cuenta";
+"%@, %@, %lld percent of spending" = "%1$@, %2$@, %3$lld por ciento del gasto";
+"Import from Another App" = "Importar desde otra app";
+"Icon" = "Icono";

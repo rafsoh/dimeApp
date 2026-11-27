@@ -13,6 +13,7 @@ import SwiftUI
 struct LogView: View {
     // Only tells whether there are any transactions, so their values aren't loaded.
     @FetchRequest(fetchRequest: Transaction.identifiersOnlyRequest) private var transactions: FetchedResults<Transaction>
+    @FetchRequest(sortDescriptors: []) private var accounts: FetchedResults<Account>
 
     @ObservedObject var dataController = DataController.shared
     @Environment(\.managedObjectContext) var moc
@@ -64,6 +65,7 @@ struct LogView: View {
 
     // filters
     @State var categoryFilter: CategorySlice?
+    @State var accountFilter: AccountChoice = .main
     @State var dateFilter = Date.now
     @State var weekFilter = Date.now
     @State var monthFilter = Date.now
@@ -84,8 +86,9 @@ struct LogView: View {
         } else {
             ZStack {
                 ScrollView(showsIndicators: false) {
-                    LogListContent(filter: filter, category: categoryFilter, date: dateFilter, week: weekFilter, month: monthFilter, income: income, showCents: showCents, currencySymbol: currencySymbol, dataVersion: dataVersion)
+                    LogListContent(filter: filter, category: categoryFilter, account: accountFilter, date: dateFilter, week: weekFilter, month: monthFilter, income: income, showCents: showCents, currencySymbol: currencySymbol, dataVersion: dataVersion)
                         .equatable()
+                        .environment(\.showsAccountNames, !accounts.isEmpty)
                         .pullToSearch(pullToSearch, onTrigger: startSearch)
                 }
                 .tabBarClearance()
@@ -98,6 +101,7 @@ struct LogView: View {
                     ScrollView(showsIndicators: false) {
                         if let searchResults {
                             FilteredSearchView(query: searchResults)
+                                .environment(\.showsAccountNames, !accounts.isEmpty)
                                 .padding(.horizontal, 20)
                         } else {
                             EmptyStateView(systemImage: "magnifyingglass", title: "Search by note, category, amount or date")
@@ -153,9 +157,24 @@ struct LogView: View {
             .onAppear {
                 dataController.updateRecurringTransactionsIfReady()
                 resetIncomeFilterIfNeeded()
+
+                #if DEBUG
+                // `-logAccount <name>` opens the log filtered to that account, for screenshots.
+                let arguments = ProcessInfo.processInfo.arguments
+                if let index = arguments.firstIndex(of: "-logAccount"), index + 1 < arguments.count,
+                   let account = accounts.first(where: { $0.wrappedName == arguments[index + 1] }) {
+                    accountFilter = .account(account)
+                    filter = .account
+                }
+                #endif
             }
             .onChange(of: incomeTracking) { _ in
                 resetIncomeFilterIfNeeded()
+            }
+            .onChange(of: accounts.isEmpty) { isEmpty in
+                if isEmpty && filter == .account {
+                    filter = .all
+                }
             }
             .onOpenURL { url in
                 guard url.host == "search" else {
@@ -179,6 +198,8 @@ struct LogView: View {
                         EmptyView()
                     case .category:
                         filterTagView(text: "filter-tag-category")
+                    case .account:
+                        filterTagView(text: "filter-tag-account")
                     case .day:
                         filterTagView(text: "filter-tag-day")
                     case .week:
@@ -296,6 +317,8 @@ struct LogView: View {
         switch filter {
         case .category:
             CategoryStepperView(categoryFilter: $categoryFilter)
+        case .account:
+            AccountFilterView(account: $accountFilter)
         case .day:
             DateStepperView(date: $dateFilter)
         case .week:
@@ -416,6 +439,7 @@ struct NumberView: AnimatableModifier {
 struct LogListContent: View, Equatable {
     let filter: FilterType
     let category: CategorySlice?
+    let account: AccountChoice
     let date: Date
     let week: Date
     let month: Date
@@ -432,7 +456,7 @@ struct LogListContent: View, Equatable {
                 LogInsightsView(showCents: showCents, currencySymbol: currencySymbol)
             }
 
-            TransactionsList(filter: filter, category: category, date: date, week: week, month: month, income: income)
+            TransactionsList(filter: filter, category: category, account: account, date: date, week: week, month: month, income: income)
                 .zIndex(0)
                 .padding(.horizontal, 20)
         }
@@ -737,7 +761,12 @@ struct FilteredSearchView: View {
         let begins = NSPredicate(format: "%K BEGINSWITH[cd] %@", #keyPath(Transaction.note), query)
         let contains = NSPredicate(format: "%K CONTAINS[cd] %@", #keyPath(Transaction.note), query)
         let category = NSPredicate(format: "%K CONTAINS[cd] %@", #keyPath(Transaction.category.name), query)
-        var parts = [begins, contains, category]
+        let account = NSPredicate(format: "%K CONTAINS[cd] %@", "account.name", query)
+        var parts = [begins, contains, category, account]
+        // Main has no account object, so its name matches transactions without one.
+        if MainAccount.name.range(of: query, options: [.caseInsensitive, .diacriticInsensitive]) != nil {
+            parts.append(NSPredicate(format: "%K == nil", #keyPath(Transaction.account)))
+        }
         if let amount = TransactionAmountSearch.value(in: query) {
             // Stored amounts are binary doubles, so match to the cent rather than exactly.
             parts.append(NSPredicate(format: "amount >= %@ AND amount < %@", NSNumber(value: amount - 0.005), NSNumber(value: amount + 0.005)))
@@ -787,9 +816,12 @@ struct FilterPickerView: View {
     @Binding var showMenu: Bool
 
     @AppStorage("incomeTracking", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var incomeTracking: Bool = true
+    @FetchRequest(sortDescriptors: []) private var accounts: FetchedResults<Account>
 
     var filters: [FilterType] {
-        incomeTracking ? FilterType.allCases : FilterType.allCases.filter { $0 != .type }
+        FilterType.allCases.filter { filter in
+            (incomeTracking || filter != .type) && (!accounts.isEmpty || filter != .account)
+        }
     }
 
     var body: some View {
@@ -816,6 +848,7 @@ struct FilterPickerView: View {
 struct TransactionsList: View {
     var filter: FilterType
     var category: CategorySlice?
+    var account: AccountChoice
     var date: Date
     var week: Date
     var month: Date
@@ -844,6 +877,8 @@ struct TransactionsList: View {
                 ListView(transactions: _transactions)
             case .category:
                 FilteredCategoryView(category: category)
+            case .account:
+                FilteredAccountView(account: account)
             case .day:
                 FilteredDateView(date: date)
             case .week:
@@ -863,6 +898,9 @@ struct TransactionsList: View {
 
 struct ListView: View {
     @SectionedFetchRequest<Date?, Transaction> var transactions: SectionedFetchResults<Date?, Transaction>
+    /// An account's own list counts its transfers in each day's total: money did leave or reach it.
+    /// Everywhere else a transfer is neither spending nor income.
+    var countsTransfers = false
 
     @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
 
@@ -944,13 +982,23 @@ struct ListView: View {
 
     func filterOutDupes(_ day: [Transaction]) -> (transactions: [Transaction], string: String) {
         var seen = Set<UUID?>()
-        let filtered = day.filter { entity -> Bool in
+        let unique = day.filter { entity -> Bool in
             seen.insert(entity.id).inserted
         }
 
+        // An account's own list shows its own side of each transfer; every other list shows each transfer once.
+        let filtered = countsTransfers ? unique : unique.oneLegPerTransfer()
+
         let numberFormatter = CachedFormatter.currency(currency, maximumFractionDigits: showCents ? 2 : 0)
 
-        let dayMoney = filtered.total(using: .current(), signed: true)
+        let counted = filtered.filter { countsTransfers || !$0.isTransfer }
+
+        // A day with only transfers has no spending or income to total.
+        if counted.isEmpty && !filtered.isEmpty {
+            return (filtered, "")
+        }
+
+        let dayMoney = counted.total(using: .current(), signed: true)
         let total = dayMoney.value
 
         let text: String
@@ -973,13 +1021,16 @@ struct FutureListView: View {
     var limitedMode: Bool
 
     var transactions: [Transaction] {
+        // Each upcoming transfer once.
+        let upcoming = fetchedResults.oneLegPerTransfer()
+
         if limitedMode {
             let calendar = Calendar.current
 
             let startOfToday = calendar.startOfDay(for: Date.now)
             let twoWeeksFromStartOfToday = calendar.date(byAdding: .weekOfYear, value: 2, to: startOfToday)!
 
-            let holding = fetchedResults.filter {
+            let holding = upcoming.filter {
                 let date = $0.wrappedDate > Date.now ? $0.wrappedDate : $0.nextTransactionDate
 
                 return date < twoWeeksFromStartOfToday
@@ -993,7 +1044,7 @@ struct FutureListView: View {
             }
 
         } else {
-            return fetchedResults.sorted { itemA, itemB in
+            return upcoming.sorted { itemA, itemB in
                 let date1 = itemA.wrappedDate > Date.now ? itemA.wrappedDate : itemA.nextTransactionDate
                 let date2 = itemB.wrappedDate > Date.now ? itemB.wrappedDate : itemB.nextTransactionDate
 
@@ -1017,7 +1068,14 @@ struct FutureListView: View {
     var totalString: String {
         let numberFormatter = CachedFormatter.currency(currency, maximumFractionDigits: showCents ? 2 : 0)
 
-        let money = transactions.total(using: .current(), signed: true)
+        // Transfers are neither spending nor income, so upcoming ones show without counting.
+        let counted = transactions.filter { !$0.isTransfer }
+
+        if counted.isEmpty {
+            return ""
+        }
+
+        let money = counted.total(using: .current(), signed: true)
         let total = money.value
 
         if total >= 0 {
@@ -1065,9 +1123,9 @@ struct FutureListView: View {
         let recurringPredicate = NSPredicate(format: "%K > %i", #keyPath(Transaction.recurringType), 0)
         let futurePredicate = NSPredicate(format: "%K > %@", #keyPath(Transaction.date), Date.now as CVarArg)
 
-        let andPredicate = NSCompoundPredicate(type: .or, subpredicates: [recurringPredicate, futurePredicate])
+        let upcomingPredicate = NSCompoundPredicate(type: .or, subpredicates: [recurringPredicate, futurePredicate])
 
-        _fetchedResults = FetchRequest<Transaction>(sortDescriptors: [], predicate: andPredicate)
+        _fetchedResults = FetchRequest<Transaction>(sortDescriptors: [], predicate: upcomingPredicate)
 
         self.filterMode = filterMode
         self.limitedMode = limitedMode
@@ -1088,6 +1146,15 @@ struct SingleTransactionView: View {
 
     @ObservedObject var dataController = DataController.shared
     @EnvironmentObject var transactionManager: OverallTransactionManager
+
+    @Environment(\.logAccount) private var logAccount
+    @Environment(\.showsAccountNames) private var showsAccountNames
+
+    /// A transfer in a list of every account is neither spending nor income, so it has no sign or colour.
+    /// In an account's own list it's money leaving or arriving, like any other.
+    var isNeutralTransfer: Bool {
+        transaction.isTransfer && logAccount == nil
+    }
 
     // delete mode
 //    @State private var toDelete: Transaction?
@@ -1202,7 +1269,15 @@ struct SingleTransactionView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                if transaction.income {
+                if isNeutralTransfer {
+                    amountWithConversion(Text(transactionAmountString)
+                        .font(.app(.title3, weight: .medium))
+                        .foregroundColor(future ? Color.SubtitleText : Color.PrimaryText))
+                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                        .minimumScaleFactor(0.7)
+                        .lineLimit(1)
+                        .layoutPriority(1)
+                } else if transaction.income {
                     amountWithConversion(Text(showExpenseOrIncomeSign ? "+\(transactionAmountString)" : transactionAmountString)
                         .font(.app(.title3, weight: .medium))
                         .foregroundColor(future ? Color.SubtitleText : Color.IncomeGreen))
@@ -1394,19 +1469,34 @@ struct SingleTransactionView: View {
             return subtitle
         }
 
+        let base: String
+
         if future {
             if transaction.wrappedDate > Date.now {
-                return dateFormatter(date: transaction.wrappedDate)
+                base = dateFormatter(date: transaction.wrappedDate)
             } else {
-                return dateFormatter(date: transaction.nextTransactionDate)
+                base = dateFormatter(date: transaction.nextTransactionDate)
             }
+        } else if swapTimeLabel {
+            base = transaction.isTransfer ? String(localized: "Transfer") : transaction.wrappedCategoryName
         } else {
-            if swapTimeLabel {
-                return transaction.wrappedCategoryName
-            } else {
-                return CachedFormatter.date(template: "jmm").string(from: transaction.wrappedDate)
-            }
+            base = CachedFormatter.date(template: "jmm").string(from: transaction.wrappedDate)
         }
+
+        return base + accountSuffix
+    }
+
+    /// Where the transaction is, when that isn't already clear from the list or the title.
+    var accountSuffix: String {
+        if transaction.isTransfer {
+            // A transfer without a note is already titled with its accounts.
+            let hasNote = !transaction.wrappedNote.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            guard hasNote, let title = transaction.transferTitle else { return "" }
+            return " · " + title
+        }
+
+        guard showsAccountNames, logAccount == nil else { return "" }
+        return " · " + transaction.accountName
     }
 }
 
@@ -1464,9 +1554,14 @@ struct EmojiLogView: View {
         self.huge = huge
     }
 
-    /// The transaction's category, or a grey arrow when it has none.
+    /// The transaction's category, or a grey arrow when it has none. Transfers have two arrows.
     init(transaction: Transaction, future: Bool, huge: Bool = false) {
-        self.init(category: transaction.category, income: transaction.income, future: future, huge: huge)
+        if transaction.isTransfer {
+            self.init(emoji: "", colour: Uncategorised.colour, future: future, huge: huge)
+            symbol = "arrow.left.arrow.right"
+        } else {
+            self.init(category: transaction.category, income: transaction.income, future: future, huge: huge)
+        }
     }
 
     init(category: Category?, income: Bool, future: Bool, huge: Bool = false) {
@@ -1556,7 +1651,7 @@ struct FilteredRecurringView: View {
         let recurringPredicate = NSPredicate(format: "%K = %d", #keyPath(Transaction.onceRecurring), true)
         let datePredicate = NSPredicate(format: "%K <= %@", #keyPath(Transaction.date), Date.now as CVarArg)
 
-        let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [recurringPredicate, datePredicate])
+        let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [recurringPredicate, datePredicate, TransferPredicate.excluded])
 
         _transactions = SectionedFetchRequest<Date?, Transaction>(sectionIdentifier: \.day, sortDescriptors: [
             SortDescriptor(\.day, order: .reverse),
@@ -1584,7 +1679,8 @@ struct FilteredTypeView: View {
         let incomePredicate = NSPredicate(format: "income = %d", income)
         let datePredicate = NSPredicate(format: "%K <= %@", #keyPath(Transaction.date), Date.now as CVarArg)
 
-        let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [incomePredicate, datePredicate])
+        // Transfers are neither expenses nor income.
+        let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [incomePredicate, datePredicate, TransferPredicate.excluded])
 
         _transactions = SectionedFetchRequest<Date?, Transaction>(sectionIdentifier: \.day, sortDescriptors: [
             SortDescriptor(\.day, order: .reverse),
@@ -1631,6 +1727,106 @@ struct FilteredCategoryView: View {
     }
 }
 
+struct FilteredAccountView: View {
+    @SectionedFetchRequest<Date?, Transaction> private var transactions: SectionedFetchResults<Date?, Transaction>
+
+    let account: AccountChoice
+
+    var body: some View {
+        if transactions.isEmpty {
+            EmptyStateView(systemImage: "tray", title: "No logs in this account")
+                .fillsScrollViewport()
+        } else {
+            ListView(transactions: _transactions, countsTransfers: true)
+                .environment(\.logAccount, account)
+        }
+    }
+
+    /// Both legs of a transfer belong to their own accounts, so each account's list shows its own side.
+    init(account: AccountChoice) {
+        let datePredicate = NSPredicate(format: "%K <= %@", #keyPath(Transaction.date), Date.now as CVarArg)
+
+        _transactions = SectionedFetchRequest<Date?, Transaction>(sectionIdentifier: \.day, sortDescriptors: [
+            SortDescriptor(\.day, order: .reverse),
+            SortDescriptor(\.date, order: .reverse)
+        ], predicate: NSCompoundPredicate(andPredicateWithSubpredicates: [account.predicate, datePredicate]))
+
+        self.account = account
+    }
+}
+
+/// The account the log is filtered to.
+struct AccountFilterView: View {
+    @Binding var account: AccountChoice
+    @ObservedObject var dataController = DataController.shared
+    @FetchRequest(sortDescriptors: []) private var accounts: FetchedResults<Account>
+    @AppStorage(MainAccount.nameKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var mainAccountName = ""
+    @AppStorage(MainAccount.symbolKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var mainAccountSymbol = ""
+    @State private var showPicker = false
+
+    var body: some View {
+        Button {
+            showPicker = true
+        } label: {
+            HStack(spacing: 6) {
+                // Like the category filter's emoji.
+                AccountIconView(symbol: account.symbol)
+                    .foregroundColor(Color.SubtitleText)
+
+                Text(account.name)
+                    .foregroundColor(Color.PrimaryText)
+                    .lineLimit(1)
+
+                Image(systemName: "chevron.down")
+                    .font(.app(.caption, weight: .bold))
+                    .foregroundColor(Color.SubtitleText)
+            }
+            .font(.app(.body, weight: .semibold))
+            .padding(.horizontal, 16)
+            .frame(height: 44)
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .glassBackground(in: Capsule(), tint: .glassTint)
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text("Account filter") + Text(", ") + Text(account.name))
+        .accessibilityAddTraits(.isButton)
+        .sheet(isPresented: $showPicker) {
+            AccountPickerSheet(title: "Account", selection: Binding(get: { account }, set: { account = $0 ?? .main }))
+                .environmentObject(dataController)
+        }
+        .onChange(of: accounts.count) { _ in
+            // The filtered account was deleted.
+            if let filtered = account.account, filtered.isGone {
+                account = .main
+            }
+        }
+    }
+}
+
+private struct LogAccountKey: EnvironmentKey {
+    static let defaultValue: AccountChoice? = nil
+}
+
+private struct ShowsAccountNamesKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+extension EnvironmentValues {
+    /// The account a list is showing, or nil for a list that spans every account.
+    var logAccount: AccountChoice? {
+        get { self[LogAccountKey.self] }
+        set { self[LogAccountKey.self] = newValue }
+    }
+
+    /// Whether rows name their account: only once there's an account besides Main.
+    var showsAccountNames: Bool {
+        get { self[ShowsAccountNamesKey.self] }
+        set { self[ShowsAccountNamesKey.self] = newValue }
+    }
+}
+
 struct FilteredDateView: View {
     @FetchRequest private var transactions: FetchedResults<Transaction>
 
@@ -1648,13 +1844,18 @@ struct FilteredDateView: View {
     @AppStorage("showExpenseOrIncomeSign", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
     var showExpenseOrIncomeSign: Bool = true
 
+    /// Each transfer once.
+    var shown: [Transaction] {
+        transactions.oneLegPerTransfer()
+    }
+
     var body: some View {
-        if transactions.isEmpty {
+        if shown.isEmpty {
             EmptyStateView(systemImage: "calendar", title: "No logs on this day")
                 .fillsScrollViewport()
         } else {
             VStack(spacing: 0) {
-                ForEach(transactions) { transaction in
+                ForEach(shown) { transaction in
                     SingleTransactionView(transaction: transaction, showCents: showCents, currencySymbol: currencySymbol, currency: currency, swapTimeLabel: swapTimeLabel, future: false, showExpenseOrIncomeSign: showExpenseOrIncomeSign)
                 }
             }

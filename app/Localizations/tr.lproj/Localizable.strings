@@ -494,6 +494,41 @@
 "The new reset day applies from this period on, and earlier periods keep the old one." = "Yeni başlangıç günü bu dönemden itibaren geçerli olur; önceki dönemler eskisini korur.";
 "The %@ from earlier periods is kept." = "Şimdiye kadar devredilen %@ korunur.";
 
+/* Accounts and transfers */
+"by account" = "hesaba göre";
+"filter-tag-account" = "hesaba göre";
+"Accounts" = "Hesaplar";
+"Account" = "Hesap";
+"Transfer" = "Transfer";
+"Main" = "Ana hesap";
+"New Account" = "Yeni hesap";
+"Edit Account" = "Hesabı düzenle";
+"Account Name" = "Hesap adı";
+"Add Account" = "Hesap ekle";
+"All Accounts" = "Tüm hesaplar";
+"all accounts" = "tüm hesaplar";
+"From" = "Nereden";
+"To" = "Nereye";
+"Cash" = "Nakit";
+"Debit Card" = "Banka kartı";
+"Credit Card" = "Kredi kartı";
+"Savings" = "Birikim";
+"Duplicate Name" = "Bu ad zaten var";
+"Pick Two Accounts" = "İki hesap seç";
+"Delete Transfer?" = "Transfer silinsin mi?";
+"Both of its accounts lose it. This action cannot be undone." = "İki hesaptan da kaldırılır. Bu işlem geri alınamaz.";
+"No logs in this account" = "Bu hesapta kayıt yok";
+"Spending by account" = "Hesaba göre harcama";
+"Its transactions and Quick Add templates move to %@. Nothing else is deleted." = "İşlemleri ve hızlı ekle şablonları “%@” hesabına taşınır. Başka hiçbir şey silinmez.";
+"Its transactions and Quick Add templates move to %@. Its transfers with %@ are deleted, since both sides would be %@." = "İşlemleri ve hızlı ekle şablonları “%1$@” hesabına taşınır. “%2$@” ile olan transferleri silinir, çünkü iki taraf da “%3$@” olurdu.";
+"Transactions not in another account are in %@. You can rename %@, but not delete it." = "Başka hesapta olmayan işlemler “%@” içinde. “%@” hesabının adını değiştirebilirsin ama silemezsin.";
+"Only %@" = "Yalnızca %@";
+"%lld accounts" = "%lld hesap";
+"Changing which accounts count clears the %@ from earlier periods. Rollover starts again from this period." = "Hangi hesapların sayılacağını değiştirmek şimdiye kadar devredilen %@ tutarını siler. Devir bu dönemden yeniden başlar.";
+"Changing which accounts count restarts rollover from this period." = "Hangi hesapların sayılacağını değiştirmek devri bu dönemden yeniden başlatır.";
+"Add %@" = "%@ ekle";
+"Show all accounts" = "Tüm hesapları göster";
+"Account filter" = "Hesap filtresi";
 // log
 "UPCOMING" = "YAKLAŞAN";
 
@@ -539,3 +574,15 @@
 
 "Font" = "Yazı Tipi";
 "Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo, Josh Puckett'ın SIL Open Font License ile lisanslanan yazı tipidir.";
+"Keep cash, cards and savings apart" = "Nakit, kart ve birikimlerinizi ayrı tutun";
+"Everything you've logged so far is in %@. Tap it to rename it, or add an account below." = "Şimdiye kadar kaydettiğiniz her şey %@ hesabında. Yeniden adlandırmak için dokunun veya aşağıdan bir hesap ekleyin.";
+"Time frame" = "Zaman aralığı";
+"Account Was Deleted" = "Hesap silindi";
+"Type" = "Tür";
+"Shows insights for this account" = "Bu hesabın analizini gösterir";
+"Which accounts' spending counts towards this budget" = "Bu bütçeye hangi hesapların harcamaları sayılır";
+"Renames the account" = "Hesabı yeniden adlandırır";
+"Edits the account" = "Hesabı düzenler";
+"%@, %@, %lld percent of spending" = "%1$@, %2$@, harcamaların %%%3$lld kadarı";
+"Import from Another App" = "Başka bir uygulamadan içe aktar";
+"Icon" = "Simge";

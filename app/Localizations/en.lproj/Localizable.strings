@@ -508,6 +508,41 @@
 "The new reset day applies from this period on, and earlier periods keep the old one." = "The new reset day applies from this period on, and earlier periods keep the old one.";
 "The %@ from earlier periods is kept." = "The %@ from earlier periods is kept.";
 
+/* Accounts and transfers */
+"by account" = "by account";
+"filter-tag-account" = "by account";
+"Accounts" = "Accounts";
+"Account" = "Account";
+"Transfer" = "Transfer";
+"Main" = "Main";
+"New Account" = "New Account";
+"Edit Account" = "Edit Account";
+"Account Name" = "Account Name";
+"Add Account" = "Add Account";
+"All Accounts" = "All Accounts";
+"all accounts" = "all accounts";
+"From" = "From";
+"To" = "To";
+"Cash" = "Cash";
+"Debit Card" = "Debit Card";
+"Credit Card" = "Credit Card";
+"Savings" = "Savings";
+"Duplicate Name" = "Duplicate Name";
+"Pick Two Accounts" = "Pick Two Accounts";
+"Delete Transfer?" = "Delete Transfer?";
+"Both of its accounts lose it. This action cannot be undone." = "Both of its accounts lose it. This action cannot be undone.";
+"No logs in this account" = "No logs in this account";
+"Spending by account" = "Spending by account";
+"Its transactions and Quick Add templates move to %@. Nothing else is deleted." = "Its transactions and Quick Add templates move to %@. Nothing else is deleted.";
+"Its transactions and Quick Add templates move to %@. Its transfers with %@ are deleted, since both sides would be %@." = "Its transactions and Quick Add templates move to %1$@. Its transfers with %2$@ are deleted, since both sides would be %3$@.";
+"Transactions not in another account are in %@. You can rename %@, but not delete it." = "Transactions not in another account are in %@. You can rename %@, but not delete it.";
+"Only %@" = "Only %@";
+"%lld accounts" = "%lld accounts";
+"Changing which accounts count clears the %@ from earlier periods. Rollover starts again from this period." = "Changing which accounts count clears the %@ from earlier periods. Rollover starts again from this period.";
+"Changing which accounts count restarts rollover from this period." = "Changing which accounts count restarts rollover from this period.";
+"Add %@" = "Add %@";
+"Show all accounts" = "Show all accounts";
+"Account filter" = "Account filter";
 // log
 "UPCOMING" = "UPCOMING";
 
@@ -521,3 +556,15 @@
 
 "Font" = "Font";
 "Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License.";
+"Keep cash, cards and savings apart" = "Keep cash, cards and savings apart";
+"Everything you've logged so far is in %@. Tap it to rename it, or add an account below." = "Everything you've logged so far is in %@. Tap it to rename it, or add an account below.";
+"Time frame" = "Time frame";
+"Account Was Deleted" = "Account Was Deleted";
+"Type" = "Type";
+"Shows insights for this account" = "Shows insights for this account";
+"Which accounts' spending counts towards this budget" = "Which accounts' spending counts towards this budget";
+"Renames the account" = "Renames the account";
+"Edits the account" = "Edits the account";
+"%@, %@, %lld percent of spending" = "%@, %@, %lld percent of spending";
+"Import from Another App" = "Import from Another App";
+"Icon" = "Icon";
