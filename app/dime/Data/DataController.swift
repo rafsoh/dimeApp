@@ -27,7 +27,7 @@ enum CustomError: Swift.Error, CustomLocalizedStringResourceConvertible {
         case let .unknownError(message): return "An unknown error occurred: \(message)"
         case let .unknownId(id): return "No category with an ID matching: \(id)"
         case .notFound: return "Category not found"
-        case .coreDataSave: return "Couldn't save to CoreData"
+        case .coreDataSave: return "Dime couldn't save your changes"
         case .storeUnavailable: return "Dime couldn't open your data. Open Dime and try again."
         }
     }
@@ -749,21 +749,37 @@ class DataController: ObservableObject {
 
     /// Main's name and icon sync through iCloud key-value storage, since Main has no object in the store.
     private func observeMainAccountName() {
-        MainAccount.adoptFromICloud(clearingIfMissing: false)
+        // Key-value storage answers through the system's sync daemon, and a read at launch can keep the main
+        // thread waiting until the watchdog ends the app (DIME-IOS-W). It's read on a background queue and
+        // what it holds is stored on the main thread.
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            let values = MainAccount.iCloudValues()
+            NSUbiquitousKeyValueStore.default.synchronize()
 
-        NotificationCenter.default.addObserver(forName: NSUbiquitousKeyValueStore.didChangeExternallyNotification, object: NSUbiquitousKeyValueStore.default, queue: .main) { [weak self] notification in
+            DispatchQueue.main.async {
+                guard MainAccount.adopt(values, clearingIfMissing: false) else { return }
+                self?.objectWillChange.send()
+                WidgetCenter.shared.reloadAllTimelines()
+            }
+        }
+
+        // Delivered on the queue that posts it, so the read stays off the main thread too. Only the default
+        // store posts this, so it isn't named here: naming it would create it on the main thread.
+        NotificationCenter.default.addObserver(forName: NSUbiquitousKeyValueStore.didChangeExternallyNotification, object: nil, queue: nil) { [weak self] notification in
             let changed = notification.userInfo?[NSUbiquitousKeyValueStoreChangedKeysKey] as? [String] ?? []
 
             guard changed.contains(MainAccount.nameKey) || changed.contains(MainAccount.symbolKey) else {
                 return
             }
 
-            MainAccount.adoptFromICloud(clearingIfMissing: true)
-            self?.objectWillChange.send()
-            WidgetCenter.shared.reloadAllTimelines()
-        }
+            let values = MainAccount.iCloudValues()
 
-        NSUbiquitousKeyValueStore.default.synchronize()
+            DispatchQueue.main.async {
+                MainAccount.adopt(values, clearingIfMissing: true)
+                self?.objectWillChange.send()
+                WidgetCenter.shared.reloadAllTimelines()
+            }
+        }
     }
 
     // MARK: CloudKit events
@@ -1370,10 +1386,57 @@ class DataController: ObservableObject {
         return transaction
     }
 
+    /// Logs a transaction from Shortcuts, inserted and saved on a background context. Returns its ID; throws
+    /// when it couldn't be saved, so the action doesn't say it was logged.
+    ///
+    /// The action runs on the main actor, and saving in the view context waited there on a slow disk write for
+    /// 2–3 seconds (DIME-IOS-Y). The action always logs at the current time, so a recurring transaction has no
+    /// earlier occurrences to fill in here; the app catches up on recurring transactions as usual.
+    @MainActor
+    func newTransactionInBackground(note: String, categoryID: NSManagedObjectID?, income: Bool, amount: Double, currencyCode: String?, repeatType: Int) async throws -> NSManagedObjectID {
+        let author = container.viewContext.transactionAuthor
+        let mergePolicy = container.viewContext.mergePolicy
+        let resolvedCurrency = currencyCode ?? currencyForNewTransaction()
+
+        let objectID: NSManagedObjectID = try await withCheckedThrowingContinuation { continuation in
+            container.performBackgroundTask { context in
+                context.transactionAuthor = author
+                context.mergePolicy = mergePolicy
+
+                let category = categoryID.flatMap { try? context.existingObject(with: $0) as? Category }
+                let transaction = Transaction(context: context)
+                Self.fill(transaction, note: note, category: category, income: income, amount: amount, currencyCode: resolvedCurrency, account: nil, date: Date.now, repeatType: repeatType, repeatCoefficient: 1)
+
+                do {
+                    try context.save()
+                    continuation.resume(returning: transaction.objectID)
+                } catch {
+                    let nsError = error as NSError
+                    DataIntegrityLog.capture(nsError, message: "Saving a Shortcuts transaction failed", flags: ["outOfSpace": DataIntegrityLog.isOutOfSpace(error)])
+                    context.rollback()
+                    continuation.resume(throwing: CustomError.coreDataSave)
+                }
+            }
+        }
+
+        WidgetCenter.shared.reloadAllTimelines()
+        return objectID
+    }
+
     /// Inserts a transaction without saving, so imports can save many at once. No account means Main.
     func insertTransaction(note: String, category: Category?, income: Bool, amount: Double, currencyCode: String? = nil, account: Account? = nil, date: Date, repeatType: Int = 0, repeatCoefficient: Int = 1) -> Transaction {
         let transaction = Transaction(context: container.viewContext)
+        Self.fill(transaction, note: note, category: category, income: income, amount: amount, currencyCode: currencyCode ?? currencyForNewTransaction(), account: account, date: date, repeatType: repeatType, repeatCoefficient: repeatCoefficient)
 
+        if repeatType > 0 {
+            updateRecurringTransaction(transaction: transaction)
+        }
+
+        return transaction
+    }
+
+    /// A new transaction's values, in whichever context it was inserted. Recurrences are set up but not filled in.
+    private static func fill(_ transaction: Transaction, note: String, category: Category?, income: Bool, amount: Double, currencyCode: String, account: Account?, date: Date, repeatType: Int, repeatCoefficient: Int) {
         if note.trimmingCharacters(in: .whitespacesAndNewlines) == "" {
             transaction.note = category?.wrappedName ?? ""
         } else {
@@ -1385,7 +1448,7 @@ class DataController: ObservableObject {
         transaction.account = account
 
         transaction.amount = amount
-        transaction.currencyCode = currencyCode ?? currencyForNewTransaction()
+        transaction.currencyCode = currencyCode
         transaction.date = date
         transaction.id = UUID()
 
@@ -1401,10 +1464,7 @@ class DataController: ObservableObject {
             transaction.onceRecurring = true
             transaction.recurringType = Int16(repeatType)
             transaction.recurringCoefficient = Int16(repeatCoefficient)
-            updateRecurringTransaction(transaction: transaction)
         }
-
-        return transaction
     }
 
     // MARK: Quick Add templates

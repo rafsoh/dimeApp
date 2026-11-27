@@ -72,18 +72,37 @@ enum MainAccount {
         }
     }
 
-    /// Takes the name and icon another device set. At launch iCloud may not have delivered anything yet,
-    /// so a missing value only clears this device's when iCloud says it changed.
-    static func adoptFromICloud(clearingIfMissing: Bool) {
+    /// The name and icon in iCloud key-value storage, by key. Reading it can wait on the system's sync
+    /// daemon, so launch reads it off the main thread.
+    static func iCloudValues() -> [String: String] {
         let store = NSUbiquitousKeyValueStore.default
+        var values: [String: String] = [:]
 
         for key in [nameKey, symbolKey] {
             if let value = store.string(forKey: key), !value.isEmpty {
+                values[key] = value
+            }
+        }
+
+        return values
+    }
+
+    /// Takes the name and icon another device set, as `iCloudValues()` read them. On the main thread, since
+    /// views read these defaults. At launch iCloud may not have delivered anything yet, so a missing value only
+    /// clears this device's when iCloud says it changed. Returns whether the name or icon changed.
+    @discardableResult
+    static func adopt(_ values: [String: String], clearingIfMissing: Bool) -> Bool {
+        let before = (name, symbol)
+
+        for key in [nameKey, symbolKey] {
+            if let value = values[key] {
                 defaults?.set(value, forKey: key)
             } else if clearingIfMissing {
                 defaults?.removeObject(forKey: key)
             }
         }
+
+        return before != (name, symbol)
     }
 }
 
