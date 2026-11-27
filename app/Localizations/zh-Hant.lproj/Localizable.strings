@@ -494,6 +494,41 @@
 "The new reset day applies from this period on, and earlier periods keep the old one." = "新的起始日從本週期開始生效，之前的週期保留原起始日。";
 "The %@ from earlier periods is kept." = "目前已結轉的%@將保留。";
 
+/* Accounts and transfers */
+"by account" = "按帳戶";
+"filter-tag-account" = "按帳戶";
+"Accounts" = "帳戶";
+"Account" = "帳戶";
+"Transfer" = "轉帳";
+"Main" = "主帳戶";
+"New Account" = "新增帳戶";
+"Edit Account" = "編輯帳戶";
+"Account Name" = "帳戶名稱";
+"Add Account" = "新增帳戶";
+"All Accounts" = "所有帳戶";
+"all accounts" = "所有帳戶";
+"From" = "轉出";
+"To" = "轉入";
+"Cash" = "現金";
+"Debit Card" = "簽帳金融卡";
+"Credit Card" = "信用卡";
+"Savings" = "儲蓄";
+"Duplicate Name" = "名稱重複";
+"Pick Two Accounts" = "請選擇兩個帳戶";
+"Delete Transfer?" = "刪除轉帳？";
+"Both of its accounts lose it. This action cannot be undone." = "它將從兩個帳戶中移除。此動作無法還原。";
+"No logs in this account" = "此帳戶中沒有記錄";
+"Spending by account" = "按帳戶的支出";
+"Its transactions and Quick Add templates move to %@. Nothing else is deleted." = "其交易和快速新增範本將移至「%@」。不會刪除其他內容。";
+"Its transactions and Quick Add templates move to %@. Its transfers with %@ are deleted, since both sides would be %@." = "其交易和快速新增範本將移至「%1$@」。它與「%2$@」之間的轉帳將被刪除，因為兩邊都會是「%3$@」。";
+"Transactions not in another account are in %@. You can rename %@, but not delete it." = "不在其他帳戶中的交易都在「%@」裡。「%@」可以重新命名，但不能刪除。";
+"Only %@" = "僅%@";
+"%lld accounts" = "%lld 個帳戶";
+"Changing which accounts count clears the %@ from earlier periods. Rollover starts again from this period." = "變更計入的帳戶會清除目前已結轉的%@。結轉將從本週期重新開始。";
+"Changing which accounts count restarts rollover from this period." = "變更計入的帳戶會讓結轉從本週期重新開始。";
+"Add %@" = "新增%@";
+"Show all accounts" = "顯示所有帳戶";
+"Account filter" = "帳戶篩選";
 // log
 "UPCOMING" = "即將到來";
 
@@ -539,6 +574,18 @@
 
 "Font" = "字體";
 "Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo 是 Josh Puckett 設計的字體，採用 SIL Open Font License 授權。";
+"Keep cash, cards and savings apart" = "將現金、卡片和儲蓄分開管理";
+"Everything you've logged so far is in %@. Tap it to rename it, or add an account below." = "你目前記錄的所有內容都在「%@」中。點一下可重新命名，或在下方加入帳戶。";
+"Time frame" = "時間範圍";
+"Account Was Deleted" = "此帳戶已被刪除";
+"Type" = "類型";
+"Shows insights for this account" = "顯示此帳戶的分析";
+"Which accounts' spending counts towards this budget" = "哪些帳戶的支出計入此預算";
+"Renames the account" = "重新命名此帳戶";
+"Edits the account" = "編輯此帳戶";
+"%@, %@, %lld percent of spending" = "%1$@，%2$@，佔支出的%3$lld%%";
+"Import from Another App" = "從其他 App 匯入";
+"Icon" = "圖像";
 
 "Calculator" = "計算機";
 "Can't Divide by Zero" = "無法除以零";

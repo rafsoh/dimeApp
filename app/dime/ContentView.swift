@@ -32,6 +32,7 @@ struct ContentView: View {
     @State var showWhatsNew: Bool = false
     @State var whatsNewPending: Bool = false
     @State var whatsNewReleases: [WhatsNewRelease] = []
+    @State var showAccountsIntro: Bool = false
 
     var center = UNUserNotificationCenter.current()
 
@@ -41,6 +42,30 @@ struct ContentView: View {
         #else
         false
         #endif
+    }
+
+    /// Takes the main currency from iCloud key-value storage, or stores `fallback` there when it has none.
+    ///
+    /// Reading it can wait on the system's sync daemon; at launch on the main thread, that ended in the
+    /// watchdog killing the app (DIME-IOS-W). It's read on a background queue, and the currency changes on the
+    /// main thread only if nobody picked one meanwhile, such as during onboarding.
+    private func adoptICloudCurrency(storingIfMissing fallback: String) {
+        let currencyBefore = currency
+
+        DispatchQueue.global(qos: .userInitiated).async {
+            let store = NSUbiquitousKeyValueStore.default
+
+            guard let stored = store.string(forKey: "currency") else {
+                store.set(fallback, forKey: "currency")
+                return
+            }
+
+            DispatchQueue.main.async {
+                guard currency == currencyBefore, stored != currency else { return }
+                currency = stored
+                dataController.refreshExchangeRates()
+            }
+        }
     }
 
     @AppStorage("topEdge", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var savedTopEdge: Double = 30
@@ -59,6 +84,10 @@ struct ContentView: View {
                 }
                 .sheet(isPresented: $showWhatsNew) {
                     WhatsNewSheet(releases: whatsNewReleases)
+                }
+                .sheet(isPresented: $showAccountsIntro) {
+                    AccountsIntroSheet()
+                        .environmentObject(dataController)
                 }
                 .alert(item: Binding(get: { dataController.saveFailure }, set: { if $0 == nil { dataController.acknowledgeSaveFailure() } })) { failure in
                     // The changes are still in memory and are saved again when Dime comes back to the
@@ -110,6 +139,8 @@ struct ContentView: View {
                 showIntro = true
                 firstLaunch = false
                 WhatsNew.markSeen()
+                // Onboarding has its own accounts step.
+                AccountsIntro.markSeen()
 
                 // Fresh installs have no legacy data, and running these on categories that are still
                 // arriving from iCloud would overwrite the user's order and colours on every device.
@@ -127,23 +158,17 @@ struct ContentView: View {
 
                 if isUsingDemoData {
                     // Demo data sets its own currency, and must not reach iCloud's copy.
-                } else if NSUbiquitousKeyValueStore.default.string(forKey: "currency") == nil {
-                    NSUbiquitousKeyValueStore.default.set(Locale.current.currencyCode ?? "USD", forKey: "currency")
                 } else {
-                    currency = NSUbiquitousKeyValueStore.default.string(forKey: "currency")!
+                    adoptICloudCurrency(storingIfMissing: Locale.current.currencyCode ?? "USD")
                 }
 
                 defaults.set(2, forKey: "numberEntryType")
             } else if isUsingDemoData {
                 // Demo data sets its own currency, and must not reach iCloud's copy.
             } else {
-                if let holdingCurrency = NSUbiquitousKeyValueStore.default.string(forKey: "currency") {
-                    currency = holdingCurrency
-                } else {
-                    // Before iCloud's copy arrives, keep this device's currency rather than the locale's:
-                    // transactions name their currency, so a silent switch would make them all foreign.
-                    NSUbiquitousKeyValueStore.default.set(currency, forKey: "currency")
-                }
+                // Before iCloud's copy arrives, keep this device's currency rather than the locale's:
+                // transactions name their currency, so a silent switch would make them all foreign.
+                adoptICloudCurrency(storingIfMissing: currency)
             }
 
             dataController.refreshExchangeRates()
@@ -182,7 +207,23 @@ struct ContentView: View {
             }
 
             whatsNewReleases = WhatsNew.unseenReleases
-            whatsNewPending = !whatsNewReleases.isEmpty
+            whatsNewPending = !whatsNewReleases.isEmpty || !AccountsIntro.isSeen
+
+            #if DEBUG
+            // Screenshots, removed with the other accounts launch arguments: `-accountsScreen intro` shows the
+            // accounts introduction people updating see, and `-onboarding welcome|categories|accounts` the
+            // onboarding a new install sees, at that page.
+            let arguments = ProcessInfo.processInfo.arguments
+            if let index = arguments.firstIndex(of: "-accountsScreen"), index + 1 < arguments.count, arguments[index + 1] == "intro" {
+                // Someone updating, even when it's the simulator's first launch.
+                showIntro = false
+                showAccountsIntro = true
+            }
+            if arguments.contains("-onboarding") {
+                showIntro = true
+            }
+            #endif
+
             presentWhatsNewIfReady()
 
             center.getNotificationSettings { settings in
@@ -254,7 +295,7 @@ struct ContentView: View {
 
     /// Waits for the lock screen and any restore offer, since the sheet would cover the first and block the second.
     func presentWhatsNewIfReady() {
-        guard whatsNewPending, !showIntro, !showWhatsNew, backupManager.suggestedRestore == nil, !appLockVM.isAppLockEnabled || appLockVM.isAppUnLocked else {
+        guard whatsNewPending, !showIntro, !showWhatsNew, !showAccountsIntro, backupManager.suggestedRestore == nil, !appLockVM.isAppLockEnabled || appLockVM.isAppUnLocked else {
             return
         }
 
@@ -266,6 +307,19 @@ struct ContentView: View {
                 whatsNewPending = true
                 return
             }
+
+            // Accounts get their own sheet, ahead of the release notes, which wait for the next launch
+            // rather than following straight after. Anyone who already has accounts, say from another
+            // device, has found them.
+            if !AccountsIntro.isSeen {
+                AccountsIntro.markSeen()
+                if dataController.accountCount() == 0 {
+                    showAccountsIntro = true
+                    return
+                }
+            }
+
+            guard !whatsNewReleases.isEmpty else { return }
             WhatsNew.markSeen()
             showWhatsNew = true
         }

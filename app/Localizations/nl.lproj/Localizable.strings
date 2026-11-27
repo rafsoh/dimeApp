@@ -494,6 +494,41 @@
 "The new reset day applies from this period on, and earlier periods keep the old one." = "De nieuwe startdag geldt vanaf deze periode; eerdere periodes houden de oude.";
 "The %@ from earlier periods is kept." = "Het tot nu toe overgedragen bedrag (%@) blijft behouden.";
 
+/* Accounts and transfers */
+"by account" = "per rekening";
+"filter-tag-account" = "per rekening";
+"Accounts" = "Rekeningen";
+"Account" = "Rekening";
+"Transfer" = "Overboeking";
+"Main" = "Hoofdrekening";
+"New Account" = "Nieuwe rekening";
+"Edit Account" = "Rekening bewerken";
+"Account Name" = "Naam rekening";
+"Add Account" = "Rekening toevoegen";
+"All Accounts" = "Alle rekeningen";
+"all accounts" = "alle rekeningen";
+"From" = "Van";
+"To" = "Naar";
+"Cash" = "Contant";
+"Debit Card" = "Betaalpas";
+"Credit Card" = "Creditcard";
+"Savings" = "Spaargeld";
+"Duplicate Name" = "Naam bestaat al";
+"Pick Two Accounts" = "Kies twee rekeningen";
+"Delete Transfer?" = "Overboeking verwijderen?";
+"Both of its accounts lose it. This action cannot be undone." = "Ze verdwijnt van beide rekeningen. Dit kan niet ongedaan worden gemaakt.";
+"No logs in this account" = "Geen items op deze rekening";
+"Spending by account" = "Uitgaven per rekening";
+"Its transactions and Quick Add templates move to %@. Nothing else is deleted." = "De transacties en snel-toevoegen-sjablonen gaan naar ‘%@’. Verder wordt niets verwijderd.";
+"Its transactions and Quick Add templates move to %@. Its transfers with %@ are deleted, since both sides would be %@." = "De transacties en snel-toevoegen-sjablonen gaan naar ‘%1$@’. De overboekingen met ‘%2$@’ worden verwijderd, omdat beide kanten ‘%3$@’ zouden zijn.";
+"Transactions not in another account are in %@. You can rename %@, but not delete it." = "Transacties zonder andere rekening staan op ‘%@’. Je kunt ‘%@’ hernoemen, maar niet verwijderen.";
+"Only %@" = "Alleen %@";
+"%lld accounts" = "%lld rekeningen";
+"Changing which accounts count clears the %@ from earlier periods. Rollover starts again from this period." = "Als je wijzigt welke rekeningen meetellen, wordt het tot nu toe overgedragen bedrag (%@) gewist. Overdragen begint opnieuw vanaf deze periode.";
+"Changing which accounts count restarts rollover from this period." = "Als je wijzigt welke rekeningen meetellen, begint overdragen opnieuw vanaf deze periode.";
+"Add %@" = "%@ toevoegen";
+"Show all accounts" = "Alle rekeningen tonen";
+"Account filter" = "Rekeningfilter";
 // log
 "UPCOMING" = "AANKOMEND";
 
@@ -539,6 +574,18 @@
 
 "Font" = "Lettertype";
 "Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo is een lettertype van Josh Puckett, gelicentieerd onder de SIL Open Font License.";
+"Keep cash, cards and savings apart" = "Houd contant geld, kaarten en spaargeld gescheiden";
+"Everything you've logged so far is in %@. Tap it to rename it, or add an account below." = "Alles wat je tot nu toe hebt vastgelegd staat in %@. Tik erop om de naam te wijzigen, of voeg hieronder een rekening toe.";
+"Time frame" = "Periode";
+"Account Was Deleted" = "Rekening verwijderd";
+"Type" = "Soort";
+"Shows insights for this account" = "Toont inzichten voor deze rekening";
+"Which accounts' spending counts towards this budget" = "Welke rekeningen meetellen voor dit budget";
+"Renames the account" = "Wijzigt de naam van de rekening";
+"Edits the account" = "Bewerkt de rekening";
+"%@, %@, %lld percent of spending" = "%1$@, %2$@, %3$lld procent van de uitgaven";
+"Import from Another App" = "Importeren uit een andere app";
+"Icon" = "Pictogram";
 
 "Calculator" = "Rekenmachine";
 "Can't Divide by Zero" = "Kan niet delen door nul";

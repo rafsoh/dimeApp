@@ -34,6 +34,24 @@ struct HomeView: View {
 
     @State var currentTab = "Log"
 
+    #if DEBUG
+    @State private var debugAccountsScreen: String?
+
+    private struct DebugScreen: Identifiable {
+        let id: String
+    }
+
+    @ViewBuilder
+    private func debugAccountsSheet(_ mode: String) -> some View {
+        if #available(iOS 16.0, *) {
+            NavigationStack {
+                AccountsView(mode: mode == "welcome" ? .welcome : .settings)
+            }
+            .environmentObject(dataController)
+        }
+    }
+    #endif
+
     @AppStorage("firstWeekday", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var firstWeekday: Int = 1
     @AppStorage("firstDayOfMonth", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var firstDayOfMonth: Int = 1
 
@@ -250,10 +268,24 @@ struct HomeView: View {
         }
         #if DEBUG
         .onAppear {
+            // Accounts screenshots. Remove before merging, with the rest of the accounts launch arguments.
+            // `-insightsTab` and `-insightsAccount <name>` (see seedDemoAccounts) start on the Insights tab.
+            let arguments = ProcessInfo.processInfo.arguments
+            if arguments.contains("-insightsTab") || arguments.contains("-insightsSheet") || arguments.contains("-insightsAccount") {
+                currentTab = "Insights"
+            }
+            // `-accountsBudget overview|detail|edit|picker` (see BudgetView) starts on the Budget tab.
+            if arguments.contains("-accountsBudget") {
+                currentTab = "Budget"
+            }
+            // `-accountsScreen settings|welcome` opens the accounts page as Settings or onboarding shows it.
+            // `intro` is ContentView's own introduction sheet.
+            if let index = arguments.firstIndex(of: "-accountsScreen"), index + 1 < arguments.count, arguments[index + 1] != "intro" {
+                debugAccountsScreen = arguments[index + 1]
+            }
             // `-budgetTab`, `-budgetSheet` and `-budgetEdit` (see BudgetView) start on the Budget tab,
             // `-screenshotTab Log|Insights|Budget|Settings` on that tab, and `-screenshotAdd` opens a filled-in
             // add screen (see TransactionView), for screenshots.
-            let arguments = ProcessInfo.processInfo.arguments
             if arguments.contains("-budgetTab") || arguments.contains("-budgetSheet") || arguments.contains("-budgetEdit") {
                 currentTab = "Budget"
             }
@@ -263,6 +295,9 @@ struct HomeView: View {
             if arguments.contains("-screenshotAdd") {
                 addTransaction = true
             }
+        }
+        .sheet(item: Binding(get: { debugAccountsScreen.map(DebugScreen.init) }, set: { debugAccountsScreen = $0?.id })) { screen in
+            debugAccountsSheet(screen.id)
         }
         #endif
     }

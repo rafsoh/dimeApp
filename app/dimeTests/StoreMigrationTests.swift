@@ -98,6 +98,12 @@ final class StoreMigrationTests: XCTestCase {
 
             let context = try openStore(at: storeURL, model: currentModel)
             XCTAssertEqual(try context.count(for: NSFetchRequest(entityName: "Category")), 3)
+
+            // Every migrated transaction is in Main, and none is a transfer.
+            let moved = NSFetchRequest<NSManagedObject>(entityName: "Transaction")
+            moved.predicate = NSPredicate(format: "account != nil OR transferID != nil")
+            XCTAssertEqual(try context.count(for: moved), 0)
+            XCTAssertEqual(try context.count(for: NSFetchRequest(entityName: "Account")), 0)
             let budgets = try context.fetch(NSFetchRequest<NSManagedObject>(entityName: "Budget"))
             XCTAssertEqual(budgets.count, 1)
             XCTAssertEqual(budgets.first?.value(forKey: "amount") as? Double, 420.5)
@@ -120,6 +126,14 @@ final class StoreMigrationTests: XCTestCase {
         earlierModels.first { $0.entitiesByName["TemplateTransaction"]?.attributesByName["currencyCode"] != nil && $0.entitiesByName["Budget"]?.attributesByName["rolloverEnabled"] == nil }
     }
 
+    private var modelFive: NSManagedObjectModel? {
+        earlierModels.first { $0.entitiesByName["Budget"]?.attributesByName["rolloverEnabled"] != nil && $0.entitiesByName["Account"] == nil }
+    }
+
+    private var modelSix: NSManagedObjectModel? {
+        earlierModels.first { $0.entitiesByName["Account"] != nil }
+    }
+
     func testModelThreeOnlyAddsAnOptionalCurrencyToTransactions() throws {
         try assertOnlyAddsOptionalCurrency(from: XCTUnwrap(modelTwo), to: XCTUnwrap(modelThree), on: "Transaction")
     }
@@ -129,17 +143,18 @@ final class StoreMigrationTests: XCTestCase {
     }
 
     /// CloudKit only accepts optional or defaulted additions, and older app versions keep syncing the other fields untouched.
-    func testCurrentModelOnlyAddsOptionalRolloverToBudgets() throws {
+    func testModelFiveOnlyAddsOptionalRolloverToBudgets() throws {
         let previous = try XCTUnwrap(modelFour)
+        let model = try XCTUnwrap(modelFive)
         let added: Set<String> = ["rolloverEnabled", "rolloverAnchor", "rolloverBalance"]
-        XCTAssertEqual(Set(currentModel.entitiesByName.keys), Set(previous.entitiesByName.keys))
+        XCTAssertEqual(Set(model.entitiesByName.keys), Set(previous.entitiesByName.keys))
 
-        for (name, entity) in currentModel.entitiesByName where name != "Budget" && name != "MainBudget" {
+        for (name, entity) in model.entitiesByName where name != "Budget" && name != "MainBudget" {
             XCTAssertEqual(entity.versionHash, previous.entitiesByName[name]?.versionHash, "\(name) changed")
         }
 
         for entityName in ["Budget", "MainBudget"] {
-            let entity = try XCTUnwrap(currentModel.entitiesByName[entityName])
+            let entity = try XCTUnwrap(model.entitiesByName[entityName])
             let previousEntity = try XCTUnwrap(previous.entitiesByName[entityName])
             XCTAssertEqual(Set(entity.propertiesByName.keys), Set(previousEntity.propertiesByName.keys).union(added))
 
@@ -153,6 +168,103 @@ final class StoreMigrationTests: XCTestCase {
             XCTAssertEqual(entity.attributesByName["rolloverEnabled"]?.defaultValue as? Bool, false)
             XCTAssertEqual(entity.attributesByName["rolloverBalance"]?.defaultValue as? Double, 0)
         }
+    }
+
+    /// Models 6 and 7 add accounts and transfers. Older app versions keep syncing every field they know, a
+    /// transaction they write has no account (so it's in Main), and nothing about accounts can ever delete a transaction.
+    func testCurrentModelOnlyAddsAccountsAndTransfers() throws {
+        let previous = try XCTUnwrap(modelFive)
+        let added: [String: Set<String>] = [
+            "Transaction": ["account", "transferID"],
+            "TemplateTransaction": ["account"],
+            "Budget": ["accountScope"],
+            "MainBudget": ["accountScope"]
+        ]
+
+        XCTAssertEqual(Set(currentModel.entitiesByName.keys), Set(previous.entitiesByName.keys).union(["Account"]))
+
+        for (name, entity) in currentModel.entitiesByName where name != "Account" {
+            let previousEntity = try XCTUnwrap(previous.entitiesByName[name])
+            let newProperties = added[name] ?? []
+            XCTAssertEqual(Set(entity.propertiesByName.keys), Set(previousEntity.propertiesByName.keys).union(newProperties), "\(name)")
+
+            for (property, description) in previousEntity.propertiesByName {
+                XCTAssertEqual(entity.propertiesByName[property]?.versionHash, description.versionHash, "\(name).\(property) changed")
+            }
+
+            for property in newProperties {
+                XCTAssertTrue(try XCTUnwrap(entity.propertiesByName[property]).isOptional, "\(name).\(property) isn't optional")
+            }
+
+            if newProperties.isEmpty {
+                XCTAssertEqual(entity.versionHash, previousEntity.versionHash, "\(name) changed")
+            }
+        }
+
+        let account = try XCTUnwrap(currentModel.entitiesByName["Account"])
+        XCTAssertTrue(account.properties.allSatisfy(\.isOptional))
+
+        // Deleting an account moves its transactions and templates to Main; it never deletes them.
+        for relationship in account.relationshipsByName.values {
+            XCTAssertEqual(relationship.deleteRule, .nullifyDeleteRule, "Account.\(relationship.name)")
+            XCTAssertNotNil(relationship.inverseRelationship)
+        }
+
+        for entityName in ["Transaction", "TemplateTransaction"] {
+            let relationship = try XCTUnwrap(currentModel.entitiesByName[entityName]?.relationshipsByName["account"])
+            XCTAssertEqual(relationship.deleteRule, .nullifyDeleteRule)
+            XCTAssertFalse(relationship.isToMany)
+        }
+    }
+
+    /// Model 7 only gives accounts an optional icon. Model 6 never shipped, but builds of the accounts work
+    /// ran it, so model 6 stays exactly as they had it and their stores still open.
+    func testModelSevenOnlyAddsAnOptionalIconToAccounts() throws {
+        let previous = try XCTUnwrap(modelSix)
+        XCTAssertEqual(Set(currentModel.entitiesByName.keys), Set(previous.entitiesByName.keys))
+
+        for (name, entity) in currentModel.entitiesByName where name != "Account" {
+            XCTAssertEqual(entity.versionHash, previous.entitiesByName[name]?.versionHash, "\(name) changed")
+        }
+
+        let account = try XCTUnwrap(currentModel.entitiesByName["Account"])
+        let previousAccount = try XCTUnwrap(previous.entitiesByName["Account"])
+        XCTAssertEqual(Set(account.propertiesByName.keys), Set(previousAccount.propertiesByName.keys).union(["symbol"]))
+
+        for (name, property) in previousAccount.propertiesByName {
+            XCTAssertEqual(account.propertiesByName[name]?.versionHash, property.versionHash, "Account.\(name) changed")
+        }
+
+        XCTAssertTrue(try XCTUnwrap(account.attributesByName["symbol"]).isOptional)
+    }
+
+    /// A model 6 store keeps its accounts, what's in them and its transfers on the way to the current model.
+    func testModelSixStoreKeepsItsAccountsWhenMigrated() throws {
+        let model = try XCTUnwrap(modelSix)
+        let storeURL = directory.appendingPathComponent("six", isDirectory: true).appendingPathComponent("Main.sqlite")
+        try FileManager.default.createDirectory(at: storeURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+
+        let context = try openStore(at: storeURL, model: model)
+        let account = NSEntityDescription.insertNewObject(forEntityName: "Account", into: context)
+        set(account, ["id": UUID(), "name": "Card", "order": Int64(0)])
+        let transferID = UUID()
+        let spend = NSEntityDescription.insertNewObject(forEntityName: "Transaction", into: context)
+        set(spend, ["id": UUID(), "amount": 12.5, "note": "Lunch", "date": Date(timeIntervalSinceReferenceDate: 700_000_000), "income": false, "account": account, "transferID": transferID])
+        try context.save()
+        try close(context)
+
+        let migrated = try openStore(at: storeURL, model: currentModel)
+        defer { try? close(migrated) }
+
+        let accounts = try migrated.fetch(NSFetchRequest<NSManagedObject>(entityName: "Account"))
+        XCTAssertEqual(accounts.count, 1)
+        XCTAssertEqual(accounts.first?.value(forKey: "name") as? String, "Card")
+        XCTAssertNil(accounts.first?.value(forKey: "symbol"))
+
+        let transactions = try migrated.fetch(NSFetchRequest<NSManagedObject>(entityName: "Transaction"))
+        XCTAssertEqual(transactions.count, 1)
+        XCTAssertEqual((transactions.first?.value(forKey: "account") as? NSManagedObject)?.value(forKey: "name") as? String, "Card")
+        XCTAssertEqual(transactions.first?.value(forKey: "transferID") as? UUID, transferID)
     }
 
     private func assertOnlyAddsOptionalCurrency(from previous: NSManagedObjectModel, to model: NSManagedObjectModel, on entityName: String) throws {
@@ -190,6 +302,26 @@ final class StoreMigrationTests: XCTestCase {
         request.predicate = NSPredicate(format: "currencyCode != nil")
         XCTAssertEqual(try context.count(for: request), 0)
         try close(context)
+    }
+
+    // The fallback for when Core Data refuses the copy (DIME-IOS-P). The copy must open as the same store.
+    func testSQLiteCopyOfAStoreHoldsTheSameTransactions() throws {
+        let model = try XCTUnwrap(earlierModels.first)
+        let storeURL = directory.appendingPathComponent("Main.sqlite")
+        let copyURL = directory.appendingPathComponent("Copy.sqlite")
+        let expected = try writeFixture(to: storeURL, model: model)
+
+        try StoreSnapshot.copyWithSQLite(from: storeURL, to: copyURL)
+
+        XCTAssertEqual(try readTransactions(at: copyURL, model: model), expected)
+        XCTAssertTrue(StoreSnapshot.needsMigration(storeAt: copyURL, to: currentModel))
+    }
+
+    func testSQLiteCopyOfAMissingStoreThrows() {
+        let storeURL = directory.appendingPathComponent("Missing.sqlite")
+        let copyURL = directory.appendingPathComponent("Copy.sqlite")
+
+        XCTAssertThrowsError(try StoreSnapshot.copyWithSQLite(from: storeURL, to: copyURL))
     }
 
     func testStoreOnTheCurrentModelIsNotSnapshotted() throws {

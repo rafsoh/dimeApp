@@ -39,11 +39,15 @@ extension Transaction {
         note ?? ""
     }
 
-    /// What to call the transaction on screen: its note, or "Expense" or "Income" when it has none.
+    /// What to call the transaction on screen: its note, or when it has none, the accounts of a transfer
+    /// ("Main → Savings") or "Expense" or "Income".
     var displayTitle: String {
         let trimmed = wrappedNote.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmed.isEmpty {
             return trimmed
+        }
+        if isTransfer {
+            return transferTitle ?? String(localized: "Transfer")
         }
         return income ? String(localized: "Income") : String(localized: "Expense")
     }
@@ -217,6 +221,8 @@ protocol RolloverBudget: NSManagedObject {
     var rolloverEnabled: Bool { get set }
     var rolloverAnchor: Date? { get set }
     var rolloverBalance: Double { get set }
+    /// Which accounts the budget counts. Nil counts every account.
+    var accountScope: String? { get set }
 }
 
 extension Budget: RolloverBudget {}
@@ -287,16 +293,21 @@ struct BudgetRollover: Equatable {
     }
 
     /// Expenses from the anchor up to `start`; matches nothing when the period starts before the anchor.
-    static func spendingPredicate(_ rollover: BudgetRollover?, before start: Date, category: Category?) -> NSPredicate {
+    /// Transfers are never spending. `accounts` limits it to the budget's accounts.
+    static func spendingPredicate(_ rollover: BudgetRollover?, before start: Date, category: Category?, accounts: NSPredicate? = nil) -> NSPredicate {
         guard let rollover, start > rollover.anchor else { return NSPredicate(value: false) }
         var predicates = [
             NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), rollover.anchor as CVarArg),
             NSPredicate(format: "%K < %@", #keyPath(Transaction.date), start as CVarArg),
             NSPredicate(format: "%K <= %@", #keyPath(Transaction.date), Date.now as CVarArg),
-            NSPredicate(format: "income = %d", false)
+            NSPredicate(format: "income = %d", false),
+            TransferPredicate.excluded
         ]
         if let category {
             predicates.append(NSPredicate(format: "%K == %@", #keyPath(Transaction.category), category))
+        }
+        if let accounts {
+            predicates.append(accounts)
         }
         return NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
     }

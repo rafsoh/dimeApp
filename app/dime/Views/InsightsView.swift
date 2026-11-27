@@ -29,6 +29,26 @@ struct InsightsView: View {
     @State private var periodStart: Date?
     @State private var route: InsightsRoute?
     @State private var refreshID = UUID()
+    @State private var dashboard: LoadedDashboard?
+    @AppStorage("firstWeekday", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var firstWeekday: Int = 0
+
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.order), SortDescriptor(\.dateCreated)]) private var accounts: FetchedResults<Account>
+    /// The account Insights shows; empty for every account.
+    @AppStorage(InsightsAccountFilter.key, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var insightsAccount = ""
+    @AppStorage(MainAccount.nameKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var mainAccountName = ""
+    @AppStorage(MainAccount.symbolKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var mainAccountSymbol = ""
+    @State private var showAccountMenu = false
+    @State private var periodMenuWidth: CGFloat = 0
+    @State private var isScrubbingPeriod = false
+
+    var accountChoices: [AccountChoice] {
+        [.main] + accounts.map(AccountChoice.account)
+    }
+
+    /// The selected account, or nil for every account, including when the selected one was deleted.
+    var selectedAccount: AccountChoice? {
+        InsightsAccountFilter.choice(among: accountChoices)
+    }
 
     private let didSave = NSManagedObjectContext.recordsDidSave
 
@@ -65,31 +85,110 @@ struct InsightsView: View {
         transactions.first?.day
     }
 
+    /// Everything the dashboard's numbers depend on. They're worked out again only when this changes.
+    struct DashboardKey: Equatable {
+        let period: InsightsPeriod
+        let incomeTracking: Bool
+        let firstDay: Date?
+        let breaksDownByAccount: Bool
+        let account: String
+        let currency: String
+        let firstWeekday: Int
+        let refreshID: UUID
+
+        /// Whether only the data moved on, not what's being looked at.
+        func isSameView(as other: DashboardKey) -> Bool {
+            period == other.period && incomeTracking == other.incomeTracking && breaksDownByAccount == other.breaksDownByAccount
+                && account == other.account && currency == other.currency && firstWeekday == other.firstWeekday
+        }
+    }
+
+    struct LoadedDashboard {
+        let key: DashboardKey
+        let data: InsightsDashboardData
+    }
+
+    var dashboardKey: DashboardKey {
+        DashboardKey(period: period, incomeTracking: incomeTracking, firstDay: firstDay, breaksDownByAccount: !accounts.isEmpty && selectedAccount == nil, account: insightsAccount, currency: currency, firstWeekday: firstWeekday, refreshID: refreshID)
+    }
+
+    // Saves arrive in bursts while CloudKit imports, each one changing the key. Waiting a moment lets the
+    // burst cancel this and be counted once. Stepping to another period or account doesn't wait.
+    private func loadDashboard() async {
+        let key = dashboardKey
+
+        if let dashboard, dashboard.key.isSameView(as: key) {
+            try? await Task.sleep(nanoseconds: 250_000_000)
+        }
+
+        guard !Task.isCancelled else { return }
+
+        dashboard = LoadedDashboard(key: key, data: InsightsDashboardData(period: key.period, dataController: dataController, incomeTracking: key.incomeTracking, firstDay: key.firstDay, breaksDownByAccount: key.breaksDownByAccount))
+    }
+
     var body: some View {
         Group {
             if transactions.isEmpty {
                 EmptyStateView(systemImage: "chart.bar", title: "No insights yet")
                     .tabBarClearance()
             } else {
-                ScrollView(showsIndicators: false) {
-                    InsightsDashboard(period: period, dataController: dataController, incomeTracking: incomeTracking, firstDay: firstDay, formatter: formatter) { selection in
-                        route = selection
+                ScrollViewReader { scroller in
+                    ScrollView(showsIndicators: false) {
+                        VStack(spacing: 12) {
+                            if let dashboard {
+                                InsightsDashboard(data: dashboard.data, incomeTracking: dashboard.key.incomeTracking, formatter: formatter, onSelectAccount: { choice in
+                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                        insightsAccount = choice.key
+                                    }
+                                }) { selection in
+                                    route = selection
+                                }
+                                .id(dashboard.key.refreshID)
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.top, 4)
                     }
-                    .id(refreshID)
-                    .padding(.horizontal, 16)
-                    .padding(.top, 4)
+                    .task(id: dashboardKey) {
+                        await loadDashboard()
+                    }
+                    #if DEBUG
+                    .onAppear {
+                        // `-insightsScroll accounts` brings the accounts card into view, for screenshots.
+                        if ProcessInfo.processInfo.arguments.contains("-insightsScroll") {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                                scroller.scrollTo(InsightsDashboard.accountsCardID, anchor: .center)
+                            }
+                        }
+                    }
+                    #endif
                 }
                 .tabBarClearance()
                 .floatingAboveTabBar {
-                    GlassStepperCapsule(
-                        previousLabel: period.previousLabel,
-                        nextLabel: period.nextLabel
-                    ) { offset in
-                        let shifted = period.shifted(by: offset)
-                        guard offset == 0 || (shifted.start >= earliestStart && shifted.start <= currentStart) else { return nil }
-                        return shifted.title
-                    } onStep: { offset in
-                        step(by: offset)
+                    // When on the left, which period on the right: the time frame sits beside the dates it steps through.
+                    HStack(spacing: 8) {
+                        periodMenu
+                            .background(GeometryReader { proxy in
+                                Color.clear
+                                    .onAppear { periodMenuWidth = proxy.size.width }
+                                    .onChange(of: proxy.size.width) { periodMenuWidth = $0 }
+                            })
+                            .opacity(isScrubbingPeriod ? 0 : 1)
+                            .animation(.easeInOut(duration: 0.2), value: isScrubbingPeriod)
+
+                        GlassStepperCapsule(
+                            reservedWidth: periodMenuWidth + 8,
+                            previousLabel: period.previousLabel,
+                            nextLabel: period.nextLabel
+                        ) { offset in
+                            let shifted = period.shifted(by: offset)
+                            guard offset == 0 || (shifted.start >= earliestStart && shifted.start <= currentStart) else { return nil }
+                            return shifted.title
+                        } onStep: { offset in
+                            step(by: offset)
+                        } onScrubbingChange: { scrubbing in
+                            isScrubbingPeriod = scrubbing
+                        }
                     }
                 }
             }
@@ -97,28 +196,19 @@ struct InsightsView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .tabHeader {
             TabHeader("Insights") {
-                GlassCapsuleButton(LocalizedStringKey(chartTypeString), trailingSystemImage: "chevron.up.chevron.down") {
-                    showTimeMenu = true
+                // Hidden until there's an account besides Main, so Insights looks as it always has for one account.
+                if !accounts.isEmpty {
+                    accountMenu
                 }
-                .popover(present: $showTimeMenu, attributes: {
-                    $0.position = .absolute(
-                        originAnchor: .bottomRight,
-                        popoverAnchor: .topRight
-                    )
-                    $0.rubberBandingMode = .none
-                    $0.sourceFrameInset = UIEdgeInsets(top: 0, left: 0, bottom: -10, right: 0)
-                    $0.presentation.animation = .easeInOut(duration: 0.2)
-                    $0.dismissal.animation = .easeInOut(duration: 0.3)
-                }) {
-                    ChartTimePickerView(showMenu: $showTimeMenu)
-                }
-                .disabled(transactions.isEmpty)
-                .opacity(transactions.isEmpty ? 0.4 : 1)
             }
         }
         .background(Color.PrimaryBackground)
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .onReceive(didSave) { _ in
+            refreshID = UUID()
+        }
+        // New exchange rates, among others.
+        .onReceive(dataController.objectWillChange) { _ in
             refreshID = UUID()
         }
         .onChange(of: chartType) { _ in
@@ -127,11 +217,29 @@ struct InsightsView: View {
         .onChange(of: firstDayOfMonth) { _ in
             periodStart = nil
         }
+        .onChange(of: insightsAccount) { _ in
+            refreshID = UUID()
+        }
         #if DEBUG
         .onAppear {
-            // `-insightsTimeFrame 1|2|3` shows weeks, months or years, `-insightsOffset -1` steps back that many periods,
-            // and `-insightsSheet category|categories|cashFlow|recurring` opens that sheet, for screenshots.
+            // `-insightsMenu account|period` opens that menu, for screenshots.
             let arguments = ProcessInfo.processInfo.arguments
+            if let index = arguments.firstIndex(of: "-insightsMenu") {
+                let value = index + 1 < arguments.count ? arguments[index + 1] : "account"
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    if value == "period" {
+                        showTimeMenu = true
+                    } else {
+                        showAccountMenu = true
+                    }
+                }
+            }
+        }
+        .onAppear {
+            // `-insightsSheet category|categories|cashFlow|recurring` opens that sheet, for screenshots.
+            let arguments = ProcessInfo.processInfo.arguments
+
+            // `-insightsTimeFrame 1|2|3` shows weeks, months or years, and `-insightsOffset -1` steps back that many periods.
             if let index = arguments.firstIndex(of: "-insightsTimeFrame"), index + 1 < arguments.count, let value = Int(arguments[index + 1]) {
                 chartType = value
             }
@@ -141,6 +249,7 @@ struct InsightsView: View {
                     periodStart = period.shifted(by: offset).start
                 }
             }
+
             guard let index = arguments.firstIndex(of: "-insightsSheet") else { return }
             let value = index + 1 < arguments.count ? arguments[index + 1] : "category"
 
@@ -165,6 +274,54 @@ struct InsightsView: View {
         }
     }
 
+    /// Which account the dashboard shows, in the header where the time frame used to be.
+    var accountMenu: some View {
+        let name = selectedAccount?.name ?? String(localized: "All Accounts")
+
+        return GlassCapsuleButton(verbatim: name, trailingSystemImage: "chevron.up.chevron.down") {
+            showAccountMenu = true
+        }
+        .frame(maxWidth: 190)
+        .popover(present: $showAccountMenu, attributes: {
+            $0.position = .absolute(
+                originAnchor: .bottomRight,
+                popoverAnchor: .topRight
+            )
+            $0.rubberBandingMode = .none
+            $0.sourceFrameInset = UIEdgeInsets(top: 0, left: 0, bottom: -10, right: 0)
+            $0.presentation.animation = .easeInOut(duration: 0.2)
+            $0.dismissal.animation = .easeInOut(duration: 0.3)
+        }) {
+            InsightsAccountMenu(choices: accountChoices, selectedKey: selectedAccount?.key ?? "", showMenu: $showAccountMenu) { key in
+                insightsAccount = key
+            }
+        }
+        .disabled(transactions.isEmpty)
+        .opacity(transactions.isEmpty ? 0.4 : 1)
+        .accessibilityLabel(Text("Account") + Text(", ") + Text(verbatim: name))
+    }
+
+    /// A calendar button, since the stepper's dates already say whether it's a week, month or year.
+    var periodMenu: some View {
+        GlassIconButton(systemName: "calendar", accessibilityLabel: "Time frame") {
+            showTimeMenu = true
+        }
+        .accessibilityValue(Text(LocalizedStringKey(chartTypeString)))
+        .fixedSize()
+        .popover(present: $showTimeMenu, attributes: {
+            $0.position = .absolute(
+                originAnchor: .topLeft,
+                popoverAnchor: .bottomLeft
+            )
+            $0.rubberBandingMode = .none
+            $0.sourceFrameInset = UIEdgeInsets(top: -10, left: 0, bottom: 0, right: 0)
+            $0.presentation.animation = .easeInOut(duration: 0.2)
+            $0.dismissal.animation = .easeInOut(duration: 0.3)
+        }) {
+            ChartTimePickerView(showMenu: $showTimeMenu)
+        }
+    }
+
     func step(by value: Int) {
         let next = period.shifted(by: value).start
         guard next >= earliestStart && next <= currentStart else { return }
@@ -172,6 +329,31 @@ struct InsightsView: View {
         withAnimation(.easeInOut(duration: 0.2)) {
             periodStart = next
         }
+    }
+}
+
+// MARK: - Account
+
+/// The account Insights shows, kept between launches like its time frame. Nothing saved means every account.
+enum InsightsAccountFilter {
+    static let key = "insightsAccount"
+
+    static var selection: String {
+        UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.string(forKey: key) ?? ""
+    }
+
+    /// The selected account, or nil for every account, including when the selected one was deleted.
+    static func choice(among choices: [AccountChoice]) -> AccountChoice? {
+        let key = selection
+        guard !key.isEmpty else { return nil }
+        return choices.first { $0.key == key }
+    }
+
+    /// Matches the selected account's transactions, or nil for every account.
+    static func predicate(in dataController: DataController) -> NSPredicate? {
+        let key = selection
+        guard !key.isEmpty else { return nil }
+        return AccountScope(keys: [key]).predicate(in: dataController.container.viewContext)
     }
 }
 
@@ -398,7 +580,8 @@ enum CategorySlice: Hashable {
         if let category {
             return NSPredicate(format: "%K == %@", #keyPath(Transaction.category), category)
         }
-        return NSPredicate(format: "%K == nil AND income = %d", #keyPath(Transaction.category), income)
+        // Transfers have no category either, but they're neither spending nor income.
+        return NSPredicate(format: "%K == nil AND income = %d AND %K == nil", #keyPath(Transaction.category), income, #keyPath(Transaction.transferID))
     }
 }
 
@@ -421,6 +604,30 @@ struct InsightsCategoryTotal: Identifiable {
         return totals
             .map { InsightsCategoryTotal(slice: $0.key, amount: $0.value, share: total > 0 ? $0.value / total : 0) }
             .sorted { $0.amount > $1.amount }
+    }
+}
+
+/// One account's share of a period's spending.
+struct InsightsAccountTotal: Identifiable {
+    let account: AccountChoice
+    let amount: Double
+    let share: Double
+
+    var id: String { account.key }
+
+    static func make(from transactions: [Transaction], using converter: CurrencyConverter = .current()) -> [InsightsAccountTotal] {
+        var totals = [AccountChoice: Double]()
+
+        for transaction in transactions {
+            totals[transaction.accountChoice, default: 0] += converter.amountInBreakdown(of: transaction.money)
+        }
+
+        let total = totals.values.reduce(0, +)
+
+        return totals
+            .filter { $0.value > 0 }
+            .map { InsightsAccountTotal(account: $0.key, amount: $0.value, share: total > 0 ? $0.value / total : 0) }
+            .sorted { $0.amount == $1.amount ? $0.account.key < $1.account.key : $0.amount > $1.amount }
     }
 }
 
@@ -672,7 +879,13 @@ struct InsightsRecurringCharge: Identifiable {
         let now = Date.now
         var seen = Set<UUID>()
 
-        return dataController.results(for: dataController.fetchRequestForRecurringTransactions())
+        let request = dataController.fetchRequestForRecurringTransactions()
+
+        if let accounts = InsightsAccountFilter.predicate(in: dataController) {
+            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [request.predicate, accounts].compactMap { $0 })
+        }
+
+        return dataController.results(for: request)
             .filter { transaction in
                 guard !transaction.income, (1 ... 3).contains(transaction.recurringType) else { return false }
                 guard let id = transaction.id else { return true }
@@ -691,13 +904,19 @@ func insightsLargestFirst(_ transactions: [Transaction]) -> [Transaction] {
     return transactions.sorted { (amounts[$0.objectID] ?? -.infinity) > (amounts[$1.objectID] ?? -.infinity) }
 }
 
+/// Spending or income in a period, in the account Insights shows. Transfers are neither.
 func insightsTransactions(_ dataController: DataController, from start: Date, to end: Date, income: Bool?, slice: CategorySlice? = nil) -> [Transaction] {
     let request: NSFetchRequest<Transaction> = Transaction.fetchRequest()
 
     var predicates = [
         NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), start as CVarArg),
-        NSPredicate(format: "%K < %@", #keyPath(Transaction.date), end as CVarArg)
+        NSPredicate(format: "%K < %@", #keyPath(Transaction.date), end as CVarArg),
+        TransferPredicate.excluded
     ]
+
+    if let accounts = InsightsAccountFilter.predicate(in: dataController) {
+        predicates.append(accounts)
+    }
 
     if let income {
         predicates.append(NSPredicate(format: "income = %d", income))
@@ -717,8 +936,9 @@ func insightsFirstTransactionDate(_ dataController: DataController, from start: 
     let request: NSFetchRequest<Transaction> = Transaction.fetchRequest()
     request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
         NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), start as CVarArg),
-        NSPredicate(format: "%K < %@", #keyPath(Transaction.date), end as CVarArg)
-    ])
+        NSPredicate(format: "%K < %@", #keyPath(Transaction.date), end as CVarArg),
+        TransferPredicate.excluded
+    ] + [InsightsAccountFilter.predicate(in: dataController)].compactMap { $0 })
     request.sortDescriptors = [NSSortDescriptor(key: "date", ascending: true)]
     request.fetchLimit = 1
 
@@ -760,6 +980,8 @@ struct InsightsDashboard: View {
     let largest: [Transaction]
     let cashFlow: InsightsCashFlow?
     let recurring: [InsightsRecurringCharge]
+    let accountTotals: [InsightsAccountTotal]
+    let onSelectAccount: ((AccountChoice) -> Void)?
 
     // Without income anywhere in the chart's window, income and net would only restate spending.
     var showsCashFlow: Bool {
@@ -786,6 +1008,13 @@ struct InsightsDashboard: View {
 
             if !categories.isEmpty {
                 categoriesCard
+                    .transition(.opacity)
+            }
+
+            // Only worth a card once spending is spread over more than one account.
+            if accountTotals.count > 1 {
+                accountsCard
+                    .id(Self.accountsCardID)
                     .transition(.opacity)
             }
 
@@ -926,6 +1155,26 @@ struct InsightsDashboard: View {
         }
     }
 
+    static let accountsCardID = "accountsCard"
+
+    var accountsCard: some View {
+        InsightsCard {
+            VStack(alignment: .leading, spacing: 0) {
+                InsightsCardTitle("Spending by account")
+                    .padding(.horizontal, 16)
+                    .padding(.top, 16)
+                    .padding(.bottom, 8)
+
+                ForEach(accountTotals) { total in
+                    InsightsAccountRow(total: total, formatter: formatter) {
+                        onSelectAccount?(total.account)
+                    }
+                }
+            }
+            .padding(.bottom, 10)
+        }
+    }
+
     var largestCard: some View {
         InsightsTappableCard {
             onSelect(.largest)
@@ -989,22 +1238,66 @@ struct InsightsDashboard: View {
         }
     }
 
-    init(period: InsightsPeriod, dataController: DataController, incomeTracking: Bool, firstDay: Date?, formatter: InsightsFormatter, onSelect: @escaping (InsightsRoute) -> Void) {
-        self.period = period
+    init(data: InsightsDashboardData, incomeTracking: Bool, formatter: InsightsFormatter, onSelectAccount: ((AccountChoice) -> Void)? = nil, onSelect: @escaping (InsightsRoute) -> Void) {
+        period = data.period
         self.incomeTracking = incomeTracking
         self.formatter = formatter
         self.onSelect = onSelect
-        let spentInsights = dataController.getInsights(type: period.type, date: period.start, income: false)
+        self.onSelectAccount = onSelectAccount
+        buckets = data.buckets
+        spent = data.spent
+        spentReport = data.spentReport
+        average = data.average
+        income = data.income
+        net = data.net
+        change = data.change
+        projection = data.projection
+        cashFlow = data.cashFlow
+        // The data can trail a save by a moment, so a record deleted in it, or synced away, is left out until
+        // the totals catch up rather than drawn from a deleted object.
+        categories = data.categories.filter { $0.slice.category?.isGone != true }
+        largest = data.largest.filter { !$0.isGone }
+        recurring = data.recurring.filter { !$0.transaction.isGone }
+        accountTotals = data.accountTotals.filter { total in
+            if case let .account(account) = total.account { return !account.isGone }
+            return true
+        }
+    }
+}
+
+/// What the dashboard shows. Each card fetches, so this is worked out when what it depends on changes, not
+/// on every redraw of Insights: a menu opening or the stepper's width settling used to redo all of it.
+struct InsightsDashboardData {
+    let period: InsightsPeriod
+    let buckets: [InsightsBucket]
+    let spent: Double
+    let spentReport: ConversionReport
+    let average: Double
+    let income: Double
+    let net: Double
+    let change: Double?
+    let projection: InsightsProjection?
+    let categories: [InsightsCategoryTotal]
+    let largest: [Transaction]
+    let cashFlow: InsightsCashFlow?
+    let recurring: [InsightsRecurringCharge]
+    let accountTotals: [InsightsAccountTotal]
+
+    init(period: InsightsPeriod, dataController: DataController, incomeTracking: Bool, firstDay: Date?, breaksDownByAccount: Bool = false) {
+        self.period = period
+        let accounts = InsightsAccountFilter.predicate(in: dataController)
+        let spentInsights = dataController.getInsights(type: period.type, date: period.start, income: false, accounts: accounts)
         buckets = InsightsBucket.make(dates: spentInsights.dates, values: spentInsights.dateDictionary, type: period.type)
         spent = spentInsights.amount
         spentReport = spentInsights.report
         average = spentInsights.amount / Double(insightsAverageSpan(dataController, period: period, firstDay: firstDay))
 
-        let previous = dataController.getInsights(type: period.type, date: period.shifted(by: -1).start, income: false).amount
+        let previous = dataController.getInsights(type: period.type, date: period.shifted(by: -1).start, income: false, accounts: accounts).amount
         change = previous > 0 && spentInsights.amount > 0 ? (spentInsights.amount - previous) / previous : nil
 
         let expenses = insightsTransactions(dataController, from: period.start, to: period.queryEnd, income: false)
         categories = InsightsCategoryTotal.make(from: expenses)
+        accountTotals = breaksDownByAccount ? InsightsAccountTotal.make(from: expenses) : []
         largest = Array(insightsLargestFirst(expenses).prefix(3))
 
         cashFlow = incomeTracking ? InsightsCashFlow.make(dataController, period: period, count: 6, firstDay: firstDay) : nil
@@ -1270,6 +1563,66 @@ struct InsightsShareBar: View {
         .frame(height: height)
         .clipShape(RoundedRectangle(cornerRadius: height / 2, style: .continuous))
         .accessibilityHidden(true)
+    }
+}
+
+/// An account's spending with a bar for its share. Tapping it shows Insights for just that account.
+struct InsightsAccountRow: View {
+    let total: InsightsAccountTotal
+    let formatter: InsightsFormatter
+    let action: () -> Void
+
+    var share: Int {
+        Int((total.share * 100).rounded())
+    }
+
+    var body: some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(alignment: .firstTextBaseline, spacing: 12) {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        AccountIconView(symbol: total.account.symbol)
+                            .font(.app(.subheadline, weight: .medium))
+                            .foregroundColor(Color.SubtitleText)
+
+                        Text(total.account.name)
+                            .font(.app(.body, weight: .medium))
+                            .foregroundColor(Color.PrimaryText)
+                            .lineLimit(1)
+                    }
+
+                    Text("\(share)%")
+                        .font(.app(.subheadline))
+                        .foregroundColor(Color.SubtitleText)
+                        .lineLimit(1)
+
+                    Spacer(minLength: 8)
+
+                    InsightsAmountText(amount: total.amount, formatter: formatter, font: .app(.body, weight: .medium))
+                        .layoutPriority(1)
+                }
+
+                GeometryReader { proxy in
+                    ZStack(alignment: .leading) {
+                        Capsule()
+                            .fill(Color.PrimaryText.opacity(0.08))
+
+                        Capsule()
+                            .fill(Color.PrimaryText.opacity(0.55))
+                            .frame(width: max(6, proxy.size.width * total.share))
+                    }
+                }
+                .frame(height: 6)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(total.account.name), \(formatter.string(total.amount)), \(share) percent of spending")
+        .accessibilityHint(Text("Shows insights for this account"))
+        .accessibilityAddTraits(.isButton)
     }
 }
 
@@ -1802,7 +2155,7 @@ struct InsightsDetailSheet: View {
         let allTotal = insightsTransactions(dataController, from: period.start, to: period.queryEnd, income: slice.income).total(using: converter).value
         let share = allTotal > 0 ? Int((total / allTotal * 100).rounded()) : 0
 
-        let dates = dataController.getInsights(type: period.type, date: period.start, income: slice.income).dates
+        let dates = dataController.getInsights(type: period.type, date: period.start, income: slice.income, accounts: InsightsAccountFilter.predicate(in: dataController)).dates
         var values = [Date: Double]()
         for (index, bucketStart) in dates.enumerated() {
             let bucketEnd = index + 1 < dates.count ? dates[index + 1] : period.end
@@ -2075,9 +2428,10 @@ struct FilteredInsightsView: View {
 
         if let unwrappedIncome = income {
             let incomePredicate = NSPredicate(format: "income = %d", unwrappedIncome)
-            andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate, incomePredicate])
+            andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate, incomePredicate, TransferPredicate.excluded])
 
         } else {
+            // Both legs of a transfer: ListView shows each transfer once.
             andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate])
         }
 
@@ -2128,6 +2482,57 @@ struct ChartTimePickerView: View {
                 timeframe = ChartTimeFrame.month
             } else if chartType == 3 {
                 timeframe = ChartTimeFrame.year
+            }
+        }
+    }
+}
+
+/// Every account, with All Accounts first; picking one scopes the whole dashboard.
+struct InsightsAccountMenu: View {
+    let choices: [AccountChoice]
+    let selectedKey: String
+    @Binding var showMenu: Bool
+    let onSelect: (String) -> Void
+
+    @State private var picked: String?
+
+    var current: String {
+        picked ?? selectedKey
+    }
+
+    var body: some View {
+        GlassPopoverMenu {
+            GlassPopoverRow("All Accounts", systemImage: "rectangle.stack", isSelected: current.isEmpty) {
+                pick("")
+            }
+
+            Divider()
+                .padding(.horizontal, 16)
+                .padding(.vertical, 4)
+
+            ForEach(choices, id: \.key) { choice in
+                GlassPopoverRow(verbatim: choice.name, systemImage: AccountIcons.displayable(choice.symbol), isSelected: current == choice.key) {
+                    pick(choice.key)
+                }
+            }
+        }
+    }
+
+    func pick(_ key: String) {
+        guard key != current else {
+            showMenu = false
+            return
+        }
+
+        // Like the time frame menu: the tick moves, then the menu closes.
+        withAnimation(.easeIn(duration: 0.15)) {
+            picked = key
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            showMenu = false
+            withAnimation(.easeInOut(duration: 0.2)) {
+                onSelect(key)
             }
         }
     }

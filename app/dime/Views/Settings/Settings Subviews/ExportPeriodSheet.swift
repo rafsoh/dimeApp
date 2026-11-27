@@ -114,8 +114,14 @@ enum ExportCSV {
             let currencyCode = (transaction.currencyCode ?? mainCurrency).uppercased()
             let amount = CSVExport.amount(transaction.wrappedAmount, currencyCode: currencyCode)
             let category = field(transaction.category?.wrappedName ?? "")
-            let type = transaction.income ? "Income" : "Expense"
-            csv += "\(date),\(note),\(amount),\(category),\(type),\(currencyCode)\n"
+            let type: String
+            if transaction.isTransfer {
+                type = transaction.income ? CSVExport.transferInType : CSVExport.transferOutType
+            } else {
+                type = transaction.income ? "Income" : "Expense"
+            }
+            let account = field(transaction.accountName)
+            csv += "\(date),\(note),\(amount),\(category),\(type),\(currencyCode),\(account)\n"
         }
         return csv
     }

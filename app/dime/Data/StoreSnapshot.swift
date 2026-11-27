@@ -5,6 +5,7 @@
 
 import CoreData
 import Foundation
+import SQLite3
 
 // Before Core Data migrates the store to a newer model, a copy of the untouched file is kept so the data can
 // still be recovered by hand if the migration goes wrong. JSON backups can't do this: they need the store open.
@@ -62,7 +63,8 @@ enum StoreSnapshot {
             "Category": "categories",
             "Budget": "budgets",
             "MainBudget": "mainBudgets",
-            "TemplateTransaction": "templates"
+            "TemplateTransaction": "templates",
+            "Account": "accounts"
         ]
         let coordinator = NSPersistentStoreCoordinator(managedObjectModel: model)
 
@@ -137,8 +139,9 @@ enum StoreSnapshot {
     }
 
     // Call before loading the store. Returns the snapshot's location, or nil when no migration is pending.
+    // `copiedBySQLite` is told when Core Data refused the copy and SQLite made it instead, with Core Data's error.
     @discardableResult
-    static func snapshotIfMigrationNeeded(storeAt storeURL: URL, to model: NSManagedObjectModel, sourceModels: [NSManagedObjectModel] = modelVersions(), in directory: URL, at date: Date = .now) throws -> URL? {
+    static func snapshotIfMigrationNeeded(storeAt storeURL: URL, to model: NSManagedObjectModel, sourceModels: [NSManagedObjectModel] = modelVersions(), in directory: URL, at date: Date = .now, copiedBySQLite: ((Error) -> Void)? = nil) throws -> URL? {
         guard needsMigration(storeAt: storeURL, to: model) else {
             return nil
         }
@@ -175,11 +178,65 @@ enum StoreSnapshot {
         } catch {
             // A copy cut short (for one, by a full disk) is useless and holds space the migration needs.
             removeFiles(of: destination)
-            throw error
+
+            // Core Data has refused a store it had just counted, with NSCocoaErrorDomain 134000 (DIME-IOS-P),
+            // leaving no copy before the migration. SQLite's own backup reads the same file through its
+            // write-ahead log. Out of space, it would only fail the same way.
+            guard !DataIntegrityLog.isOutOfSpace(error) else {
+                throw error
+            }
+
+            do {
+                try copyWithSQLite(from: storeURL, to: destination)
+            } catch let copyError {
+                removeFiles(of: destination)
+                let sqliteError = copyError as NSError
+
+                // Core Data's error is the one reported, with SQLite's result code beneath it.
+                let coreDataError = error as NSError
+                var underlyingInfo: [String: Any] = [:]
+                underlyingInfo[NSUnderlyingErrorKey] = coreDataError.userInfo[NSUnderlyingErrorKey]
+                var userInfo = coreDataError.userInfo
+                userInfo[NSUnderlyingErrorKey] = NSError(domain: sqliteError.domain, code: sqliteError.code, userInfo: underlyingInfo)
+                throw NSError(domain: coreDataError.domain, code: coreDataError.code, userInfo: userInfo)
+            }
+
+            copiedBySQLite?(error)
         }
 
         prune(directory, keeping: destination)
         return destination
+    }
+
+    /// Copies the database with SQLite's online backup, write-ahead log included, into a new file.
+    static func copyWithSQLite(from source: URL, to destination: URL) throws {
+        var sourceDatabase: OpaquePointer?
+        var destinationDatabase: OpaquePointer?
+        defer {
+            sqlite3_close(sourceDatabase)
+            sqlite3_close(destinationDatabase)
+        }
+
+        func failure(_ code: Int32) -> NSError {
+            NSError(domain: NSSQLiteErrorDomain, code: Int(code))
+        }
+
+        var result = sqlite3_open_v2(source.path, &sourceDatabase, SQLITE_OPEN_READONLY, nil)
+        guard result == SQLITE_OK else { throw failure(result) }
+
+        result = sqlite3_open_v2(destination.path, &destinationDatabase, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nil)
+        guard result == SQLITE_OK else { throw failure(result) }
+
+        guard let backup = sqlite3_backup_init(destinationDatabase, "main", sourceDatabase, "main") else {
+            throw failure(sqlite3_errcode(destinationDatabase))
+        }
+
+        // Every page in one step, so a write from another process can't restart the copy halfway.
+        let step = sqlite3_backup_step(backup, -1)
+        let finish = sqlite3_backup_finish(backup)
+
+        guard step == SQLITE_DONE else { throw failure(step) }
+        guard finish == SQLITE_OK else { throw failure(finish) }
     }
 
     static func list(in directory: URL) -> [URL] {

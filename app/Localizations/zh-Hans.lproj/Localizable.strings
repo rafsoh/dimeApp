@@ -494,6 +494,41 @@
 "The new reset day applies from this period on, and earlier periods keep the old one." = "新的起始日从本周期开始生效，之前的周期保留原起始日。";
 "The %@ from earlier periods is kept." = "目前已结转的%@将保留。";
 
+/* Accounts and transfers */
+"by account" = "按账户";
+"filter-tag-account" = "按账户";
+"Accounts" = "账户";
+"Account" = "账户";
+"Transfer" = "转账";
+"Main" = "主账户";
+"New Account" = "新建账户";
+"Edit Account" = "编辑账户";
+"Account Name" = "账户名称";
+"Add Account" = "添加账户";
+"All Accounts" = "所有账户";
+"all accounts" = "所有账户";
+"From" = "转出";
+"To" = "转入";
+"Cash" = "现金";
+"Debit Card" = "借记卡";
+"Credit Card" = "信用卡";
+"Savings" = "储蓄";
+"Duplicate Name" = "名称重复";
+"Pick Two Accounts" = "请选择两个账户";
+"Delete Transfer?" = "删除转账？";
+"Both of its accounts lose it. This action cannot be undone." = "它将从两个账户中移除。此操作无法撤销。";
+"No logs in this account" = "此账户中没有记录";
+"Spending by account" = "按账户的支出";
+"Its transactions and Quick Add templates move to %@. Nothing else is deleted." = "其交易和快速添加模板将移至“%@”。不会删除其他内容。";
+"Its transactions and Quick Add templates move to %@. Its transfers with %@ are deleted, since both sides would be %@." = "其交易和快速添加模板将移至“%1$@”。它与“%2$@”之间的转账将被删除，因为两边都会是“%3$@”。";
+"Transactions not in another account are in %@. You can rename %@, but not delete it." = "不在其他账户中的交易都在“%@”里。“%@”可以重命名，但不能删除。";
+"Only %@" = "仅%@";
+"%lld accounts" = "%lld 个账户";
+"Changing which accounts count clears the %@ from earlier periods. Rollover starts again from this period." = "更改计入的账户会清除目前已结转的%@。结转将从本周期重新开始。";
+"Changing which accounts count restarts rollover from this period." = "更改计入的账户会让结转从本周期重新开始。";
+"Add %@" = "添加%@";
+"Show all accounts" = "显示所有账户";
+"Account filter" = "账户筛选";
 // log
 "UPCOMING" = "即将到来";
 
@@ -539,6 +574,18 @@
 
 "Font" = "字体";
 "Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo 是 Josh Puckett 设计的字体，采用 SIL Open Font License 授权。";
+"Keep cash, cards and savings apart" = "将现金、银行卡和储蓄分开管理";
+"Everything you've logged so far is in %@. Tap it to rename it, or add an account below." = "你目前记录的所有内容都在“%@”中。轻点可重新命名，或在下方添加账户。";
+"Time frame" = "时间范围";
+"Account Was Deleted" = "此账户已被删除";
+"Type" = "类型";
+"Shows insights for this account" = "显示此账户的分析";
+"Which accounts' spending counts towards this budget" = "哪些账户的支出计入此预算";
+"Renames the account" = "重命名此账户";
+"Edits the account" = "编辑此账户";
+"%@, %@, %lld percent of spending" = "%1$@，%2$@，占支出的%3$lld%%";
+"Import from Another App" = "从其他应用导入";
+"Icon" = "图标";
 
 "Calculator" = "计算器";
 "Can't Divide by Zero" = "不能除以零";

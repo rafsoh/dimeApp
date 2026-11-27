@@ -149,9 +149,10 @@ final class MainCurrencyChangeTests: XCTestCase {
 
         let lines = ExportCSV.text(for: [legacy, foreign], mainCurrency: "usd").split(separator: "\n").map(String.init)
 
-        XCTAssertEqual(lines.first, "Date,Note,Amount,Category,Type,Currency")
-        XCTAssertTrue(lines[1].hasSuffix(",Taxi,1.250,,Expense,KWD"), lines[1])
-        XCTAssertTrue(lines[2].hasSuffix(",\"Lunch, with Sam\",12.50,,Expense,USD"), lines[2])
+        // Transactions without an account are in Main, named in the last column.
+        XCTAssertEqual(lines.first, "Date,Note,Amount,Category,Type,Currency,Account")
+        XCTAssertTrue(lines[1].hasSuffix(",Taxi,1.250,,Expense,KWD,\(MainAccount.name)"), lines[1])
+        XCTAssertTrue(lines[2].hasSuffix(",\"Lunch, with Sam\",12.50,,Expense,USD,\(MainAccount.name)"), lines[2])
     }
 
     // A recurring transaction from before currencies existed must not pass its missing currency on.

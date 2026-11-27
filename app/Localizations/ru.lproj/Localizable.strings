@@ -506,6 +506,41 @@
 "The new reset day applies from this period on, and earlier periods keep the old one." = "Новый день начала применится с этого периода, а прошлые периоды сохранят прежний.";
 "The %@ from earlier periods is kept." = "Уже перенесённый %@ сохранится.";
 
+/* Accounts and transfers */
+"by account" = "по счёту";
+"filter-tag-account" = "по счёту";
+"Accounts" = "Счета";
+"Account" = "Счёт";
+"Transfer" = "Перевод";
+"Main" = "Основной";
+"New Account" = "Новый счёт";
+"Edit Account" = "Изменить счёт";
+"Account Name" = "Название счёта";
+"Add Account" = "Добавить счёт";
+"All Accounts" = "Все счета";
+"all accounts" = "все счета";
+"From" = "Откуда";
+"To" = "Куда";
+"Cash" = "Наличные";
+"Debit Card" = "Дебетовая карта";
+"Credit Card" = "Кредитная карта";
+"Savings" = "Сбережения";
+"Duplicate Name" = "Такое название уже есть";
+"Pick Two Accounts" = "Выберите два счёта";
+"Delete Transfer?" = "Удалить перевод?";
+"Both of its accounts lose it. This action cannot be undone." = "Он исчезнет с обоих счетов. Это действие нельзя отменить.";
+"No logs in this account" = "На этом счёте нет записей";
+"Spending by account" = "Расходы по счетам";
+"Its transactions and Quick Add templates move to %@. Nothing else is deleted." = "Его транзакции и шаблоны быстрого добавления перейдут в «%@». Больше ничего не удалится.";
+"Its transactions and Quick Add templates move to %@. Its transfers with %@ are deleted, since both sides would be %@." = "Его транзакции и шаблоны быстрого добавления перейдут в «%1$@». Его переводы с «%2$@» удалятся, так как обе стороны были бы «%3$@».";
+"Transactions not in another account are in %@. You can rename %@, but not delete it." = "Транзакции без другого счёта находятся в «%@». «%@» можно переименовать, но не удалить.";
+"Only %@" = "Только %@";
+"%lld accounts" = "Счетов: %lld";
+"Changing which accounts count clears the %@ from earlier periods. Rollover starts again from this period." = "Если изменить учитываемые счета, уже перенесённый %@ обнулится. Перенос начнётся заново с этого периода.";
+"Changing which accounts count restarts rollover from this period." = "Если изменить учитываемые счета, перенос начнётся заново с этого периода.";
+"Add %@" = "Добавить: %@";
+"Show all accounts" = "Показать все счета";
+"Account filter" = "Фильтр по счёту";
 // log
 "UPCOMING" = "ПРЕДСТОЯЩИЕ";
 
@@ -551,6 +586,18 @@
 
 "Font" = "Шрифт";
 "Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo — шрифт Джоша Пакетта, распространяется по лицензии SIL Open Font License.";
+"Keep cash, cards and savings apart" = "Разделяйте наличные, карты и сбережения";
+"Everything you've logged so far is in %@. Tap it to rename it, or add an account below." = "Всё, что вы записали до сих пор, находится в «%@». Нажмите, чтобы переименовать, или добавьте счёт ниже.";
+"Time frame" = "Период";
+"Account Was Deleted" = "Счёт удалён";
+"Type" = "Тип";
+"Shows insights for this account" = "Показывает отчет по этому счёту";
+"Which accounts' spending counts towards this budget" = "Расходы каких счетов учитываются в этом бюджете";
+"Renames the account" = "Переименовывает счёт";
+"Edits the account" = "Изменяет счёт";
+"%@, %@, %lld percent of spending" = "%1$@, %2$@, %3$lld%% расходов";
+"Import from Another App" = "Импорт из другого приложения";
+"Icon" = "Значок";
 
 "Calculator" = "Калькулятор";
 "Can't Divide by Zero" = "Нельзя делить на ноль";

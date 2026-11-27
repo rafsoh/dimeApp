@@ -24,6 +24,9 @@ struct WelcomeSheetView: View {
     @State var firstPage = true
     @State var visibleLines: Int = 0
 
+    @State private var importing = false
+    @State private var transactionsBeforeImport = 0
+
     let timer = Timer.publish(every: 0.16, on: .main, in: .common).autoconnect()
 
     let welcomeFeatures = [
@@ -96,19 +99,37 @@ struct WelcomeSheetView: View {
 
                     Spacer(minLength: 0)
 
-                    Button {
-                        withAnimation {
-                            firstPage = false
+                    VStack(spacing: 10) {
+                        Button {
+                            withAnimation {
+                                firstPage = false
+                            }
+                        } label: {
+                            Text("Get Started")
+                                .font(.app(.headline))
+                                .foregroundColor(.black)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 50)
+                                .contentShape(Capsule())
                         }
-                    } label: {
-                        Text("Get Started")
-                            .font(.app(.headline))
-                            .foregroundColor(.black)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 50)
-                            .contentShape(Capsule())
+                        .whiteGlassButtonStyle()
+
+                        // Someone switching from another app can bring their history in first. The categories
+                        // and accounts steps that follow then show what the import made, to tidy up. A plain
+                        // link, so it never looks more like the way forward than Get Started.
+                        Button {
+                            transactionsBeforeImport = DataController.shared.transactionCount()
+                            importing = true
+                        } label: {
+                            Text("Import from Another App")
+                                .font(.app(.body, weight: .semibold))
+                                .foregroundColor(Color.SubtitleText)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 44)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .whiteGlassButtonStyle()
                 }
                 .padding(.horizontal, 28)
                 .padding(.top, 30)
@@ -116,9 +137,31 @@ struct WelcomeSheetView: View {
             } else {
                 CategoryView(mode: .welcome)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    // Categories, then accounts, close the sheet from inside its navigation stack.
+                    .environment(\.finishOnboarding, { dismiss() })
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.PrimaryBackground)
+        #if DEBUG
+        .onAppear {
+            // `-onboarding categories|accounts` starts past the welcome page, for screenshots (see ContentView).
+            let arguments = ProcessInfo.processInfo.arguments
+            if let index = arguments.firstIndex(of: "-onboarding"), index + 1 < arguments.count, ["categories", "accounts"].contains(arguments[index + 1]) {
+                firstPage = false
+            }
+        }
+        #endif
+        .sheet(isPresented: $importing, onDismiss: {
+            // Closing the import without importing leaves the welcome page as it was.
+            if DataController.shared.transactionCount() > transactionsBeforeImport {
+                withAnimation {
+                    firstPage = false
+                }
+            }
+        }) {
+            ImportDataView()
+                .environmentObject(DataController.shared)
+        }
     }
 }

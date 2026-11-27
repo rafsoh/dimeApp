@@ -17,7 +17,7 @@ final class CSVCurrencyTests: XCTestCase {
 
     func testExportKeepsEarlierColumnsAndEachCurrencysDigits() {
         XCTAssertTrue(CSVExport.header.hasPrefix("Date,Note,Amount,Category,Type,"))
-        XCTAssertEqual(CSVExport.header, "Date,Note,Amount,Category,Type,Currency\n")
+        XCTAssertEqual(CSVExport.header, "Date,Note,Amount,Category,Type,Currency,Account\n")
         XCTAssertEqual(CSVExport.amount(12.5, currencyCode: "USD"), "12.50")
         XCTAssertEqual(CSVExport.amount(1.25, currencyCode: "KWD"), "1.250")
         XCTAssertEqual(CSVExport.amount(1_200, currencyCode: "JPY"), "1200.00")

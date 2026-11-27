@@ -97,6 +97,16 @@ private struct AddTransactionSheet: ViewModifier {
             .onChange(of: launchAdd) { _ in
                 isPresented = true
             }
+            #if DEBUG
+            .onAppear {
+                // `-newEntry` opens the entry sheet, for screenshots; dimeapp:// links leave a prompt on screen.
+                if ProcessInfo.processInfo.arguments.contains("-newEntry") {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                        isPresented = true
+                    }
+                }
+            }
+            #endif
             .onChange(of: isPresented) { _ in
                 if isPresented {
                     count = DataController.shared.transactionCount()
