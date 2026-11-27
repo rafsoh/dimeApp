@@ -1,0 +1,555 @@
+/*
+  Localizable.strings
+  dime
+
+  Malayalam
+*/
+
+// welcome sheet
+
+"dime_name" = "Dime";
+"welcome_header_1" = "നിങ്ങളുടെ പണത്തിന്റെ കണക്ക് സൂക്ഷിക്കൂ";
+"welcome_subtitle_1" = "ലളിതമായും നേരിട്ടും പുതിയ എൻട്രികൾ ചേർക്കൂ";
+"welcome_header_2" = "നിങ്ങളുടെ ചെലവുകൾ വിശകലനം ചെയ്യൂ";
+"welcome_subtitle_2" = "വിവിധ കാലയളവുകളിലെ ചെലവുകളിൽ നിന്ന് ഉൾക്കാഴ്ച നേടൂ";
+"welcome_header_3" = "ബജറ്റ് പാലിക്കൂ";
+"welcome_subtitle_3" = "ചെലവ് നിയന്ത്രിക്കാൻ വിഭാഗവും സമയവും അടിസ്ഥാനമാക്കി ലക്ഷ്യങ്ങൾ നിശ്ചയിക്കൂ";
+"Get Started" = "ആരംഭിക്കുക";
+
+// categories
+
+"Categories" = "വിഭാഗങ്ങൾ";
+"no_income_categories" = "വരുമാന വിഭാഗങ്ങളൊന്നുമില്ല";
+"no_expense_categories" = "ചെലവ് വിഭാഗങ്ങളൊന്നുമില്ല";
+"Suggestions Hidden" = "നിർദ്ദേശങ്ങൾ മറച്ചു";
+"Successfully Edited" = "മാറ്റങ്ങൾ സംരക്ഷിച്ചു";
+"Income Categories" = "വരുമാന വിഭാഗങ്ങൾ";
+"Expense Categories" = "ചെലവ് വിഭാഗങ്ങൾ";
+"Suggested" = "നിർദ്ദേശിച്ചവ";
+"Income Category" = "വരുമാന വിഭാഗം";
+"Expense Category" = "ചെലവ് വിഭാഗം";
+"New" = "പുതിയത്";
+"Expense" = "ചെലവ്";
+"Income" = "വരുമാനം";
+"Delete" = "ഇല്ലാതാക്കുക";
+"Cancel" = "റദ്ദാക്കുക";
+"Delete '%@'?" = "'%@' ഇല്ലാതാക്കണോ?";
+"This action cannot be undone, and all %@ transactions would be deleted." = "ഇത് പഴയപടിയാക്കാനാവില്ല, %@-ലെ എല്ലാ ഇടപാടുകളും ഇല്ലാതാകും.";
+"Category Name" = "വിഭാഗത്തിന്റെ പേര്";
+"Missing Name" = "പേരില്ല";
+"Missing Emoji" = "ഇമോജിയില്ല";
+"Incomplete Entry" = "എൻട്രി പൂർണ്ണമല്ല";
+"Missing Information" = "വിവരങ്ങൾ പൂർണ്ണമല്ല";
+"This action cannot be undone." = "ഇത് പഴയപടിയാക്കാനാവില്ല.";
+"Duplicate Found" = "ഇത് നിലവിലുണ്ട്";
+"Please Edit Accordingly" = "ദയവായി അതിനനുസരിച്ച് തിരുത്തുക";
+"Please Change Emoji" = "ദയവായി ഇമോജി മാറ്റുക";
+"Please Change Name" = "ദയവായി പേര് മാറ്റുക";
+"Food" = "ഭക്ഷണം";
+"Transport" = "യാത്ര";
+"Rent" = "വാടക";
+"Subscriptions" = "സബ്‌സ്‌ക്രിപ്‌ഷനുകൾ";
+"Groceries" = "പലചരക്ക്";
+"Family" = "കുടുംബം";
+"Utilities" = "ബില്ലുകൾ";
+"Fashion" = "ഫാഷൻ";
+"Healthcare" = "ആരോഗ്യം";
+"Pets" = "വളർത്തുമൃഗങ്ങൾ";
+"Sneakers" = "സ്നീക്കറുകൾ";
+"Gifts" = "സമ്മാനങ്ങൾ";
+"Paycheck" = "ശമ്പളം";
+"Allowance" = "പോക്കറ്റ് മണി";
+"Part-Time" = "പാർട്ട്-ടൈം";
+"Investments" = "നിക്ഷേപങ്ങൾ";
+"Tips" = "ടിപ്പുകൾ";
+"Successfully Added" = "ചേർത്തു";
+
+// new transaction page
+"Today, %@" = "ഇന്ന്, %@";
+"Add Note" = "കുറിപ്പ് ചേർക്കുക";
+"Category" = "വിഭാഗം";
+"none" = "ഒരിക്കലുമില്ല";
+"daily" = "ദിവസവും";
+"weekly" = "ആഴ്ചതോറും";
+"monthly" = "മാസംതോറും";
+"custom" = "ഇഷ്ടാനുസൃതം";
+"Custom Interval" = "ഇഷ്ടാനുസൃത ഇടവേള";
+"Repeats every" = "ആവർത്തിക്കുന്നത്";
+"days" = "ദിവസം";
+"weeks" = "ആഴ്ച";
+"months" = "മാസം";
+"Edit" = "എഡിറ്റ് ചെയ്യുക";
+"Delete Expense?" = "ഈ ചെലവ് ഇല്ലാതാക്കണോ?";
+"Missing Amount" = "തുകയില്ല";
+"Expense Was Deleted" = "ഈ ചെലവ് ഇല്ലാതാക്കി";
+"Template Was Deleted" = "ഈ ടെംപ്ലേറ്റ് ഇല്ലാതാക്കി";
+"Budget Was Deleted" = "ഈ ബജറ്റ് ഇല്ലാതാക്കി";
+"Category Was Deleted" = "ഈ വിഭാഗം ഇല്ലാതാക്കി";
+"Dime couldn't open your data" = "Dime-ന് നിങ്ങളുടെ ഡാറ്റ തുറക്കാനായില്ല";
+"Your entries are still on this device, and nothing has been changed or deleted. Please don't delete Dime: that would remove them. Try again, or contact support if this keeps happening." = "നിങ്ങളുടെ എൻട്രികൾ ഇപ്പോഴും ഈ ഉപകരണത്തിൽ തന്നെയുണ്ട്, ഒന്നും മാറ്റുകയോ ഇല്ലാതാക്കുകയോ ചെയ്തിട്ടില്ല. ദയവായി Dime ഇല്ലാതാക്കരുത്: അങ്ങനെ ചെയ്താൽ അവ നഷ്ടപ്പെടും. വീണ്ടും ശ്രമിക്കുക, അല്ലെങ്കിൽ ഇത് ആവർത്തിച്ചാൽ പിന്തുണയുമായി ബന്ധപ്പെടുക.";
+"Try Again" = "വീണ്ടും ശ്രമിക്കുക";
+"Trying Again…" = "വീണ്ടും ശ്രമിക്കുന്നു…";
+"Contact Support" = "പിന്തുണയുമായി ബന്ധപ്പെടുക";
+"Dime couldn't save your changes" = "Dime-ന് നിങ്ങളുടെ മാറ്റങ്ങൾ സംരക്ഷിക്കാനായില്ല";
+"This device is out of storage. Free up some space in the Settings app, and Dime will save your changes when you come back." = "ഈ ഉപകരണത്തിലെ സ്റ്റോറേജ് നിറഞ്ഞു. ക്രമീകരണം ആപ്പിൽ കുറച്ച് സ്ഥലം ഒഴിവാക്കുക, നിങ്ങൾ തിരികെ വരുമ്പോൾ Dime നിങ്ങളുടെ മാറ്റങ്ങൾ സംരക്ഷിക്കും.";
+"Dime will try again. If this keeps happening, contact support." = "Dime വീണ്ടും ശ്രമിക്കും. ഇത് ആവർത്തിച്ചാൽ പിന്തുണയുമായി ബന്ധപ്പെടുക.";
+"This device is out of storage, so Dime can't open your data. Your entries are still here. Free up some space in the Settings app, then try again. Please don't delete Dime: that would remove them." = "ഈ ഉപകരണത്തിലെ സ്റ്റോറേജ് നിറഞ്ഞതിനാൽ Dime-ന് നിങ്ങളുടെ ഡാറ്റ തുറക്കാനാവുന്നില്ല. നിങ്ങളുടെ എൻട്രികൾ ഇപ്പോഴും ഇവിടെയുണ്ട്. ക്രമീകരണം ആപ്പിൽ കുറച്ച് സ്ഥലം ഒഴിവാക്കിയ ശേഷം വീണ്ടും ശ്രമിക്കുക. ദയവായി Dime ഇല്ലാതാക്കരുത്: അങ്ങനെ ചെയ്താൽ അവ നഷ്ടപ്പെടും.";
+"Missing Category" = "വിഭാഗമില്ല";
+"No Category" = "വിഭാഗമില്ല";
+"category-picker-none" = "ഒന്നുമില്ല";
+"transaction-view-income-picker" = "വരുമാനം";
+
+// log view
+"Your Log is Empty" = "നിങ്ങളുടെ ലോഗ് ശൂന്യമാണ്";
+"Press the plus button to add your first entry" = "ആദ്യ എൻട്രി ചേർക്കാൻ പ്ലസ് ബട്ടൺ അമർത്തുക";
+"Search entry by note" = "കുറിപ്പ് ഉപയോഗിച്ച് എൻട്രി തിരയുക";
+"Search by note, category, amount or date" = "കുറിപ്പ്, വിഭാഗം, തുക അല്ലെങ്കിൽ തീയതി ഉപയോഗിച്ച് തിരയുക";
+"Search" = "തിരയുക";
+"all entries" = "എല്ലാ എൻട്രികളും";
+"by type" = "തരം അനുസരിച്ച്";
+"by day" = "ദിവസം അനുസരിച്ച്";
+"by week" = "ആഴ്ച അനുസരിച്ച്";
+"by month" = "മാസം അനുസരിച്ച്";
+"by category" = "വിഭാഗം അനുസരിച്ച്";
+"recurring" = "ആവർത്തിക്കുന്നവ";
+"filter-tag-type" = "തരം അനുസരിച്ച്";
+"filter-tag-day" = "ദിവസം അനുസരിച്ച്";
+"filter-tag-category" = "വിഭാഗം അനുസരിച്ച്";
+"filter-tag-week" = "ആഴ്ച അനുസരിച്ച്";
+"filter-tag-month" = "മാസം അനുസരിച്ച്";
+"filter-tag-recurring" = "ആവർത്തിക്കുന്നവ";
+"filter-picker-income" = "വരുമാനം";
+"filter-tag-upcoming" = "വരാനിരിക്കുന്നവ";
+"Total Spent" = "ആകെ ചെലവ്";
+"Total Income" = "ആകെ വരുമാനം";
+"Net Total" = "അറ്റ ആകെത്തുക";
+"Net total" = "അറ്റ ആകെത്തുക";
+"Spent" = "ചെലവ്";
+"Earned" = "വരുമാനം";
+"today" = "ഇന്ന്";
+"this week" = "ഈ ആഴ്ച";
+"this month" = "ഈ മാസം";
+"this year" = "ഈ വർഷം";
+"No entries found." = "എൻട്രികളൊന്നും കണ്ടെത്തിയില്ല.";
+"Try a different search query!" = "മറ്റൊരു വാക്ക് ഉപയോഗിച്ച് തിരഞ്ഞുനോക്കൂ!";
+"yesterday" = "ഇന്നലെ";
+
+
+// insights
+"Insights" = "വിശകലനം";
+"Analyse Your Expenditure" = "നിങ്ങളുടെ ചെലവുകൾ വിശകലനം ചെയ്യൂ";
+"As transactions start piling up" = "ഇടപാടുകൾ കൂടുന്നതനുസരിച്ച്";
+"Expenses" = "ചെലവുകൾ";
+"SPENT/DAY" = "ചെലവ്/ദിവസം";
+"INCOME/DAY" = "വരുമാനം/ദിവസം";
+"SPENT/MTH" = "ചെലവ്/മാസം";
+"INCOME/MTH" = "വരുമാനം/മാസം";
+"AVG/DAY" = "ശരാശരി/ദിവസം";
+"AVG/MTH" = "ശരാശരി/മാസം";
+"That's all, buddy." = "ഇത്രയേ ഉള്ളൂ, സുഹൃത്തേ.";
+"Into the unknown." = "അജ്ഞാതതയിലേക്ക്.";
+"week" = "ആഴ്ച";
+"month" = "മാസം";
+"year" = "വർഷം";
+"Jan" = "ജനു";
+"Apr" = "ഏപ്രി";
+"Jul" = "ജൂലൈ";
+"Oct" = "ഒക്ടോ";
+
+// budgets
+"Budgets" = "ബജറ്റുകൾ";
+"Budget Your Finances" = "നിങ്ങളുടെ പണത്തിന് ബജറ്റ് തയ്യാറാക്കൂ";
+"Link budgets to categories and set appropriate expenditure goals" = "ബജറ്റുകൾ വിഭാഗങ്ങളുമായി ബന്ധിപ്പിച്ച് ഉചിതമായ ചെലവ് ലക്ഷ്യങ്ങൾ നിശ്ചയിക്കൂ";
+"No Budgets Found" = "ബജറ്റുകളൊന്നുമില്ല";
+"Add your first budget today!" = "ഇന്നുതന്നെ ആദ്യ ബജറ്റ് ചേർക്കൂ!";
+"category budget" = "വിഭാഗ ബജറ്റ്";
+"overall budget" = "മൊത്തം ബജറ്റ്";
+"new" = "പുതിയത്";
+"New Budget" = "പുതിയ ബജറ്റ്";
+"Overall Budget" = "മൊത്തം ബജറ്റ്";
+"Select a category" = "ഒരു വിഭാഗം തിരഞ്ഞെടുക്കുക";
+"Begin by linking this budget to an existing category." = "ആദ്യം ഈ ബജറ്റ് നിലവിലുള്ള ഒരു വിഭാഗവുമായി ബന്ധിപ്പിക്കുക.";
+"Choose a time frame" = "കാലയളവ് തിരഞ്ഞെടുക്കുക";
+"The budget will periodically refresh according to your preference." = "നിങ്ങളുടെ ഇഷ്ടമനുസരിച്ച് ബജറ്റ് കൃത്യമായ ഇടവേളകളിൽ പുനഃക്രമീകരിക്കും.";
+"Continue" = "തുടരുക";
+"Pick a start date" = "ആരംഭ തീയതി തിരഞ്ഞെടുക്കുക";
+"Daily" = "ദിവസേന";
+"Weekly" = "പ്രതിവാരം";
+"Monthly" = "പ്രതിമാസം";
+"Yearly" = "വാർഷികം";
+"Which day of the %@ do you want your budget to start from?" = "നിങ്ങളുടെ ബജറ്റ് %@ ഏത് ദിവസം മുതൽ തുടങ്ങണം?";
+"weekNewBudget" = "ആഴ്ചയിലെ";
+"monthNewBudget" = "മാസത്തിലെ";
+"yearNewBudget" = "വർഷത്തിലെ";
+"Sunday" = "ഞായർ";
+"Monday" = "തിങ്കൾ";
+"Tuesday" = "ചൊവ്വ";
+"Wednesday" = "ബുധൻ";
+"Thursday" = "വ്യാഴം";
+"Friday" = "വെള്ളി";
+"Saturday" = "ശനി";
+"Start of month" = "മാസാരംഭം";
+"%@ of month" = "മാസത്തിലെ ദിവസം: %@";
+"Set budget amount" = "ബജറ്റ് തുക നിശ്ചയിക്കുക";
+"Feel free to edit this in the future." = "ഇത് പിന്നീട് എപ്പോൾ വേണമെങ്കിലും മാറ്റാം.";
+"%@ SPENT" = "%@ ചെലവ്";
+"left %@" = "ബാക്കി (%@)";
+"over %@" = "അധികം (%@)";
+"left of %@" = "%@-ൽ ബാക്കി";
+"widget-log-button" = "രേഖപ്പെടുത്തുക";
+"left today" = "ഇന്ന് ബാക്കി";
+"left on %@" = "%@ ബാക്കി";
+"over today" = "ഇന്ന് അധികം";
+"over on %@" = "%@ അധികം";
+"left this week" = "ഈ ആഴ്ച ബാക്കി";
+"over this week" = "ഈ ആഴ്ച അധികം";
+"left each day" = "ഓരോ ദിവസവും ബാക്കി";
+"left this month" = "ഈ മാസം ബാക്കി";
+"over this month" = "ഈ മാസം അധികം";
+"left this year" = "ഈ വർഷം ബാക്കി";
+"over this year" = "ഈ വർഷം അധികം";
+"%lldd left" = "%lld ദിവസം ബാക്കി";
+"%lldh left" = "%lld മണിക്കൂർ ബാക്കി";
+"%@ • %@ spent" = "%@ • %@ ചെലവ്";
+"Back" = "തിരികെ";
+"Delete the '%@' budget?" = "'%@' ബജറ്റ് ഇല്ലാതാക്കണോ?";
+"OVERALL SPENT: %@" = "ആകെ ചെലവ്: %@";
+"Delete your overall budget?" = "മൊത്തം ബജറ്റ് ഇല്ലാതാക്കണോ?";
+
+// Settings
+"Settings" = "ക്രമീകരണം";
+"General" = "പൊതുവായവ";
+"Data" = "ഡാറ്റ";
+"Others" = "മറ്റുള്ളവ";
+"Appearance" = "രൂപം";
+"Start of Week" = "ആഴ്ചയുടെ തുടക്കം";
+"Notifications" = "അറിയിപ്പുകൾ";
+"Currency" = "കറൻസി";
+"Number Entry" = "സംഖ്യ നൽകൽ";
+"Authentication" = "പ്രാമാണീകരണം";
+"Income Tracking" = "വരുമാന കണക്ക്";
+"Display Cents" = "ദശാംശം കാണിക്കുക";
+"iCloud Sync" = "iCloud സിങ്ക്";
+"Export Data" = "ഡാറ്റ എക്‌സ്‌പോർട്ട് ചെയ്യുക";
+"Erase Data" = "ഡാറ്റ മായ്ക്കുക";
+"Animated Charts" = "ആനിമേറ്റഡ് ചാർട്ടുകൾ";
+"Feature Lab" = "ഫീച്ചർ ലാബ്";
+"Tip Jar" = "ടിപ്പ് ജാർ";
+"Report Bug" = "ബഗ് റിപ്പോർട്ട് ചെയ്യുക";
+"Rate on App Store" = "App Store-ൽ റേറ്റ് ചെയ്യുക";
+"Share with Friends" = "സുഹൃത്തുക്കളുമായി പങ്കിടുക";
+"Follow Dime on Twitter" = "Twitter-ൽ Dime-നെ ഫോളോ ചെയ്യുക";
+"Follow Rafael on Instagram" = "Instagram-ൽ Rafael-നെ ഫോളോ ചെയ്യുക";
+"Light" = "ലൈറ്റ്";
+"Dark" = "ഡാർക്ക്";
+"System" = "സിസ്റ്റം";
+"Mornings" = "രാവിലെ";
+"Evenings" = "വൈകുന്നേരം";
+"Custom" = "ഇഷ്ടാനുസൃതം";
+"Off" = "ഓഫ്";
+"On" = "ഓൺ";
+"Type 1" = "തരം 1";
+"Type 2" = "തരം 2";
+"Close and reload app for change to take effect." = "മാറ്റം പ്രാബല്യത്തിൽ വരാൻ ആപ്പ് അടച്ച് വീണ്ടും തുറക്കുക.";
+"Enable Notifications" = "അറിയിപ്പുകൾ ഓണാക്കുക";
+"Every morning (8:00 AM)" = "എല്ലാ ദിവസവും രാവിലെ (8:00 AM)";
+"Every evening (8:00 PM)" = "എല്ലാ ദിവസവും വൈകുന്നേരം (8:00 PM)";
+"Custom Time" = "ഇഷ്ടാനുസൃത സമയം";
+"Currencies" = "കറൻസികൾ";
+"Number Entry Method" = "സംഖ്യ നൽകുന്ന രീതി";
+"\"Pre-dotted\"" = "\"മുൻകൂട്ടി ദശാംശം\"";
+"If you're too lazy to add a decimal point, I gotchu covered." = "ദശാംശ ബിന്ദു ഇടാൻ മടിയാണോ? പേടിക്കേണ്ട, ഞാൻ നോക്കിക്കോളാം.";
+"\"Cent-less\"" = "\"ദശാംശമില്ലാതെ\"";
+"If your transactions usually amount to whole numbers - this one is for you." = "നിങ്ങളുടെ ഇടപാടുകൾ സാധാരണയായി പൂർണ്ണസംഖ്യകളാണെങ്കിൽ - ഇത് നിങ്ങൾക്കുള്ളതാണ്.";
+"Enable Sync" = "സിങ്ക് ഓണാക്കുക";
+"Permanently Delete Everythin'" = "എല്ലാം ശാശ്വതമായി ഇല്ലാതാക്കുക";
+"This action would delete all existing transactions, categories, and budgets, and cannot be undone." = "ഇത് എല്ലാ ഇടപാടുകളും വിഭാഗങ്ങളും ബജറ്റുകളും ഇല്ലാതാക്കും, ഇത് പഴയപടിയാക്കാനാവില്ല.";
+"Danger Zone" = "അപകട മേഖല";
+"This action genuinely cannot be undone. Long press to confirm." = "ഇത് ശരിക്കും പഴയപടിയാക്കാനാവില്ല. സ്ഥിരീകരിക്കാൻ അമർത്തിപ്പിടിക്കുക.";
+"Delete Literally Everything" = "ശരിക്കും എല്ലാം ഇല്ലാതാക്കുക";
+"Back Out" = "വേണ്ട";
+"Celebrate Expenses" = "ചെലവുകൾ ആഘോഷിക്കുക";
+"Show Line Graph" = "ലൈൻ ഗ്രാഫ് കാണിക്കുക";
+"Budget Rows" = "ബജറ്റ് വരികൾ";
+"Experimental features - proceed with caution." = "പരീക്ഷണാത്മക ഫീച്ചറുകൾ - ശ്രദ്ധയോടെ ഉപയോഗിക്കുക.";
+"Replace Time Label" = "സമയത്തിന് പകരം വിഭാഗം കാണിക്കുക";
+"Swaps the time label of each transaction with its category name. However, if you do not manually input a note for each transaction - in which case the note is the category name by default - duplicate text will appear." = "ഓരോ ഇടപാടിന്റെയും സമയത്തിന് പകരം അതിന്റെ വിഭാഗത്തിന്റെ പേര് കാണിക്കുന്നു. എന്നാൽ ഓരോ ഇടപാടിനും നിങ്ങൾ സ്വയം കുറിപ്പ് എഴുതിയില്ലെങ്കിൽ, കുറിപ്പ് സ്വയമേവ വിഭാഗത്തിന്റെ പേരാകും, അതിനാൽ ഒരേ വാചകം രണ്ടുതവണ കാണാം.";
+"Keep the streak going!" = "ഈ തുടർച്ച നിലനിർത്തൂ!";
+"Remember to input your expenses today." = "ഇന്നത്തെ ചെലവുകൾ രേഖപ്പെടുത്താൻ മറക്കരുത്.";
+"Loading" = "ലോഡ് ചെയ്യുന്നു";
+"Unable to load tip options, please try again later 🥲" = "ടിപ്പ് ഓപ്ഷനുകൾ ലോഡ് ചെയ്യാനായില്ല, ദയവായി പിന്നീട് വീണ്ടും ശ്രമിക്കുക 🥲";
+"Hey! Dime was built by a solo student developer, and is intended to be completely free-of-charge, with no paywalls or ads. If you enjoy using Dime and want to support development, please consider a small tip." = "ഹായ്! Dime ഒരു വിദ്യാർത്ഥി ഡെവലപ്പർ ഒറ്റയ്ക്ക് നിർമ്മിച്ചതാണ്, പേവാളുകളോ പരസ്യങ്ങളോ ഇല്ലാതെ ഇത് പൂർണ്ണമായും സൗജന്യമാണ്. Dime ഇഷ്ടമാണെങ്കിൽ, അതിന്റെ വികസനത്തെ പിന്തുണയ്ക്കാൻ ആഗ്രഹിക്കുന്നുവെങ്കിൽ, ഒരു ചെറിയ ടിപ്പ് നൽകുന്നത് പരിഗണിക്കൂ.";
+"Tip failed to go through, please try again!" = "ടിപ്പ് അയയ്ക്കാനായില്ല, ദയവായി വീണ്ടും ശ്രമിക്കുക!";
+"Thanks a million, %@ Rafael" = "ഒരുപാട് നന്ദി, %@ Rafael";
+"Have a great day ahead!" = "നല്ലൊരു ദിവസം ആശംസിക്കുന്നു!";
+"Version %@ (%@)" = "പതിപ്പ് %@ (%@)";
+"Made with ❤️ by %@ from 🇸🇬" = "🇸🇬-ൽ നിന്ന് %@ ❤️ ഓടെ നിർമ്മിച്ചത്";
+"☕ Coffee-Sized Tip" = "☕ ഒരു കാപ്പിയുടെ ടിപ്പ്";
+"🌮 Taco-Sized Tip" = "🌮 ഒരു ടാക്കോയുടെ ടിപ്പ്";
+"🍕 Pizza-Sized Tip" = "🍕 ഒരു പിസ്സയുടെ ടിപ്പ്";
+
+// Widgets
+
+// Labels
+"Recent Transactions" = "സമീപകാല ഇടപാടുകൾ";
+"View your latest expenses." = "നിങ്ങളുടെ പുതിയ ചെലവുകൾ കാണുക.";
+"Analyse your expenditure breakdowns over various time periods." = "വിവിധ കാലയളവുകളിലെ ചെലവുകളുടെ വിശദാംശങ്ങൾ വിശകലനം ചെയ്യുക.";
+"Monitor how you are sticking to your overall budgets." = "മൊത്തം ബജറ്റ് എങ്ങനെ പാലിക്കുന്നുവെന്ന് കാണുക.";
+"Budget" = "ബജറ്റ്";
+"Monitor how you are sticking to your budgets." = "ബജറ്റുകൾ എങ്ങനെ പാലിക്കുന്നുവെന്ന് കാണുക.";
+"New Expense" = "പുതിയ ചെലവ്";
+"A convenient button to log new purchases." = "പുതിയ വാങ്ങലുകൾ രേഖപ്പെടുത്താനുള്ള എളുപ്പ ബട്ടൺ.";
+
+"%lld%% spent" = "%lld%% ചെലവായി";
+"NO RECENT EXPENSES" = "സമീപകാല ചെലവുകളില്ല";
+"RECENT EXPENSES" = "സമീപകാല ചെലവുകൾ";
+"Recent expenses" = "സമീപകാല ചെലവുകൾ";
+"No recent expenses" = "സമീപകാല ചെലവുകളില്ല";
+"in %@" = "%@-ൽ";
+"net" = "അറ്റം";
+"earned" = "വരുമാനം";
+"spent" = "ചെലവ്";
+"Time Period" = "കാലയളവ്";
+"NO TRANSACTIONS\n%@" = "ഇടപാടുകളില്ല\n%@";
+"THIS WEEK" = "ഈ ആഴ്ച";
+"THIS MONTH" = "ഈ മാസം";
+"THIS YEAR" = "ഈ വർഷം";
+"EARNED " = "വരുമാനം ";
+"SPENT " = "ചെലവ് ";
+"ADD OVERALL BUDGET" = "മൊത്തം ബജറ്റ് ചേർക്കുക";
+"Percent Spent" = "ചെലവ് ശതമാനം";
+"Create your overall budget in the app" = "ആപ്പിൽ നിങ്ങളുടെ മൊത്തം ബജറ്റ് സൃഷ്ടിക്കുക";
+"ADD BUDGET" = "ബജറ്റ് ചേർക്കുക";
+"over" = "അധികം";
+"SPENT: %@" = "ചെലവ്: %@";
+"Select budget in widget options" = "വിജറ്റ് ഓപ്ഷനുകളിൽ ബജറ്റ് തിരഞ്ഞെടുക്കുക";
+"Budget no longer exists - please select new budget from widget options." = "ഈ ബജറ്റ് ഇനി നിലവിലില്ല - ദയവായി വിജറ്റ് ഓപ്ഷനുകളിൽ നിന്ന് പുതിയ ബജറ്റ് തിരഞ്ഞെടുക്കുക.";
+"left" = "ബാക്കി";
+"SELECT BUDGET" = "ബജറ്റ് തിരഞ്ഞെടുക്കുക";
+"SELECT BUDGET IN WIDGET OPTIONS" = "വിജറ്റ് ഓപ്ഷനുകളിൽ ബജറ്റ് തിരഞ്ഞെടുക്കുക";
+
+// iCloud sync status
+"Up to date" = "കാലികമാണ്";
+"Syncing…" = "സിങ്ക് ചെയ്യുന്നു…";
+"Not Syncing" = "സിങ്ക് ചെയ്യുന്നില്ല";
+"Waiting to sync" = "സിങ്കിനായി കാത്തിരിക്കുന്നു";
+"Checking iCloud…" = "iCloud പരിശോധിക്കുന്നു…";
+"Last synced %@" = "അവസാനം സിങ്ക് ചെയ്തത് %@";
+"Sign in to iCloud in the Settings app to back up and sync your data." = "നിങ്ങളുടെ ഡാറ്റ ബാക്കപ്പ് ചെയ്യാനും സിങ്ക് ചെയ്യാനും ക്രമീകരണം ആപ്പിൽ iCloud-ലേക്ക് സൈൻ ഇൻ ചെയ്യുക.";
+"iCloud is restricted on this device, so your data isn't being backed up." = "ഈ ഉപകരണത്തിൽ iCloud നിയന്ത്രിച്ചിരിക്കുന്നു, അതിനാൽ നിങ്ങളുടെ ഡാറ്റ ബാക്കപ്പ് ചെയ്യുന്നില്ല.";
+"iCloud is temporarily unavailable. Check your Apple Account in the Settings app." = "iCloud താൽക്കാലികമായി ലഭ്യമല്ല. ക്രമീകരണം ആപ്പിൽ നിങ്ങളുടെ Apple അക്കൗണ്ട് പരിശോധിക്കുക.";
+"Couldn't check your iCloud account." = "നിങ്ങളുടെ iCloud അക്കൗണ്ട് പരിശോധിക്കാനായില്ല.";
+"Your iCloud storage is full, so new changes aren't being backed up or synced. Free up space in the Settings app." = "നിങ്ങളുടെ iCloud സ്റ്റോറേജ് നിറഞ്ഞു, അതിനാൽ പുതിയ മാറ്റങ്ങൾ ബാക്കപ്പ് ചെയ്യുകയോ സിങ്ക് ചെയ്യുകയോ ചെയ്യുന്നില്ല. ക്രമീകരണം ആപ്പിൽ സ്ഥലം ഒഴിവാക്കുക.";
+"You're offline. Changes will sync when you're back online." = "നിങ്ങൾ ഓഫ്‌ലൈനാണ്. വീണ്ടും ഓൺലൈനാകുമ്പോൾ മാറ്റങ്ങൾ സിങ്ക് ചെയ്യും.";
+"Dime's data was deleted from iCloud in the Settings app." = "ക്രമീകരണം ആപ്പിൽ Dime-ന്റെ ഡാറ്റ iCloud-ൽ നിന്ന് ഇല്ലാതാക്കി.";
+"iCloud is busy right now. Dime will try again automatically." = "iCloud ഇപ്പോൾ തിരക്കിലാണ്. Dime സ്വയമേവ വീണ്ടും ശ്രമിക്കും.";
+"Sync ran into a problem and will try again." = "സിങ്കിൽ ഒരു പ്രശ്നമുണ്ടായി, വീണ്ടും ശ്രമിക്കും.";
+
+// Backups
+"Backups" = "ബാക്കപ്പുകൾ";
+"Back Up Now" = "ഇപ്പോൾ ബാക്കപ്പ് ചെയ്യുക";
+"Dime backs up your data on this device once a day and keeps the last 14 backups. Restoring adds back anything that's missing and never removes or changes what you have now. Backups are deleted if you delete Dime." = "Dime ഈ ഉപകരണത്തിൽ ദിവസത്തിലൊരിക്കൽ നിങ്ങളുടെ ഡാറ്റ ബാക്കപ്പ് ചെയ്യുകയും അവസാനത്തെ 14 ബാക്കപ്പുകൾ സൂക്ഷിക്കുകയും ചെയ്യുന്നു. പുനഃസ്ഥാപിച്ചാൽ നഷ്ടപ്പെട്ടവ തിരികെ ചേർക്കും, ഇപ്പോഴുള്ളവ ഒരിക്കലും നീക്കം ചെയ്യുകയോ മാറ്റുകയോ ഇല്ല. Dime ഇല്ലാതാക്കിയാൽ ബാക്കപ്പുകളും ഇല്ലാതാകും.";
+"No backups yet" = "ഇതുവരെ ബാക്കപ്പുകളില്ല";
+"Restore" = "പുനഃസ്ഥാപിക്കുക";
+"Restore this backup?" = "ഈ ബാക്കപ്പ് പുനഃസ്ഥാപിക്കണോ?";
+"Anything missing from Dime will be added back from the backup made %@. Nothing you have now will be removed or changed." = "Dime-ൽ ഇല്ലാത്തവ %@ എടുത്ത ബാക്കപ്പിൽ നിന്ന് തിരികെ ചേർക്കും. ഇപ്പോഴുള്ള ഒന്നും നീക്കം ചെയ്യുകയോ മാറ്റുകയോ ഇല്ല.";
+"Nothing was missing" = "ഒന്നും നഷ്ടപ്പെട്ടിരുന്നില്ല";
+"Restore complete" = "പുനഃസ്ഥാപനം പൂർത്തിയായി";
+"Everything in this backup is already in Dime." = "ഈ ബാക്കപ്പിലുള്ളതെല്ലാം ഇതിനകം Dime-ൽ ഉണ്ട്.";
+"Items added back: %lld." = "തിരികെ ചേർത്ത ഇനങ്ങൾ: %lld.";
+"Waiting for iCloud" = "iCloud-നായി കാത്തിരിക്കുന്നു";
+"You can restore once iCloud finishes syncing, so nothing gets added twice." = "iCloud സിങ്ക് പൂർത്തിയായ ശേഷം പുനഃസ്ഥാപിക്കാം, അങ്ങനെ ഒന്നും രണ്ടുതവണ ചേർക്കപ്പെടില്ല.";
+"Something went wrong" = "എന്തോ കുഴപ്പം സംഭവിച്ചു";
+"Dime couldn't finish. Please try again." = "Dime-ന് പൂർത്തിയാക്കാനായില്ല. ദയവായി വീണ്ടും ശ്രമിക്കുക.";
+"OK" = "ശരി";
+"Some of your data may be missing" = "നിങ്ങളുടെ ചില ഡാറ്റ നഷ്ടപ്പെട്ടിരിക്കാം";
+"Backup from %@: %lld transactions. On this device now: %lld. Restore what's missing? Nothing you have now will be removed or changed." = "%@-ലെ ബാക്കപ്പ്: %lld ഇടപാടുകൾ. ഇപ്പോൾ ഈ ഉപകരണത്തിൽ: %lld. നഷ്ടപ്പെട്ടവ പുനഃസ്ഥാപിക്കണോ? ഇപ്പോഴുള്ള ഒന്നും നീക്കം ചെയ്യുകയോ മാറ്റുകയോ ഇല്ല.";
+"Not Now" = "ഇപ്പോൾ വേണ്ട";
+
+/* Multiple currencies */
+"No exchange rate yet" = "ഇതുവരെ വിനിമയ നിരക്കില്ല";
+"Currency, %@" = "കറൻസി, %@";
+"Recent" = "സമീപകാലം";
+"All Currencies" = "എല്ലാ കറൻസികളും";
+"Exchange Rates" = "വിനിമയ നിരക്കുകൾ";
+"None yet" = "ഇതുവരെ ഒന്നുമില്ല";
+"Never" = "ഒരിക്കലുമില്ല";
+"Source" = "ഉറവിടം";
+"Last Updated" = "അവസാനം അപ്‌ഡേറ്റ് ചെയ്തത്";
+"Days Saved" = "സംരക്ഷിച്ച ദിവസങ്ങൾ";
+"Refresh Rates" = "നിരക്കുകൾ പുതുക്കുക";
+"Rates come from fawazahmed0/exchange-api, and from Frankfurter (European Central Bank) for dates before March 2024. Each transaction is converted at the rate on its own date. Rates are kept on this device only and are never added to your data or iCloud." = "നിരക്കുകൾ fawazahmed0/exchange-api-ൽ നിന്നും, 2024 മാർച്ചിന് മുമ്പുള്ള തീയതികൾക്ക് Frankfurter (യൂറോപ്യൻ സെൻട്രൽ ബാങ്ക്)-ൽ നിന്നുമാണ് ലഭിക്കുന്നത്. ഓരോ ഇടപാടും അതിന്റെ തീയതിയിലെ നിരക്കിൽ മാറ്റുന്നു. നിരക്കുകൾ ഈ ഉപകരണത്തിൽ മാത്രം സൂക്ഷിക്കുന്നു, നിങ്ങളുടെ ഡാറ്റയിലോ iCloud-ലോ ഒരിക്കലും ചേർക്കില്ല.";
+"Some rates couldn't be downloaded. Dime will try again later, and amounts without a rate are left out of totals until then." = "ചില നിരക്കുകൾ ഡൗൺലോഡ് ചെയ്യാനായില്ല. Dime പിന്നീട് വീണ്ടും ശ്രമിക്കും, അതുവരെ നിരക്കില്ലാത്ത തുകകൾ ആകെത്തുകയിൽ ഉൾപ്പെടുത്തില്ല.";
+"with an unknown currency" = "അജ്ഞാത കറൻസിയിൽ";
+"Change your primary currency?" = "നിങ്ങളുടെ പ്രാഥമിക കറൻസി മാറ്റണോ?";
+"Primary Currency" = "പ്രാഥമിക കറൻസി";
+"Can't restore yet" = "ഇപ്പോൾ പുനഃസ്ഥാപിക്കാനാവില്ല";
+"Changes the currency of this transaction" = "ഈ ഇടപാടിന്റെ കറൻസി മാറ്റുന്നു";
+"My transactions were actually in %@" = "എന്റെ ഇടപാടുകൾ യഥാർത്ഥത്തിൽ %@-ൽ ആയിരുന്നു";
+"Convert to %@" = "%@-ലേക്ക് മാറ്റുക";
+"Relabelling keeps every amount as it is and treats your %@ transactions as %@. Converting keeps them in %@ and shows them in %@ at each day's rate. Budgets and templates keep their amounts. Dime backs up your data first." = "റീലേബൽ ചെയ്താൽ ഓരോ തുകയും അതേപടി നിലനിൽക്കും, നിങ്ങളുടെ %1$@ ഇടപാടുകൾ %2$@ ആയി കണക്കാക്കും. മാറ്റിയാൽ അവ %3$@-ൽ തന്നെ നിലനിൽക്കുകയും അതത് ദിവസത്തെ നിരക്കിൽ %4$@-ൽ കാണിക്കുകയും ചെയ്യും. ബജറ്റുകളുടെയും ടെംപ്ലേറ്റുകളുടെയും തുകകൾ മാറില്ല. Dime ആദ്യം നിങ്ങളുടെ ഡാറ്റ ബാക്കപ്പ് ചെയ്യും.";
+"Currency not changed" = "കറൻസി മാറ്റിയില്ല";
+"Dime is still finishing your last currency change. Try again in a moment." = "Dime ഇപ്പോഴും നിങ്ങളുടെ കഴിഞ്ഞ കറൻസി മാറ്റം പൂർത്തിയാക്കുകയാണ്. അൽപ്പസമയത്തിന് ശേഷം വീണ്ടും ശ്രമിക്കുക.";
+"Dime is still catching up with iCloud. Try again once it's up to date." = "Dime ഇപ്പോഴും iCloud-മായി സിങ്ക് ചെയ്യുകയാണ്. കാലികമായ ശേഷം വീണ്ടും ശ്രമിക്കുക.";
+"Dime couldn't back up your data first, so nothing was changed. Please try again." = "Dime-ന് ആദ്യം നിങ്ങളുടെ ഡാറ്റ ബാക്കപ്പ് ചെയ്യാനായില്ല, അതിനാൽ ഒന്നും മാറ്റിയില്ല. ദയവായി വീണ്ടും ശ്രമിക്കുക.";
+"Dime couldn't finish changing your currency. Nothing was lost, and it will finish the next time you open Dime." = "Dime-ന് നിങ്ങളുടെ കറൻസി മാറ്റം പൂർത്തിയാക്കാനായില്ല. ഒന്നും നഷ്ടപ്പെട്ടിട്ടില്ല, അടുത്ത തവണ Dime തുറക്കുമ്പോൾ ഇത് പൂർത്തിയാകും.";
+"Here you go! %@" = "ഇതാ! %@";
+"A three-letter code such as EUR. Leave it empty to use the currency Dime picks for new transactions." = "INR പോലുള്ള മൂന്നക്ഷര കോഡ്. പുതിയ ഇടപാടുകൾക്ക് Dime തിരഞ്ഞെടുക്കുന്ന കറൻസി ഉപയോഗിക്കാൻ ശൂന്യമായി വിടുക.";
+"Which currency? Use a three-letter code such as EUR." = "ഏത് കറൻസി? INR പോലുള്ള മൂന്നക്ഷര കോഡ് ഉപയോഗിക്കുക.";
+"Export" = "എക്‌സ്‌പോർട്ട് ചെയ്യുക";
+"All time" = "എല്ലാ കാലവും";
+"No transactions to export" = "എക്‌സ്‌പോർട്ട് ചെയ്യാൻ ഇടപാടുകളില്ല";
+
+/* Feature tips */
+"Log in Any Currency" = "ഏത് കറൻസിയിലും രേഖപ്പെടുത്തുക";
+"Tap the symbol to change this transaction's currency." = "ഈ ഇടപാടിന്റെ കറൻസി മാറ്റാൻ ചിഹ്നത്തിൽ ടാപ്പ് ചെയ്യുക.";
+
+/* What's New 3.0.1 */
+"Version %@" = "പതിപ്പ് %@";
+"Multiple Currencies" = "ഒന്നിലധികം കറൻസികൾ";
+"Tap the currency symbol to log in any currency. Totals are converted to your primary currency at each day's rate." = "ഏത് കറൻസിയിലും രേഖപ്പെടുത്താൻ കറൻസി ചിഹ്നത്തിൽ ടാപ്പ് ചെയ്യുക. ആകെത്തുകകൾ അതത് ദിവസത്തെ നിരക്കിൽ നിങ്ങളുടെ പ്രാഥമിക കറൻസിയിലേക്ക് മാറ്റും.";
+"Start Your Week Any Day" = "ആഴ്ച ഏത് ദിവസവും തുടങ്ങാം";
+"Weeks can now begin on any weekday. Pick yours in Settings." = "ഇനി ആഴ്ച ഏത് ദിവസം മുതലും തുടങ്ങാം. ക്രമീകരണത്തിൽ നിങ്ങളുടെ ദിവസം തിരഞ്ഞെടുക്കുക.";
+"Export a Period" = "ഒരു കാലയളവ് എക്‌സ്‌പോർട്ട് ചെയ്യുക";
+"Choose the dates to include before exporting your transactions." = "ഇടപാടുകൾ എക്‌സ്‌പോർട്ട് ചെയ്യുന്നതിന് മുമ്പ് ഉൾപ്പെടുത്തേണ്ട തീയതികൾ തിരഞ്ഞെടുക്കുക.";
+"Unlimited Categories" = "പരിധിയില്ലാത്ത വിഭാഗങ്ങൾ";
+"Add as many expense categories as you like, shown in the order you set." = "ഇഷ്ടമുള്ളത്ര ചെലവ് വിഭാഗങ്ങൾ ചേർക്കൂ, നിങ്ങൾ നിശ്ചയിച്ച ക്രമത്തിൽ കാണിക്കും.";
+"Search by Amount" = "തുക ഉപയോഗിച്ച് തിരയുക";
+"Find a transaction by its amount, even with a currency symbol or separators." = "കറൻസി ചിഹ്നമോ വിഭജകങ്ങളോ ഉണ്ടെങ്കിലും തുക ഉപയോഗിച്ച് ഇടപാട് കണ്ടെത്തുക.";
+"Français and Русский" = "Français, Русский";
+"Dime is now available in French and Russian." = "Dime ഇപ്പോൾ ഫ്രഞ്ചിലും റഷ്യനിലും ലഭ്യമാണ്.";
+
+// quick add
+"Quick Add" = "ദ്രുത ചേർക്കൽ";
+"Templates" = "ടെംപ്ലേറ്റുകൾ";
+"%lld/%lld" = "%lld/%lld";
+"%lld of %lld templates" = "%2$lld-ൽ %1$lld ടെംപ്ലേറ്റുകൾ";
+"New Template" = "പുതിയ ടെംപ്ലേറ്റ്";
+"You can have up to 4 templates" = "പരമാവധി 4 ടെംപ്ലേറ്റുകൾ സൂക്ഷിക്കാം";
+"Log a template with one tap from the Quick Add widget, without opening Dime. Each one becomes its own transaction, so editing or deleting a template never changes what you've logged." = "Dime തുറക്കാതെ തന്നെ, ദ്രുത ചേർക്കൽ വിജറ്റിൽ നിന്ന് ഒറ്റ ടാപ്പിൽ ടെംപ്ലേറ്റ് രേഖപ്പെടുത്തുക. ഓരോന്നും പ്രത്യേക ഇടപാടാകും, അതിനാൽ ടെംപ്ലേറ്റ് എഡിറ്റ് ചെയ്താലും ഇല്ലാതാക്കിയാലും നിങ്ങൾ രേഖപ്പെടുത്തിയത് ഒരിക്കലും മാറില്ല.";
+"Add From Recent" = "സമീപകാലത്തുനിന്ന് ചേർക്കുക";
+"Adds a template" = "ഒരു ടെംപ്ലേറ്റ് ചേർക്കുന്നു";
+"Delete Template?" = "ടെംപ്ലേറ്റ് ഇല്ലാതാക്കണോ?";
+"Transactions you've logged with it stay as they are." = "ഇതുപയോഗിച്ച് രേഖപ്പെടുത്തിയ ഇടപാടുകൾ അതേപടി നിലനിൽക്കും.";
+"Log your templates with one tap, without opening Dime." = "Dime തുറക്കാതെ തന്നെ, ഒറ്റ ടാപ്പിൽ ടെംപ്ലേറ്റുകൾ രേഖപ്പെടുത്തുക.";
+"Add templates in Settings to log them from here." = "ഇവിടെ നിന്ന് രേഖപ്പെടുത്താൻ ക്രമീകരണത്തിൽ ടെംപ്ലേറ്റുകൾ ചേർക്കുക.";
+"Add a template" = "ഒരു ടെംപ്ലേറ്റ് ചേർക്കുക";
+"Log %@, %@" = "%@ രേഖപ്പെടുത്തുക, %@";
+"Logged %@, %@" = "%@ രേഖപ്പെടുത്തി, %@";
+"Log Quick Add Template" = "ദ്രുത ചേർക്കൽ ടെംപ്ലേറ്റ് രേഖപ്പെടുത്തുക";
+"Template" = "ടെംപ്ലേറ്റ്";
+"Coffee" = "കാപ്പി";
+"Lunch" = "ഉച്ചഭക്ഷണം";
+"Bus" = "ബസ്";
+
+/* Notifications */
+"Reminders" = "ഓർമ്മപ്പെടുത്തലുകൾ";
+"Daily Check-in" = "ദൈനംദിന ചെക്ക്-ഇൻ";
+"A nudge to log the day's spending" = "അന്നത്തെ ചെലവ് രേഖപ്പെടുത്താനുള്ള ഓർമ്മപ്പെടുത്തൽ";
+"Upcoming Charges" = "വരാനിരിക്കുന്ന പേയ്‌മെന്റുകൾ";
+"A heads-up before a recurring expense is logged" = "ആവർത്തിക്കുന്ന ചെലവ് രേഖപ്പെടുത്തുന്നതിന് മുമ്പ് ഒരു മുന്നറിയിപ്പ്";
+"Time" = "സമയം";
+"Remind Me" = "ഓർമ്മിപ്പിക്കുക";
+"On the day" = "അതേ ദിവസം";
+"1 day before" = "1 ദിവസം മുമ്പ്";
+"%lld days before" = "%lld ദിവസം മുമ്പ്";
+"Fewer days" = "കുറച്ച് ദിവസം";
+"More days" = "കൂടുതൽ ദിവസം";
+"Check-ins and charge reminders both arrive at this time." = "ചെക്ക്-ഇന്നുകളും പേയ്‌മെന്റ് ഓർമ്മപ്പെടുത്തലുകളും ഈ സമയത്ത് എത്തും.";
+"Your check-in arrives at this time every day." = "നിങ്ങളുടെ ചെക്ക്-ഇൻ എല്ലാ ദിവസവും ഈ സമയത്ത് എത്തും.";
+"Charge reminders arrive at this time." = "പേയ്‌മെന്റ് ഓർമ്മപ്പെടുത്തലുകൾ ഈ സമയത്ത് എത്തും.";
+"Covers recurring expenses. Reminders are planned a couple of months ahead and refresh whenever you open Dime." = "ആവർത്തിക്കുന്ന ചെലവുകൾക്ക്. ഓർമ്മപ്പെടുത്തലുകൾ രണ്ട് മാസം മുമ്പേ ആസൂത്രണം ചെയ്യുകയും Dime തുറക്കുമ്പോഴെല്ലാം പുതുക്കുകയും ചെയ്യും.";
+"Due today: %@" = "ഇന്ന് അടയ്ക്കേണ്ടത്: %@";
+"Due tomorrow: %@" = "നാളെ അടയ്ക്കേണ്ടത്: %@";
+"Due in %lld days: %@" = "%lld ദിവസത്തിനുള്ളിൽ അടയ്ക്കേണ്ടത്: %@";
+"%@ will be added to your log today." = "%@ ഇന്ന് നിങ്ങളുടെ ലോഗിൽ ചേർക്കും.";
+"%@ will be added to your log tomorrow." = "%@ നാളെ നിങ്ങളുടെ ലോഗിൽ ചേർക്കും.";
+"%@ will be added to your log on %@." = "%1$@ %2$@-ന് നിങ്ങളുടെ ലോഗിൽ ചേർക്കും.";
+
+// shortcuts
+"Category for an income. Choose No Category to log it without one." = "വരുമാനത്തിനുള്ള വിഭാഗം. വിഭാഗമില്ലാതെ രേഖപ്പെടുത്താൻ വിഭാഗമില്ല തിരഞ്ഞെടുക്കുക.";
+"Category for an expense. Choose No Category to log it without one." = "ചെലവിനുള്ള വിഭാഗം. വിഭാഗമില്ലാതെ രേഖപ്പെടുത്താൻ വിഭാഗമില്ല തിരഞ്ഞെടുക്കുക.";
+
+// quick add grid
+"Tap a template to edit it, or hold and drag it to a new spot. The Quick Add widget logs each one with one tap, without opening Dime, and editing or deleting a template never changes what you've logged." = "എഡിറ്റ് ചെയ്യാൻ ടെംപ്ലേറ്റിൽ ടാപ്പ് ചെയ്യുക, അല്ലെങ്കിൽ അമർത്തിപ്പിടിച്ച് പുതിയ സ്ഥലത്തേക്ക് വലിച്ചിടുക. ദ്രുത ചേർക്കൽ വിജറ്റ് Dime തുറക്കാതെ ഓരോന്നും ഒറ്റ ടാപ്പിൽ രേഖപ്പെടുത്തും, ടെംപ്ലേറ്റ് എഡിറ്റ് ചെയ്താലും ഇല്ലാതാക്കിയാലും നിങ്ങൾ രേഖപ്പെടുത്തിയത് ഒരിക്കലും മാറില്ല.";
+"Move Earlier" = "മുന്നിലേക്ക് നീക്കുക";
+"Move Later" = "പിന്നിലേക്ക് നീക്കുക";
+"Edits the template" = "ടെംപ്ലേറ്റ് എഡിറ്റ് ചെയ്യുന്നു";
+
+// budget rollover
+"with" = "കൂടാതെ";
+"rollover" = "റോൾഓവറോടെ";
+"no rollover" = "റോൾഓവർ ഇല്ലാതെ";
+"+%@ rolled over" = "+%@ മുന്നോട്ട് കൊണ്ടുവന്നു";
+"−%@ rolled over" = "−%@ മുന്നോട്ട് കൊണ്ടുവന്നു";
+"Leftover rolls over %@" = "ബാക്കി തുക %@ മുന്നോട്ട് പോകും";
+"Nothing rolled over" = "ഒന്നും മുന്നോട്ട് കൊണ്ടുവന്നില്ല";
+"Rolls over" = "മുന്നോട്ട് പോകും";
+"%@ budget %@ %@ = %@" = "%@ ബജറ്റ് %@ %@ = %@";
+"Rollover" = "റോൾഓവർ";
+"Whether what's left, or overspent, carries into the next period" = "ബാക്കിയോ അധികം ചെലവായതോ അടുത്ത കാലയളവിലേക്ക് പോകണോ എന്ന്";
+"%@ overspend" = "%@ അധിക ചെലവ്";
+"%@ left over" = "%@ ബാക്കി";
+"Rollover starts this period" = "റോൾഓവർ ഈ കാലയളവ് മുതൽ";
+"What's left at the end of this period, or overspent, carries into the next one. Earlier periods aren't counted." = "ഈ കാലയളവിന്റെ അവസാനം ബാക്കിയുള്ളതോ അധികം ചെലവായതോ അടുത്തതിലേക്ക് പോകും. മുൻ കാലയളവുകൾ കണക്കാക്കില്ല.";
+"Turn On Rollover" = "റോൾഓവർ ഓണാക്കുക";
+"Turn off rollover?" = "റോൾഓവർ ഓഫാക്കണോ?";
+"The %@ from earlier periods will be cleared. Turning rollover back on starts fresh." = "മുൻ കാലയളവുകളിലെ %@ മായ്ക്കും. റോൾഓവർ വീണ്ടും ഓണാക്കിയാൽ പുതുതായി തുടങ്ങും.";
+"Leftovers will stop carrying over. Turning rollover back on starts fresh." = "ബാക്കി തുക ഇനി മുന്നോട്ട് പോകില്ല. റോൾഓവർ വീണ്ടും ഓണാക്കിയാൽ പുതുതായി തുടങ്ങും.";
+"Turn Off" = "ഓഫാക്കുക";
+"Reset rollover?" = "റോൾഓവർ പുനഃക്രമീകരിക്കണോ?";
+"Changing how often this budget repeats clears the %@ from earlier periods. Rollover starts again from this period." = "ഈ ബജറ്റ് എത്ര തവണ ആവർത്തിക്കുന്നുവെന്ന് മാറ്റിയാൽ മുൻ കാലയളവുകളിലെ %@ മായ്ക്കും. റോൾഓവർ ഈ കാലയളവ് മുതൽ വീണ്ടും തുടങ്ങും.";
+"Changing the category clears the %@ from earlier periods. Rollover starts again from this period." = "വിഭാഗം മാറ്റിയാൽ മുൻ കാലയളവുകളിലെ %@ മായ്ക്കും. റോൾഓവർ ഈ കാലയളവ് മുതൽ വീണ്ടും തുടങ്ങും.";
+"Changing how often this budget repeats restarts rollover from this period." = "ഈ ബജറ്റ് എത്ര തവണ ആവർത്തിക്കുന്നുവെന്ന് മാറ്റിയാൽ റോൾഓവർ ഈ കാലയളവ് മുതൽ വീണ്ടും തുടങ്ങും.";
+"Changing the category restarts rollover from this period." = "വിഭാഗം മാറ്റിയാൽ റോൾഓവർ ഈ കാലയളവ് മുതൽ വീണ്ടും തുടങ്ങും.";
+"Apply from this period?" = "ഈ കാലയളവ് മുതൽ ബാധകമാക്കണോ?";
+"Your changes apply from this period on, and earlier periods keep their old settings." = "നിങ്ങളുടെ മാറ്റങ്ങൾ ഈ കാലയളവ് മുതൽ ബാധകമാകും, മുൻ കാലയളവുകളിൽ പഴയ ക്രമീകരണങ്ങൾ തന്നെ തുടരും.";
+"The new amount applies from this period on, and earlier periods keep the old one." = "പുതിയ തുക ഈ കാലയളവ് മുതൽ ബാധകമാകും, മുൻ കാലയളവുകളിൽ പഴയത് തന്നെ തുടരും.";
+"The new reset day applies from this period on, and earlier periods keep the old one." = "പുതിയ റീസെറ്റ് ദിവസം ഈ കാലയളവ് മുതൽ ബാധകമാകും, മുൻ കാലയളവുകളിൽ പഴയത് തന്നെ തുടരും.";
+"The %@ from earlier periods is kept." = "മുൻ കാലയളവുകളിലെ %@ അതേപടി നിലനിൽക്കും.";
+
+// log
+"UPCOMING" = "വരാനിരിക്കുന്നവ";
+
+// budgets, insights and settings
+"Overall" = "മൊത്തം";
+"%lld days to go" = "ഇനി %lld ദിവസം";
+"1 day to go" = "ഇനി 1 ദിവസം";
+"%lld hours to go" = "ഇനി %lld മണിക്കൂർ";
+"1 hour to go" = "ഇനി 1 മണിക്കൂർ";
+"%@ a day for %lld days" = "%2$lld ദിവസത്തേക്ക് ദിവസം %1$@";
+"%@ left today" = "ഇന്ന് %@ ബാക്കി";
+"%@ a day" = "ദിവസം %@";
+"Close to limit" = "പരിധിക്ക് അടുത്ത്";
+"Resets %@" = "%@ പുനഃക്രമീകരിക്കും";
+"tomorrow" = "നാളെ";
+"Nothing spent yet" = "ഇതുവരെ ചെലവില്ല";
+"Over budget" = "ബജറ്റ് കവിഞ്ഞു";
+"Net" = "അറ്റം";
+"Top categories" = "പ്രധാന വിഭാഗങ്ങൾ";
+"Largest expenses" = "വലിയ ചെലവുകൾ";
+"%lld%% of spending" = "ചെലവിന്റെ %lld%%";
+"of spending" = "ചെലവിന്റെ";
+"of income" = "വരുമാനത്തിന്റെ";
+"avg " = "ശരാശരി ";
+"~%@ forecasted" = "~%@ പ്രതീക്ഷിക്കുന്നു";
+"categories" = "വിഭാഗങ്ങൾ";
+"category" = "വിഭാഗം";
+"Time Frames" = "കാലയളവുകൾ";
+"Theme" = "തീം";
+"App Icon" = "ആപ്പ് ഐക്കൺ";
+"Upcoming Logs" = "വരാനിരിക്കുന്ന എൻട്രികൾ";
+"Shown" = "കാണിക്കുന്നു";
+"Hidden" = "മറച്ചു";
+"Display +/- Symbol" = "+/- ചിഹ്നം കാണിക്കുക";
+
+/* Delete category */
+"%@ has 1 transaction. What should happen to it?" = "%@-ൽ 1 ഇടപാടുണ്ട്. അത് എന്ത് ചെയ്യണം?";
+"%@ has %lld transactions. What should happen to them?" = "%@-ൽ %lld ഇടപാടുകളുണ്ട്. അവ എന്ത് ചെയ്യണം?";
+"Move to" = "ഇവിടേക്ക് നീക്കുക";
+"Delete it" = "അത് ഇല്ലാതാക്കുക";
+"Delete them" = "അവ ഇല്ലാതാക്കുക";
+"Delete Category" = "വിഭാഗം ഇല്ലാതാക്കുക";
+
+"Font" = "ഫോണ്ട്";
+"Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Josh Puckett രൂപകൽപ്പന ചെയ്ത ടൈപ്പ്ഫേസാണ് Allo, ഇത് SIL Open Font License പ്രകാരം ലൈസൻസ് ചെയ്തതാണ്.";

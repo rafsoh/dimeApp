@@ -1,0 +1,555 @@
+/*
+  Localizable.strings
+  dime
+
+  Vietnamese
+*/
+
+// welcome sheet
+
+"dime_name" = "Dime";
+"welcome_header_1" = "Theo dõi tài chính";
+"welcome_subtitle_1" = "Thêm mục mới một cách đơn giản, nhanh gọn";
+"welcome_header_2" = "Phân tích chi tiêu";
+"welcome_subtitle_2" = "Hiểu rõ chi tiêu của bạn qua nhiều khoảng thời gian";
+"welcome_header_3" = "Bám sát ngân sách";
+"welcome_subtitle_3" = "Đặt mục tiêu theo danh mục và thời gian để hạn chế chi tiêu";
+"Get Started" = "Bắt đầu";
+
+// categories
+
+"Categories" = "Danh mục";
+"no_income_categories" = "Không có danh mục thu nhập";
+"no_expense_categories" = "Không có danh mục chi tiêu";
+"Suggestions Hidden" = "Đã ẩn gợi ý";
+"Successfully Edited" = "Đã sửa";
+"Income Categories" = "Danh mục thu nhập";
+"Expense Categories" = "Danh mục chi tiêu";
+"Suggested" = "Gợi ý";
+"Income Category" = "Danh mục thu nhập";
+"Expense Category" = "Danh mục chi tiêu";
+"New" = "Mới";
+"Expense" = "Chi tiêu";
+"Income" = "Thu nhập";
+"Delete" = "Xóa";
+"Cancel" = "Hủy";
+"Delete '%@'?" = "Xóa '%@'?";
+"This action cannot be undone, and all %@ transactions would be deleted." = "Không thể hoàn tác thao tác này, và tất cả giao dịch %@ sẽ bị xóa.";
+"Category Name" = "Tên danh mục";
+"Missing Name" = "Thiếu tên";
+"Missing Emoji" = "Thiếu emoji";
+"Incomplete Entry" = "Mục chưa đầy đủ";
+"Missing Information" = "Thiếu thông tin";
+"This action cannot be undone." = "Không thể hoàn tác thao tác này.";
+"Duplicate Found" = "Đã tồn tại";
+"Please Edit Accordingly" = "Vui lòng chỉnh sửa lại";
+"Please Change Emoji" = "Vui lòng đổi emoji";
+"Please Change Name" = "Vui lòng đổi tên";
+"Food" = "Ăn uống";
+"Transport" = "Đi lại";
+"Rent" = "Tiền nhà";
+"Subscriptions" = "Đăng ký";
+"Groceries" = "Đi chợ";
+"Family" = "Gia đình";
+"Utilities" = "Điện nước";
+"Fashion" = "Thời trang";
+"Healthcare" = "Sức khỏe";
+"Pets" = "Thú cưng";
+"Sneakers" = "Giày sneaker";
+"Gifts" = "Quà tặng";
+"Paycheck" = "Lương";
+"Allowance" = "Tiền tiêu vặt";
+"Part-Time" = "Bán thời gian";
+"Investments" = "Đầu tư";
+"Tips" = "Tiền boa";
+"Successfully Added" = "Đã thêm";
+
+// new transaction page
+"Today, %@" = "Hôm nay, %@";
+"Add Note" = "Thêm ghi chú";
+"Category" = "Danh mục";
+"none" = "không lặp lại";
+"daily" = "hằng ngày";
+"weekly" = "hằng tuần";
+"monthly" = "hằng tháng";
+"custom" = "tùy chỉnh";
+"Custom Interval" = "Khoảng tùy chỉnh";
+"Repeats every" = "Lặp lại mỗi";
+"days" = "ngày";
+"weeks" = "tuần";
+"months" = "tháng";
+"Edit" = "Sửa";
+"Delete Expense?" = "Xóa khoản chi này?";
+"Missing Amount" = "Thiếu số tiền";
+"Expense Was Deleted" = "Khoản chi đã bị xóa";
+"Template Was Deleted" = "Mẫu đã bị xóa";
+"Budget Was Deleted" = "Ngân sách đã bị xóa";
+"Category Was Deleted" = "Danh mục đã bị xóa";
+"Dime couldn't open your data" = "Dime không thể mở dữ liệu của bạn";
+"Your entries are still on this device, and nothing has been changed or deleted. Please don't delete Dime: that would remove them. Try again, or contact support if this keeps happening." = "Các mục của bạn vẫn còn trên thiết bị này, và chưa có gì bị thay đổi hay xóa. Vui lòng đừng xóa Dime: làm vậy sẽ xóa luôn các mục đó. Hãy thử lại, hoặc liên hệ hỗ trợ nếu lỗi này cứ lặp lại.";
+"Try Again" = "Thử lại";
+"Trying Again…" = "Đang thử lại…";
+"Contact Support" = "Liên hệ hỗ trợ";
+"Dime couldn't save your changes" = "Dime không thể lưu thay đổi của bạn";
+"This device is out of storage. Free up some space in the Settings app, and Dime will save your changes when you come back." = "Thiết bị đã hết dung lượng. Hãy giải phóng bớt dung lượng trong ứng dụng Cài đặt, Dime sẽ lưu thay đổi khi bạn quay lại.";
+"Dime will try again. If this keeps happening, contact support." = "Dime sẽ thử lại. Nếu lỗi này cứ lặp lại, hãy liên hệ hỗ trợ.";
+"This device is out of storage, so Dime can't open your data. Your entries are still here. Free up some space in the Settings app, then try again. Please don't delete Dime: that would remove them." = "Thiết bị đã hết dung lượng nên Dime không thể mở dữ liệu của bạn. Các mục của bạn vẫn còn ở đây. Hãy giải phóng bớt dung lượng trong ứng dụng Cài đặt, rồi thử lại. Vui lòng đừng xóa Dime: làm vậy sẽ xóa luôn các mục đó.";
+"Missing Category" = "Thiếu danh mục";
+"No Category" = "Không có danh mục";
+"category-picker-none" = "Không";
+"transaction-view-income-picker" = "Thu nhập";
+
+// log view
+"Your Log is Empty" = "Nhật ký trống";
+"Press the plus button to add your first entry" = "Nhấn nút cộng để thêm mục đầu tiên";
+"Search entry by note" = "Tìm mục theo ghi chú";
+"Search by note, category, amount or date" = "Tìm theo ghi chú, danh mục, số tiền hoặc ngày";
+"Search" = "Tìm kiếm";
+"all entries" = "tất cả";
+"by type" = "theo loại";
+"by day" = "theo ngày";
+"by week" = "theo tuần";
+"by month" = "theo tháng";
+"by category" = "theo danh mục";
+"recurring" = "định kỳ";
+"filter-tag-type" = "theo loại";
+"filter-tag-day" = "theo ngày";
+"filter-tag-category" = "theo danh mục";
+"filter-tag-week" = "theo tuần";
+"filter-tag-month" = "theo tháng";
+"filter-tag-recurring" = "định kỳ";
+"filter-picker-income" = "Thu nhập";
+"filter-tag-upcoming" = "sắp tới";
+"Total Spent" = "Tổng chi";
+"Total Income" = "Tổng thu";
+"Net Total" = "Tổng ròng";
+"Net total" = "Tổng ròng";
+"Spent" = "Đã chi";
+"Earned" = "Đã thu";
+"today" = "hôm nay";
+"this week" = "tuần này";
+"this month" = "tháng này";
+"this year" = "năm nay";
+"No entries found." = "Không tìm thấy mục nào.";
+"Try a different search query!" = "Hãy thử từ khóa khác!";
+"yesterday" = "hôm qua";
+
+
+// insights
+"Insights" = "Phân tích";
+"Analyse Your Expenditure" = "Phân tích chi tiêu";
+"As transactions start piling up" = "Khi giao dịch bắt đầu nhiều lên";
+"Expenses" = "Chi tiêu";
+"SPENT/DAY" = "CHI/NGÀY";
+"INCOME/DAY" = "THU/NGÀY";
+"SPENT/MTH" = "CHI/THÁNG";
+"INCOME/MTH" = "THU/THÁNG";
+"AVG/DAY" = "TB/NGÀY";
+"AVG/MTH" = "TB/THÁNG";
+"That's all, buddy." = "Hết rồi, bạn ơi.";
+"Into the unknown." = "Tiến vào điều chưa biết.";
+"week" = "tuần";
+"month" = "tháng";
+"year" = "năm";
+"Jan" = "Th1";
+"Apr" = "Th4";
+"Jul" = "Th7";
+"Oct" = "Th10";
+
+// budgets
+"Budgets" = "Ngân sách";
+"Budget Your Finances" = "Lập ngân sách tài chính";
+"Link budgets to categories and set appropriate expenditure goals" = "Liên kết ngân sách với danh mục và đặt mục tiêu chi tiêu phù hợp";
+"No Budgets Found" = "Không có ngân sách";
+"Add your first budget today!" = "Thêm ngân sách đầu tiên ngay hôm nay!";
+"category budget" = "ngân sách danh mục";
+"overall budget" = "ngân sách tổng";
+"new" = "mới";
+"New Budget" = "Ngân sách mới";
+"Overall Budget" = "Ngân sách tổng";
+"Select a category" = "Chọn danh mục";
+"Begin by linking this budget to an existing category." = "Bắt đầu bằng cách liên kết ngân sách này với một danh mục có sẵn.";
+"Choose a time frame" = "Chọn khoảng thời gian";
+"The budget will periodically refresh according to your preference." = "Ngân sách sẽ được đặt lại định kỳ theo lựa chọn của bạn.";
+"Continue" = "Tiếp tục";
+"Pick a start date" = "Chọn ngày bắt đầu";
+"Daily" = "Hằng ngày";
+"Weekly" = "Hằng tuần";
+"Monthly" = "Hằng tháng";
+"Yearly" = "Hằng năm";
+"Which day of the %@ do you want your budget to start from?" = "Bạn muốn ngân sách bắt đầu từ ngày nào trong %@?";
+"weekNewBudget" = "tuần";
+"monthNewBudget" = "tháng";
+"yearNewBudget" = "năm";
+"Sunday" = "Chủ Nhật";
+"Monday" = "Thứ Hai";
+"Tuesday" = "Thứ Ba";
+"Wednesday" = "Thứ Tư";
+"Thursday" = "Thứ Năm";
+"Friday" = "Thứ Sáu";
+"Saturday" = "Thứ Bảy";
+"Start of month" = "Đầu tháng";
+"%@ of month" = "Ngày %@ của tháng";
+"Set budget amount" = "Đặt số tiền ngân sách";
+"Feel free to edit this in the future." = "Bạn có thể thay đổi bất cứ lúc nào.";
+"%@ SPENT" = "ĐÃ CHI %@";
+"left %@" = "còn lại (%@)";
+"over %@" = "vượt (%@)";
+"left of %@" = "còn lại trên %@";
+"widget-log-button" = "Ghi";
+"left today" = "còn lại hôm nay";
+"left on %@" = "còn lại vào %@";
+"over today" = "vượt hôm nay";
+"over on %@" = "vượt vào %@";
+"left this week" = "còn lại tuần này";
+"over this week" = "vượt tuần này";
+"left each day" = "còn lại mỗi ngày";
+"left this month" = "còn lại tháng này";
+"over this month" = "vượt tháng này";
+"left this year" = "còn lại năm nay";
+"over this year" = "vượt năm nay";
+"%lldd left" = "còn %lld ngày";
+"%lldh left" = "còn %lld giờ";
+"%@ • %@ spent" = "%@ • đã chi %@";
+"Back" = "Quay lại";
+"Delete the '%@' budget?" = "Xóa ngân sách '%@'?";
+"OVERALL SPENT: %@" = "TỔNG ĐÃ CHI: %@";
+"Delete your overall budget?" = "Xóa ngân sách tổng?";
+
+// Settings
+"Settings" = "Cài đặt";
+"General" = "Chung";
+"Data" = "Dữ liệu";
+"Others" = "Khác";
+"Appearance" = "Giao diện";
+"Start of Week" = "Ngày đầu tuần";
+"Notifications" = "Thông báo";
+"Currency" = "Tiền tệ";
+"Number Entry" = "Nhập số";
+"Authentication" = "Xác thực";
+"Income Tracking" = "Theo dõi thu nhập";
+"Display Cents" = "Hiển thị số thập phân";
+"iCloud Sync" = "Đồng bộ iCloud";
+"Export Data" = "Xuất dữ liệu";
+"Erase Data" = "Xóa dữ liệu";
+"Animated Charts" = "Biểu đồ động";
+"Feature Lab" = "Phòng thí nghiệm";
+"Tip Jar" = "Ủng hộ";
+"Report Bug" = "Báo lỗi";
+"Rate on App Store" = "Đánh giá trên App Store";
+"Share with Friends" = "Chia sẻ với bạn bè";
+"Follow Dime on Twitter" = "Theo dõi Dime trên Twitter";
+"Follow Rafael on Instagram" = "Theo dõi Rafael trên Instagram";
+"Light" = "Sáng";
+"Dark" = "Tối";
+"System" = "Hệ thống";
+"Mornings" = "Buổi sáng";
+"Evenings" = "Buổi tối";
+"Custom" = "Tùy chỉnh";
+"Off" = "Tắt";
+"On" = "Bật";
+"Type 1" = "Kiểu 1";
+"Type 2" = "Kiểu 2";
+"Close and reload app for change to take effect." = "Đóng và mở lại ứng dụng để áp dụng thay đổi.";
+"Enable Notifications" = "Bật thông báo";
+"Every morning (8:00 AM)" = "Mỗi sáng (8:00)";
+"Every evening (8:00 PM)" = "Mỗi tối (20:00)";
+"Custom Time" = "Giờ tùy chỉnh";
+"Currencies" = "Tiền tệ";
+"Number Entry Method" = "Cách nhập số";
+"\"Pre-dotted\"" = "\"Có sẵn dấu thập phân\"";
+"If you're too lazy to add a decimal point, I gotchu covered." = "Lười gõ dấu thập phân? Cứ để mình lo.";
+"\"Cent-less\"" = "\"Không thập phân\"";
+"If your transactions usually amount to whole numbers - this one is for you." = "Nếu giao dịch của bạn thường là số tròn - lựa chọn này dành cho bạn.";
+"Enable Sync" = "Bật đồng bộ";
+"Permanently Delete Everythin'" = "Xóa vĩnh viễn mọi thứ";
+"This action would delete all existing transactions, categories, and budgets, and cannot be undone." = "Thao tác này sẽ xóa tất cả giao dịch, danh mục và ngân sách hiện có, và không thể hoàn tác.";
+"Danger Zone" = "Vùng nguy hiểm";
+"This action genuinely cannot be undone. Long press to confirm." = "Thao tác này thực sự không thể hoàn tác. Nhấn giữ để xác nhận.";
+"Delete Literally Everything" = "Xóa sạch mọi thứ";
+"Back Out" = "Thôi";
+"Celebrate Expenses" = "Ăn mừng khoản chi";
+"Show Line Graph" = "Hiện biểu đồ đường";
+"Budget Rows" = "Ngân sách dạng hàng";
+"Experimental features - proceed with caution." = "Tính năng thử nghiệm - hãy dùng cẩn thận.";
+"Replace Time Label" = "Thay nhãn thời gian";
+"Swaps the time label of each transaction with its category name. However, if you do not manually input a note for each transaction - in which case the note is the category name by default - duplicate text will appear." = "Thay nhãn thời gian của mỗi giao dịch bằng tên danh mục. Tuy nhiên, nếu bạn không tự nhập ghi chú cho mỗi giao dịch - khi đó ghi chú mặc định là tên danh mục - chữ sẽ bị lặp lại.";
+"Keep the streak going!" = "Giữ vững chuỗi ngày nhé!";
+"Remember to input your expenses today." = "Đừng quên ghi lại chi tiêu hôm nay.";
+"Loading" = "Đang tải";
+"Unable to load tip options, please try again later 🥲" = "Không tải được các mức ủng hộ, vui lòng thử lại sau 🥲";
+"Hey! Dime was built by a solo student developer, and is intended to be completely free-of-charge, with no paywalls or ads. If you enjoy using Dime and want to support development, please consider a small tip." = "Chào bạn! Dime được một sinh viên tự phát triển, và hoàn toàn miễn phí, không có tường phí hay quảng cáo. Nếu bạn thích dùng Dime và muốn ủng hộ việc phát triển, hãy cân nhắc ủng hộ một chút nhé.";
+"Tip failed to go through, please try again!" = "Ủng hộ không thành công, vui lòng thử lại!";
+"Thanks a million, %@ Rafael" = "Cảm ơn bạn rất nhiều, %@ Rafael";
+"Have a great day ahead!" = "Chúc bạn một ngày tốt lành!";
+"Version %@ (%@)" = "Phiên bản %@ (%@)";
+"Made with ❤️ by %@ from 🇸🇬" = "Được làm với ❤️ bởi %@ từ 🇸🇬";
+"☕ Coffee-Sized Tip" = "☕ Một ly cà phê";
+"🌮 Taco-Sized Tip" = "🌮 Một chiếc taco";
+"🍕 Pizza-Sized Tip" = "🍕 Một chiếc pizza";
+
+// Widgets
+
+// Labels
+"Recent Transactions" = "Giao dịch gần đây";
+"View your latest expenses." = "Xem các khoản chi mới nhất.";
+"Analyse your expenditure breakdowns over various time periods." = "Phân tích chi tiết chi tiêu qua nhiều khoảng thời gian.";
+"Monitor how you are sticking to your overall budgets." = "Theo dõi mức bám sát ngân sách tổng.";
+"Budget" = "Ngân sách";
+"Monitor how you are sticking to your budgets." = "Theo dõi mức bám sát ngân sách.";
+"New Expense" = "Khoản chi mới";
+"A convenient button to log new purchases." = "Nút tiện lợi để ghi lại khoản mua mới.";
+
+"%lld%% spent" = "Đã chi %lld%%";
+"NO RECENT EXPENSES" = "KHÔNG CÓ KHOẢN CHI GẦN ĐÂY";
+"RECENT EXPENSES" = "KHOẢN CHI GẦN ĐÂY";
+"Recent expenses" = "Khoản chi gần đây";
+"No recent expenses" = "Không có khoản chi gần đây";
+"in %@" = "trong %@";
+"net" = "ròng";
+"earned" = "đã thu";
+"spent" = "đã chi";
+"Time Period" = "Khoảng thời gian";
+"NO TRANSACTIONS\n%@" = "KHÔNG CÓ GIAO DỊCH\n%@";
+"THIS WEEK" = "TUẦN NÀY";
+"THIS MONTH" = "THÁNG NÀY";
+"THIS YEAR" = "NĂM NAY";
+"EARNED " = "ĐÃ THU ";
+"SPENT " = "ĐÃ CHI ";
+"ADD OVERALL BUDGET" = "THÊM NGÂN SÁCH TỔNG";
+"Percent Spent" = "Phần trăm đã chi";
+"Create your overall budget in the app" = "Tạo ngân sách tổng trong ứng dụng";
+"ADD BUDGET" = "THÊM NGÂN SÁCH";
+"over" = "vượt";
+"SPENT: %@" = "ĐÃ CHI: %@";
+"Select budget in widget options" = "Chọn ngân sách trong tùy chọn widget";
+"Budget no longer exists - please select new budget from widget options." = "Ngân sách không còn tồn tại - vui lòng chọn ngân sách mới trong tùy chọn widget.";
+"left" = "còn lại";
+"SELECT BUDGET" = "CHỌN NGÂN SÁCH";
+"SELECT BUDGET IN WIDGET OPTIONS" = "CHỌN NGÂN SÁCH TRONG TÙY CHỌN WIDGET";
+
+// iCloud sync status
+"Up to date" = "Đã cập nhật";
+"Syncing…" = "Đang đồng bộ…";
+"Not Syncing" = "Không đồng bộ";
+"Waiting to sync" = "Đang chờ đồng bộ";
+"Checking iCloud…" = "Đang kiểm tra iCloud…";
+"Last synced %@" = "Đồng bộ lần cuối %@";
+"Sign in to iCloud in the Settings app to back up and sync your data." = "Đăng nhập iCloud trong ứng dụng Cài đặt để sao lưu và đồng bộ dữ liệu.";
+"iCloud is restricted on this device, so your data isn't being backed up." = "iCloud bị giới hạn trên thiết bị này, nên dữ liệu của bạn không được sao lưu.";
+"iCloud is temporarily unavailable. Check your Apple Account in the Settings app." = "iCloud tạm thời không khả dụng. Kiểm tra Tài khoản Apple trong ứng dụng Cài đặt.";
+"Couldn't check your iCloud account." = "Không thể kiểm tra tài khoản iCloud.";
+"Your iCloud storage is full, so new changes aren't being backed up or synced. Free up space in the Settings app." = "Dung lượng iCloud đã đầy, nên các thay đổi mới không được sao lưu hay đồng bộ. Hãy giải phóng dung lượng trong ứng dụng Cài đặt.";
+"You're offline. Changes will sync when you're back online." = "Bạn đang ngoại tuyến. Thay đổi sẽ được đồng bộ khi bạn trực tuyến trở lại.";
+"Dime's data was deleted from iCloud in the Settings app." = "Dữ liệu Dime đã bị xóa khỏi iCloud trong ứng dụng Cài đặt.";
+"iCloud is busy right now. Dime will try again automatically." = "iCloud đang bận. Dime sẽ tự động thử lại.";
+"Sync ran into a problem and will try again." = "Đồng bộ gặp sự cố và sẽ thử lại.";
+
+// Backups
+"Backups" = "Sao lưu";
+"Back Up Now" = "Sao lưu ngay";
+"Dime backs up your data on this device once a day and keeps the last 14 backups. Restoring adds back anything that's missing and never removes or changes what you have now. Backups are deleted if you delete Dime." = "Dime sao lưu dữ liệu trên thiết bị này mỗi ngày một lần và giữ 14 bản sao lưu gần nhất. Khôi phục sẽ thêm lại những gì bị thiếu và không bao giờ xóa hay thay đổi dữ liệu hiện có. Các bản sao lưu sẽ bị xóa nếu bạn xóa Dime.";
+"No backups yet" = "Chưa có bản sao lưu";
+"Restore" = "Khôi phục";
+"Restore this backup?" = "Khôi phục bản sao lưu này?";
+"Anything missing from Dime will be added back from the backup made %@. Nothing you have now will be removed or changed." = "Những gì bị thiếu trong Dime sẽ được thêm lại từ bản sao lưu tạo %@. Dữ liệu hiện có sẽ không bị xóa hay thay đổi.";
+"Nothing was missing" = "Không thiếu gì cả";
+"Restore complete" = "Đã khôi phục xong";
+"Everything in this backup is already in Dime." = "Mọi thứ trong bản sao lưu này đã có trong Dime.";
+"Items added back: %lld." = "Số mục đã thêm lại: %lld.";
+"Waiting for iCloud" = "Đang chờ iCloud";
+"You can restore once iCloud finishes syncing, so nothing gets added twice." = "Bạn có thể khôi phục sau khi iCloud đồng bộ xong, để không có gì bị thêm hai lần.";
+"Something went wrong" = "Đã xảy ra lỗi";
+"Dime couldn't finish. Please try again." = "Dime không thể hoàn tất. Vui lòng thử lại.";
+"OK" = "OK";
+"Some of your data may be missing" = "Một số dữ liệu của bạn có thể bị thiếu";
+"Backup from %@: %lld transactions. On this device now: %lld. Restore what's missing? Nothing you have now will be removed or changed." = "Bản sao lưu từ %@: %lld giao dịch. Hiện có trên thiết bị: %lld. Khôi phục phần bị thiếu? Dữ liệu hiện có sẽ không bị xóa hay thay đổi.";
+"Not Now" = "Để sau";
+
+/* Multiple currencies */
+"No exchange rate yet" = "Chưa có tỷ giá";
+"Currency, %@" = "Tiền tệ, %@";
+"Recent" = "Gần đây";
+"All Currencies" = "Tất cả tiền tệ";
+"Exchange Rates" = "Tỷ giá";
+"None yet" = "Chưa có";
+"Never" = "Chưa bao giờ";
+"Source" = "Nguồn";
+"Last Updated" = "Cập nhật lần cuối";
+"Days Saved" = "Số ngày đã lưu";
+"Refresh Rates" = "Làm mới tỷ giá";
+"Rates come from fawazahmed0/exchange-api, and from Frankfurter (European Central Bank) for dates before March 2024. Each transaction is converted at the rate on its own date. Rates are kept on this device only and are never added to your data or iCloud." = "Tỷ giá lấy từ fawazahmed0/exchange-api, và từ Frankfurter (Ngân hàng Trung ương châu Âu) cho các ngày trước tháng 3/2024. Mỗi giao dịch được quy đổi theo tỷ giá của chính ngày đó. Tỷ giá chỉ lưu trên thiết bị này và không bao giờ được thêm vào dữ liệu của bạn hay iCloud.";
+"Some rates couldn't be downloaded. Dime will try again later, and amounts without a rate are left out of totals until then." = "Không tải được một số tỷ giá. Dime sẽ thử lại sau, và cho đến lúc đó các khoản chưa có tỷ giá sẽ không được tính vào tổng.";
+"with an unknown currency" = "với tiền tệ không xác định";
+"Change your primary currency?" = "Đổi tiền tệ chính?";
+"Primary Currency" = "Tiền tệ chính";
+"Can't restore yet" = "Chưa thể khôi phục";
+"Changes the currency of this transaction" = "Đổi tiền tệ của giao dịch này";
+"My transactions were actually in %@" = "Giao dịch của tôi thực ra là %@";
+"Convert to %@" = "Quy đổi sang %@";
+"Relabelling keeps every amount as it is and treats your %@ transactions as %@. Converting keeps them in %@ and shows them in %@ at each day's rate. Budgets and templates keep their amounts. Dime backs up your data first." = "Đổi nhãn giữ nguyên mọi số tiền và coi các giao dịch %1$@ của bạn là %2$@. Quy đổi giữ chúng ở %3$@ và hiển thị bằng %4$@ theo tỷ giá từng ngày. Ngân sách và mẫu giữ nguyên số tiền. Dime sẽ sao lưu dữ liệu trước.";
+"Currency not changed" = "Chưa đổi tiền tệ";
+"Dime is still finishing your last currency change. Try again in a moment." = "Dime vẫn đang hoàn tất lần đổi tiền tệ trước. Hãy thử lại sau giây lát.";
+"Dime is still catching up with iCloud. Try again once it's up to date." = "Dime vẫn đang đồng bộ với iCloud. Hãy thử lại khi đã cập nhật xong.";
+"Dime couldn't back up your data first, so nothing was changed. Please try again." = "Dime không thể sao lưu dữ liệu trước, nên chưa có gì thay đổi. Vui lòng thử lại.";
+"Dime couldn't finish changing your currency. Nothing was lost, and it will finish the next time you open Dime." = "Dime không thể hoàn tất việc đổi tiền tệ. Không có gì bị mất, và việc này sẽ hoàn tất vào lần tới bạn mở Dime.";
+"Here you go! %@" = "Đây rồi! %@";
+"A three-letter code such as EUR. Leave it empty to use the currency Dime picks for new transactions." = "Mã gồm ba chữ cái như VND. Để trống để dùng tiền tệ Dime chọn cho giao dịch mới.";
+"Which currency? Use a three-letter code such as EUR." = "Tiền tệ nào? Dùng mã ba chữ cái như VND.";
+"Export" = "Xuất";
+"All time" = "Toàn bộ thời gian";
+"No transactions to export" = "Không có giao dịch để xuất";
+
+/* Feature tips */
+"Log in Any Currency" = "Ghi bằng mọi loại tiền";
+"Tap the symbol to change this transaction's currency." = "Chạm vào ký hiệu để đổi tiền tệ của giao dịch này.";
+
+/* What's New 3.0.1 */
+"Version %@" = "Phiên bản %@";
+"Multiple Currencies" = "Nhiều loại tiền tệ";
+"Tap the currency symbol to log in any currency. Totals are converted to your primary currency at each day's rate." = "Chạm vào ký hiệu tiền tệ để ghi bằng bất kỳ loại tiền nào. Tổng được quy đổi sang tiền tệ chính theo tỷ giá từng ngày.";
+"Start Your Week Any Day" = "Bắt đầu tuần vào ngày bất kỳ";
+"Weeks can now begin on any weekday. Pick yours in Settings." = "Giờ đây tuần có thể bắt đầu vào bất kỳ ngày nào. Chọn trong Cài đặt.";
+"Export a Period" = "Xuất một khoảng thời gian";
+"Choose the dates to include before exporting your transactions." = "Chọn các ngày cần đưa vào trước khi xuất giao dịch.";
+"Unlimited Categories" = "Danh mục không giới hạn";
+"Add as many expense categories as you like, shown in the order you set." = "Thêm bao nhiêu danh mục chi tiêu tùy thích, hiển thị theo thứ tự bạn sắp xếp.";
+"Search by Amount" = "Tìm theo số tiền";
+"Find a transaction by its amount, even with a currency symbol or separators." = "Tìm giao dịch theo số tiền, kể cả khi có ký hiệu tiền tệ hoặc dấu phân cách.";
+"Français and Русский" = "Français và Русский";
+"Dime is now available in French and Russian." = "Dime nay đã có tiếng Pháp và tiếng Nga.";
+
+// quick add
+"Quick Add" = "Thêm nhanh";
+"Templates" = "Mẫu";
+"%lld/%lld" = "%lld/%lld";
+"%lld of %lld templates" = "%lld/%lld mẫu";
+"New Template" = "Mẫu mới";
+"You can have up to 4 templates" = "Bạn có thể tạo tối đa 4 mẫu";
+"Log a template with one tap from the Quick Add widget, without opening Dime. Each one becomes its own transaction, so editing or deleting a template never changes what you've logged." = "Ghi một mẫu chỉ bằng một chạm từ widget Thêm nhanh, không cần mở Dime. Mỗi lần ghi là một giao dịch riêng, nên sửa hay xóa mẫu không bao giờ thay đổi những gì bạn đã ghi.";
+"Add From Recent" = "Thêm từ gần đây";
+"Adds a template" = "Thêm một mẫu";
+"Delete Template?" = "Xóa mẫu?";
+"Transactions you've logged with it stay as they are." = "Các giao dịch đã ghi bằng mẫu này vẫn giữ nguyên.";
+"Log your templates with one tap, without opening Dime." = "Ghi mẫu chỉ bằng một chạm, không cần mở Dime.";
+"Add templates in Settings to log them from here." = "Thêm mẫu trong Cài đặt để ghi từ đây.";
+"Add a template" = "Thêm mẫu";
+"Log %@, %@" = "Ghi %@, %@";
+"Logged %@, %@" = "Đã ghi %@, %@";
+"Log Quick Add Template" = "Ghi mẫu Thêm nhanh";
+"Template" = "Mẫu";
+"Coffee" = "Cà phê";
+"Lunch" = "Ăn trưa";
+"Bus" = "Xe buýt";
+
+/* Notifications */
+"Reminders" = "Lời nhắc";
+"Daily Check-in" = "Nhắc hằng ngày";
+"A nudge to log the day's spending" = "Nhắc ghi lại chi tiêu trong ngày";
+"Upcoming Charges" = "Khoản thanh toán sắp tới";
+"A heads-up before a recurring expense is logged" = "Báo trước khi một khoản chi định kỳ được ghi";
+"Time" = "Thời gian";
+"Remind Me" = "Nhắc tôi";
+"On the day" = "Đúng ngày";
+"1 day before" = "Trước 1 ngày";
+"%lld days before" = "Trước %lld ngày";
+"Fewer days" = "Ít ngày hơn";
+"More days" = "Nhiều ngày hơn";
+"Check-ins and charge reminders both arrive at this time." = "Lời nhắc hằng ngày và nhắc thanh toán đều đến vào giờ này.";
+"Your check-in arrives at this time every day." = "Lời nhắc hằng ngày đến vào giờ này mỗi ngày.";
+"Charge reminders arrive at this time." = "Nhắc thanh toán đến vào giờ này.";
+"Covers recurring expenses. Reminders are planned a couple of months ahead and refresh whenever you open Dime." = "Áp dụng cho các khoản chi định kỳ. Lời nhắc được lên lịch trước vài tháng và làm mới mỗi khi bạn mở Dime.";
+"Due today: %@" = "Đến hạn hôm nay: %@";
+"Due tomorrow: %@" = "Đến hạn ngày mai: %@";
+"Due in %lld days: %@" = "Đến hạn sau %lld ngày: %@";
+"%@ will be added to your log today." = "%@ sẽ được thêm vào nhật ký hôm nay.";
+"%@ will be added to your log tomorrow." = "%@ sẽ được thêm vào nhật ký ngày mai.";
+"%@ will be added to your log on %@." = "%@ sẽ được thêm vào nhật ký vào %@.";
+
+// shortcuts
+"Category for an income. Choose No Category to log it without one." = "Danh mục cho khoản thu. Chọn Không có danh mục để ghi mà không cần danh mục.";
+"Category for an expense. Choose No Category to log it without one." = "Danh mục cho khoản chi. Chọn Không có danh mục để ghi mà không cần danh mục.";
+
+// quick add grid
+"Tap a template to edit it, or hold and drag it to a new spot. The Quick Add widget logs each one with one tap, without opening Dime, and editing or deleting a template never changes what you've logged." = "Chạm vào mẫu để sửa, hoặc giữ và kéo sang vị trí mới. Widget Thêm nhanh ghi từng mẫu chỉ bằng một chạm mà không cần mở Dime, và sửa hay xóa mẫu không bao giờ thay đổi những gì bạn đã ghi.";
+"Move Earlier" = "Chuyển lên trước";
+"Move Later" = "Chuyển xuống sau";
+"Edits the template" = "Sửa mẫu";
+
+// budget rollover
+"with" = "và";
+"rollover" = "có chuyển dư";
+"no rollover" = "không chuyển dư";
+"+%@ rolled over" = "+%@ được chuyển sang";
+"−%@ rolled over" = "−%@ được chuyển sang";
+"Leftover rolls over %@" = "Phần dư chuyển sang %@";
+"Nothing rolled over" = "Không có gì được chuyển sang";
+"Rolls over" = "Chuyển dư";
+"%@ budget %@ %@ = %@" = "Ngân sách %@ %@ %@ = %@";
+"Rollover" = "Chuyển dư";
+"Whether what's left, or overspent, carries into the next period" = "Phần còn lại hoặc phần chi vượt có được chuyển sang kỳ sau hay không";
+"%@ overspend" = "Chi vượt %@";
+"%@ left over" = "Dư %@";
+"Rollover starts this period" = "Chuyển dư bắt đầu từ kỳ này";
+"What's left at the end of this period, or overspent, carries into the next one. Earlier periods aren't counted." = "Phần còn lại hoặc phần chi vượt vào cuối kỳ này sẽ được chuyển sang kỳ sau. Các kỳ trước không được tính.";
+"Turn On Rollover" = "Bật chuyển dư";
+"Turn off rollover?" = "Tắt chuyển dư?";
+"The %@ from earlier periods will be cleared. Turning rollover back on starts fresh." = "%@ từ các kỳ trước sẽ bị xóa. Bật lại chuyển dư sẽ bắt đầu từ đầu.";
+"Leftovers will stop carrying over. Turning rollover back on starts fresh." = "Phần dư sẽ không được chuyển sang nữa. Bật lại chuyển dư sẽ bắt đầu từ đầu.";
+"Turn Off" = "Tắt";
+"Reset rollover?" = "Đặt lại chuyển dư?";
+"Changing how often this budget repeats clears the %@ from earlier periods. Rollover starts again from this period." = "Đổi tần suất lặp của ngân sách này sẽ xóa %@ từ các kỳ trước. Chuyển dư bắt đầu lại từ kỳ này.";
+"Changing the category clears the %@ from earlier periods. Rollover starts again from this period." = "Đổi danh mục sẽ xóa %@ từ các kỳ trước. Chuyển dư bắt đầu lại từ kỳ này.";
+"Changing how often this budget repeats restarts rollover from this period." = "Đổi tần suất lặp của ngân sách này sẽ bắt đầu lại chuyển dư từ kỳ này.";
+"Changing the category restarts rollover from this period." = "Đổi danh mục sẽ bắt đầu lại chuyển dư từ kỳ này.";
+"Apply from this period?" = "Áp dụng từ kỳ này?";
+"Your changes apply from this period on, and earlier periods keep their old settings." = "Thay đổi áp dụng từ kỳ này trở đi, các kỳ trước giữ cài đặt cũ.";
+"The new amount applies from this period on, and earlier periods keep the old one." = "Số tiền mới áp dụng từ kỳ này trở đi, các kỳ trước giữ số tiền cũ.";
+"The new reset day applies from this period on, and earlier periods keep the old one." = "Ngày đặt lại mới áp dụng từ kỳ này trở đi, các kỳ trước giữ ngày cũ.";
+"The %@ from earlier periods is kept." = "%@ từ các kỳ trước được giữ lại.";
+
+// log
+"UPCOMING" = "SẮP TỚI";
+
+// budgets, insights and settings
+"Overall" = "Tổng";
+"%lld days to go" = "còn %lld ngày";
+"1 day to go" = "còn 1 ngày";
+"%lld hours to go" = "còn %lld giờ";
+"1 hour to go" = "còn 1 giờ";
+"%@ a day for %lld days" = "%@ mỗi ngày trong %lld ngày";
+"%@ left today" = "Hôm nay còn %@";
+"%@ a day" = "%@ mỗi ngày";
+"Close to limit" = "Sắp chạm hạn mức";
+"Resets %@" = "Đặt lại %@";
+"tomorrow" = "ngày mai";
+"Nothing spent yet" = "Chưa chi gì";
+"Over budget" = "Vượt ngân sách";
+"Net" = "Ròng";
+"Top categories" = "Danh mục hàng đầu";
+"Largest expenses" = "Khoản chi lớn nhất";
+"%lld%% of spending" = "%lld%% chi tiêu";
+"of spending" = "chi tiêu";
+"of income" = "thu nhập";
+"avg " = "TB ";
+"~%@ forecasted" = "Dự báo ~%@";
+"categories" = "danh mục";
+"category" = "danh mục";
+"Time Frames" = "Khoảng thời gian";
+"Theme" = "Chủ đề";
+"App Icon" = "Biểu tượng ứng dụng";
+"Upcoming Logs" = "Mục sắp tới";
+"Shown" = "Hiện";
+"Hidden" = "Ẩn";
+"Display +/- Symbol" = "Hiện ký hiệu +/-";
+
+/* Delete category */
+"%@ has 1 transaction. What should happen to it?" = "%@ có 1 giao dịch. Bạn muốn xử lý thế nào?";
+"%@ has %lld transactions. What should happen to them?" = "%@ có %lld giao dịch. Bạn muốn xử lý thế nào?";
+"Move to" = "Chuyển sang";
+"Delete it" = "Xóa giao dịch";
+"Delete them" = "Xóa các giao dịch";
+"Delete Category" = "Xóa danh mục";
+
+"Font" = "Phông chữ";
+"Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo là kiểu chữ của Josh Puckett, được cấp phép theo SIL Open Font License.";

@@ -1,0 +1,555 @@
+/*
+  Localizable.strings
+  dime
+
+  Gujarati
+*/
+
+// welcome sheet
+
+"dime_name" = "Dime";
+"welcome_header_1" = "તમારા પૈસાનો હિસાબ રાખો";
+"welcome_subtitle_1" = "સરળ અને સીધી રીતે નવી એન્ટ્રી ઉમેરો";
+"welcome_header_2" = "તમારા ખર્ચનું વિશ્લેષણ કરો";
+"welcome_subtitle_2" = "જુદા જુદા સમયગાળાના ખર્ચમાંથી સમજ મેળવો";
+"welcome_header_3" = "બજેટમાં રહો";
+"welcome_subtitle_3" = "ખર્ચ મર્યાદિત રાખવા કેટેગરી અને સમય મુજબ લક્ષ્યો નક્કી કરો";
+"Get Started" = "શરૂ કરો";
+
+// categories
+
+"Categories" = "કેટેગરી";
+"no_income_categories" = "આવકની કોઈ કેટેગરી મળી નથી";
+"no_expense_categories" = "ખર્ચની કોઈ કેટેગરી મળી નથી";
+"Suggestions Hidden" = "સૂચનો છુપાવ્યાં";
+"Successfully Edited" = "ફેરફારો સેવ થયા";
+"Income Categories" = "આવકની કેટેગરી";
+"Expense Categories" = "ખર્ચની કેટેગરી";
+"Suggested" = "સૂચવેલી";
+"Income Category" = "આવકની કેટેગરી";
+"Expense Category" = "ખર્ચની કેટેગરી";
+"New" = "નવું";
+"Expense" = "ખર્ચ";
+"Income" = "આવક";
+"Delete" = "ડિલીટ કરો";
+"Cancel" = "રદ કરો";
+"Delete '%@'?" = "'%@' ડિલીટ કરીએ?";
+"This action cannot be undone, and all %@ transactions would be deleted." = "આ ક્રિયા પાછી ફેરવી શકાશે નહીં, અને %@ના બધા વ્યવહારો ડિલીટ થઈ જશે.";
+"Category Name" = "કેટેગરીનું નામ";
+"Missing Name" = "નામ નથી";
+"Missing Emoji" = "ઇમોજી નથી";
+"Incomplete Entry" = "એન્ટ્રી અધૂરી છે";
+"Missing Information" = "માહિતી અધૂરી છે";
+"This action cannot be undone." = "આ ક્રિયા પાછી ફેરવી શકાશે નહીં.";
+"Duplicate Found" = "આ પહેલેથી છે";
+"Please Edit Accordingly" = "કૃપા કરીને તે મુજબ ફેરફાર કરો";
+"Please Change Emoji" = "કૃપા કરીને ઇમોજી બદલો";
+"Please Change Name" = "કૃપા કરીને નામ બદલો";
+"Food" = "ખાવાનું";
+"Transport" = "મુસાફરી";
+"Rent" = "ભાડું";
+"Subscriptions" = "સબ્સ્ક્રિપ્શન";
+"Groceries" = "કરિયાણું";
+"Family" = "પરિવાર";
+"Utilities" = "બિલ";
+"Fashion" = "ફેશન";
+"Healthcare" = "આરોગ્ય";
+"Pets" = "પાળતુ પ્રાણી";
+"Sneakers" = "સ્નીકર્સ";
+"Gifts" = "ભેટ";
+"Paycheck" = "પગાર";
+"Allowance" = "ખિસ્સાખર્ચી";
+"Part-Time" = "પાર્ટ-ટાઇમ";
+"Investments" = "રોકાણ";
+"Tips" = "ટિપ્સ";
+"Successfully Added" = "ઉમેરાઈ ગયું";
+
+// new transaction page
+"Today, %@" = "આજે, %@";
+"Add Note" = "નોંધ ઉમેરો";
+"Category" = "કેટેગરી";
+"none" = "ક્યારેય નહીં";
+"daily" = "દરરોજ";
+"weekly" = "દર અઠવાડિયે";
+"monthly" = "દર મહિને";
+"custom" = "કસ્ટમ";
+"Custom Interval" = "કસ્ટમ અંતરાલ";
+"Repeats every" = "પુનરાવર્તન દર";
+"days" = "દિવસ";
+"weeks" = "અઠવાડિયાં";
+"months" = "મહિના";
+"Edit" = "ફેરફાર કરો";
+"Delete Expense?" = "આ ખર્ચ ડિલીટ કરીએ?";
+"Missing Amount" = "રકમ નથી";
+"Expense Was Deleted" = "આ ખર્ચ ડિલીટ થઈ ગયો";
+"Template Was Deleted" = "આ ટેમ્પ્લેટ ડિલીટ થઈ ગયું";
+"Budget Was Deleted" = "આ બજેટ ડિલીટ થઈ ગયું";
+"Category Was Deleted" = "આ કેટેગરી ડિલીટ થઈ ગઈ";
+"Dime couldn't open your data" = "Dime તમારો ડેટા ખોલી શક્યું નહીં";
+"Your entries are still on this device, and nothing has been changed or deleted. Please don't delete Dime: that would remove them. Try again, or contact support if this keeps happening." = "તમારી એન્ટ્રી હજી આ ડિવાઇસ પર જ છે, અને કંઈ બદલાયું કે ડિલીટ થયું નથી. કૃપા કરીને Dime ડિલીટ કરશો નહીં: તેમ કરવાથી એન્ટ્રી દૂર થઈ જશે. ફરી પ્રયાસ કરો, અથવા આવું વારંવાર થાય તો સપોર્ટનો સંપર્ક કરો.";
+"Try Again" = "ફરી પ્રયાસ કરો";
+"Trying Again…" = "ફરી પ્રયાસ થઈ રહ્યો છે…";
+"Contact Support" = "સપોર્ટનો સંપર્ક કરો";
+"Dime couldn't save your changes" = "Dime તમારા ફેરફારો સેવ કરી શક્યું નહીં";
+"This device is out of storage. Free up some space in the Settings app, and Dime will save your changes when you come back." = "આ ડિવાઇસનું સ્ટોરેજ ભરાઈ ગયું છે. સેટિંગ્સ ઍપમાં થોડી જગ્યા ખાલી કરો, અને તમે પાછા આવશો ત્યારે Dime તમારા ફેરફારો સેવ કરશે.";
+"Dime will try again. If this keeps happening, contact support." = "Dime ફરી પ્રયાસ કરશે. આવું વારંવાર થાય તો સપોર્ટનો સંપર્ક કરો.";
+"This device is out of storage, so Dime can't open your data. Your entries are still here. Free up some space in the Settings app, then try again. Please don't delete Dime: that would remove them." = "આ ડિવાઇસનું સ્ટોરેજ ભરાઈ ગયું છે, તેથી Dime તમારો ડેટા ખોલી શકતું નથી. તમારી એન્ટ્રી હજી અહીં જ છે. સેટિંગ્સ ઍપમાં થોડી જગ્યા ખાલી કરો, પછી ફરી પ્રયાસ કરો. કૃપા કરીને Dime ડિલીટ કરશો નહીં: તેમ કરવાથી એન્ટ્રી દૂર થઈ જશે.";
+"Missing Category" = "કેટેગરી નથી";
+"No Category" = "કોઈ કેટેગરી નહીં";
+"category-picker-none" = "કોઈ નહીં";
+"transaction-view-income-picker" = "આવક";
+
+// log view
+"Your Log is Empty" = "તમારો લૉગ ખાલી છે";
+"Press the plus button to add your first entry" = "તમારી પહેલી એન્ટ્રી ઉમેરવા પ્લસ બટન દબાવો";
+"Search entry by note" = "નોંધથી એન્ટ્રી શોધો";
+"Search by note, category, amount or date" = "નોંધ, કેટેગરી, રકમ અથવા તારીખથી શોધો";
+"Search" = "શોધો";
+"all entries" = "બધી એન્ટ્રી";
+"by type" = "પ્રકાર મુજબ";
+"by day" = "દિવસ મુજબ";
+"by week" = "અઠવાડિયા મુજબ";
+"by month" = "મહિના મુજબ";
+"by category" = "કેટેગરી મુજબ";
+"recurring" = "પુનરાવર્તિત";
+"filter-tag-type" = "પ્રકાર મુજબ";
+"filter-tag-day" = "દિવસ મુજબ";
+"filter-tag-category" = "કેટેગરી મુજબ";
+"filter-tag-week" = "અઠવાડિયા મુજબ";
+"filter-tag-month" = "મહિના મુજબ";
+"filter-tag-recurring" = "પુનરાવર્તિત";
+"filter-picker-income" = "આવક";
+"filter-tag-upcoming" = "આગામી";
+"Total Spent" = "કુલ ખર્ચ";
+"Total Income" = "કુલ આવક";
+"Net Total" = "ચોખ્ખો સરવાળો";
+"Net total" = "ચોખ્ખો સરવાળો";
+"Spent" = "ખર્ચ";
+"Earned" = "કમાણી";
+"today" = "આજે";
+"this week" = "આ અઠવાડિયે";
+"this month" = "આ મહિને";
+"this year" = "આ વર્ષે";
+"No entries found." = "કોઈ એન્ટ્રી મળી નથી.";
+"Try a different search query!" = "કંઈક બીજું શોધી જુઓ!";
+"yesterday" = "ગઈકાલે";
+
+
+// insights
+"Insights" = "વિશ્લેષણ";
+"Analyse Your Expenditure" = "તમારા ખર્ચનું વિશ્લેષણ કરો";
+"As transactions start piling up" = "જેમ જેમ વ્યવહારો વધશે";
+"Expenses" = "ખર્ચ";
+"SPENT/DAY" = "ખર્ચ/દિવસ";
+"INCOME/DAY" = "આવક/દિવસ";
+"SPENT/MTH" = "ખર્ચ/મહિનો";
+"INCOME/MTH" = "આવક/મહિનો";
+"AVG/DAY" = "સરેરાશ/દિવસ";
+"AVG/MTH" = "સરેરાશ/મહિનો";
+"That's all, buddy." = "બસ આટલું જ, દોસ્ત.";
+"Into the unknown." = "અજાણ્યા રસ્તે.";
+"week" = "અઠવાડિયું";
+"month" = "મહિનો";
+"year" = "વર્ષ";
+"Jan" = "જાન્યુ";
+"Apr" = "એપ્રિલ";
+"Jul" = "જુલાઈ";
+"Oct" = "ઑક્ટો";
+
+// budgets
+"Budgets" = "બજેટ";
+"Budget Your Finances" = "તમારા પૈસાનું બજેટ બનાવો";
+"Link budgets to categories and set appropriate expenditure goals" = "બજેટને કેટેગરી સાથે જોડો અને યોગ્ય ખર્ચનાં લક્ષ્યો નક્કી કરો";
+"No Budgets Found" = "કોઈ બજેટ મળ્યું નથી";
+"Add your first budget today!" = "આજે જ તમારું પહેલું બજેટ ઉમેરો!";
+"category budget" = "કેટેગરી બજેટ";
+"overall budget" = "કુલ બજેટ";
+"new" = "નવું";
+"New Budget" = "નવું બજેટ";
+"Overall Budget" = "કુલ બજેટ";
+"Select a category" = "કેટેગરી પસંદ કરો";
+"Begin by linking this budget to an existing category." = "શરૂઆતમાં આ બજેટને હાલની કોઈ કેટેગરી સાથે જોડો.";
+"Choose a time frame" = "સમયગાળો પસંદ કરો";
+"The budget will periodically refresh according to your preference." = "તમારી પસંદગી મુજબ બજેટ સમયાંતરે રીસેટ થશે.";
+"Continue" = "ચાલુ રાખો";
+"Pick a start date" = "શરૂઆતની તારીખ પસંદ કરો";
+"Daily" = "દૈનિક";
+"Weekly" = "સાપ્તાહિક";
+"Monthly" = "માસિક";
+"Yearly" = "વાર્ષિક";
+"Which day of the %@ do you want your budget to start from?" = "તમારું બજેટ %@ કયા દિવસથી શરૂ કરવું છે?";
+"weekNewBudget" = "અઠવાડિયાના";
+"monthNewBudget" = "મહિનાના";
+"yearNewBudget" = "વર્ષના";
+"Sunday" = "રવિવાર";
+"Monday" = "સોમવાર";
+"Tuesday" = "મંગળવાર";
+"Wednesday" = "બુધવાર";
+"Thursday" = "ગુરુવાર";
+"Friday" = "શુક્રવાર";
+"Saturday" = "શનિવાર";
+"Start of month" = "મહિનાની શરૂઆત";
+"%@ of month" = "મહિનાનો દિવસ: %@";
+"Set budget amount" = "બજેટની રકમ નક્કી કરો";
+"Feel free to edit this in the future." = "તમે આને પછી ગમે ત્યારે બદલી શકો છો.";
+"%@ SPENT" = "%@ ખર્ચ";
+"left %@" = "બાકી (%@)";
+"over %@" = "વધુ (%@)";
+"left of %@" = "%@માંથી બાકી";
+"widget-log-button" = "નોંધો";
+"left today" = "આજે બાકી";
+"left on %@" = "%@ બાકી";
+"over today" = "આજે વધુ";
+"over on %@" = "%@ વધુ";
+"left this week" = "આ અઠવાડિયે બાકી";
+"over this week" = "આ અઠવાડિયે વધુ";
+"left each day" = "દરરોજ બાકી";
+"left this month" = "આ મહિને બાકી";
+"over this month" = "આ મહિને વધુ";
+"left this year" = "આ વર્ષે બાકી";
+"over this year" = "આ વર્ષે વધુ";
+"%lldd left" = "%lld દિવસ બાકી";
+"%lldh left" = "%lld કલાક બાકી";
+"%@ • %@ spent" = "%@ • %@ ખર્ચ";
+"Back" = "પાછા";
+"Delete the '%@' budget?" = "'%@' બજેટ ડિલીટ કરીએ?";
+"OVERALL SPENT: %@" = "કુલ ખર્ચ: %@";
+"Delete your overall budget?" = "તમારું કુલ બજેટ ડિલીટ કરીએ?";
+
+// Settings
+"Settings" = "સેટિંગ્સ";
+"General" = "સામાન્ય";
+"Data" = "ડેટા";
+"Others" = "અન્ય";
+"Appearance" = "દેખાવ";
+"Start of Week" = "અઠવાડિયાની શરૂઆત";
+"Notifications" = "સૂચનાઓ";
+"Currency" = "ચલણ";
+"Number Entry" = "અંક એન્ટ્રી";
+"Authentication" = "પ્રમાણીકરણ";
+"Income Tracking" = "આવકનો હિસાબ";
+"Display Cents" = "દશાંશ બતાવો";
+"iCloud Sync" = "iCloud સિંક";
+"Export Data" = "ડેટા એક્સપોર્ટ કરો";
+"Erase Data" = "ડેટા ભૂંસો";
+"Animated Charts" = "એનિમેટેડ ચાર્ટ";
+"Feature Lab" = "ફીચર લેબ";
+"Tip Jar" = "ટિપ જાર";
+"Report Bug" = "બગની જાણ કરો";
+"Rate on App Store" = "App Store પર રેટિંગ આપો";
+"Share with Friends" = "મિત્રો સાથે શેર કરો";
+"Follow Dime on Twitter" = "Twitter પર Dimeને ફૉલો કરો";
+"Follow Rafael on Instagram" = "Instagram પર Rafaelને ફૉલો કરો";
+"Light" = "લાઇટ";
+"Dark" = "ડાર્ક";
+"System" = "સિસ્ટમ";
+"Mornings" = "સવારે";
+"Evenings" = "સાંજે";
+"Custom" = "કસ્ટમ";
+"Off" = "બંધ";
+"On" = "ચાલુ";
+"Type 1" = "પ્રકાર 1";
+"Type 2" = "પ્રકાર 2";
+"Close and reload app for change to take effect." = "ફેરફાર લાગુ કરવા માટે ઍપ બંધ કરીને ફરી ખોલો.";
+"Enable Notifications" = "સૂચનાઓ ચાલુ કરો";
+"Every morning (8:00 AM)" = "દરરોજ સવારે (8:00 AM)";
+"Every evening (8:00 PM)" = "દરરોજ સાંજે (8:00 PM)";
+"Custom Time" = "કસ્ટમ સમય";
+"Currencies" = "ચલણો";
+"Number Entry Method" = "અંક દાખલ કરવાની રીત";
+"\"Pre-dotted\"" = "\"પહેલેથી દશાંશ\"";
+"If you're too lazy to add a decimal point, I gotchu covered." = "દશાંશ બિંદુ મૂકવાનો કંટાળો આવે છે? ચિંતા નહીં, હું સંભાળી લઈશ.";
+"\"Cent-less\"" = "\"દશાંશ વગર\"";
+"If your transactions usually amount to whole numbers - this one is for you." = "જો તમારા વ્યવહારો મોટે ભાગે પૂર્ણ સંખ્યામાં હોય - તો આ તમારા માટે છે.";
+"Enable Sync" = "સિંક ચાલુ કરો";
+"Permanently Delete Everythin'" = "બધું કાયમ માટે ડિલીટ કરો";
+"This action would delete all existing transactions, categories, and budgets, and cannot be undone." = "આનાથી બધા વ્યવહારો, કેટેગરી અને બજેટ ડિલીટ થઈ જશે, અને તે પાછું ફેરવી શકાશે નહીં.";
+"Danger Zone" = "જોખમ વિભાગ";
+"This action genuinely cannot be undone. Long press to confirm." = "આ ખરેખર પાછું ફેરવી શકાશે નહીં. ખાતરી કરવા દબાવી રાખો.";
+"Delete Literally Everything" = "ખરેખર બધું ડિલીટ કરો";
+"Back Out" = "રહેવા દો";
+"Celebrate Expenses" = "ખર્ચની ઉજવણી કરો";
+"Show Line Graph" = "લાઇન ગ્રાફ બતાવો";
+"Budget Rows" = "બજેટની હરોળ";
+"Experimental features - proceed with caution." = "પ્રાયોગિક ફીચર - સાવચેતીથી વાપરો.";
+"Replace Time Label" = "સમયને બદલે કેટેગરી બતાવો";
+"Swaps the time label of each transaction with its category name. However, if you do not manually input a note for each transaction - in which case the note is the category name by default - duplicate text will appear." = "દરેક વ્યવહારના સમયને બદલે તેની કેટેગરીનું નામ બતાવે છે. જોકે, જો તમે દરેક વ્યવહાર માટે જાતે નોંધ ન લખો, તો નોંધ આપમેળે કેટેગરીનું નામ બને છે અને એક જ લખાણ બે વાર દેખાશે.";
+"Keep the streak going!" = "સિલસિલો ચાલુ રાખો!";
+"Remember to input your expenses today." = "આજના ખર્ચ નોંધવાનું ભૂલશો નહીં.";
+"Loading" = "લોડ થઈ રહ્યું છે";
+"Unable to load tip options, please try again later 🥲" = "ટિપના વિકલ્પો લોડ થઈ શક્યા નહીં, કૃપા કરીને પછી ફરી પ્રયાસ કરો 🥲";
+"Hey! Dime was built by a solo student developer, and is intended to be completely free-of-charge, with no paywalls or ads. If you enjoy using Dime and want to support development, please consider a small tip." = "નમસ્તે! Dime એક વિદ્યાર્થી ડેવલપરે એકલા હાથે બનાવ્યું છે, અને તે કોઈ પેવૉલ કે જાહેરાત વગર સંપૂર્ણ મફત છે. જો તમને Dime ગમતું હોય અને તેના વિકાસમાં મદદ કરવી હોય, તો નાની ટિપ આપવાનું વિચારો.";
+"Tip failed to go through, please try again!" = "ટિપ મોકલી શકાઈ નહીં, કૃપા કરીને ફરી પ્રયાસ કરો!";
+"Thanks a million, %@ Rafael" = "ખૂબ ખૂબ આભાર, %@ Rafael";
+"Have a great day ahead!" = "તમારો દિવસ શુભ રહે!";
+"Version %@ (%@)" = "વર્ઝન %@ (%@)";
+"Made with ❤️ by %@ from 🇸🇬" = "🇸🇬 થી %@ એ ❤️ સાથે બનાવ્યું";
+"☕ Coffee-Sized Tip" = "☕ એક કૉફી જેટલી ટિપ";
+"🌮 Taco-Sized Tip" = "🌮 એક ટાકો જેટલી ટિપ";
+"🍕 Pizza-Sized Tip" = "🍕 એક પિઝા જેટલી ટિપ";
+
+// Widgets
+
+// Labels
+"Recent Transactions" = "તાજેતરના વ્યવહારો";
+"View your latest expenses." = "તમારા તાજેતરના ખર્ચ જુઓ.";
+"Analyse your expenditure breakdowns over various time periods." = "જુદા જુદા સમયગાળામાં તમારા ખર્ચની વિગતો જુઓ.";
+"Monitor how you are sticking to your overall budgets." = "તમે કુલ બજેટમાં કેવી રીતે રહો છો તે જુઓ.";
+"Budget" = "બજેટ";
+"Monitor how you are sticking to your budgets." = "તમે બજેટમાં કેવી રીતે રહો છો તે જુઓ.";
+"New Expense" = "નવો ખર્ચ";
+"A convenient button to log new purchases." = "નવી ખરીદી નોંધવા માટેનું સરળ બટન.";
+
+"%lld%% spent" = "%lld%% ખર્ચ";
+"NO RECENT EXPENSES" = "તાજેતરમાં કોઈ ખર્ચ નથી";
+"RECENT EXPENSES" = "તાજેતરના ખર્ચ";
+"Recent expenses" = "તાજેતરના ખર્ચ";
+"No recent expenses" = "તાજેતરમાં કોઈ ખર્ચ નથી";
+"in %@" = "%@માં";
+"net" = "ચોખ્ખું";
+"earned" = "કમાણી";
+"spent" = "ખર્ચ";
+"Time Period" = "સમયગાળો";
+"NO TRANSACTIONS\n%@" = "કોઈ વ્યવહાર નથી\n%@";
+"THIS WEEK" = "આ અઠવાડિયે";
+"THIS MONTH" = "આ મહિને";
+"THIS YEAR" = "આ વર્ષે";
+"EARNED " = "કમાણી ";
+"SPENT " = "ખર્ચ ";
+"ADD OVERALL BUDGET" = "કુલ બજેટ ઉમેરો";
+"Percent Spent" = "ખર્ચની ટકાવારી";
+"Create your overall budget in the app" = "ઍપમાં તમારું કુલ બજેટ બનાવો";
+"ADD BUDGET" = "બજેટ ઉમેરો";
+"over" = "વધુ";
+"SPENT: %@" = "ખર્ચ: %@";
+"Select budget in widget options" = "વિજેટના વિકલ્પોમાં બજેટ પસંદ કરો";
+"Budget no longer exists - please select new budget from widget options." = "આ બજેટ હવે અસ્તિત્વમાં નથી - કૃપા કરીને વિજેટના વિકલ્પોમાંથી નવું બજેટ પસંદ કરો.";
+"left" = "બાકી";
+"SELECT BUDGET" = "બજેટ પસંદ કરો";
+"SELECT BUDGET IN WIDGET OPTIONS" = "વિજેટના વિકલ્પોમાં બજેટ પસંદ કરો";
+
+// iCloud sync status
+"Up to date" = "અપ-ટુ-ડેટ";
+"Syncing…" = "સિંક થઈ રહ્યું છે…";
+"Not Syncing" = "સિંક થતું નથી";
+"Waiting to sync" = "સિંકની રાહ જોવાય છે";
+"Checking iCloud…" = "iCloud તપાસી રહ્યા છીએ…";
+"Last synced %@" = "છેલ્લે સિંક %@";
+"Sign in to iCloud in the Settings app to back up and sync your data." = "તમારા ડેટાનો બેકઅપ અને સિંક કરવા માટે સેટિંગ્સ ઍપમાં iCloudમાં સાઇન ઇન કરો.";
+"iCloud is restricted on this device, so your data isn't being backed up." = "આ ડિવાઇસ પર iCloud પ્રતિબંધિત છે, તેથી તમારા ડેટાનો બેકઅપ થતો નથી.";
+"iCloud is temporarily unavailable. Check your Apple Account in the Settings app." = "iCloud હાલમાં ઉપલબ્ધ નથી. સેટિંગ્સ ઍપમાં તમારું Apple એકાઉન્ટ તપાસો.";
+"Couldn't check your iCloud account." = "તમારું iCloud એકાઉન્ટ તપાસી શકાયું નહીં.";
+"Your iCloud storage is full, so new changes aren't being backed up or synced. Free up space in the Settings app." = "તમારું iCloud સ્ટોરેજ ભરાઈ ગયું છે, તેથી નવા ફેરફારોનો બેકઅપ કે સિંક થતો નથી. સેટિંગ્સ ઍપમાં જગ્યા ખાલી કરો.";
+"You're offline. Changes will sync when you're back online." = "તમે ઑફલાઇન છો. ફરી ઑનલાઇન થશો ત્યારે ફેરફારો સિંક થશે.";
+"Dime's data was deleted from iCloud in the Settings app." = "સેટિંગ્સ ઍપમાં Dimeનો ડેટા iCloudમાંથી ડિલીટ કરવામાં આવ્યો.";
+"iCloud is busy right now. Dime will try again automatically." = "iCloud હાલમાં વ્યસ્ત છે. Dime આપમેળે ફરી પ્રયાસ કરશે.";
+"Sync ran into a problem and will try again." = "સિંકમાં સમસ્યા આવી, તે ફરી પ્રયાસ કરશે.";
+
+// Backups
+"Backups" = "બેકઅપ";
+"Back Up Now" = "હમણાં બેકઅપ લો";
+"Dime backs up your data on this device once a day and keeps the last 14 backups. Restoring adds back anything that's missing and never removes or changes what you have now. Backups are deleted if you delete Dime." = "Dime આ ડિવાઇસ પર દિવસમાં એક વાર તમારા ડેટાનો બેકઅપ લે છે અને છેલ્લા 14 બેકઅપ રાખે છે. રિસ્ટોર કરવાથી જે ખૂટે છે તે પાછું ઉમેરાય છે, અને તમારો હાલનો ડેટા ક્યારેય દૂર થતો કે બદલાતો નથી. Dime ડિલીટ કરવાથી બેકઅપ પણ ડિલીટ થઈ જાય છે.";
+"No backups yet" = "હજી કોઈ બેકઅપ નથી";
+"Restore" = "રિસ્ટોર કરો";
+"Restore this backup?" = "આ બેકઅપ રિસ્ટોર કરીએ?";
+"Anything missing from Dime will be added back from the backup made %@. Nothing you have now will be removed or changed." = "Dimeમાં જે ખૂટે છે તે %@ લીધેલા બેકઅપમાંથી પાછું ઉમેરાશે. તમારી પાસે હાલ જે છે તે કંઈ દૂર કે બદલાશે નહીં.";
+"Nothing was missing" = "કંઈ ખૂટતું ન હતું";
+"Restore complete" = "રિસ્ટોર પૂર્ણ થયું";
+"Everything in this backup is already in Dime." = "આ બેકઅપમાંનું બધું પહેલેથી Dimeમાં છે.";
+"Items added back: %lld." = "પાછી ઉમેરાયેલી આઇટમ: %lld.";
+"Waiting for iCloud" = "iCloudની રાહ જોવાય છે";
+"You can restore once iCloud finishes syncing, so nothing gets added twice." = "iCloudનું સિંક પૂરું થાય પછી તમે રિસ્ટોર કરી શકો છો, જેથી કંઈ બે વાર ન ઉમેરાય.";
+"Something went wrong" = "કંઈક ખોટું થયું";
+"Dime couldn't finish. Please try again." = "Dime પૂરું કરી શક્યું નહીં. કૃપા કરીને ફરી પ્રયાસ કરો.";
+"OK" = "ઠીક છે";
+"Some of your data may be missing" = "તમારો થોડો ડેટા ખૂટતો હોઈ શકે";
+"Backup from %@: %lld transactions. On this device now: %lld. Restore what's missing? Nothing you have now will be removed or changed." = "%@નો બેકઅપ: %lld વ્યવહારો. હાલ આ ડિવાઇસ પર: %lld. જે ખૂટે છે તે રિસ્ટોર કરીએ? તમારી પાસે હાલ જે છે તે કંઈ દૂર કે બદલાશે નહીં.";
+"Not Now" = "હમણાં નહીં";
+
+/* Multiple currencies */
+"No exchange rate yet" = "હજી કોઈ વિનિમય દર નથી";
+"Currency, %@" = "ચલણ, %@";
+"Recent" = "તાજેતરનાં";
+"All Currencies" = "બધાં ચલણો";
+"Exchange Rates" = "વિનિમય દરો";
+"None yet" = "હજી કંઈ નથી";
+"Never" = "ક્યારેય નહીં";
+"Source" = "સ્રોત";
+"Last Updated" = "છેલ્લું અપડેટ";
+"Days Saved" = "સેવ કરેલા દિવસો";
+"Refresh Rates" = "દરો રિફ્રેશ કરો";
+"Rates come from fawazahmed0/exchange-api, and from Frankfurter (European Central Bank) for dates before March 2024. Each transaction is converted at the rate on its own date. Rates are kept on this device only and are never added to your data or iCloud." = "દરો fawazahmed0/exchange-apiમાંથી આવે છે, અને માર્ચ 2024 પહેલાંની તારીખો માટે Frankfurter (યુરોપિયન સેન્ટ્રલ બેંક)માંથી. દરેક વ્યવહાર તેની પોતાની તારીખના દરે બદલાય છે. દરો ફક્ત આ ડિવાઇસ પર જ રહે છે અને ક્યારેય તમારા ડેટા કે iCloudમાં ઉમેરાતા નથી.";
+"Some rates couldn't be downloaded. Dime will try again later, and amounts without a rate are left out of totals until then." = "કેટલાક દરો ડાઉનલોડ થઈ શક્યા નહીં. Dime પછી ફરી પ્રયાસ કરશે, અને ત્યાં સુધી દર વગરની રકમ સરવાળામાં ગણાશે નહીં.";
+"with an unknown currency" = "અજાણ્યા ચલણમાં";
+"Change your primary currency?" = "તમારું મુખ્ય ચલણ બદલીએ?";
+"Primary Currency" = "મુખ્ય ચલણ";
+"Can't restore yet" = "હજી રિસ્ટોર થઈ શકે નહીં";
+"Changes the currency of this transaction" = "આ વ્યવહારનું ચલણ બદલે છે";
+"My transactions were actually in %@" = "મારા વ્યવહારો ખરેખર %@માં હતા";
+"Convert to %@" = "%@માં રૂપાંતરિત કરો";
+"Relabelling keeps every amount as it is and treats your %@ transactions as %@. Converting keeps them in %@ and shows them in %@ at each day's rate. Budgets and templates keep their amounts. Dime backs up your data first." = "રીલેબલ કરવાથી દરેક રકમ એમ જ રહે છે અને તમારા %1$@ વ્યવહારો %2$@ ગણાય છે. રૂપાંતર કરવાથી તે %3$@માં જ રહે છે અને દરેક દિવસના દરે %4$@માં દેખાય છે. બજેટ અને ટેમ્પ્લેટની રકમ બદલાતી નથી. Dime પહેલાં તમારા ડેટાનો બેકઅપ લે છે.";
+"Currency not changed" = "ચલણ બદલાયું નથી";
+"Dime is still finishing your last currency change. Try again in a moment." = "Dime હજી તમારો છેલ્લો ચલણ ફેરફાર પૂરો કરી રહ્યું છે. થોડી વારમાં ફરી પ્રયાસ કરો.";
+"Dime is still catching up with iCloud. Try again once it's up to date." = "Dime હજી iCloud સાથે સિંક થઈ રહ્યું છે. અપ-ટુ-ડેટ થાય પછી ફરી પ્રયાસ કરો.";
+"Dime couldn't back up your data first, so nothing was changed. Please try again." = "Dime પહેલાં તમારા ડેટાનો બેકઅપ લઈ શક્યું નહીં, તેથી કંઈ બદલાયું નથી. કૃપા કરીને ફરી પ્રયાસ કરો.";
+"Dime couldn't finish changing your currency. Nothing was lost, and it will finish the next time you open Dime." = "Dime તમારું ચલણ બદલવાનું પૂરું કરી શક્યું નહીં. કંઈ ગુમાવ્યું નથી, અને આગલી વાર Dime ખોલશો ત્યારે તે પૂરું થશે.";
+"Here you go! %@" = "આ રહ્યું! %@";
+"A three-letter code such as EUR. Leave it empty to use the currency Dime picks for new transactions." = "ત્રણ અક્ષરનો કોડ, જેમ કે INR. નવા વ્યવહારો માટે Dime જે ચલણ પસંદ કરે તે વાપરવા ખાલી રાખો.";
+"Which currency? Use a three-letter code such as EUR." = "કયું ચલણ? ત્રણ અક્ષરનો કોડ વાપરો, જેમ કે INR.";
+"Export" = "એક્સપોર્ટ કરો";
+"All time" = "અત્યાર સુધીનું બધું";
+"No transactions to export" = "એક્સપોર્ટ કરવા માટે કોઈ વ્યવહાર નથી";
+
+/* Feature tips */
+"Log in Any Currency" = "કોઈ પણ ચલણમાં નોંધો";
+"Tap the symbol to change this transaction's currency." = "આ વ્યવહારનું ચલણ બદલવા ચિહ્ન પર ટૅપ કરો.";
+
+/* What's New 3.0.1 */
+"Version %@" = "વર્ઝન %@";
+"Multiple Currencies" = "ઘણાં ચલણો";
+"Tap the currency symbol to log in any currency. Totals are converted to your primary currency at each day's rate." = "કોઈ પણ ચલણમાં નોંધવા ચલણના ચિહ્ન પર ટૅપ કરો. સરવાળા દરેક દિવસના દરે તમારા મુખ્ય ચલણમાં બદલાય છે.";
+"Start Your Week Any Day" = "અઠવાડિયું કોઈ પણ દિવસથી શરૂ કરો";
+"Weeks can now begin on any weekday. Pick yours in Settings." = "હવે અઠવાડિયું કોઈ પણ વારથી શરૂ થઈ શકે છે. સેટિંગ્સમાં તમારો દિવસ પસંદ કરો.";
+"Export a Period" = "કોઈ સમયગાળો એક્સપોર્ટ કરો";
+"Choose the dates to include before exporting your transactions." = "વ્યવહારો એક્સપોર્ટ કરતાં પહેલાં સમાવવાની તારીખો પસંદ કરો.";
+"Unlimited Categories" = "અમર્યાદિત કેટેગરી";
+"Add as many expense categories as you like, shown in the order you set." = "જેટલી જોઈએ તેટલી ખર્ચની કેટેગરી ઉમેરો, તે તમે નક્કી કરેલા ક્રમમાં દેખાશે.";
+"Search by Amount" = "રકમથી શોધો";
+"Find a transaction by its amount, even with a currency symbol or separators." = "ચલણનું ચિહ્ન કે વિભાજક હોય તો પણ રકમથી વ્યવહાર શોધો.";
+"Français and Русский" = "Français અને Русский";
+"Dime is now available in French and Russian." = "Dime હવે ફ્રેન્ચ અને રશિયનમાં ઉપલબ્ધ છે.";
+
+// quick add
+"Quick Add" = "ઝડપથી ઉમેરો";
+"Templates" = "ટેમ્પ્લેટ";
+"%lld/%lld" = "%lld/%lld";
+"%lld of %lld templates" = "%2$lldમાંથી %1$lld ટેમ્પ્લેટ";
+"New Template" = "નવું ટેમ્પ્લેટ";
+"You can have up to 4 templates" = "તમે વધુમાં વધુ 4 ટેમ્પ્લેટ રાખી શકો છો";
+"Log a template with one tap from the Quick Add widget, without opening Dime. Each one becomes its own transaction, so editing or deleting a template never changes what you've logged." = "Dime ખોલ્યા વગર, ઝડપથી ઉમેરો વિજેટમાંથી એક ટૅપમાં ટેમ્પ્લેટ નોંધો. દરેક અલગ વ્યવહાર બને છે, તેથી ટેમ્પ્લેટમાં ફેરફાર કરવાથી કે તેને ડિલીટ કરવાથી તમે નોંધેલું ક્યારેય બદલાતું નથી.";
+"Add From Recent" = "તાજેતરનામાંથી ઉમેરો";
+"Adds a template" = "ટેમ્પ્લેટ ઉમેરે છે";
+"Delete Template?" = "ટેમ્પ્લેટ ડિલીટ કરીએ?";
+"Transactions you've logged with it stay as they are." = "તેનાથી નોંધેલા વ્યવહારો એમ જ રહેશે.";
+"Log your templates with one tap, without opening Dime." = "Dime ખોલ્યા વગર, એક ટૅપમાં તમારા ટેમ્પ્લેટ નોંધો.";
+"Add templates in Settings to log them from here." = "અહીંથી નોંધવા માટે સેટિંગ્સમાં ટેમ્પ્લેટ ઉમેરો.";
+"Add a template" = "ટેમ્પ્લેટ ઉમેરો";
+"Log %@, %@" = "%@ નોંધો, %@";
+"Logged %@, %@" = "%@ નોંધાયું, %@";
+"Log Quick Add Template" = "ઝડપથી ઉમેરો ટેમ્પ્લેટ નોંધો";
+"Template" = "ટેમ્પ્લેટ";
+"Coffee" = "કૉફી";
+"Lunch" = "બપોરનું જમણ";
+"Bus" = "બસ";
+
+/* Notifications */
+"Reminders" = "રિમાઇન્ડર";
+"Daily Check-in" = "દૈનિક ચેક-ઇન";
+"A nudge to log the day's spending" = "દિવસનો ખર્ચ નોંધવાની યાદ";
+"Upcoming Charges" = "આગામી ચુકવણીઓ";
+"A heads-up before a recurring expense is logged" = "પુનરાવર્તિત ખર્ચ નોંધાય તે પહેલાં સૂચના";
+"Time" = "સમય";
+"Remind Me" = "યાદ અપાવો";
+"On the day" = "તે જ દિવસે";
+"1 day before" = "1 દિવસ પહેલાં";
+"%lld days before" = "%lld દિવસ પહેલાં";
+"Fewer days" = "ઓછા દિવસ";
+"More days" = "વધુ દિવસ";
+"Check-ins and charge reminders both arrive at this time." = "ચેક-ઇન અને ચુકવણીના રિમાઇન્ડર બંને આ સમયે આવે છે.";
+"Your check-in arrives at this time every day." = "તમારું ચેક-ઇન દરરોજ આ સમયે આવે છે.";
+"Charge reminders arrive at this time." = "ચુકવણીના રિમાઇન્ડર આ સમયે આવે છે.";
+"Covers recurring expenses. Reminders are planned a couple of months ahead and refresh whenever you open Dime." = "પુનરાવર્તિત ખર્ચ માટે. રિમાઇન્ડર બે-એક મહિના અગાઉથી નક્કી થાય છે અને જ્યારે પણ તમે Dime ખોલો ત્યારે રિફ્રેશ થાય છે.";
+"Due today: %@" = "આજે ચૂકવવાનું: %@";
+"Due tomorrow: %@" = "કાલે ચૂકવવાનું: %@";
+"Due in %lld days: %@" = "%lld દિવસમાં ચૂકવવાનું: %@";
+"%@ will be added to your log today." = "%@ આજે તમારા લૉગમાં ઉમેરાશે.";
+"%@ will be added to your log tomorrow." = "%@ કાલે તમારા લૉગમાં ઉમેરાશે.";
+"%@ will be added to your log on %@." = "%1$@ %2$@ના રોજ તમારા લૉગમાં ઉમેરાશે.";
+
+// shortcuts
+"Category for an income. Choose No Category to log it without one." = "આવકની કેટેગરી. કેટેગરી વગર નોંધવા કોઈ કેટેગરી નહીં પસંદ કરો.";
+"Category for an expense. Choose No Category to log it without one." = "ખર્ચની કેટેગરી. કેટેગરી વગર નોંધવા કોઈ કેટેગરી નહીં પસંદ કરો.";
+
+// quick add grid
+"Tap a template to edit it, or hold and drag it to a new spot. The Quick Add widget logs each one with one tap, without opening Dime, and editing or deleting a template never changes what you've logged." = "ફેરફાર કરવા ટેમ્પ્લેટ પર ટૅપ કરો, અથવા દબાવી રાખીને નવી જગ્યાએ ખેંચો. ઝડપથી ઉમેરો વિજેટ Dime ખોલ્યા વગર દરેકને એક ટૅપમાં નોંધે છે, અને ટેમ્પ્લેટમાં ફેરફાર કરવાથી કે તેને ડિલીટ કરવાથી તમે નોંધેલું ક્યારેય બદલાતું નથી.";
+"Move Earlier" = "આગળ ખસેડો";
+"Move Later" = "પાછળ ખસેડો";
+"Edits the template" = "ટેમ્પ્લેટમાં ફેરફાર કરે છે";
+
+// budget rollover
+"with" = "અને";
+"rollover" = "રોલઓવર સાથે";
+"no rollover" = "રોલઓવર વગર";
+"+%@ rolled over" = "+%@ આગળ લવાયા";
+"−%@ rolled over" = "−%@ આગળ લવાયા";
+"Leftover rolls over %@" = "બાકી રકમ %@ આગળ જશે";
+"Nothing rolled over" = "કંઈ આગળ લવાયું નથી";
+"Rolls over" = "આગળ જાય છે";
+"%@ budget %@ %@ = %@" = "%@ બજેટ %@ %@ = %@";
+"Rollover" = "રોલઓવર";
+"Whether what's left, or overspent, carries into the next period" = "બાકી કે વધુ ખર્ચાયેલી રકમ આગલા સમયગાળામાં જાય કે નહીં";
+"%@ overspend" = "%@ વધુ ખર્ચ";
+"%@ left over" = "%@ બાકી";
+"Rollover starts this period" = "રોલઓવર આ સમયગાળાથી શરૂ થશે";
+"What's left at the end of this period, or overspent, carries into the next one. Earlier periods aren't counted." = "આ સમયગાળાના અંતે બાકી કે વધુ ખર્ચાયેલી રકમ આગલામાં જશે. પહેલાંના સમયગાળા ગણાતા નથી.";
+"Turn On Rollover" = "રોલઓવર ચાલુ કરો";
+"Turn off rollover?" = "રોલઓવર બંધ કરીએ?";
+"The %@ from earlier periods will be cleared. Turning rollover back on starts fresh." = "પહેલાંના સમયગાળાના %@ દૂર થશે. રોલઓવર ફરી ચાલુ કરવાથી નવેસરથી શરૂ થશે.";
+"Leftovers will stop carrying over. Turning rollover back on starts fresh." = "બાકી રકમ આગળ જવાનું બંધ થશે. રોલઓવર ફરી ચાલુ કરવાથી નવેસરથી શરૂ થશે.";
+"Turn Off" = "બંધ કરો";
+"Reset rollover?" = "રોલઓવર રીસેટ કરીએ?";
+"Changing how often this budget repeats clears the %@ from earlier periods. Rollover starts again from this period." = "આ બજેટ કેટલી વાર પુનરાવર્તિત થાય તે બદલવાથી પહેલાંના સમયગાળાના %@ દૂર થશે. રોલઓવર આ સમયગાળાથી ફરી શરૂ થશે.";
+"Changing the category clears the %@ from earlier periods. Rollover starts again from this period." = "કેટેગરી બદલવાથી પહેલાંના સમયગાળાના %@ દૂર થશે. રોલઓવર આ સમયગાળાથી ફરી શરૂ થશે.";
+"Changing how often this budget repeats restarts rollover from this period." = "આ બજેટ કેટલી વાર પુનરાવર્તિત થાય તે બદલવાથી રોલઓવર આ સમયગાળાથી ફરી શરૂ થશે.";
+"Changing the category restarts rollover from this period." = "કેટેગરી બદલવાથી રોલઓવર આ સમયગાળાથી ફરી શરૂ થશે.";
+"Apply from this period?" = "આ સમયગાળાથી લાગુ કરીએ?";
+"Your changes apply from this period on, and earlier periods keep their old settings." = "તમારા ફેરફારો આ સમયગાળાથી લાગુ થશે, અને પહેલાંના સમયગાળામાં જૂનાં સેટિંગ્સ રહેશે.";
+"The new amount applies from this period on, and earlier periods keep the old one." = "નવી રકમ આ સમયગાળાથી લાગુ થશે, અને પહેલાંના સમયગાળામાં જૂની રકમ રહેશે.";
+"The new reset day applies from this period on, and earlier periods keep the old one." = "રીસેટનો નવો દિવસ આ સમયગાળાથી લાગુ થશે, અને પહેલાંના સમયગાળામાં જૂનો દિવસ રહેશે.";
+"The %@ from earlier periods is kept." = "પહેલાંના સમયગાળાના %@ યથાવત્ રહેશે.";
+
+// log
+"UPCOMING" = "આગામી";
+
+// budgets, insights and settings
+"Overall" = "કુલ";
+"%lld days to go" = "%lld દિવસ બાકી";
+"1 day to go" = "1 દિવસ બાકી";
+"%lld hours to go" = "%lld કલાક બાકી";
+"1 hour to go" = "1 કલાક બાકી";
+"%@ a day for %lld days" = "%2$lld દિવસ સુધી રોજ %1$@";
+"%@ left today" = "આજે %@ બાકી";
+"%@ a day" = "રોજ %@";
+"Close to limit" = "મર્યાદાની નજીક";
+"Resets %@" = "%@ રીસેટ થશે";
+"tomorrow" = "કાલે";
+"Nothing spent yet" = "હજી કોઈ ખર્ચ નથી";
+"Over budget" = "બજેટ કરતાં વધુ";
+"Net" = "ચોખ્ખું";
+"Top categories" = "મુખ્ય કેટેગરી";
+"Largest expenses" = "સૌથી મોટા ખર્ચ";
+"%lld%% of spending" = "ખર્ચના %lld%%";
+"of spending" = "ખર્ચના";
+"of income" = "આવકના";
+"avg " = "સરેરાશ ";
+"~%@ forecasted" = "~%@ અંદાજિત";
+"categories" = "કેટેગરી";
+"category" = "કેટેગરી";
+"Time Frames" = "સમયગાળા";
+"Theme" = "થીમ";
+"App Icon" = "ઍપ આઇકન";
+"Upcoming Logs" = "આગામી એન્ટ્રી";
+"Shown" = "દેખાય છે";
+"Hidden" = "છુપાયેલું";
+"Display +/- Symbol" = "+/- ચિહ્ન બતાવો";
+
+/* Delete category */
+"%@ has 1 transaction. What should happen to it?" = "%@માં 1 વ્યવહાર છે. તેનું શું કરવું?";
+"%@ has %lld transactions. What should happen to them?" = "%@માં %lld વ્યવહારો છે. તેમનું શું કરવું?";
+"Move to" = "અહીં ખસેડો";
+"Delete it" = "તેને ડિલીટ કરો";
+"Delete them" = "તેમને ડિલીટ કરો";
+"Delete Category" = "કેટેગરી ડિલીટ કરો";
+
+"Font" = "ફૉન્ટ";
+"Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo એ Josh Puckett દ્વારા બનાવેલું ટાઇપફેસ છે, જે SIL Open Font License હેઠળ લાઇસન્સ પ્રાપ્ત છે.";
