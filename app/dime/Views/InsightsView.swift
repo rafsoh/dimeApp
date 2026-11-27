@@ -2338,7 +2338,8 @@ struct FilteredInsightsView: View {
             andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate, incomePredicate, TransferPredicate.excluded])
 
         } else {
-            andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate, TransferPredicate.oneLegPerTransfer])
+            // Both legs of a transfer: ListView shows each transfer once.
+            andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate])
         }
 
         _transactions = SectionedFetchRequest<Date?, Transaction>(sectionIdentifier: \.day, sortDescriptors: [

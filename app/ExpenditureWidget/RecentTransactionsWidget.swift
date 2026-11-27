@@ -133,7 +133,8 @@ struct Provider: IntentTimelineProvider {
 //        let dataController = DataController()
         let dataController = DataController.shared
         let itemRequest = dataController.fetchRequestForRecentTransactionsWithCount(type: type, count: count)
-        let holding = dataController.results(for: itemRequest)
+        // Each transfer once, by the leg the log shows.
+        let holding = dataController.results(for: itemRequest).oneLegPerTransfer().prefix(count)
 
         var sending = [HoldingTransaction]()
 

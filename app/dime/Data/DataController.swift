@@ -1316,14 +1316,8 @@ class DataController: ObservableObject {
         return itemRequest
     }
 
-    /// Lists show each transfer once.
+    /// Both legs of each transfer; a list shows each once with `oneLegPerTransfer()`.
     func fetchRequestForRecentTransactions(type: TimePeriod) -> NSFetchRequest<Transaction> {
-        let request = fetchRequestForRecentTransactionsIncludingTransfers(type: type)
-        request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [request.predicate, TransferPredicate.oneLegPerTransfer].compactMap { $0 })
-        return request
-    }
-
-    private func fetchRequestForRecentTransactionsIncludingTransfers(type: TimePeriod) -> NSFetchRequest<Transaction> {
         let itemRequest: NSFetchRequest<Transaction> = Transaction.fetchRequest()
 
         var calendar = Calendar(identifier: .gregorian)
@@ -2618,10 +2612,13 @@ class DataController: ObservableObject {
         return (itemRequest, startDate)
     }
 
-    /// Lists show each transfer once.
+    /// Both legs of each transfer, so twice `count` rows: a list shows each transfer once with
+    /// `oneLegPerTransfer()`, then takes `count`.
     func fetchRequestForRecentTransactionsWithCount(type: TimePeriod, count: Int) -> NSFetchRequest<Transaction> {
         let request = fetchRequestForRecentTransactionsWithCountIncludingTransfers(type: type, count: count)
-        request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [request.predicate, TransferPredicate.oneLegPerTransfer].compactMap { $0 })
+        if request.fetchLimit > 0 {
+            request.fetchLimit = count * 2
+        }
         return request
     }
 

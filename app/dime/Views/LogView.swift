@@ -732,7 +732,7 @@ struct FilteredSearchView: View {
         _transactions = SectionedFetchRequest<Date?, Transaction>(sectionIdentifier: \.day, sortDescriptors: [
             SortDescriptor(\.day, order: .reverse),
             SortDescriptor(\.date, order: .reverse)
-        ], predicate: NSCompoundPredicate(andPredicateWithSubpredicates: [query.predicate, TransferPredicate.oneLegPerTransfer]))
+        ], predicate: query.predicate)
 
         self.searchQuery = query.text
     }
@@ -862,10 +862,7 @@ struct TransactionsList: View {
         SortDescriptor(\.day, order: .reverse),
         SortDescriptor(\.date, order: .reverse),
         SortDescriptor(\.note)
-    ], predicate: NSCompoundPredicate(andPredicateWithSubpredicates: [
-        NSPredicate(format: "%K <= %@", #keyPath(Transaction.date), Date.now as CVarArg),
-        TransferPredicate.oneLegPerTransfer
-    ])) private var transactions: SectionedFetchResults<Date?, Transaction>
+    ], predicate: NSPredicate(format: "%K <= %@", #keyPath(Transaction.date), Date.now as CVarArg)) private var transactions: SectionedFetchResults<Date?, Transaction>
 
     var body: some View {
         VStack {
@@ -973,7 +970,7 @@ struct ListView: View {
 
     func filterOutDupes(day: SectionedFetchResults<Date?, Transaction>.Element) -> (transactions: [Transaction], string: String) {
         var seen = [Transaction]()
-        let filtered = day.filter { entity -> Bool in
+        let unique = day.filter { entity -> Bool in
             if seen.contains(where: { $0.id == entity.id }) {
                 return false
             } else {
@@ -981,6 +978,9 @@ struct ListView: View {
                 return true
             }
         }
+
+        // An account's own list shows its own side of each transfer; every other list shows each transfer once.
+        let filtered = countsTransfers ? unique : unique.oneLegPerTransfer()
 
         let numberFormatter = NumberFormatter()
         numberFormatter.numberStyle = .currency
@@ -1022,13 +1022,16 @@ struct FutureListView: View {
     var limitedMode: Bool
 
     var transactions: [Transaction] {
+        // Each upcoming transfer once.
+        let upcoming = fetchedResults.oneLegPerTransfer()
+
         if limitedMode {
             let calendar = Calendar.current
 
             let startOfToday = calendar.startOfDay(for: Date.now)
             let twoWeeksFromStartOfToday = calendar.date(byAdding: .weekOfYear, value: 2, to: startOfToday)!
 
-            let holding = fetchedResults.filter {
+            let holding = upcoming.filter {
                 let date = $0.wrappedDate > Date.now ? $0.wrappedDate : $0.nextTransactionDate
 
                 return date < twoWeeksFromStartOfToday
@@ -1042,7 +1045,7 @@ struct FutureListView: View {
             }
 
         } else {
-            return fetchedResults.sorted { itemA, itemB in
+            return upcoming.sorted { itemA, itemB in
                 let date1 = itemA.wrappedDate > Date.now ? itemA.wrappedDate : itemA.nextTransactionDate
                 let date2 = itemB.wrappedDate > Date.now ? itemB.wrappedDate : itemB.nextTransactionDate
 
@@ -1074,7 +1077,14 @@ struct FutureListView: View {
             numberFormatter.maximumFractionDigits = 0
         }
 
-        let money = transactions.total(using: .current(), signed: true)
+        // Transfers are neither spending nor income, so upcoming ones show without counting.
+        let counted = transactions.filter { !$0.isTransfer }
+
+        if counted.isEmpty {
+            return ""
+        }
+
+        let money = counted.total(using: .current(), signed: true)
         let total = money.value
 
         if total >= 0 {
@@ -1123,9 +1133,8 @@ struct FutureListView: View {
         let futurePredicate = NSPredicate(format: "%K > %@", #keyPath(Transaction.date), Date.now as CVarArg)
 
         let upcomingPredicate = NSCompoundPredicate(type: .or, subpredicates: [recurringPredicate, futurePredicate])
-        let andPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: [upcomingPredicate, TransferPredicate.oneLegPerTransfer])
 
-        _fetchedResults = FetchRequest<Transaction>(sortDescriptors: [], predicate: andPredicate)
+        _fetchedResults = FetchRequest<Transaction>(sortDescriptors: [], predicate: upcomingPredicate)
 
         self.filterMode = filterMode
         self.limitedMode = limitedMode
@@ -1858,13 +1867,18 @@ struct FilteredDateView: View {
     @AppStorage("showExpenseOrIncomeSign", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
     var showExpenseOrIncomeSign: Bool = true
 
+    /// Each transfer once.
+    var shown: [Transaction] {
+        transactions.oneLegPerTransfer()
+    }
+
     var body: some View {
-        if transactions.isEmpty {
+        if shown.isEmpty {
             EmptyStateView(systemImage: "calendar", title: "No logs on this day")
                 .fillsScrollViewport()
         } else {
             VStack(spacing: 0) {
-                ForEach(transactions) { transaction in
+                ForEach(shown) { transaction in
                     SingleTransactionView(transaction: transaction, showCents: showCents, currencySymbol: currencySymbol, currency: currency, swapTimeLabel: swapTimeLabel, future: false, showExpenseOrIncomeSign: showExpenseOrIncomeSign)
                 }
             }
@@ -1875,7 +1889,7 @@ struct FilteredDateView: View {
         let datePredicate = NSPredicate(format: "%K == %@", #keyPath(Transaction.day), date as CVarArg)
         let futurePredicate = NSPredicate(format: "%K <= %@", #keyPath(Transaction.date), Date.now as CVarArg)
 
-        let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [futurePredicate, datePredicate, TransferPredicate.oneLegPerTransfer])
+        let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [futurePredicate, datePredicate])
 
         _transactions = FetchRequest<Transaction>(sortDescriptors: [
             SortDescriptor(\.date, order: .reverse)

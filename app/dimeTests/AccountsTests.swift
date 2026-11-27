@@ -132,10 +132,23 @@ final class AccountsTests: XCTestCase {
         let savings = makeAccount("Savings")
         let legs = transfer(300, from: .main, to: .account(savings))
         let request = dataController.fetchRequestForRecentTransactions(type: .day)
-        let shown = dataController.results(for: request)
+        let shown = dataController.results(for: request).oneLegPerTransfer()
 
         XCTAssertTrue(shown.contains(legs.outgoing))
         XCTAssertFalse(shown.contains(legs.incoming))
+    }
+
+    // An incoming leg whose outgoing one is gone, such as deleted on a device from before transfers, still shows.
+    func testATransferMissingItsOutgoingLegStillShows() throws {
+        let savings = makeAccount("Savings")
+        let legs = transfer(300, from: .main, to: .account(savings))
+        context.delete(legs.outgoing)
+        try context.save()
+
+        let request = dataController.fetchRequestForRecentTransactions(type: .day)
+        let shown = dataController.results(for: request).oneLegPerTransfer()
+
+        XCTAssertTrue(shown.contains(legs.incoming))
     }
 
     func testDeletingEitherLegDeletesTheTransfer() throws {

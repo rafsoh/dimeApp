@@ -334,17 +334,29 @@ enum TransferPredicate {
         NSPredicate(format: "%K == nil", #keyPath(Transaction.transferID))
     }
 
-    /// Shows each transfer once, by its outgoing leg, in lists that span every account.
-    static var oneLegPerTransfer: NSPredicate {
-        NSPredicate(format: "%K == nil OR income == NO", #keyPath(Transaction.transferID))
-    }
-
     /// Adds `excluded` to a predicate.
     static func excluding(_ predicate: NSPredicate?) -> NSPredicate {
         guard let predicate else {
             return excluded
         }
         return NSCompoundPredicate(andPredicateWithSubpredicates: [predicate, excluded])
+    }
+}
+
+extension Sequence where Element == Transaction {
+    /// Each transfer once, for lists that span every account: by its outgoing leg, or by its incoming leg when
+    /// the outgoing one isn't among these, such as one deleted on a device from before transfers. Both legs
+    /// share a date, so a list by date has both unless one is gone. Not done in a fetch, which can't tell.
+    func oneLegPerTransfer() -> [Transaction] {
+        let transactions = Array(self)
+        let outgoing = Set(transactions.compactMap { $0.isTransfer && !$0.income ? $0.transferID : nil })
+
+        return transactions.filter { transaction in
+            guard transaction.income, let transferID = transaction.transferID else {
+                return true
+            }
+            return !outgoing.contains(transferID)
+        }
     }
 }
 
