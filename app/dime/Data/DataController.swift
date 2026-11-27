@@ -27,7 +27,7 @@ enum CustomError: Swift.Error, CustomLocalizedStringResourceConvertible {
         case let .unknownError(message): return "An unknown error occurred: \(message)"
         case let .unknownId(id): return "No category with an ID matching: \(id)"
         case .notFound: return "Category not found"
-        case .coreDataSave: return "Couldn't save to CoreData"
+        case .coreDataSave: return "Dime couldn't save your changes"
         case .storeUnavailable: return "Dime couldn't open your data. Open Dime and try again."
         }
     }
@@ -532,7 +532,18 @@ class DataController: ObservableObject {
         )
 
         do {
-            if let snapshot = try StoreSnapshot.snapshotIfMigrationNeeded(storeAt: storeURL, to: container.managedObjectModel, sourceModels: versions, in: StoreSnapshot.directory(forStoreAt: storeURL)) {
+            let snapshotDirectory = StoreSnapshot.directory(forStoreAt: storeURL)
+            let copiedBySQLite: (Error) -> Void = { error in
+                let nsError = error as NSError
+                DataIntegrityLog.breadcrumb(
+                    "pre-migration snapshot made by SQLite after Core Data refused",
+                    numbers: ["coreDataCode": nsError.code],
+                    flags: ["cloudKit": self.isCloudKitSyncEnabled],
+                    persist: true
+                )
+            }
+
+            if let snapshot = try StoreSnapshot.snapshotIfMigrationNeeded(storeAt: storeURL, to: container.managedObjectModel, sourceModels: versions, in: snapshotDirectory, copiedBySQLite: copiedBySQLite) {
                 logger.notice("Saved the store before migrating it")
                 let bytes = (try? snapshot.resourceValues(forKeys: [.fileSizeKey]))?.fileSize ?? 0
                 DataIntegrityLog.breadcrumb(
@@ -741,21 +752,37 @@ class DataController: ObservableObject {
 
     /// Main's name and icon sync through iCloud key-value storage, since Main has no object in the store.
     private func observeMainAccountName() {
-        MainAccount.adoptFromICloud(clearingIfMissing: false)
+        // Key-value storage answers through the system's sync daemon, and a read at launch can keep the main
+        // thread waiting until the watchdog ends the app (DIME-IOS-W). It's read on a background queue and
+        // what it holds is stored on the main thread.
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            let values = MainAccount.iCloudValues()
+            NSUbiquitousKeyValueStore.default.synchronize()
 
-        NotificationCenter.default.addObserver(forName: NSUbiquitousKeyValueStore.didChangeExternallyNotification, object: NSUbiquitousKeyValueStore.default, queue: .main) { [weak self] notification in
+            DispatchQueue.main.async {
+                guard MainAccount.adopt(values, clearingIfMissing: false) else { return }
+                self?.objectWillChange.send()
+                WidgetCenter.shared.reloadAllTimelines()
+            }
+        }
+
+        // Delivered on the queue that posts it, so the read stays off the main thread too. Only the default
+        // store posts this, so it isn't named here: naming it would create it on the main thread.
+        NotificationCenter.default.addObserver(forName: NSUbiquitousKeyValueStore.didChangeExternallyNotification, object: nil, queue: nil) { [weak self] notification in
             let changed = notification.userInfo?[NSUbiquitousKeyValueStoreChangedKeysKey] as? [String] ?? []
 
             guard changed.contains(MainAccount.nameKey) || changed.contains(MainAccount.symbolKey) else {
                 return
             }
 
-            MainAccount.adoptFromICloud(clearingIfMissing: true)
-            self?.objectWillChange.send()
-            WidgetCenter.shared.reloadAllTimelines()
-        }
+            let values = MainAccount.iCloudValues()
 
-        NSUbiquitousKeyValueStore.default.synchronize()
+            DispatchQueue.main.async {
+                MainAccount.adopt(values, clearingIfMissing: true)
+                self?.objectWillChange.send()
+                WidgetCenter.shared.reloadAllTimelines()
+            }
+        }
     }
 
     // MARK: CloudKit events
@@ -1372,10 +1399,58 @@ class DataController: ObservableObject {
         return transaction
     }
 
+    /// Logs a transaction from Shortcuts, inserted and saved on a background context. Returns its ID; throws
+    /// when it couldn't be saved, so the action doesn't say it was logged.
+    ///
+    /// The action runs on the main actor, and saving in the view context waited there on a slow disk write for
+    /// 2–3 seconds (DIME-IOS-Y). The action always logs at the current time, so a recurring transaction has no
+    /// earlier occurrences to fill in here; the app catches up on recurring transactions as usual.
+    @available(iOS 16, *)
+    @MainActor
+    func newTransactionInBackground(note: String, categoryID: NSManagedObjectID?, income: Bool, amount: Double, currencyCode: String?, repeatType: Int) async throws -> NSManagedObjectID {
+        let author = container.viewContext.transactionAuthor
+        let mergePolicy = container.viewContext.mergePolicy
+        let resolvedCurrency = currencyCode ?? currencyForNewTransaction()
+
+        let objectID: NSManagedObjectID = try await withCheckedThrowingContinuation { continuation in
+            container.performBackgroundTask { context in
+                context.transactionAuthor = author
+                context.mergePolicy = mergePolicy
+
+                let category = categoryID.flatMap { try? context.existingObject(with: $0) as? Category }
+                let transaction = Transaction(context: context)
+                Self.fill(transaction, note: note, category: category, income: income, amount: amount, currencyCode: resolvedCurrency, account: nil, date: Date.now, repeatType: repeatType, repeatCoefficient: 1)
+
+                do {
+                    try context.save()
+                    continuation.resume(returning: transaction.objectID)
+                } catch {
+                    let nsError = error as NSError
+                    DataIntegrityLog.capture(nsError, message: "Saving a Shortcuts transaction failed", flags: ["outOfSpace": DataIntegrityLog.isOutOfSpace(error)])
+                    context.rollback()
+                    continuation.resume(throwing: CustomError.coreDataSave)
+                }
+            }
+        }
+
+        WidgetCenter.shared.reloadAllTimelines()
+        return objectID
+    }
+
     /// Inserts a transaction without saving, so imports can save many at once. No account means Main.
     func insertTransaction(note: String, category: Category?, income: Bool, amount: Double, currencyCode: String? = nil, account: Account? = nil, date: Date, repeatType: Int = 0, repeatCoefficient: Int = 1) -> Transaction {
         let transaction = Transaction(context: container.viewContext)
+        Self.fill(transaction, note: note, category: category, income: income, amount: amount, currencyCode: currencyCode ?? currencyForNewTransaction(), account: account, date: date, repeatType: repeatType, repeatCoefficient: repeatCoefficient)
 
+        if repeatType > 0 {
+            updateRecurringTransaction(transaction: transaction)
+        }
+
+        return transaction
+    }
+
+    /// A new transaction's values, in whichever context it was inserted. Recurrences are set up but not filled in.
+    private static func fill(_ transaction: Transaction, note: String, category: Category?, income: Bool, amount: Double, currencyCode: String, account: Account?, date: Date, repeatType: Int, repeatCoefficient: Int) {
         if note.trimmingCharacters(in: .whitespacesAndNewlines) == "" {
             transaction.note = category?.wrappedName ?? ""
         } else {
@@ -1387,7 +1462,7 @@ class DataController: ObservableObject {
         transaction.account = account
 
         transaction.amount = amount
-        transaction.currencyCode = currencyCode ?? currencyForNewTransaction()
+        transaction.currencyCode = currencyCode
         transaction.date = date
         transaction.id = UUID()
 
@@ -1403,10 +1478,7 @@ class DataController: ObservableObject {
             transaction.onceRecurring = true
             transaction.recurringType = Int16(repeatType)
             transaction.recurringCoefficient = Int16(repeatCoefficient)
-            updateRecurringTransaction(transaction: transaction)
         }
-
-        return transaction
     }
 
     // MARK: Quick Add templates
@@ -2262,16 +2334,51 @@ class DataController: ObservableObject {
         return allTransactions.total(using: currencyConverter, signed: true)
     }
 
+    /// The log header's net, spent and earned totals from one fetch, and with `lineGraph` (the header's
+    /// display type) its line graph. Call on `context`'s queue.
+    func logInsightsSummary(type: Int, lineGraph displayType: Int?, in context: NSManagedObjectContext) -> LogInsightsSummary {
+        let transactions = results(for: fetchRequestForLogView(type: type, optionalIncome: nil), in: context)
+        let converter = currencyConverter
+        var summary = LogInsightsSummary()
+
+        summary.net = transactions.total(using: converter, signed: true)
+        summary.spent = transactions.filter { !$0.income }.total(using: converter)
+        summary.income = transactions.filter(\.income).total(using: converter)
+
+        if let displayType {
+            if displayType == 1 {
+                summary.lineGraph = lineGraphNet(type: type, in: context).points
+            } else {
+                summary.lineGraph = lineGraph(income: displayType == 2, type: type, in: context).points
+            }
+        }
+
+        return summary
+    }
+
+    /// `logInsightsSummary` worked out on a background context.
+    ///
+    /// The header used to fetch every transaction in its time frame several times over on each redraw, and
+    /// the log redraws it on every change to the view context. While CloudKit merged an import into a store
+    /// of 4,000 transactions, that held the main thread for 10 seconds (DIME-IOS-Q).
+    func loadLogInsightsSummary(type: Int, lineGraph displayType: Int?) async -> LogInsightsSummary {
+        await withCheckedContinuation { continuation in
+            container.performBackgroundTask { context in
+                continuation.resume(returning: self.logInsightsSummary(type: type, lineGraph: displayType, in: context))
+            }
+        }
+    }
+
     func getLineGraphDataNet(type: Int) -> [LineGraphDataPoint] {
         lineGraphNet(type: type).points
     }
 
-    func lineGraphNet(type: Int) -> (points: [LineGraphDataPoint], report: ConversionReport) {
+    func lineGraphNet(type: Int, in context: NSManagedObjectContext? = nil) -> (points: [LineGraphDataPoint], report: ConversionReport) {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date.now)
 
         let fetchRequest = fetchRequestForLineGraph(optionalIncome: nil)
-        let transactions = results(for: fetchRequest)
+        let transactions = results(for: fetchRequest, in: context)
         let converter = currencyConverter
         var report = ConversionReport()
 
@@ -2434,12 +2541,12 @@ class DataController: ObservableObject {
         lineGraph(income: income, type: type).points
     }
 
-    func lineGraph(income: Bool, type: Int) -> (points: [LineGraphDataPoint], report: ConversionReport) {
+    func lineGraph(income: Bool, type: Int, in context: NSManagedObjectContext? = nil) -> (points: [LineGraphDataPoint], report: ConversionReport) {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date.now)
 
         let fetchRequest = fetchRequestForLineGraph(optionalIncome: income)
-        let transactions = results(for: fetchRequest)
+        let transactions = results(for: fetchRequest, in: context)
         let converter = currencyConverter
         var report = ConversionReport()
 
@@ -3345,8 +3452,9 @@ class DataController: ObservableObject {
         }
     }
 
-    func results<T: NSManagedObject>(for fetchRequest: NSFetchRequest<T>) -> [T] {
-        return (try? container.viewContext.fetch(fetchRequest)) ?? []
+    /// Fetches in the view context, or in `context` (on its queue) when given.
+    func results<T: NSManagedObject>(for fetchRequest: NSFetchRequest<T>, in context: NSManagedObjectContext? = nil) -> [T] {
+        return (try? (context ?? container.viewContext).fetch(fetchRequest)) ?? []
     }
 }
 
@@ -3393,6 +3501,13 @@ extension NSManagedObject {
     var isGone: Bool {
         isDeleted || managedObjectContext == nil
     }
+}
+
+struct LogInsightsSummary: Equatable {
+    var net = MoneyTotal()
+    var spent = MoneyTotal()
+    var income = MoneyTotal()
+    var lineGraph: [LineGraphDataPoint] = []
 }
 
 struct LineGraphDataPoint: Equatable {

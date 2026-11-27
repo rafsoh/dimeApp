@@ -124,7 +124,12 @@ struct NewTransactionIntent: AppIntent {
             category = id == CategoryEntityOptions.noCategoryID ? nil : try dataController.findCategory(withId: id)
         }
 
-        let transaction = dataController.newTransaction(note: note ?? "", category: category, income: isIncome, amount: amount, currencyCode: currency, date: Date.now, repeatType: repeatType, repeatCoefficient: 1, delay: false)
+        // Saved off the main thread; a slow disk write held it for seconds (DIME-IOS-Y).
+        let objectID = try await dataController.newTransactionInBackground(note: note ?? "", categoryID: category?.objectID, income: isIncome, amount: amount, currencyCode: currency, repeatType: repeatType)
+
+        guard let transaction = try? dataController.container.viewContext.existingObject(with: objectID) as? Transaction else {
+            throw CustomError.coreDataSave
+        }
 
         // Feature Lab: without a category, Apple Intelligence picks one first, so the result shows it. If it
         // can't (busy, or Dime in the background), the transaction stays queued for when Dime next opens.

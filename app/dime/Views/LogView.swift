@@ -453,7 +453,7 @@ struct LogListContent: View, Equatable {
     var body: some View {
         VStack {
             if filter == .all {
-                LogInsightsView(showCents: showCents, currencySymbol: currencySymbol)
+                LogInsightsView(showCents: showCents, currencySymbol: currencySymbol, dataVersion: dataVersion)
             }
 
             TransactionsList(filter: filter, category: category, account: account, date: date, week: week, month: month, income: income)
@@ -469,8 +469,18 @@ struct LogInsightsView: View {
 
     let showCents: Bool
     let currencySymbol: String
+    /// Bumped by the log on every change to the view context.
+    var dataVersion = 0
 
     @State var showMenu1 = false
+    /// Worked out off the main thread whenever `summaryKey` changes, and only then.
+    @State private var summary = LogInsightsSummary()
+    @State private var loadedKey: SummaryKey?
+    /// For what the key doesn't cover: new exchange rates, a new day.
+    @State private var refreshCount = 0
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var currency: String = Locale.current.currencyCode ?? "USD"
+    @AppStorage("firstWeekday", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var firstWeekday: Int = 0
+    @AppStorage("firstDayOfMonth", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var firstDayOfMonth: Int = 1
     let subtitleText = ["today", "this week", "this month", "this year", "all time"]
 
     @AppStorage("logInsightsTimeFrame", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var timeframe = 2
@@ -484,7 +494,22 @@ struct LogInsightsView: View {
     @AppStorage("logViewLineGraph", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var lineGraph: Bool = false
 
     var netTotal: (value: Double, positive: Bool) {
-        dataController.getLogViewTotalNet(type: timeframe)
+        let total = summary.net.value
+        return (abs(total), total >= 0)
+    }
+
+    struct SummaryKey: Equatable {
+        let timeframe: Int
+        let lineGraph: Int?
+        let dataVersion: Int
+        let refreshCount: Int
+        let currency: String
+        let firstWeekday: Int
+        let firstDayOfMonth: Int
+    }
+
+    var summaryKey: SummaryKey {
+        SummaryKey(timeframe: timeframe, lineGraph: lineGraph ? displayType : nil, dataVersion: dataVersion, refreshCount: refreshCount, currency: currency, firstWeekday: firstWeekday, firstDayOfMonth: firstDayOfMonth)
     }
 
     var range: Int {
@@ -518,21 +543,15 @@ struct LogInsightsView: View {
     }
 
     var totalSpent: Double {
-        return dataController.getLogViewTotalSpent(type: timeframe)
+        summary.spent.value
     }
 
     var totalIncome: Double {
-        return dataController.getLogViewTotalIncome(type: timeframe)
+        summary.income.value
     }
 
     var lineGraphData: [LineGraphDataPoint] {
-        if displayType == 1 {
-            return dataController.getLineGraphDataNet(type: timeframe)
-        } else if displayType == 2 {
-            return dataController.getLineGraphData(income: true, type: timeframe)
-        } else {
-            return dataController.getLineGraphData(income: false, type: timeframe)
-        }
+        summary.lineGraph
     }
 
     var lineGraphGreen: Bool {
@@ -557,11 +576,11 @@ struct LogInsightsView: View {
 
     var displayedReport: ConversionReport {
         if displayType == 1 {
-            return dataController.logViewNetTotal(type: timeframe).report
+            return summary.net.report
         } else if displayType == 2 {
-            return dataController.logViewTotal(type: timeframe, income: true).report
+            return summary.income.report
         } else {
-            return dataController.logViewTotal(type: timeframe, income: false).report
+            return summary.spent.report
         }
     }
 
@@ -603,6 +622,8 @@ struct LogInsightsView: View {
 
                 EmptyView()
                     .modifier(NumberView(number: amount, dynamicTypeSize: _dynamicTypeSize.wrappedValue, netTotal: displayType == 1, positive: netTotal.positive, hasCents: Int((abs(amount) * 100).rounded()) % 100 != 0))
+                    // Hidden rather than showing zero until the first totals arrive.
+                    .opacity(loadedKey == nil ? 0 : 1)
 
                 ConversionNote(report: displayedReport)
             }
@@ -694,6 +715,37 @@ struct LogInsightsView: View {
         .padding([.bottom, .horizontal], 20)
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .frame(height: lineGraph ? 295 : 225)
+        .task(id: summaryKey) {
+            await loadSummary()
+        }
+        // New exchange rates, among others.
+        .onReceive(dataController.objectWillChange) { _ in
+            refreshCount &+= 1
+        }
+        // "Today" and "this week" move on at midnight.
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.significantTimeChangeNotification)) { _ in
+            refreshCount &+= 1
+        }
+    }
+
+    private func loadSummary() async {
+        let key = summaryKey
+
+        // A CloudKit import changes the view context many times a second. Waiting a moment lets a burst of
+        // changes cancel this load and be counted once. The first load, and a time frame or graph someone
+        // just picked, don't wait.
+        if let loadedKey, loadedKey.timeframe == key.timeframe, loadedKey.lineGraph == key.lineGraph {
+            try? await Task.sleep(nanoseconds: 250_000_000)
+        }
+
+        guard !Task.isCancelled else { return }
+
+        let loaded = await dataController.loadLogInsightsSummary(type: key.timeframe, lineGraph: key.lineGraph)
+
+        guard !Task.isCancelled else { return }
+
+        summary = loaded
+        loadedKey = key
     }
 
     func formatNumber(showCents: Bool, number: Double) -> String {
