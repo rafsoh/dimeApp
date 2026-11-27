@@ -6,7 +6,6 @@
 //
 
 import CoreData
-import Popovers
 import SwiftUI
 import UIKit
 
@@ -63,22 +62,16 @@ struct AccountIconView: View {
     }
 }
 
-/// Every account icon, to pick one; shown in a popover from the account editor.
+/// Every account icon, to pick one. The account editor shows it where the keyboard was, like the emoji
+/// keyboard in the category editor.
 struct AccountIconGrid: View {
     let selection: String
     let onPick: (String) -> Void
 
-    private let columns = [
-        GridItem(.fixed(40), spacing: 6),
-        GridItem(.fixed(40), spacing: 6),
-        GridItem(.fixed(40), spacing: 6),
-        GridItem(.fixed(40), spacing: 6),
-        GridItem(.fixed(40), spacing: 6),
-        GridItem(.fixed(40))
-    ]
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: 10), count: 6)
 
     var body: some View {
-        LazyVGrid(columns: columns, spacing: 6) {
+        LazyVGrid(columns: columns, spacing: 10) {
             ForEach(AccountIcons.all, id: \.self) { symbol in
                 let isSelected = symbol == selection
 
@@ -87,9 +80,9 @@ struct AccountIconGrid: View {
                     onPick(symbol)
                 } label: {
                     Image(systemName: AccountIcons.displayable(symbol))
-                        .font(.system(size: 17, weight: .medium))
+                        .font(.system(size: 19, weight: .medium))
                         .foregroundColor(isSelected ? Color.LightIcon : Color.PrimaryText)
-                        .frame(width: 40, height: 40)
+                        .frame(width: 46, height: 46)
                         .background(Circle().fill(isSelected ? Color.DarkBackground : Color.PrimaryText.opacity(0.06)))
                         .contentShape(Circle())
                 }
@@ -97,9 +90,6 @@ struct AccountIconGrid: View {
                 .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
             }
         }
-        .padding(10)
-        .frame(width: 290)
-        .glassPopoverBackground(cornerRadius: 26)
     }
 }
 
@@ -596,15 +586,18 @@ struct AccountEditorSheet: View {
 
     var body: some View {
         if #available(iOS 16.0, *) {
-            content
-                .presentationDetents([.height(170)])
+            // The icons take the keyboard's place, so the sheet grows to hold them while it's down.
+            content(fixedHeight: false)
+                .presentationDetents([.height(showingIcons ? 540 : 300)])
                 .presentationDragIndicator(.hidden)
         } else {
-            content
+            content(fixedHeight: true)
         }
     }
 
-    private var content: some View {
+    /// Laid out like the category editor: the title, the icon where a category has its emoji, then the name
+    /// and the confirm button.
+    private func content(fixedHeight: Bool) -> some View {
         VStack(spacing: 0) {
             HStack {
                 GlassIconButton(systemName: "xmark", accessibilityLabel: "Close") {
@@ -623,23 +616,36 @@ struct AccountEditorSheet: View {
                 }
             }
 
-            Spacer(minLength: 20)
+            Spacer(minLength: 16)
+
+            iconTile
+
+            Spacer(minLength: 16)
 
             HStack(spacing: 10) {
-                iconButton
-
                 NormalTextField(text: $name, placeholder: String(localized: "Account Name"), autofocus: true, action: save)
                     .foregroundColor(Color.PrimaryText)
                     .padding(.horizontal, 18)
                     .frame(height: 50)
-                    .glassField(in: Capsule(), isFocused: true)
+                    .glassField(in: Capsule(), isFocused: !showingIcons)
 
                 CategoryConfirmButton(systemImage: editingChoice == nil ? "plus" : "checkmark", accessibilityLabel: editingChoice == nil ? "Add Account" : "Save", action: save)
+            }
+
+            if showingIcons {
+                AccountIconGrid(selection: symbol) { picked in
+                    withAnimation(.easeOut(duration: 0.15)) {
+                        pickedSymbol = picked
+                    }
+                }
+                .padding(.top, 24)
+                .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
         }
         .padding(.horizontal, 20)
         .padding(.top, 20)
         .padding(.bottom, 16)
+        .frame(maxHeight: fixedHeight && !showingIcons ? 350 : .infinity, alignment: .top)
         .frame(maxHeight: .infinity, alignment: .top)
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .sheetBackground()
@@ -651,9 +657,17 @@ struct AccountEditorSheet: View {
                 }
             }
         }
+        // Tapping the name brings the keyboard back in place of the icons.
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
+            guard showingIcons else { return }
+
+            withAnimation(.easeOut(duration: 0.25)) {
+                showingIcons = false
+            }
+        }
         #if DEBUG
         .onAppear {
-            // `-accountEditor typed` types a name, and `-accountEditor icons` opens the icons (see AccountsView).
+            // `-accountEditor typed` types a name, and `-accountEditor icons` shows the icons (see AccountsView).
             let arguments = ProcessInfo.processInfo.arguments
             guard let index = arguments.firstIndex(of: "-accountEditor"), index + 1 < arguments.count else { return }
 
@@ -662,7 +676,7 @@ struct AccountEditorSheet: View {
                 name = "Visa Platinum"
             case "icons":
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-                    showingIcons = true
+                    showIcons()
                 }
             default:
                 break
@@ -674,37 +688,29 @@ struct AccountEditorSheet: View {
         }
     }
 
-    /// The account's icon, beside its name like a category's colour; tapping it shows every icon.
-    private var iconButton: some View {
-        Button {
-            showingIcons = true
+    /// The account's icon, where a category has its emoji. Tapping it swaps the keyboard for every icon.
+    private var iconTile: some View {
+        let shape = RoundedRectangle(cornerRadius: 28, style: .continuous)
+
+        return Button {
+            showIcons()
         } label: {
             AccountIconView(symbol: symbol)
-                .font(.app(.title3, weight: .medium))
-                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                .font(.system(size: 38, weight: .medium))
                 .foregroundColor(Color.PrimaryText)
-                .frame(width: 50, height: 50)
-                .glassField(in: Circle(), isFocused: showingIcons)
-                .contentShape(Circle())
+                .frame(width: 96, height: 96)
+                .glassField(in: shape, isFocused: showingIcons)
+                .contentShape(shape)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Text("Icon"))
-        .popover(present: $showingIcons, attributes: {
-            $0.position = .absolute(
-                originAnchor: .topLeft,
-                popoverAnchor: .bottomLeft
-            )
-            $0.rubberBandingMode = .none
-            $0.sourceFrameInset = UIEdgeInsets(top: -10, left: 0, bottom: 0, right: 0)
-            $0.presentation.animation = .easeInOut(duration: 0.2)
-            $0.dismissal.animation = .easeInOut(duration: 0.3)
-        }) {
-            AccountIconGrid(selection: symbol) { picked in
-                withAnimation(.easeOut(duration: 0.15)) {
-                    pickedSymbol = picked
-                }
-                showingIcons = false
-            }
+    }
+
+    private func showIcons() {
+        UIApplication.shared.endEditing()
+
+        withAnimation(.easeOut(duration: 0.25)) {
+            showingIcons = true
         }
     }
 
