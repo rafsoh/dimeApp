@@ -15,6 +15,11 @@ on:
       - '.github/ISSUE_TEMPLATE/**'
       - 'LICENSE'
   workflow_dispatch:
+    inputs:
+      screenshots:
+        description: "Screenshots to take, written as in a pull request's ci-screenshots block with ; between lines. They're saved to the ci-screenshots branch under run-<run id>."
+        required: false
+        default: ""
 
 concurrency:
   group: ios-${{ github.ref }}
@@ -118,11 +123,17 @@ jobs:
         # Only the screenshots the pull request asks for, in a ```ci-screenshots block in its description
         # (see .github/scripts/pr_screenshots.py). Nothing is committed for them, so they go away with the
         # pull request. Editing the description doesn't rerun CI: push a commit or rerun the job.
-        if: github.event_name == 'pull_request' && contains(github.event.pull_request.body, '```ci-screenshots')
+        # A manual run takes the ones its screenshots input lists instead.
+        if: (github.event_name == 'pull_request' && contains(github.event.pull_request.body, '```ci-screenshots')) || (github.event_name == 'workflow_dispatch' && inputs.screenshots != '')
         continue-on-error: true
         env:
           PR_BODY: ${{ github.event.pull_request.body }}
+          RUN_SHOTS: ${{ inputs.screenshots }}
         run: |
+          if [ -n "$RUN_SHOTS" ]; then
+            PR_BODY=$(printf '```ci-screenshots\n%s\n```\n' "$(printf '%s' "$RUN_SHOTS" | tr ';' '\n')")
+            export PR_BODY
+          fi
           APP=$(find "$DERIVED_DATA/Build/Products" -maxdepth 2 -name "*.app" -path "*iphonesimulator*" | head -1)
           echo "App: $APP"
           python3 .github/scripts/pr_screenshots.py "$APP" screenshots
@@ -184,6 +195,34 @@ jobs:
           else
             gh api "repos/$REPO/issues/$PR/comments" -F body=@comment.md > /dev/null
           fi
+
+      - name: Save a manual run's screenshots
+        # A manual run has no pull request to show them on, so they go to the ci-screenshots branch
+        # under run-<run id>, to fetch from there.
+        if: always() && github.event_name == 'workflow_dispatch' && inputs.screenshots != ''
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN: ${{ github.run_id }}
+          REPO: ${{ github.repository }}
+        run: |
+          ls screenshots/*.png > /dev/null 2>&1 || { echo "No screenshots"; exit 0; }
+          folder="run-$RUN"
+          remote="https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git"
+          work=$(mktemp -d)
+          if git ls-remote --exit-code "$remote" refs/heads/ci-screenshots > /dev/null; then
+            git clone -q --depth 1 --branch ci-screenshots "$remote" "$work"
+          else
+            git init -q -b ci-screenshots "$work"
+            git -C "$work" remote add origin "$remote"
+          fi
+          mkdir -p "$work/$folder"
+          cp screenshots/*.png "$work/$folder/"
+          git -C "$work" add -A
+          git -C "$work" -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "Screenshots for run $RUN at ${GITHUB_SHA:0:7}" || true
+          git -C "$work" push -q origin ci-screenshots
+          echo "Saved to ci-screenshots/$folder at $(git -C "$work" rev-parse HEAD)"
 
       - name: Upload logs and test results
         if: failure()
