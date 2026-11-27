@@ -1,8 +1,12 @@
-Nieuw in Dime 3.0.2
+Nieuw in Dime 3.0.3
 
-• Budget doorschuiven: wat er over is van een budget, of wat je te veel hebt uitgegeven, schuift door naar de volgende periode. Zet het aan bij het maken of bewerken van een budget.
-• Snel toevoegen-sjablonen verschijnen nu in een raster dat op de widget lijkt. Houd een sjabloon vast en sleep om de volgorde te wijzigen.
-• Bij het verwijderen van een categorie vraagt Dime nu of je de transacties naar een andere categorie wilt verplaatsen of wilt verwijderen.
-• Nieuwe lettertypen in Instellingen > Weergave: SF Pro, Allo, Atkinson Hyperlegible, Fraunces en Geist Pixel.
-• Dime is nu beschikbaar in het Spaans, Duits, Portugees, Italiaans, Nederlands, Turks, Japans, Koreaans en Chinees (vereenvoudigd en traditioneel).
-• Anonieme crashrapporten helpen bugs te vinden en op te lossen. Ze bevatten nooit je transacties, bedragen, notities of categorieën.
+• Dime is nu beschikbaar in 15 extra talen: Hindi, Bengaals, Marathi, Telugu, Tamil, Gujarati, Kannada, Malayalam, Punjabi, Odia, Urdu, Indonesisch, Maleis, Vietnamees en Thai.
+• Op de iPhone Duo staan de knoppen van vensters nu in de zijbalk.
+
+Oplossingen
+• Crashes bij de eerste start na een update zijn opgelost.
+• Als Dime je gegevens niet kan openen, legt het nu uit wat er is gebeurd en kun je het opnieuw proberen, in plaats van dat de app crasht. Je gegevens blijven veilig.
+• Dime laat je nu weten wanneer een wijziging niet kan worden bewaard, bijvoorbeeld als je iPhone vol is, en probeert het later opnieuw.
+• Je gegevens lijken niet meer verdwenen als je bent afgemeld bij iCloud terwijl synchronisatie aanstaat.
+• Een crash bij het verwijderen van een categorie tijdens het bewerken van een transactie is opgelost.
+• Crashes en vastlopers in Budgetten, Inzichten, het logboek en het emojitoetsenbord zijn opgelost.

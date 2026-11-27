@@ -1,8 +1,12 @@
-Dime 3.0.2'deki yenilikler
+Dime 3.0.3'teki yenilikler
 
-• Bütçe devri: Bir bütçede kalan ya da aşılan tutar bir sonraki döneme aktarılır. Bütçe oluştururken veya düzenlerken açın.
-• Hızlı ekle şablonları artık widget'a benzeyen bir ızgarada görünüyor. Sıralamayı değiştirmek için bir şablonu basılı tutup sürükleyin.
-• Bir kategoriyi silerken Dime artık işlemlerini başka bir kategoriye taşımak mı yoksa silmek mi istediğinizi soruyor.
-• Ayarlar > Görünüm'de yeni yazı tipleri: SF Pro, Allo, Atkinson Hyperlegible, Fraunces ve Geist Pixel.
-• Dime artık İspanyolca, Almanca, Portekizce, İtalyanca, Felemenkçe, Türkçe, Japonca, Korece ve Çince (Basitleştirilmiş ve Geleneksel) dillerinde.
-• Anonim çökme raporları hataları bulup düzeltmeye yardımcı olur. İşlemlerinizi, tutarlarınızı, notlarınızı veya kategorilerinizi asla içermez.
+• Dime artık 15 dilde daha kullanılabilir: Hintçe, Bengalce, Marathi, Telugu, Tamilce, Guceratça, Kannada, Malayalam, Pencapça, Oriya, Urduca, Endonezce, Malayca, Vietnamca ve Tayca.
+• iPhone Duo'da sayfalardaki düğmeler artık kenar çubuğunda.
+
+Düzeltmeler
+• Güncellemeden sonraki ilk açılışta yaşanan çökmeler düzeltildi.
+• Dime verilerinizi açamazsa artık çökmek yerine ne olduğunu açıklıyor ve yeniden denemenize izin veriyor. Kayıtlarınız güvende.
+• Dime artık bir değişiklik kaydedilemediğinde, örneğin iPhone'unuzda yer kalmadığında, size haber veriyor ve daha sonra yeniden deniyor.
+• Eşzamanlama açıkken iCloud oturumunuz kapalı olduğunda kayıtlarınız artık kaybolmuş gibi görünmüyor.
+• Bir işlemi düzenlerken kategori silindiğinde yaşanan çökme düzeltildi.
+• Bütçeler, Analiz, kayıt listesi ve emoji klavyesindeki çökmeler ve donmalar düzeltildi.

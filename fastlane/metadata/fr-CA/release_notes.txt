@@ -1,8 +1,12 @@
-Nouveautés de Dime 3.0.2
+Nouveautés de Dime 3.0.3
 
-• Report de budget : ce qui reste d'un budget, ou ce que vous avez dépassé, est reporté sur la période suivante. Activez-le en créant ou en modifiant un budget.
-• Les modèles d'Ajout rapide s'affichent désormais dans une grille au style du widget. Maintenez un modèle et faites-le glisser pour le réorganiser.
-• Lorsque vous supprimez une catégorie, Dime vous demande de déplacer ses transactions vers une autre catégorie ou de les supprimer.
-• Nouvelles polices dans Paramètres > Apparence : SF Pro, Allo, Atkinson Hyperlegible, Fraunces et Geist Pixel.
-• Dime est désormais disponible en espagnol, allemand, portugais, italien, néerlandais, turc, japonais, coréen et chinois (simplifié et traditionnel).
-• Des rapports de plantage anonymes aident à trouver et corriger les bugs. Ils n'incluent jamais vos transactions, montants, notes ou catégories.
+• Dime est désormais disponible dans 15 langues supplémentaires : hindi, bengali, marathi, télougou, tamoul, gujarati, kannada, malayalam, pendjabi, oriya, ourdou, indonésien, malais, vietnamien et thaï.
+• Sur iPhone Duo, les boutons des fenêtres se trouvent désormais dans la barre latérale.
+
+Corrections
+• Correction de plantages au premier lancement après une mise à jour.
+• Si Dime ne peut pas ouvrir vos données, il explique désormais ce qui s'est passé et vous permet de réessayer au lieu de planter. Vos entrées restent en sécurité.
+• Dime vous prévient désormais lorsqu'une modification ne peut pas être enregistrée, par exemple quand votre iPhone manque d'espace, et réessaie plus tard.
+• Vos entrées ne semblent plus disparues lorsque vous êtes déconnecté d'iCloud avec la synchronisation activée.
+• Correction d'un plantage lors de la suppression d'une catégorie pendant la modification d'une transaction.
+• Correction de plantages et de blocages dans Budgets, Perspectives, l'historique et le clavier emoji.

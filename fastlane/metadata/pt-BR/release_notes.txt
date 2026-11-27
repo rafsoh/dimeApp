@@ -1,8 +1,12 @@
-Novidades do Dime 3.0.2
+Novidades do Dime 3.0.3
 
-• Saldo acumulado do orçamento: o que sobrar de um orçamento, ou o que você gastar a mais, passa para o próximo período. Ative ao criar ou editar um orçamento.
-• Os modelos de Adição rápida agora aparecem em uma grade no estilo do widget. Toque e segure um modelo e arraste para reordenar.
-• Ao apagar uma categoria, o Dime pergunta se você quer mover as transações para outra categoria ou apagá-las.
-• Novas fontes em Ajustes > Aparência: SF Pro, Allo, Atkinson Hyperlegible, Fraunces e Geist Pixel.
-• O Dime agora está disponível em espanhol, alemão, português, italiano, holandês, turco, japonês, coreano e chinês (simplificado e tradicional).
-• Relatórios de falhas anônimos ajudam a encontrar e corrigir erros. Eles nunca incluem suas transações, valores, notas ou categorias.
+• O Dime agora está disponível em mais 15 idiomas: hindi, bengali, marati, télugo, tâmil, guzerate, canarês, malaiala, punjabi, oriá, urdu, indonésio, malaio, vietnamita e tailandês.
+• No iPhone Duo, os botões das janelas agora ficam na barra lateral.
+
+Correções
+• Corrigidas falhas na primeira abertura após uma atualização.
+• Se o Dime não conseguir abrir seus dados, ele agora explica o que aconteceu e permite tentar de novo, em vez de fechar. Seus registros continuam seguros.
+• O Dime agora avisa quando uma alteração não pode ser salva, por exemplo quando o iPhone está sem espaço, e tenta de novo depois.
+• Seus registros não parecem mais sumidos quando você sai do iCloud com a sincronização ativada.
+• Corrigida uma falha ao apagar uma categoria enquanto você editava uma transação.
+• Corrigidas falhas e travamentos em Orçamentos, Análises, no registro e no teclado de emojis.
