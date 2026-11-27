@@ -34,6 +34,7 @@ struct InsightsView: View {
     /// The account Insights shows; empty for every account.
     @AppStorage(InsightsAccountFilter.key, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var insightsAccount = ""
     @AppStorage(MainAccount.nameKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var mainAccountName = ""
+    @AppStorage(MainAccount.symbolKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var mainAccountSymbol = ""
     @State private var showAccountMenu = false
     @State private var periodMenuWidth: CGFloat = 0
     @State private var isScrubbingPeriod = false
@@ -1486,10 +1487,16 @@ struct InsightsAccountRow: View {
         Button(action: action) {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(alignment: .firstTextBaseline, spacing: 12) {
-                    Text(total.account.name)
-                        .font(.app(.body, weight: .medium))
-                        .foregroundColor(Color.PrimaryText)
-                        .lineLimit(1)
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        AccountIconView(symbol: total.account.symbol)
+                            .font(.app(.subheadline, weight: .medium))
+                            .foregroundColor(Color.SubtitleText)
+
+                        Text(total.account.name)
+                            .font(.app(.body, weight: .medium))
+                            .foregroundColor(Color.PrimaryText)
+                            .lineLimit(1)
+                    }
 
                     Text("\(share)%")
                         .font(.app(.subheadline))
@@ -2401,7 +2408,7 @@ struct InsightsAccountMenu: View {
 
     var body: some View {
         GlassPopoverMenu {
-            GlassPopoverRow("All Accounts", isSelected: current.isEmpty) {
+            GlassPopoverRow("All Accounts", systemImage: "rectangle.stack", isSelected: current.isEmpty) {
                 pick("")
             }
 
@@ -2410,7 +2417,7 @@ struct InsightsAccountMenu: View {
                 .padding(.vertical, 4)
 
             ForEach(choices, id: \.key) { choice in
-                GlassPopoverRow(verbatim: choice.name, isSelected: current == choice.key) {
+                GlassPopoverRow(verbatim: choice.name, systemImage: AccountIcons.displayable(choice.symbol), isSelected: current == choice.key) {
                     pick(choice.key)
                 }
             }

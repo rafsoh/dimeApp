@@ -50,17 +50,103 @@ enum MainAccount {
         }
     }
 
-    /// Takes the name another device set. At launch iCloud may not have delivered anything yet, so a missing
-    /// name only clears this device's when iCloud says it changed.
-    static func adoptNameFromICloud(clearingIfMissing: Bool) {
-        let store = NSUbiquitousKeyValueStore.default
+    static let symbolKey = "mainAccountSymbol"
 
-        if let name = store.string(forKey: nameKey), !name.isEmpty {
-            defaults?.set(name, forKey: nameKey)
-        } else if clearingIfMissing {
-            defaults?.removeObject(forKey: nameKey)
+    /// Main's icon: the user's own, or a wallet.
+    static var symbol: String {
+        let custom = defaults?.string(forKey: symbolKey) ?? ""
+        return custom.isEmpty ? AccountIcons.defaultSymbol : custom
+    }
+
+    /// Changes Main's icon here and, through iCloud key-value storage, on the user's other devices.
+    /// The default icon is stored as nothing, like the default name.
+    static func setSymbol(_ newSymbol: String?) {
+        let stored = newSymbol == AccountIcons.defaultSymbol ? nil : newSymbol
+
+        if let stored, !stored.isEmpty {
+            defaults?.set(stored, forKey: symbolKey)
+            NSUbiquitousKeyValueStore.default.set(stored, forKey: symbolKey)
+        } else {
+            defaults?.removeObject(forKey: symbolKey)
+            NSUbiquitousKeyValueStore.default.removeObject(forKey: symbolKey)
         }
     }
+
+    /// Takes the name and icon another device set. At launch iCloud may not have delivered anything yet,
+    /// so a missing value only clears this device's when iCloud says it changed.
+    static func adoptFromICloud(clearingIfMissing: Bool) {
+        let store = NSUbiquitousKeyValueStore.default
+
+        for key in [nameKey, symbolKey] {
+            if let value = store.string(forKey: key), !value.isEmpty {
+                defaults?.set(value, forKey: key)
+            } else if clearingIfMissing {
+                defaults?.removeObject(forKey: key)
+            }
+        }
+    }
+}
+
+// MARK: - Icons
+
+/// The SF Symbols an account can have. A short list rather than the whole catalogue: each means something
+/// for money, and each is drawn alone, without colour, so accounts never look like categories.
+enum AccountIcons {
+    /// Main's, and an account's that has none and whose name suggests nothing.
+    static let defaultSymbol = "wallet.bifold"
+
+    /// In the order the picker shows them: where money is kept, what it's kept for, then what it's for in life.
+    static let all = [
+        "wallet.bifold", "creditcard", "banknote", "building.columns", "giftcard", "iphone",
+        "lock", "umbrella", "chart.line.uptrend.xyaxis", "chart.pie", "archivebox", "star",
+        "house", "car", "airplane", "globe", "briefcase", "building.2",
+        "person.2", "person", "heart", "gift", "graduationcap", "pawprint"
+    ]
+
+    /// An icon that suits an account's name, for accounts made without picking one, such as by an import
+    /// or from a suggestion.
+    static func guess(for name: String) -> String {
+        let lowered = name.lowercased()
+
+        // The suggested names, in the user's language.
+        let suggested = [
+            (String(localized: "Credit Card"), "creditcard"),
+            (String(localized: "Debit Card"), "creditcard"),
+            (String(localized: "Savings"), "building.columns"),
+            (String(localized: "Cash"), "banknote")
+        ]
+
+        if let match = suggested.first(where: { lowered.contains($0.0.lowercased()) }) {
+            return match.1
+        }
+
+        // Whole words, so "car" doesn't match "card".
+        let words = Set(lowered.components(separatedBy: CharacterSet.alphanumerics.inverted).filter { !$0.isEmpty })
+
+        for (keywords, symbol) in keywordSymbols where keywords.contains(where: { $0.contains(" ") ? lowered.contains($0) : words.contains($0) }) {
+            return symbol
+        }
+
+        return defaultSymbol
+    }
+
+    private static let keywordSymbols: [(keywords: [String], symbol: String)] = [
+        (["gift card", "giftcard", "voucher"], "giftcard"),
+        (["card", "credit", "debit", "visa", "mastercard", "amex"], "creditcard"),
+        (["emergency", "rainy day"], "umbrella"),
+        (["invest", "investment", "investments", "broker", "brokerage", "stocks", "shares", "isa", "pension", "retirement", "401k", "crypto"], "chart.line.uptrend.xyaxis"),
+        (["savings", "saving", "bank", "checking", "chequing", "current"], "building.columns"),
+        (["cash"], "banknote"),
+        (["paypal", "venmo", "revolut", "wise", "monzo", "phone"], "iphone"),
+        (["travel", "holiday", "holidays", "vacation", "trip"], "airplane"),
+        (["home", "house", "rent", "mortgage"], "house"),
+        (["car", "auto"], "car"),
+        (["business", "work", "company"], "briefcase"),
+        (["joint", "family", "shared", "household"], "person.2"),
+        (["school", "college", "university", "tuition", "education"], "graduationcap"),
+        (["gift", "gifts"], "gift"),
+        (["pet", "pets", "dog", "cat"], "pawprint")
+    ]
 }
 
 // MARK: - Choosing an account
@@ -107,6 +193,11 @@ enum AccountChoice: Hashable, Identifiable {
         account?.wrappedName ?? MainAccount.name
     }
 
+    /// The SF Symbol saved for the account. Draw it with `AccountIconView`, which stands in for one this iOS lacks.
+    var symbol: String {
+        account?.wrappedSymbol ?? MainAccount.symbol
+    }
+
     /// Matches the transactions in this account.
     var predicate: NSPredicate {
         if let account {
@@ -120,6 +211,12 @@ extension Account {
     var wrappedName: String {
         let trimmed = (name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? String(localized: "Account") : trimmed
+    }
+
+    /// Its icon, or one guessed from its name for an account that has none.
+    var wrappedSymbol: String {
+        let stored = (symbol ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        return stored.isEmpty ? AccountIcons.guess(for: wrappedName) : stored
     }
 
     /// Accounts are matched by id everywhere they're saved by key, so one made before ids (never, today) still has a key.

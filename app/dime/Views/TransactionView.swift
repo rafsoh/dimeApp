@@ -36,8 +36,9 @@ struct TransactionView: View {
 
     // accounts and transfers
     @FetchRequest(sortDescriptors: [SortDescriptor(\.order), SortDescriptor(\.dateCreated)]) private var accountObjects: FetchedResults<Account>
-    /// Redraws account names when Main is renamed.
+    /// Redraws account names and icons when Main is renamed or given another icon.
     @AppStorage(MainAccount.nameKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var mainAccountName = ""
+    @AppStorage(MainAccount.symbolKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var mainAccountSymbol = ""
     /// The account an expense or income goes into, or where a transfer comes from.
     @State private var account: AccountChoice = .main
     @State private var isTransfer = false
@@ -754,7 +755,7 @@ struct TransactionView: View {
     }
 
     var accountToken: some View {
-        AccountToken(name: account.name) {
+        AccountToken(name: account.name, symbol: account.symbol) {
             UIApplication.shared.endEditing()
             accountPicker = .account
         }
@@ -763,7 +764,7 @@ struct TransactionView: View {
     /// "Main → Savings", each side tappable.
     var transferTokens: some View {
         HStack(spacing: 2) {
-            AccountToken(name: account.name, isError: account == transferTo) {
+            AccountToken(name: account.name, symbol: account.symbol, isError: account == transferTo) {
                 UIApplication.shared.endEditing()
                 accountPicker = .from
             }
@@ -774,7 +775,7 @@ struct TransactionView: View {
                 .foregroundColor(Color.SubtitleText.opacity(0.6))
                 .accessibilityHidden(true)
 
-            AccountToken(name: transferTo?.name ?? String(localized: "Account"), isError: account == transferTo) {
+            AccountToken(name: transferTo?.name ?? String(localized: "Account"), symbol: transferTo?.symbol, isError: account == transferTo) {
                 UIApplication.shared.endEditing()
                 accountPicker = .to
             }

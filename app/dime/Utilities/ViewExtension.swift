@@ -530,9 +530,9 @@ struct GlassPopoverRow: View {
     }
 
     /// A row for a name the user typed, such as an account's, shown as written.
-    init(verbatim title: String, isSelected: Bool = false, action: @escaping () -> Void) {
+    init(verbatim title: String, systemImage: String? = nil, isSelected: Bool = false, action: @escaping () -> Void) {
         self.title = Text(verbatim: title)
-        self.systemImage = nil
+        self.systemImage = systemImage
         self.detail = nil
         self.isSelected = isSelected
         self.action = action

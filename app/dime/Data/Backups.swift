@@ -27,9 +27,10 @@ struct RestoreResult {
     var budgets = 0
     var templates = 0
     var accounts = 0
-    /// Main's name in the backup. Main has no object to restore, so the manager adopts the name
-    /// where this device hasn't named Main itself.
+    /// Main's name and icon in the backup. Main has no object to restore, so the manager adopts them
+    /// where this device hasn't set its own.
     var mainAccountName: String?
+    var mainAccountSymbol: String?
 
     var total: Int { transactions + categories + budgets + templates + accounts }
 }
@@ -51,6 +52,8 @@ private struct BackupFile: Codable {
     var accounts: [AccountRecord]?
     /// Main's own name, when the user renamed it.
     var mainAccountName: String?
+    /// Main's own icon, when the user changed it.
+    var mainAccountSymbol: String?
 }
 
 private struct AccountRecord: Codable {
@@ -59,6 +62,8 @@ private struct AccountRecord: Codable {
     var name: String?
     var order: Int64
     var dateCreated: Date?
+    /// Missing from backups made before accounts had icons; those guess one from their name.
+    var symbol: String?
 }
 
 private struct CategoryRecord: Codable {
@@ -211,9 +216,10 @@ struct BackupStore {
                 TemplateRecord(id: $0.id, amount: $0.amount, income: $0.income, note: $0.note, order: $0.order, recurringCoefficient: $0.recurringCoefficient, recurringType: $0.recurringType, categoryRef: $0.category.map(Self.reference(for:)), currencyCode: $0.currencyCode, accountRef: $0.account?.key)
             },
             accounts: accounts.map {
-                AccountRecord(ref: $0.key, id: $0.id, name: $0.name, order: $0.order, dateCreated: $0.dateCreated)
+                AccountRecord(ref: $0.key, id: $0.id, name: $0.name, order: $0.order, dateCreated: $0.dateCreated, symbol: $0.symbol)
             },
-            mainAccountName: UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.string(forKey: MainAccount.nameKey)
+            mainAccountName: UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.string(forKey: MainAccount.nameKey),
+            mainAccountSymbol: UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.string(forKey: MainAccount.symbolKey)
         )
 
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -242,6 +248,7 @@ struct BackupStore {
 
         var result = RestoreResult()
         result.mainAccountName = file.mainAccountName
+        result.mainAccountSymbol = file.mainAccountSymbol
 
         var accounts: [Account] = try context.fetch(Account.fetchRequest())
         var accountsByRef: [String: Account] = [:]
@@ -260,6 +267,7 @@ struct BackupStore {
             let account = Account(context: context)
             account.id = record.id ?? UUID()
             account.name = record.name
+            account.symbol = record.symbol ?? record.name.map(AccountIcons.guess(for:))
             account.dateCreated = record.dateCreated
             // After the store's own accounts, in the backup's order.
             account.order = nextAccountOrder + record.order
@@ -638,9 +646,13 @@ final class BackupManager: ObservableObject {
                     self.defaults?.set(backup.url.lastPathComponent, forKey: Self.handledBackupKey)
                     self.suggestedRestore = nil
 
-                    // Like everything else a restore adds, Main's name only fills in what's missing.
+                    // Like everything else a restore adds, Main's name and icon only fill in what's missing.
                     if let name = restored.mainAccountName, self.defaults?.string(forKey: MainAccount.nameKey) == nil {
                         self.dataController.renameAccount(.main, to: name)
+                    }
+
+                    if let symbol = restored.mainAccountSymbol, self.defaults?.string(forKey: MainAccount.symbolKey) == nil {
+                        self.dataController.setMainAccountSymbol(symbol)
                     }
 
                     WidgetCenter.shared.reloadAllTimelines()

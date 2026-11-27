@@ -1775,6 +1775,7 @@ struct AccountFilterView: View {
     @EnvironmentObject var dataController: DataController
     @FetchRequest(sortDescriptors: []) private var accounts: FetchedResults<Account>
     @AppStorage(MainAccount.nameKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var mainAccountName = ""
+    @AppStorage(MainAccount.symbolKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var mainAccountSymbol = ""
     @State private var showPicker = false
 
     var body: some View {
@@ -1782,6 +1783,10 @@ struct AccountFilterView: View {
             showPicker = true
         } label: {
             HStack(spacing: 6) {
+                // Like the category filter's emoji.
+                AccountIconView(symbol: account.symbol)
+                    .foregroundColor(Color.SubtitleText)
+
                 Text(account.name)
                     .foregroundColor(Color.PrimaryText)
                     .lineLimit(1)

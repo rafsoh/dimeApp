@@ -6,7 +6,9 @@
 //
 
 import CoreData
+import Popovers
 import SwiftUI
+import UIKit
 
 /// The symbol for accounts: a wallet, since accounts hold cash and savings as much as cards.
 enum AccountSymbol {
@@ -22,6 +24,82 @@ enum AccountSymbol {
             return "wallet.bifold.fill"
         }
         return "banknote.fill"
+    }
+}
+
+// MARK: - Account icons
+
+extension AccountIcons {
+    /// Symbols newer than iOS 15, and what stands in for them there.
+    private static let fallbacks = [
+        "wallet.bifold": "wallet.pass",
+        "giftcard": "gift",
+        "chart.line.uptrend.xyaxis": "chart.bar"
+    ]
+
+    /// The symbol to draw: the saved one, or a stand-in where this iOS version lacks it, such as one picked
+    /// on a newer device.
+    static func displayable(_ symbol: String) -> String {
+        if UIImage(systemName: symbol) != nil {
+            return symbol
+        }
+
+        if let fallback = fallbacks[symbol], UIImage(systemName: fallback) != nil {
+            return fallback
+        }
+
+        return "wallet.pass"
+    }
+}
+
+/// An account's icon: a plain symbol in the colour of the text around it, never a coloured tile,
+/// so an account can't be mistaken for a category.
+struct AccountIconView: View {
+    let symbol: String
+
+    var body: some View {
+        Image(systemName: AccountIcons.displayable(symbol))
+            .accessibilityHidden(true)
+    }
+}
+
+/// Every account icon, to pick one; shown in a popover from the account editor.
+struct AccountIconGrid: View {
+    let selection: String
+    let onPick: (String) -> Void
+
+    private let columns = [
+        GridItem(.fixed(40), spacing: 6),
+        GridItem(.fixed(40), spacing: 6),
+        GridItem(.fixed(40), spacing: 6),
+        GridItem(.fixed(40), spacing: 6),
+        GridItem(.fixed(40), spacing: 6),
+        GridItem(.fixed(40))
+    ]
+
+    var body: some View {
+        LazyVGrid(columns: columns, spacing: 6) {
+            ForEach(AccountIcons.all, id: \.self) { symbol in
+                let isSelected = symbol == selection
+
+                Button {
+                    UISelectionFeedbackGenerator().selectionChanged()
+                    onPick(symbol)
+                } label: {
+                    Image(systemName: AccountIcons.displayable(symbol))
+                        .font(.system(size: 17, weight: .medium))
+                        .foregroundColor(isSelected ? Color.LightIcon : Color.PrimaryText)
+                        .frame(width: 40, height: 40)
+                        .background(Circle().fill(isSelected ? Color.DarkBackground : Color.PrimaryText.opacity(0.06)))
+                        .contentShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
+            }
+        }
+        .padding(10)
+        .frame(width: 290)
+        .glassPopoverBackground(cornerRadius: 26)
     }
 }
 
@@ -116,8 +194,9 @@ struct AccountsView: View {
 
     @FetchRequest(sortDescriptors: [SortDescriptor(\.order), SortDescriptor(\.dateCreated)]) private var accounts: FetchedResults<Account>
 
-    /// Redraws Main's row when it's renamed, here or on another device.
+    /// Redraws Main's row when it's renamed or given another icon, here or on another device.
     @AppStorage(MainAccount.nameKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var mainName = ""
+    @AppStorage(MainAccount.symbolKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var mainSymbol = ""
 
     @State private var isReordering = false
     @State private var editing: AccountEditorSheet.Target?
@@ -215,7 +294,7 @@ struct AccountsView: View {
             }
 
             Section {
-                row(name: MainAccount.name, isMain: true)
+                row(name: MainAccount.name, symbol: MainAccount.symbol, isMain: true)
                     .moveDisabled(true)
                     .onTapGesture {
                         editing = .edit(.main)
@@ -230,7 +309,7 @@ struct AccountsView: View {
                     }
 
                 ForEach(accounts) { account in
-                    row(name: account.wrappedName, isMain: false)
+                    row(name: account.wrappedName, symbol: account.wrappedSymbol, isMain: false)
                         .onTapGesture {
                             editing = .edit(.account(account))
                         }
@@ -339,8 +418,14 @@ struct AccountsView: View {
         .listRowInsets(EdgeInsets(top: 0, leading: .settingsRowInset, bottom: 0, trailing: .settingsRowInset))
     }
 
-    private func row(name: String, isMain: Bool) -> some View {
-        HStack(spacing: 10) {
+    private func row(name: String, symbol: String, isMain: Bool) -> some View {
+        HStack(spacing: 12) {
+            AccountIconView(symbol: symbol)
+                .font(.app(.body, weight: .medium))
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                .foregroundColor(Color.SubtitleText)
+                .frame(width: 26)
+
             Text(name)
                 .font(.app(.body))
                 .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
@@ -380,7 +465,13 @@ private struct AccountSuggestionsSection: View {
         if !suggestions.isEmpty {
             Section {
                 ForEach(suggestions, id: \.self) { name in
-                    HStack(spacing: 8) {
+                    HStack(spacing: 12) {
+                        AccountIconView(symbol: AccountIcons.guess(for: name))
+                            .font(.app(.body, weight: .medium))
+                            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                            .foregroundColor(Color.SubtitleText)
+                            .frame(width: 26)
+
                         Text(name)
                             .font(.app(.body))
                             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
@@ -449,6 +540,9 @@ struct AccountEditorSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var name: String
+    /// The icon picked here. Until one is, a new account's icon follows its name.
+    @State private var pickedSymbol: String?
+    @State private var showingIcons = false
     @State private var toastTitle = ""
     @State private var showToast = false
 
@@ -458,9 +552,14 @@ struct AccountEditorSheet: View {
 
         if case let .edit(choice) = target {
             _name = State(initialValue: choice.name)
+            _pickedSymbol = State(initialValue: choice.symbol)
         } else {
             _name = State(initialValue: "")
         }
+    }
+
+    var symbol: String {
+        pickedSymbol ?? AccountIcons.guess(for: name)
     }
 
     var editingChoice: AccountChoice? {
@@ -502,6 +601,8 @@ struct AccountEditorSheet: View {
             Spacer(minLength: 20)
 
             HStack(spacing: 10) {
+                iconButton
+
                 NormalTextField(text: $name, placeholder: String(localized: "Account Name"), autofocus: true, action: save)
                     .foregroundColor(Color.PrimaryText)
                     .padding(.horizontal, 18)
@@ -530,10 +631,44 @@ struct AccountEditorSheet: View {
         }
     }
 
+    /// The account's icon, beside its name like a category's colour; tapping it shows every icon.
+    private var iconButton: some View {
+        Button {
+            showingIcons = true
+        } label: {
+            AccountIconView(symbol: symbol)
+                .font(.app(.title3, weight: .medium))
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                .foregroundColor(Color.PrimaryText)
+                .frame(width: 50, height: 50)
+                .glassField(in: Circle(), isFocused: showingIcons)
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text("Icon"))
+        .popover(present: $showingIcons, attributes: {
+            $0.position = .absolute(
+                originAnchor: .topLeft,
+                popoverAnchor: .bottomLeft
+            )
+            $0.rubberBandingMode = .none
+            $0.sourceFrameInset = UIEdgeInsets(top: -10, left: 0, bottom: 0, right: 0)
+            $0.presentation.animation = .easeInOut(duration: 0.2)
+            $0.dismissal.animation = .easeInOut(duration: 0.3)
+        }) {
+            AccountIconGrid(selection: symbol) { picked in
+                withAnimation(.easeOut(duration: 0.15)) {
+                    pickedSymbol = picked
+                }
+                showingIcons = false
+            }
+        }
+    }
+
     func save() {
         // Renaming Main back to nothing restores its default name.
         if editingChoice == .main, name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            dataController.renameAccount(.main, to: "")
+            dataController.renameAccount(.main, to: "", symbol: symbol)
             dismiss()
             return
         }
@@ -551,9 +686,9 @@ struct AccountEditorSheet: View {
             UINotificationFeedbackGenerator().notificationOccurred(.success)
 
             if let editingChoice {
-                dataController.renameAccount(editingChoice, to: name)
+                dataController.renameAccount(editingChoice, to: name, symbol: symbol)
             } else {
-                let account = dataController.addAccount(named: name)
+                let account = dataController.addAccount(named: name, symbol: symbol)
                 onCreate?(.account(account))
             }
 
@@ -579,6 +714,7 @@ struct AccountPickerSheet: View {
 
     @FetchRequest(sortDescriptors: [SortDescriptor(\.order), SortDescriptor(\.dateCreated)]) private var accounts: FetchedResults<Account>
     @AppStorage(MainAccount.nameKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var mainName = ""
+    @AppStorage(MainAccount.symbolKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var mainSymbol = ""
 
     @State private var showNewAccount = false
 
@@ -626,13 +762,13 @@ struct AccountPickerSheet: View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 8) {
                 if allowsAll {
-                    row(Text("All Accounts"), isSelected: isAllSelected, isDisabled: false) {
+                    row(Text("All Accounts"), symbol: "rectangle.stack", isSelected: isAllSelected, isDisabled: false) {
                         selectAll()
                     }
                 }
 
                 ForEach(choices) { choice in
-                    row(Text(choice.name), isSelected: isSelected(choice), isDisabled: choice == unavailable) {
+                    row(Text(choice.name), symbol: choice.symbol, isSelected: isSelected(choice), isDisabled: choice == unavailable) {
                         select(choice)
                     }
                 }
@@ -692,11 +828,16 @@ struct AccountPickerSheet: View {
         }
     }
 
-    private func row(_ name: Text, isSelected: Bool, isDisabled: Bool, action: @escaping () -> Void) -> some View {
+    private func row(_ name: Text, symbol: String, isSelected: Bool, isDisabled: Bool, action: @escaping () -> Void) -> some View {
         let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
 
         return Button(action: action) {
             HStack(spacing: 12) {
+                AccountIconView(symbol: symbol)
+                    .font(.app(.body, weight: .semibold))
+                    .foregroundColor(isDisabled ? Color.SubtitleText.opacity(0.6) : Color.SubtitleText)
+                    .frame(width: 24)
+
                 name
                     .font(.app(.body, weight: .semibold))
                     .lineLimit(1)
@@ -782,12 +923,19 @@ struct AccountPickerSheet: View {
 /// An account on the entry page's date and category line.
 struct AccountToken: View {
     let name: String
+    /// Left out for a side of a transfer that hasn't been picked.
+    var symbol: String?
     var isError = false
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: 5) {
+                if let symbol {
+                    AccountIconView(symbol: symbol)
+                        .font(.app(.subheadline, weight: .semibold))
+                }
+
                 Text(name)
                     .font(.app(.body, weight: .semibold))
                     .lineLimit(1)

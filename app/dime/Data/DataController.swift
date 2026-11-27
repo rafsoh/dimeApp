@@ -608,20 +608,20 @@ class DataController: ObservableObject {
         scheduleRecurringFallback()
     }
 
-    // MARK: Main account's name
+    // MARK: Main account's name and icon
 
-    /// Main's name syncs through iCloud key-value storage, since Main has no object in the store.
+    /// Main's name and icon sync through iCloud key-value storage, since Main has no object in the store.
     private func observeMainAccountName() {
-        MainAccount.adoptNameFromICloud(clearingIfMissing: false)
+        MainAccount.adoptFromICloud(clearingIfMissing: false)
 
         NotificationCenter.default.addObserver(forName: NSUbiquitousKeyValueStore.didChangeExternallyNotification, object: NSUbiquitousKeyValueStore.default, queue: .main) { [weak self] notification in
             let changed = notification.userInfo?[NSUbiquitousKeyValueStoreChangedKeysKey] as? [String] ?? []
 
-            guard changed.contains(MainAccount.nameKey) else {
+            guard changed.contains(MainAccount.nameKey) || changed.contains(MainAccount.symbolKey) else {
                 return
             }
 
-            MainAccount.adoptNameFromICloud(clearingIfMissing: true)
+            MainAccount.adoptFromICloud(clearingIfMissing: true)
             self?.objectWillChange.send()
             WidgetCenter.shared.reloadAllTimelines()
         }
@@ -746,6 +746,7 @@ class DataController: ObservableObject {
         }
 
         MainAccount.rename(to: "")
+        MainAccount.setSymbol(nil)
         save()
     }
 
@@ -1138,14 +1139,16 @@ class DataController: ObservableObject {
         return taken ? .duplicateName : .none
     }
 
+    /// Adds an account. Without `symbol`, its icon is guessed from its name.
     @discardableResult
-    func addAccount(named name: String) -> Account {
+    func addAccount(named name: String, symbol: String? = nil) -> Account {
         // Worked out before inserting, or the new account counts itself.
         let order = (accounts().map(\.order).max() ?? -1) + 1
 
         let account = Account(context: container.viewContext)
         account.id = UUID()
         account.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        account.symbol = symbol ?? AccountIcons.guess(for: name)
         account.dateCreated = Date.now
         account.order = order
 
@@ -1154,20 +1157,33 @@ class DataController: ObservableObject {
         return account
     }
 
-    func renameAccount(_ choice: AccountChoice, to name: String) {
+    /// Renames an account and, with `symbol`, changes its icon.
+    func renameAccount(_ choice: AccountChoice, to name: String, symbol: String? = nil) {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
 
         switch choice {
         case .main:
             MainAccount.rename(to: trimmed)
+            if let symbol {
+                MainAccount.setSymbol(symbol)
+            }
             objectWillChange.send()
             WidgetCenter.shared.reloadAllTimelines()
         case let .account(account):
             // Sync can delete it while its editor is open.
             guard !account.isDeleted, account.managedObjectContext != nil else { return }
             account.name = trimmed
+            if let symbol {
+                account.symbol = symbol
+            }
             save()
         }
+    }
+
+    /// Changes Main's icon alone, such as when a backup brings it back.
+    func setMainAccountSymbol(_ symbol: String) {
+        MainAccount.setSymbol(symbol)
+        objectWillChange.send()
     }
 
     /// Deletes an account. Its transactions and Quick Add templates move to Main; nothing else is deleted.
@@ -3296,18 +3312,19 @@ extension DataController {
         let calendar = Calendar.current
         let now = Date.now
 
-        func account(_ name: String, order: Int64) -> Account {
+        func account(_ name: String, symbol: String, order: Int64) -> Account {
             let account = Account(context: context)
             account.id = UUID()
             account.name = name
+            account.symbol = symbol
             account.order = order
             account.dateCreated = now
             return account
         }
 
-        let card = account("Card", order: 0)
-        let cash = account("Cash", order: 1)
-        let savings = account("Savings", order: 2)
+        let card = account("Card", symbol: "creditcard", order: 0)
+        let cash = account("Cash", symbol: "banknote", order: 1)
+        let savings = account("Savings", symbol: "building.columns", order: 2)
 
         // Earlier seeding saved along the way, so the transactions are fetched rather than taken from the inserted objects.
         for transaction in results(for: Transaction.fetchRequest() as NSFetchRequest<Transaction>) {
