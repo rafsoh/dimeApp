@@ -161,13 +161,20 @@ fi
 
 echo "Sentry: uploading dSYM for ${target_name} from ${dsym_path} (token from ${token_source})"
 
-# Do not pass the token as an argument. --force-foreground keeps the result in the build log.
-upload_output=$("$sentry_cli" --force-foreground debug-files upload --include-sources "$dsym_path" 2>&1) || upload_status=$?
+# Do not pass the token as an argument. On sentry-cli 2.x, --force-foreground keeps the
+# result in the build log; 3.x removed the flag and rejects it.
+foreground_flag=""
+if "$sentry_cli" --help 2>/dev/null | grep -q -- "--force-foreground"; then
+  foreground_flag="--force-foreground"
+fi
+# shellcheck disable=SC2086
+upload_output=$("$sentry_cli" $foreground_flag debug-files upload --include-sources "$dsym_path" 2>&1) || upload_status=$?
 upload_status=${upload_status:-0}
 
 if [ -n "$upload_output" ]; then
   if command -v python3 >/dev/null 2>&1; then
-    printf '%s\n' "$upload_output" | python3 -c 'import os,sys; t=os.environ.get("SENTRY_AUTH_TOKEN",""); d=sys.stdin.read(); sys.stdout.write(d.replace(t,"[redacted]") if t else d)'
+    printf '%s\n' "$upload_output" | python3 -c 'import os,sys; t=os.environ.get("SENTRY_AUTH_TOKEN",""); d=sys.stdin.read(); sys.stdout.write(d.replace(t,"[redacted]") if t else d)' \
+      | sed -E 's/^([[:space:]]*)error:/\1sentry-cli error -/'
   else
     echo "Sentry: sentry-cli output omitted so the auth token cannot be printed."
   fi
