@@ -1,0 +1,542 @@
+/*
+  Localizable.strings
+  dime
+
+  Malay
+*/
+
+// welcome sheet
+
+"dime_name" = "Dime";
+"welcome_header_1" = "Jejak kewangan anda";
+"welcome_subtitle_1" = "Tambah entri baharu dengan cara yang mudah dan terus";
+"welcome_header_2" = "Analisis perbelanjaan anda";
+"welcome_subtitle_2" = "Fahami perbelanjaan anda dalam pelbagai tempoh masa";
+"welcome_header_3" = "Patuhi bajet";
+"welcome_subtitle_3" = "Tetapkan sasaran mengikut kategori dan masa untuk mengehadkan perbelanjaan";
+"Get Started" = "Mula";
+
+// categories
+
+"Categories" = "Kategori";
+"no_income_categories" = "Tiada kategori pendapatan";
+"no_expense_categories" = "Tiada kategori perbelanjaan";
+"Suggestions Hidden" = "Cadangan Disembunyikan";
+"Successfully Edited" = "Berjaya Diedit";
+"Income Categories" = "Kategori Pendapatan";
+"Expense Categories" = "Kategori Perbelanjaan";
+"Suggested" = "Dicadangkan";
+"Income Category" = "Kategori Pendapatan";
+"Expense Category" = "Kategori Perbelanjaan";
+"New" = "Baharu";
+"Expense" = "Perbelanjaan";
+"Income" = "Pendapatan";
+"Delete" = "Padam";
+"Cancel" = "Batal";
+"Delete '%@'?" = "Padam '%@'?";
+"This action cannot be undone, and all %@ transactions would be deleted." = "Tindakan ini tidak boleh dibuat asal, dan semua transaksi %@ akan dipadam.";
+"Category Name" = "Nama Kategori";
+"Missing Name" = "Tiada Nama";
+"Missing Emoji" = "Tiada Emoji";
+"Incomplete Entry" = "Entri Tidak Lengkap";
+"Missing Information" = "Maklumat Tidak Lengkap";
+"This action cannot be undone." = "Tindakan ini tidak boleh dibuat asal.";
+"Duplicate Found" = "Sudah Wujud";
+"Please Edit Accordingly" = "Sila Edit Sewajarnya";
+"Please Change Emoji" = "Sila Tukar Emoji";
+"Please Change Name" = "Sila Tukar Nama";
+"Food" = "Makanan";
+"Transport" = "Pengangkutan";
+"Rent" = "Sewa";
+"Subscriptions" = "Langganan";
+"Groceries" = "Barang Dapur";
+"Family" = "Keluarga";
+"Utilities" = "Utiliti";
+"Fashion" = "Fesyen";
+"Healthcare" = "Kesihatan";
+"Pets" = "Haiwan Peliharaan";
+"Sneakers" = "Kasut Sukan";
+"Gifts" = "Hadiah";
+"Paycheck" = "Gaji";
+"Allowance" = "Elaun";
+"Part-Time" = "Separuh Masa";
+"Investments" = "Pelaburan";
+"Tips" = "Tip";
+"Successfully Added" = "Berjaya Ditambah";
+
+// new transaction page
+"Today, %@" = "Hari ini, %@";
+"Add Note" = "Tambah Nota";
+"Category" = "Kategori";
+"none" = "tiada";
+"daily" = "harian";
+"weekly" = "mingguan";
+"monthly" = "bulanan";
+"custom" = "tersuai";
+"Custom Interval" = "Selang Tersuai";
+"Repeats every" = "Ulang setiap";
+"days" = "hari";
+"weeks" = "minggu";
+"months" = "bulan";
+"Edit" = "Edit";
+"Delete Expense?" = "Padam Perbelanjaan?";
+"Missing Amount" = "Tiada Jumlah";
+"Missing Category" = "Tiada Kategori";
+"No Category" = "Tiada Kategori";
+"category-picker-none" = "Tiada";
+"transaction-view-income-picker" = "Pendapatan";
+
+// log view
+"Your Log is Empty" = "Log Anda Kosong";
+"Press the plus button to add your first entry" = "Tekan butang tambah untuk menambah entri pertama anda";
+"Search entry by note" = "Cari entri mengikut nota";
+"Search by note, category, amount or date" = "Cari mengikut nota, kategori, jumlah atau tarikh";
+"Search" = "Cari";
+"all entries" = "semua entri";
+"by type" = "ikut jenis";
+"by day" = "ikut hari";
+"by week" = "ikut minggu";
+"by month" = "ikut bulan";
+"by category" = "ikut kategori";
+"recurring" = "berulang";
+"filter-tag-type" = "ikut jenis";
+"filter-tag-day" = "ikut hari";
+"filter-tag-category" = "ikut kategori";
+"filter-tag-week" = "ikut minggu";
+"filter-tag-month" = "ikut bulan";
+"filter-tag-recurring" = "berulang";
+"filter-picker-income" = "Pendapatan";
+"filter-tag-upcoming" = "akan datang";
+"Total Spent" = "Jumlah Dibelanjakan";
+"Total Income" = "Jumlah Pendapatan";
+"Net Total" = "Jumlah Bersih";
+"Net total" = "Jumlah bersih";
+"Spent" = "Dibelanjakan";
+"Earned" = "Diperoleh";
+"today" = "hari ini";
+"this week" = "minggu ini";
+"this month" = "bulan ini";
+"this year" = "tahun ini";
+"No entries found." = "Tiada entri ditemui.";
+"Try a different search query!" = "Cuba carian lain!";
+"yesterday" = "semalam";
+
+
+// insights
+"Insights" = "Analisis";
+"Analyse Your Expenditure" = "Analisis Perbelanjaan Anda";
+"As transactions start piling up" = "Apabila transaksi semakin bertambah";
+"Expenses" = "Perbelanjaan";
+"SPENT/DAY" = "BELANJA/HARI";
+"INCOME/DAY" = "PENDAPATAN/HARI";
+"SPENT/MTH" = "BELANJA/BLN";
+"INCOME/MTH" = "PENDAPATAN/BLN";
+"AVG/DAY" = "PURATA/HARI";
+"AVG/MTH" = "PURATA/BLN";
+"That's all, buddy." = "Itu sahaja, kawan.";
+"Into the unknown." = "Menuju yang tidak diketahui.";
+"week" = "minggu";
+"month" = "bulan";
+"year" = "tahun";
+"Jan" = "Jan";
+"Apr" = "Apr";
+"Jul" = "Jul";
+"Oct" = "Okt";
+
+// budgets
+"Budgets" = "Bajet";
+"Budget Your Finances" = "Buat Bajet Kewangan Anda";
+"Link budgets to categories and set appropriate expenditure goals" = "Pautkan bajet kepada kategori dan tetapkan sasaran perbelanjaan yang sesuai";
+"No Budgets Found" = "Tiada Bajet Ditemui";
+"Add your first budget today!" = "Tambah bajet pertama anda hari ini!";
+"category budget" = "bajet kategori";
+"overall budget" = "bajet keseluruhan";
+"new" = "baharu";
+"New Budget" = "Bajet Baharu";
+"Overall Budget" = "Bajet Keseluruhan";
+"Select a category" = "Pilih kategori";
+"Begin by linking this budget to an existing category." = "Mulakan dengan memautkan bajet ini kepada kategori sedia ada.";
+"Choose a time frame" = "Pilih tempoh masa";
+"The budget will periodically refresh according to your preference." = "Bajet akan ditetapkan semula secara berkala mengikut pilihan anda.";
+"Continue" = "Teruskan";
+"Pick a start date" = "Pilih tarikh mula";
+"Daily" = "Harian";
+"Weekly" = "Mingguan";
+"Monthly" = "Bulanan";
+"Yearly" = "Tahunan";
+"Which day of the %@ do you want your budget to start from?" = "Pada hari apakah dalam %@ bajet anda bermula?";
+"weekNewBudget" = "seminggu";
+"monthNewBudget" = "sebulan";
+"yearNewBudget" = "setahun";
+"Sunday" = "Ahad";
+"Monday" = "Isnin";
+"Tuesday" = "Selasa";
+"Wednesday" = "Rabu";
+"Thursday" = "Khamis";
+"Friday" = "Jumaat";
+"Saturday" = "Sabtu";
+"Start of month" = "Awal bulan";
+"%@ of month" = "Hari %@ setiap bulan";
+"Set budget amount" = "Tetapkan jumlah bajet";
+"Feel free to edit this in the future." = "Anda boleh mengubahnya bila-bila masa nanti.";
+"%@ SPENT" = "%@ DIBELANJAKAN";
+"left %@" = "baki (%@)";
+"over %@" = "lebih (%@)";
+"left of %@" = "berbaki daripada %@";
+"widget-log-button" = "Rekod";
+"left today" = "baki hari ini";
+"left on %@" = "baki pada %@";
+"over today" = "lebih hari ini";
+"over on %@" = "lebih pada %@";
+"left this week" = "baki minggu ini";
+"over this week" = "lebih minggu ini";
+"left each day" = "baki setiap hari";
+"left this month" = "baki bulan ini";
+"over this month" = "lebih bulan ini";
+"left this year" = "baki tahun ini";
+"over this year" = "lebih tahun ini";
+"%lldd left" = "%lld hari lagi";
+"%lldh left" = "%lld jam lagi";
+"%@ • %@ spent" = "%@ • %@ dibelanjakan";
+"Back" = "Kembali";
+"Delete the '%@' budget?" = "Padam bajet '%@'?";
+"OVERALL SPENT: %@" = "JUMLAH DIBELANJAKAN: %@";
+"Delete your overall budget?" = "Padam bajet keseluruhan anda?";
+
+// Settings
+"Settings" = "Seting";
+"General" = "Umum";
+"Data" = "Data";
+"Others" = "Lain-lain";
+"Appearance" = "Penampilan";
+"Start of Week" = "Permulaan Minggu";
+"Notifications" = "Pemberitahuan";
+"Currency" = "Mata Wang";
+"Number Entry" = "Kemasukan Nombor";
+"Authentication" = "Pengesahan";
+"Income Tracking" = "Jejak Pendapatan";
+"Display Cents" = "Papar Sen";
+"iCloud Sync" = "Penyegerakan iCloud";
+"Export Data" = "Eksport Data";
+"Erase Data" = "Padam Data";
+"Animated Charts" = "Carta Beranimasi";
+"Feature Lab" = "Makmal Ciri";
+"Tip Jar" = "Balang Tip";
+"Report Bug" = "Laporkan Pepijat";
+"Rate on App Store" = "Nilai di App Store";
+"Share with Friends" = "Kongsi dengan Rakan";
+"Follow Dime on Twitter" = "Ikuti Dime di Twitter";
+"Follow Rafael on Instagram" = "Ikuti Rafael di Instagram";
+"Light" = "Cerah";
+"Dark" = "Gelap";
+"System" = "Sistem";
+"Mornings" = "Pagi";
+"Evenings" = "Petang";
+"Custom" = "Tersuai";
+"Off" = "Mati";
+"On" = "Hidup";
+"Type 1" = "Jenis 1";
+"Type 2" = "Jenis 2";
+"Close and reload app for change to take effect." = "Tutup dan buka semula app untuk perubahan berkuat kuasa.";
+"Enable Notifications" = "Dayakan Pemberitahuan";
+"Every morning (8:00 AM)" = "Setiap pagi (8:00 PG)";
+"Every evening (8:00 PM)" = "Setiap petang (8:00 PTG)";
+"Custom Time" = "Masa Tersuai";
+"Currencies" = "Mata Wang";
+"Number Entry Method" = "Kaedah Kemasukan Nombor";
+"\"Pre-dotted\"" = "\"Titik Perpuluhan Siap\"";
+"If you're too lazy to add a decimal point, I gotchu covered." = "Malas nak taip titik perpuluhan? Jangan risau, saya uruskan.";
+"\"Cent-less\"" = "\"Tanpa Sen\"";
+"If your transactions usually amount to whole numbers - this one is for you." = "Jika transaksi anda biasanya dalam nombor bulat - pilihan ini untuk anda.";
+"Enable Sync" = "Dayakan Penyegerakan";
+"Permanently Delete Everythin'" = "Padam Semuanya Secara Kekal";
+"This action would delete all existing transactions, categories, and budgets, and cannot be undone." = "Tindakan ini akan memadam semua transaksi, kategori dan bajet, dan tidak boleh dibuat asal.";
+"Danger Zone" = "Zon Bahaya";
+"This action genuinely cannot be undone. Long press to confirm." = "Tindakan ini benar-benar tidak boleh dibuat asal. Tekan lama untuk mengesahkan.";
+"Delete Literally Everything" = "Padam Betul-Betul Semuanya";
+"Back Out" = "Tak Jadi";
+"Celebrate Expenses" = "Raikan Perbelanjaan";
+"Show Line Graph" = "Tunjukkan Graf Garis";
+"Budget Rows" = "Baris Bajet";
+"Experimental features - proceed with caution." = "Ciri percubaan - gunakan dengan berhati-hati.";
+"Replace Time Label" = "Ganti Label Masa";
+"Swaps the time label of each transaction with its category name. However, if you do not manually input a note for each transaction - in which case the note is the category name by default - duplicate text will appear." = "Menggantikan label masa setiap transaksi dengan nama kategorinya. Namun, jika anda tidak memasukkan nota bagi setiap transaksi secara manual - nota secara lalai ialah nama kategori - teks yang sama akan muncul dua kali.";
+"Keep the streak going!" = "Teruskan rentak ini!";
+"Remember to input your expenses today." = "Jangan lupa rekod perbelanjaan anda hari ini.";
+"Loading" = "Memuatkan";
+"Unable to load tip options, please try again later 🥲" = "Tidak dapat memuatkan pilihan tip, sila cuba lagi nanti 🥲";
+"Hey! Dime was built by a solo student developer, and is intended to be completely free-of-charge, with no paywalls or ads. If you enjoy using Dime and want to support development, please consider a small tip." = "Hai! Dime dibina oleh seorang pembangun pelajar secara solo, dan bertujuan untuk percuma sepenuhnya, tanpa paywall atau iklan. Jika anda suka menggunakan Dime dan ingin menyokong pembangunannya, sila pertimbangkan untuk memberi sedikit tip.";
+"Tip failed to go through, please try again!" = "Tip gagal dihantar, sila cuba lagi!";
+"Thanks a million, %@ Rafael" = "Terima kasih banyak-banyak, %@ Rafael";
+"Have a great day ahead!" = "Semoga hari anda indah!";
+"Version %@ (%@)" = "Versi %@ (%@)";
+"Made with ❤️ by %@ from 🇸🇬" = "Dibuat dengan ❤️ oleh %@ dari 🇸🇬";
+"☕ Coffee-Sized Tip" = "☕ Tip Secawan Kopi";
+"🌮 Taco-Sized Tip" = "🌮 Tip Sebiji Taco";
+"🍕 Pizza-Sized Tip" = "🍕 Tip Sebiji Piza";
+
+// Widgets
+
+// Labels
+"Recent Transactions" = "Transaksi Terkini";
+"View your latest expenses." = "Lihat perbelanjaan terkini anda.";
+"Analyse your expenditure breakdowns over various time periods." = "Analisis pecahan perbelanjaan anda dalam pelbagai tempoh masa.";
+"Monitor how you are sticking to your overall budgets." = "Pantau sejauh mana anda mematuhi bajet keseluruhan.";
+"Budget" = "Bajet";
+"Monitor how you are sticking to your budgets." = "Pantau sejauh mana anda mematuhi bajet anda.";
+"New Expense" = "Perbelanjaan Baharu";
+"A convenient button to log new purchases." = "Butang mudah untuk merekod pembelian baharu.";
+
+"%lld%% spent" = "%lld%% dibelanjakan";
+"NO RECENT EXPENSES" = "TIADA PERBELANJAAN TERKINI";
+"RECENT EXPENSES" = "PERBELANJAAN TERKINI";
+"Recent expenses" = "Perbelanjaan terkini";
+"No recent expenses" = "Tiada perbelanjaan terkini";
+"in %@" = "pada %@";
+"net" = "bersih";
+"earned" = "diperoleh";
+"spent" = "dibelanjakan";
+"Time Period" = "Tempoh Masa";
+"NO TRANSACTIONS\n%@" = "TIADA TRANSAKSI\n%@";
+"THIS WEEK" = "MINGGU INI";
+"THIS MONTH" = "BULAN INI";
+"THIS YEAR" = "TAHUN INI";
+"EARNED " = "DIPEROLEH ";
+"SPENT " = "DIBELANJAKAN ";
+"ADD OVERALL BUDGET" = "TAMBAH BAJET KESELURUHAN";
+"Percent Spent" = "Peratus Dibelanjakan";
+"Create your overall budget in the app" = "Cipta bajet keseluruhan anda dalam app";
+"ADD BUDGET" = "TAMBAH BAJET";
+"over" = "lebih";
+"SPENT: %@" = "DIBELANJAKAN: %@";
+"Select budget in widget options" = "Pilih bajet dalam pilihan widget";
+"Budget no longer exists - please select new budget from widget options." = "Bajet tidak lagi wujud - sila pilih bajet baharu daripada pilihan widget.";
+"left" = "baki";
+"SELECT BUDGET" = "PILIH BAJET";
+"SELECT BUDGET IN WIDGET OPTIONS" = "PILIH BAJET DALAM PILIHAN WIDGET";
+
+// iCloud sync status
+"Up to date" = "Terkini";
+"Syncing…" = "Menyegerakkan…";
+"Not Syncing" = "Tidak Menyegerakkan";
+"Waiting to sync" = "Menunggu untuk segerak";
+"Checking iCloud…" = "Menyemak iCloud…";
+"Last synced %@" = "Kali terakhir disegerakkan %@";
+"Sign in to iCloud in the Settings app to back up and sync your data." = "Daftar masuk ke iCloud dalam app Seting untuk menyandarkan dan menyegerakkan data anda.";
+"iCloud is restricted on this device, so your data isn't being backed up." = "iCloud disekat pada peranti ini, jadi data anda tidak disandarkan.";
+"iCloud is temporarily unavailable. Check your Apple Account in the Settings app." = "iCloud tidak tersedia buat sementara waktu. Semak Akaun Apple anda dalam app Seting.";
+"Couldn't check your iCloud account." = "Tidak dapat menyemak akaun iCloud anda.";
+"Your iCloud storage is full, so new changes aren't being backed up or synced. Free up space in the Settings app." = "Storan iCloud anda penuh, jadi perubahan baharu tidak disandarkan atau disegerakkan. Kosongkan ruang dalam app Seting.";
+"You're offline. Changes will sync when you're back online." = "Anda di luar talian. Perubahan akan disegerakkan apabila anda kembali dalam talian.";
+"Dime's data was deleted from iCloud in the Settings app." = "Data Dime telah dipadam daripada iCloud dalam app Seting.";
+"iCloud is busy right now. Dime will try again automatically." = "iCloud sedang sibuk. Dime akan mencuba lagi secara automatik.";
+"Sync ran into a problem and will try again." = "Penyegerakan menghadapi masalah dan akan mencuba lagi.";
+
+// Backups
+"Backups" = "Sandaran";
+"Back Up Now" = "Sandarkan Sekarang";
+"Dime backs up your data on this device once a day and keeps the last 14 backups. Restoring adds back anything that's missing and never removes or changes what you have now. Backups are deleted if you delete Dime." = "Dime menyandarkan data anda pada peranti ini sekali sehari dan menyimpan 14 sandaran terakhir. Memulihkan akan menambah semula apa yang hilang dan tidak pernah membuang atau mengubah data anda sekarang. Sandaran dipadam jika anda memadam Dime.";
+"No backups yet" = "Belum ada sandaran";
+"Restore" = "Pulihkan";
+"Restore this backup?" = "Pulihkan sandaran ini?";
+"Anything missing from Dime will be added back from the backup made %@. Nothing you have now will be removed or changed." = "Apa sahaja yang hilang daripada Dime akan ditambah semula daripada sandaran yang dibuat %@. Tiada apa yang anda ada sekarang akan dibuang atau diubah.";
+"Nothing was missing" = "Tiada apa yang hilang";
+"Restore complete" = "Pemulihan selesai";
+"Everything in this backup is already in Dime." = "Semua kandungan sandaran ini sudah ada dalam Dime.";
+"Items added back: %lld." = "Item ditambah semula: %lld.";
+"Waiting for iCloud" = "Menunggu iCloud";
+"You can restore once iCloud finishes syncing, so nothing gets added twice." = "Anda boleh memulihkan selepas iCloud selesai menyegerakkan, supaya tiada apa yang ditambah dua kali.";
+"Something went wrong" = "Berlaku masalah";
+"Dime couldn't finish. Please try again." = "Dime tidak dapat menyelesaikannya. Sila cuba lagi.";
+"OK" = "OK";
+"Some of your data may be missing" = "Sebahagian data anda mungkin hilang";
+"Backup from %@: %lld transactions. On this device now: %lld. Restore what's missing? Nothing you have now will be removed or changed." = "Sandaran daripada %@: %lld transaksi. Pada peranti ini sekarang: %lld. Pulihkan yang hilang? Tiada apa yang anda ada sekarang akan dibuang atau diubah.";
+"Not Now" = "Bukan Sekarang";
+
+/* Multiple currencies */
+"No exchange rate yet" = "Belum ada kadar tukaran";
+"Currency, %@" = "Mata wang, %@";
+"Recent" = "Terkini";
+"All Currencies" = "Semua Mata Wang";
+"Exchange Rates" = "Kadar Tukaran";
+"None yet" = "Belum ada";
+"Never" = "Tidak pernah";
+"Source" = "Sumber";
+"Last Updated" = "Kemas Kini Terakhir";
+"Days Saved" = "Hari Disimpan";
+"Refresh Rates" = "Segar Semula Kadar";
+"Rates come from fawazahmed0/exchange-api, and from Frankfurter (European Central Bank) for dates before March 2024. Each transaction is converted at the rate on its own date. Rates are kept on this device only and are never added to your data or iCloud." = "Kadar diperoleh daripada fawazahmed0/exchange-api, dan daripada Frankfurter (Bank Pusat Eropah) bagi tarikh sebelum Mac 2024. Setiap transaksi ditukar pada kadar tarikhnya sendiri. Kadar hanya disimpan pada peranti ini dan tidak pernah ditambah ke data anda atau iCloud.";
+"Some rates couldn't be downloaded. Dime will try again later, and amounts without a rate are left out of totals until then." = "Sesetengah kadar tidak dapat dimuat turun. Dime akan mencuba lagi kemudian, dan sehingga itu jumlah tanpa kadar tidak dikira dalam jumlah keseluruhan.";
+"with an unknown currency" = "dengan mata wang tidak diketahui";
+"Change your primary currency?" = "Tukar mata wang utama anda?";
+"Primary Currency" = "Mata Wang Utama";
+"Can't restore yet" = "Belum boleh dipulihkan";
+"Changes the currency of this transaction" = "Menukar mata wang transaksi ini";
+"My transactions were actually in %@" = "Transaksi saya sebenarnya dalam %@";
+"Convert to %@" = "Tukar kepada %@";
+"Relabelling keeps every amount as it is and treats your %@ transactions as %@. Converting keeps them in %@ and shows them in %@ at each day's rate. Budgets and templates keep their amounts. Dime backs up your data first." = "Melabel semula mengekalkan setiap jumlah seperti asal dan menganggap transaksi %1$@ anda sebagai %2$@. Menukar mengekalkannya dalam %3$@ dan memaparkannya dalam %4$@ pada kadar setiap hari. Jumlah bajet dan templat tidak berubah. Dime menyandarkan data anda terlebih dahulu.";
+"Currency not changed" = "Mata wang tidak ditukar";
+"Dime is still finishing your last currency change. Try again in a moment." = "Dime masih menyelesaikan pertukaran mata wang terakhir anda. Cuba lagi sebentar nanti.";
+"Dime is still catching up with iCloud. Try again once it's up to date." = "Dime masih menyegerak dengan iCloud. Cuba lagi selepas ia terkini.";
+"Dime couldn't back up your data first, so nothing was changed. Please try again." = "Dime tidak dapat menyandarkan data anda terlebih dahulu, jadi tiada apa yang diubah. Sila cuba lagi.";
+"Dime couldn't finish changing your currency. Nothing was lost, and it will finish the next time you open Dime." = "Dime tidak dapat menyelesaikan pertukaran mata wang anda. Tiada apa yang hilang, dan ia akan selesai apabila anda membuka Dime seterusnya.";
+"Here you go! %@" = "Nah! %@";
+"A three-letter code such as EUR. Leave it empty to use the currency Dime picks for new transactions." = "Kod tiga huruf seperti MYR. Biarkan kosong untuk menggunakan mata wang yang dipilih Dime bagi transaksi baharu.";
+"Which currency? Use a three-letter code such as EUR." = "Mata wang apa? Gunakan kod tiga huruf seperti MYR.";
+"Export" = "Eksport";
+"All time" = "Sepanjang masa";
+"No transactions to export" = "Tiada transaksi untuk dieksport";
+
+/* Feature tips */
+"Log in Any Currency" = "Rekod dalam Sebarang Mata Wang";
+"Tap the symbol to change this transaction's currency." = "Ketik simbol untuk menukar mata wang transaksi ini.";
+
+/* What's New 3.0.1 */
+"Version %@" = "Versi %@";
+"Multiple Currencies" = "Pelbagai Mata Wang";
+"Tap the currency symbol to log in any currency. Totals are converted to your primary currency at each day's rate." = "Ketik simbol mata wang untuk merekod dalam sebarang mata wang. Jumlah ditukar kepada mata wang utama anda pada kadar setiap hari.";
+"Start Your Week Any Day" = "Mulakan Minggu pada Sebarang Hari";
+"Weeks can now begin on any weekday. Pick yours in Settings." = "Kini minggu boleh bermula pada mana-mana hari. Pilih dalam Seting.";
+"Export a Period" = "Eksport Satu Tempoh";
+"Choose the dates to include before exporting your transactions." = "Pilih tarikh yang disertakan sebelum mengeksport transaksi anda.";
+"Unlimited Categories" = "Kategori Tanpa Had";
+"Add as many expense categories as you like, shown in the order you set." = "Tambah seberapa banyak kategori perbelanjaan yang anda mahu, dipaparkan mengikut susunan yang anda tetapkan.";
+"Search by Amount" = "Cari Mengikut Jumlah";
+"Find a transaction by its amount, even with a currency symbol or separators." = "Cari transaksi mengikut jumlahnya, walaupun dengan simbol mata wang atau pemisah.";
+"Français and Русский" = "Français dan Русский";
+"Dime is now available in French and Russian." = "Dime kini tersedia dalam bahasa Perancis dan Rusia.";
+
+// quick add
+"Quick Add" = "Tambah Pantas";
+"Templates" = "Templat";
+"%lld/%lld" = "%lld/%lld";
+"%lld of %lld templates" = "%lld daripada %lld templat";
+"New Template" = "Templat Baharu";
+"You can have up to 4 templates" = "Anda boleh mempunyai sehingga 4 templat";
+"Log a template with one tap from the Quick Add widget, without opening Dime. Each one becomes its own transaction, so editing or deleting a template never changes what you've logged." = "Rekod templat dengan satu ketikan daripada widget Tambah Pantas, tanpa membuka Dime. Setiap satu menjadi transaksi tersendiri, jadi mengedit atau memadam templat tidak akan mengubah apa yang telah anda rekod.";
+"Add From Recent" = "Tambah daripada Terkini";
+"Adds a template" = "Menambah templat";
+"Delete Template?" = "Padam Templat?";
+"Transactions you've logged with it stay as they are." = "Transaksi yang telah direkod dengannya kekal seperti asal.";
+"Log your templates with one tap, without opening Dime." = "Rekod templat anda dengan satu ketikan, tanpa membuka Dime.";
+"Add templates in Settings to log them from here." = "Tambah templat dalam Seting untuk merekodnya dari sini.";
+"Add a template" = "Tambah templat";
+"Log %@, %@" = "Rekod %@, %@";
+"Logged %@, %@" = "%@ direkod, %@";
+"Log Quick Add Template" = "Rekod Templat Tambah Pantas";
+"Template" = "Templat";
+"Coffee" = "Kopi";
+"Lunch" = "Makan Tengah Hari";
+"Bus" = "Bas";
+
+/* Notifications */
+"Reminders" = "Peringatan";
+"Daily Check-in" = "Semakan Harian";
+"A nudge to log the day's spending" = "Peringatan untuk merekod perbelanjaan hari ini";
+"Upcoming Charges" = "Caj Akan Datang";
+"A heads-up before a recurring expense is logged" = "Makluman sebelum perbelanjaan berulang direkod";
+"Time" = "Masa";
+"Remind Me" = "Ingatkan Saya";
+"On the day" = "Pada hari tersebut";
+"1 day before" = "1 hari sebelum";
+"%lld days before" = "%lld hari sebelum";
+"Fewer days" = "Kurangkan hari";
+"More days" = "Tambah hari";
+"Check-ins and charge reminders both arrive at this time." = "Semakan harian dan peringatan caj kedua-duanya tiba pada masa ini.";
+"Your check-in arrives at this time every day." = "Semakan harian anda tiba pada masa ini setiap hari.";
+"Charge reminders arrive at this time." = "Peringatan caj tiba pada masa ini.";
+"Covers recurring expenses. Reminders are planned a couple of months ahead and refresh whenever you open Dime." = "Meliputi perbelanjaan berulang. Peringatan dirancang beberapa bulan lebih awal dan dikemas kini setiap kali anda membuka Dime.";
+"Due today: %@" = "Perlu dibayar hari ini: %@";
+"Due tomorrow: %@" = "Perlu dibayar esok: %@";
+"Due in %lld days: %@" = "Perlu dibayar dalam %lld hari: %@";
+"%@ will be added to your log today." = "%@ akan ditambah ke log anda hari ini.";
+"%@ will be added to your log tomorrow." = "%@ akan ditambah ke log anda esok.";
+"%@ will be added to your log on %@." = "%@ akan ditambah ke log anda pada %@.";
+
+// shortcuts
+"Category for an income. Choose No Category to log it without one." = "Kategori untuk pendapatan. Pilih Tiada Kategori untuk merekodnya tanpa kategori.";
+"Category for an expense. Choose No Category to log it without one." = "Kategori untuk perbelanjaan. Pilih Tiada Kategori untuk merekodnya tanpa kategori.";
+
+// quick add grid
+"Tap a template to edit it, or hold and drag it to a new spot. The Quick Add widget logs each one with one tap, without opening Dime, and editing or deleting a template never changes what you've logged." = "Ketik templat untuk mengeditnya, atau tahan dan seret ke tempat baharu. Widget Tambah Pantas merekod setiap satu dengan satu ketikan tanpa membuka Dime, dan mengedit atau memadam templat tidak akan mengubah apa yang telah anda rekod.";
+"Move Earlier" = "Alih ke Hadapan";
+"Move Later" = "Alih ke Belakang";
+"Edits the template" = "Mengedit templat";
+
+// budget rollover
+"with" = "serta";
+"rollover" = "dengan bawa baki";
+"no rollover" = "tanpa bawa baki";
+"+%@ rolled over" = "+%@ dibawa";
+"−%@ rolled over" = "−%@ dibawa";
+"Leftover rolls over %@" = "Baki dibawa %@";
+"Nothing rolled over" = "Tiada baki dibawa";
+"Rolls over" = "Baki dibawa";
+"%@ budget %@ %@ = %@" = "Bajet %@ %@ %@ = %@";
+"Rollover" = "Bawa Baki";
+"Whether what's left, or overspent, carries into the next period" = "Sama ada baki atau lebihan belanja dibawa ke tempoh seterusnya";
+"%@ overspend" = "Lebih belanja %@";
+"%@ left over" = "Baki %@";
+"Rollover starts this period" = "Bawa baki bermula tempoh ini";
+"What's left at the end of this period, or overspent, carries into the next one. Earlier periods aren't counted." = "Baki atau lebihan belanja pada akhir tempoh ini dibawa ke tempoh seterusnya. Tempoh terdahulu tidak dikira.";
+"Turn On Rollover" = "Hidupkan Bawa Baki";
+"Turn off rollover?" = "Matikan bawa baki?";
+"The %@ from earlier periods will be cleared. Turning rollover back on starts fresh." = "%@ daripada tempoh terdahulu akan dikosongkan. Menghidupkan semula bawa baki akan bermula dari awal.";
+"Leftovers will stop carrying over. Turning rollover back on starts fresh." = "Baki tidak akan dibawa lagi. Menghidupkan semula bawa baki akan bermula dari awal.";
+"Turn Off" = "Matikan";
+"Reset rollover?" = "Tetapkan semula bawa baki?";
+"Changing how often this budget repeats clears the %@ from earlier periods. Rollover starts again from this period." = "Menukar kekerapan bajet ini akan mengosongkan %@ daripada tempoh terdahulu. Bawa baki bermula semula dari tempoh ini.";
+"Changing the category clears the %@ from earlier periods. Rollover starts again from this period." = "Menukar kategori akan mengosongkan %@ daripada tempoh terdahulu. Bawa baki bermula semula dari tempoh ini.";
+"Changing how often this budget repeats restarts rollover from this period." = "Menukar kekerapan bajet ini akan memulakan semula bawa baki dari tempoh ini.";
+"Changing the category restarts rollover from this period." = "Menukar kategori akan memulakan semula bawa baki dari tempoh ini.";
+"Apply from this period?" = "Gunakan mulai tempoh ini?";
+"Your changes apply from this period on, and earlier periods keep their old settings." = "Perubahan anda berkuat kuasa mulai tempoh ini, dan tempoh terdahulu mengekalkan seting lama.";
+"The new amount applies from this period on, and earlier periods keep the old one." = "Jumlah baharu berkuat kuasa mulai tempoh ini, dan tempoh terdahulu mengekalkan jumlah lama.";
+"The new reset day applies from this period on, and earlier periods keep the old one." = "Hari tetapan semula baharu berkuat kuasa mulai tempoh ini, dan tempoh terdahulu mengekalkan hari lama.";
+"The %@ from earlier periods is kept." = "%@ daripada tempoh terdahulu dikekalkan.";
+
+// log
+"UPCOMING" = "AKAN DATANG";
+
+// budgets, insights and settings
+"Overall" = "Keseluruhan";
+"%lld days to go" = "%lld hari lagi";
+"1 day to go" = "1 hari lagi";
+"%lld hours to go" = "%lld jam lagi";
+"1 hour to go" = "1 jam lagi";
+"%@ a day for %lld days" = "%@ sehari selama %lld hari";
+"%@ left today" = "Baki %@ hari ini";
+"%@ a day" = "%@ sehari";
+"Close to limit" = "Hampir had";
+"Resets %@" = "Ditetapkan semula %@";
+"tomorrow" = "esok";
+"Nothing spent yet" = "Belum ada perbelanjaan";
+"Over budget" = "Melebihi bajet";
+"Net" = "Bersih";
+"Top categories" = "Kategori teratas";
+"Largest expenses" = "Perbelanjaan terbesar";
+"%lld%% of spending" = "%lld%% daripada perbelanjaan";
+"of spending" = "daripada perbelanjaan";
+"of income" = "daripada pendapatan";
+"avg " = "purata ";
+"~%@ forecasted" = "Unjuran ~%@";
+"categories" = "kategori";
+"category" = "kategori";
+"Time Frames" = "Tempoh Masa";
+"Theme" = "Tema";
+"App Icon" = "Ikon App";
+"Upcoming Logs" = "Log Akan Datang";
+"Shown" = "Ditunjukkan";
+"Hidden" = "Disembunyikan";
+"Display +/- Symbol" = "Papar Simbol +/-";
+
+/* Delete category */
+"%@ has 1 transaction. What should happen to it?" = "%@ mempunyai 1 transaksi. Apa yang patut dilakukan?";
+"%@ has %lld transactions. What should happen to them?" = "%@ mempunyai %lld transaksi. Apa yang patut dilakukan?";
+"Move to" = "Alihkan ke";
+"Delete it" = "Padamkannya";
+"Delete them" = "Padam semuanya";
+"Delete Category" = "Padam Kategori";
+
+"Font" = "Fon";
+"Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo ialah muka taip oleh Josh Puckett, dilesenkan di bawah SIL Open Font License.";
