@@ -1228,8 +1228,9 @@ class DataController: ObservableObject {
         save()
     }
 
+    /// Logs the occurrences of a recurring transaction that are due by today, telling `inserted` about each.
     @discardableResult
-    func updateRecurringTransaction(transaction: Transaction) -> Bool {
+    func updateRecurringTransaction(transaction: Transaction, inserted: (Transaction) -> Void = { _ in }) -> Bool {
         guard (1 ... 3).contains(transaction.recurringType) else {
             return false
         }
@@ -1251,7 +1252,7 @@ class DataController: ObservableObject {
                 break
             }
 
-            insertOccurrence(of: transaction, on: occurrenceDate, carriesRecurrence: followingDate >= startOfTomorrow)
+            inserted(insertOccurrence(of: transaction, on: occurrenceDate, carriesRecurrence: followingDate >= startOfTomorrow))
             occurrenceDate = followingDate
         }
 
@@ -1262,7 +1263,7 @@ class DataController: ObservableObject {
         return true
     }
 
-    private func insertOccurrence(of transaction: Transaction, on date: Date, carriesRecurrence: Bool) {
+    private func insertOccurrence(of transaction: Transaction, on date: Date, carriesRecurrence: Bool) -> Transaction {
         let occurrence = Transaction(context: container.viewContext)
         occurrence.note = transaction.wrappedNote
         occurrence.category = transaction.category
@@ -1289,6 +1290,8 @@ class DataController: ObservableObject {
         } else {
             occurrence.recurringType = 0
         }
+
+        return occurrence
     }
 
     func updateRecurringTransactions() {

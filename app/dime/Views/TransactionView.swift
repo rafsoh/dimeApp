@@ -1023,6 +1023,9 @@ struct TransactionView: View {
                 editedTransaction.note = note.trimmingCharacters(in: .whitespaces)
             }
 
+            // A category removed on purpose isn't put back by Apple Intelligence.
+            let removedCategory = editedTransaction.category != nil && category == nil
+
             // Assigned even when nil, so an edit can remove the category.
             editedTransaction.category = category
 
@@ -1031,6 +1034,8 @@ struct TransactionView: View {
                 guard !editedTransaction.isGone else {
                     return
                 }
+
+                var occurrences: [Transaction] = []
 
                 withAnimation(.easeInOut(duration: 0.5)) {
                     editedTransaction.amount = price
@@ -1056,7 +1061,7 @@ struct TransactionView: View {
                         editedTransaction.recurringType = Int16(repeatType)
                         editedTransaction.recurringCoefficient = Int16(repeatCoefficient)
 
-                        dataController.updateRecurringTransaction(transaction: editedTransaction)
+                        dataController.updateRecurringTransaction(transaction: editedTransaction) { occurrences.append($0) }
                     } else {
                         editedTransaction.onceRecurring = false
                         editedTransaction.recurringType = Int16(repeatType)
@@ -1068,6 +1073,10 @@ struct TransactionView: View {
                     if !CurrencyPreferences.isSameCurrency(chosenCurrency, as: nil, mainCurrency: currency) {
                         dataController.refreshExchangeRates()
                     }
+                }
+
+                if !removedCategory {
+                    AutoCategorizer.shared.categoriseIfNeeded([editedTransaction] + occurrences)
                 }
             }
 
@@ -1109,14 +1118,20 @@ struct TransactionView: View {
 
         transaction.month = calendar.date(from: dateComponents) ?? Date.now
 
+        // Occurrences already due, when it's backdated, which go under the same category.
+        var occurrences: [Transaction] = []
+
         if repeatType > 0 {
             transaction.onceRecurring = true
             transaction.recurringType = Int16(repeatType)
             transaction.recurringCoefficient = Int16(repeatCoefficient)
-            dataController.updateRecurringTransaction(transaction: transaction)
+            dataController.updateRecurringTransaction(transaction: transaction) { occurrences.append($0) }
         }
 
         dataController.save()
+
+        // Feature Lab: a note without a category gets one from Apple Intelligence, while its row glimmers.
+        AutoCategorizer.shared.categoriseIfNeeded([transaction] + occurrences)
 
         if !CurrencyPreferences.isSameCurrency(chosenCurrency, as: nil, mainCurrency: currency) {
             dataController.refreshExchangeRates()
