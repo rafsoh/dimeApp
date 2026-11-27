@@ -225,6 +225,7 @@ final class BackupRoundTripTests: XCTestCase {
         let card = Account(context: source)
         card.id = UUID()
         card.name = "Card"
+        card.symbol = "banknote"
         card.order = 0
         let savings = Account(context: source)
         savings.id = UUID()
@@ -262,6 +263,9 @@ final class BackupRoundTripTests: XCTestCase {
         XCTAssertEqual(result.accounts, 2)
         XCTAssertEqual(try transactionValues(in: target), try transactionValues(in: source))
         XCTAssertEqual(Set(try all(Account.self, in: target).compactMap(\.name)), ["Card", "Savings"])
+        // The icon picked is kept; one from before icons is guessed from the name.
+        XCTAssertEqual(try all(Account.self, in: target).first { $0.name == "Card" }?.symbol, "banknote")
+        XCTAssertEqual(try all(Account.self, in: target).first { $0.name == "Savings" }?.wrappedSymbol, "building.columns")
 
         let legs = try all(Transaction.self, in: target).filter { $0.transferID == transferID }
         XCTAssertEqual(legs.count, 2)
@@ -313,7 +317,8 @@ final class BackupRoundTripTests: XCTestCase {
           "mainBudgets": [],
           "templates": [],
           "accounts": [],
-          "mainAccountName": "Checking"
+          "mainAccountName": "Checking",
+          "mainAccountSymbol": "building.columns"
         }
         """
         let url = directory.appendingPathComponent("backup-700000000-0.json")
@@ -323,6 +328,7 @@ final class BackupRoundTripTests: XCTestCase {
         let result = try BackupStore(directory: directory).restore(backup, into: try makeContext())
 
         XCTAssertEqual(result.mainAccountName, "Checking")
+        XCTAssertEqual(result.mainAccountSymbol, "building.columns")
         XCTAssertEqual(result.total, 0)
     }
 

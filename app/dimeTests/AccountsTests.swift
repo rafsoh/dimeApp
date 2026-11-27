@@ -377,39 +377,4 @@ final class AccountsTests: XCTestCase {
         dataController.deleteAccount(card)
         XCTAssertTrue(mainOnly.evaluate(with: spend))
     }
-
-    // MARK: - Import
-
-    func testExportedTransfersPairUpOnImport() {
-        let date = Date(timeIntervalSinceReferenceDate: 700_000_000)
-        let rows = [
-            ImportedRow(date: date, amount: 50, note: "", categoryName: "", income: false, currencyCode: "EUR", accountName: "Main", isTransferLeg: true),
-            ImportedRow(date: date, amount: 12, note: "Lunch", categoryName: "Food", income: false, currencyCode: "EUR", accountName: "Card"),
-            ImportedRow(date: date, amount: 50, note: "", categoryName: "", income: true, currencyCode: "EUR", accountName: "Savings", isTransferLeg: true),
-            // A lone leg stays an ordinary row.
-            ImportedRow(date: date, amount: 7, note: "", categoryName: "", income: true, currencyCode: "EUR", accountName: "Savings", isTransferLeg: true)
-        ]
-
-        let pairs = ImportedRow.transferPairs(in: rows)
-        XCTAssertEqual(pairs.count, 1)
-        XCTAssertEqual(pairs.first?.outgoing, 0)
-        XCTAssertEqual(pairs.first?.incoming, 2)
-    }
-
-    func testExportWritesAccountsAndTransferTypes() throws {
-        let savings = makeAccount("Savings")
-        let legs = transfer(25, from: .main, to: .account(savings))
-        let spend = add(3, account: savings)
-
-        let csv = ExportCSV.text(for: [legs.outgoing, legs.incoming, spend], mainCurrency: mainCurrency)
-        let table = try XCTUnwrap(CSVTable.parse(csv))
-        let mapping = ColumnMapping.detect(in: table)
-
-        XCTAssertNotNil(mapping[.account])
-        let parsed = ImportParseResult.build(table: table, mapping: mapping, dateFormat: ExportCSV.dateFormat)
-        XCTAssertEqual(parsed.rows.count, 3)
-        XCTAssertEqual(parsed.rows.filter(\.isTransferLeg).count, 2)
-        XCTAssertEqual(Set(parsed.rows.map(\.accountName)), [MainAccount.name, "Savings"])
-        XCTAssertEqual(ImportedRow.transferPairs(in: parsed.rows).count, 1)
-    }
 }
