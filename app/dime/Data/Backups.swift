@@ -27,12 +27,14 @@ struct RestoreResult {
     var budgets = 0
     var templates = 0
     var accounts = 0
+    /// Transactions and templates still in the store that had lost their account, put back in it.
+    var relinked = 0
     /// Main's name and icon in the backup. Main has no object to restore, so the manager adopts them
     /// where this device hasn't set its own.
     var mainAccountName: String?
     var mainAccountSymbol: String?
 
-    var total: Int { transactions + categories + budgets + templates + accounts }
+    var total: Int { transactions + categories + budgets + templates + accounts + relinked }
 }
 
 private struct BackupFile: Codable {
@@ -237,7 +239,7 @@ struct BackupStore {
     }
 
     // Adds back whatever the backup has and the store lacks, matched by id. Existing objects are never
-    // changed or removed. Call on the context's queue; the caller saves.
+    // removed, and only ever changed to fill in an account they've lost. Call on the context's queue; the caller saves.
     func restore(_ backup: BackupSummary, into context: NSManagedObjectContext) throws -> RestoreResult {
         let file = try JSONDecoder().decode(BackupFile.self, from: Data(contentsOf: backup.url))
 
@@ -312,6 +314,7 @@ struct BackupStore {
 
         let existingTransactions: [Transaction] = try context.fetch(Transaction.fetchRequest())
         var transactionIDs = Set(existingTransactions.compactMap(\.id))
+        let existingTransactionsByID = Dictionary(existingTransactions.compactMap { transaction in transaction.id.map { ($0, transaction) } }, uniquingKeysWith: { first, _ in first })
         var transactionKeys = Set(existingTransactions.map {
             TransactionRecord.contentKey(date: $0.date, amount: $0.amount, note: $0.note, income: $0.income)
         })
@@ -319,6 +322,13 @@ struct BackupStore {
         for record in file.transactions {
             if let id = record.id {
                 guard transactionIDs.insert(id).inserted else {
+                    // Already here, so left as it is, except that one which lost its account, such as to a sync
+                    // problem, goes back into it. A link is only ever filled in, never changed.
+                    if let existing = existingTransactionsByID[id], existing.account == nil,
+                       let account = record.accountRef.flatMap({ accountsByRef[$0] }) {
+                        existing.account = account
+                        result.relinked += 1
+                    }
                     continue
                 }
             } else {
@@ -396,9 +406,16 @@ struct BackupStore {
         let existingTemplates: [TemplateTransaction] = try context.fetch(TemplateTransaction.fetchRequest())
         var templateIDs = Set(existingTemplates.compactMap(\.id))
         var templateOrders = Set(existingTemplates.map(\.order))
+        let existingTemplatesByID = Dictionary(existingTemplates.compactMap { template in template.id.map { ($0, template) } }, uniquingKeysWith: { first, _ in first })
 
         for record in file.templates {
             if let id = record.id, templateIDs.contains(id) {
+                // Like transactions: a template that lost its account goes back into it.
+                if let existing = existingTemplatesByID[id], existing.account == nil,
+                   let account = record.accountRef.flatMap({ accountsByRef[$0] }) {
+                    existing.account = account
+                    result.relinked += 1
+                }
                 continue
             }
 
@@ -664,6 +681,7 @@ final class BackupManager: ObservableObject {
                             "budgets": restored.budgets,
                             "templates": restored.templates,
                             "accounts": restored.accounts,
+                            "relinked": restored.relinked,
                             "backupTransactions": backup.transactionCount
                         ]
                     )

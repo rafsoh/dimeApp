@@ -305,6 +305,42 @@ final class BackupRoundTripTests: XCTestCase {
         XCTAssertEqual(try XCTUnwrap(all(Budget.self, in: target).first).countedAccounts, AccountScope([.account(recreated)]))
     }
 
+    // A transaction that lost its account, such as to a sync problem, goes back into it. One that's in an account
+    // stays where it is, even if the backup had it elsewhere.
+    func testRestoreFillsInLostAccountsButNeverMovesTransactions() throws {
+        let source = try makeContext()
+        try populate(source)
+        let card = Account(context: source)
+        card.id = UUID()
+        card.name = "Card"
+        let cash = Account(context: source)
+        cash.id = UUID()
+        cash.name = "Cash"
+
+        let transactions = try all(Transaction.self, in: source)
+        let lost = transactions[0]
+        let moved = transactions[1]
+        lost.account = card
+        moved.account = card
+        try source.save()
+
+        let store = BackupStore(directory: directory)
+        let backup = try store.write(from: source, mainCurrency: nil)
+
+        lost.account = nil
+        moved.account = cash
+        try source.save()
+
+        let result = try store.restore(backup, into: source)
+        try source.save()
+
+        XCTAssertEqual(result.transactions, 0)
+        XCTAssertEqual(result.relinked, 1)
+        XCTAssertEqual(lost.account, card)
+        XCTAssertEqual(moved.account, cash)
+        XCTAssertEqual(try store.restore(backup, into: source).total, 0)
+    }
+
     // Main has no object to restore, so its name comes back in the result for the manager to adopt.
     func testRestoreHandsBackMainsName() throws {
         let json = """
