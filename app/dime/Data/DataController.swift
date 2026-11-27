@@ -2948,10 +2948,12 @@ func calculateStartOfMonthPeriod(earliestDate: Date, startOfMonthDay: Int) -> Da
 }
 
 #if DEBUG
-// Launch with `-demoData minimal` or `-demoData varied` to run against a seeded in-memory store.
+// Launch with `-demoData minimal` or `-demoData varied` to run against a seeded in-memory store, or
+// `-demoData empty` against an empty one, as on a new install.
 enum DemoDataset: String {
     case minimal
     case varied
+    case empty
 
     init?(arguments: [String]) {
         guard let index = arguments.firstIndex(of: "-demoData"), index + 1 < arguments.count else {
@@ -3211,6 +3213,8 @@ extension DataController {
         }
 
         switch dataset {
+        case .empty:
+            return
         case .minimal:
             let food = category("Food", "🍜", "#EC7A58")
             _ = category("Transport", "🚇", "#279AF4")
