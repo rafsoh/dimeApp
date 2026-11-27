@@ -603,3 +603,10 @@
 "Can't Divide by Zero" = "Division par zéro impossible";
 "Total Can't Be Negative" = "Le total ne peut pas être négatif";
 "Total Is Too Large" = "Le total est trop élevé";
+/* Feature Lab: Auto-Categorise */
+"Auto-Categorise" = "Catégoriser automatiquement";
+"Turn on Apple Intelligence in the Settings app to have it pick a category for transactions you log with a note but no category." = "Activez Apple Intelligence dans l’app Réglages pour qu’elle choisisse une catégorie pour les transactions que vous saisissez avec une note mais sans catégorie.";
+"Apple Intelligence is still getting ready on this iPhone. Once it is, it can pick a category for transactions you log with a note but no category." = "Apple Intelligence est encore en cours de préparation sur cet iPhone. Une fois prête, elle pourra choisir une catégorie pour les transactions que vous saisissez avec une note mais sans catégorie.";
+"When you log a transaction with a note but no category, Apple Intelligence picks one of your categories for it, on your iPhone. Notes it can't make sense of stay uncategorised." = "Lorsque vous saisissez une transaction avec une note mais sans catégorie, Apple Intelligence choisit l’une de vos catégories pour elle, sur votre iPhone. Les notes qu’elle ne comprend pas restent sans catégorie.";
+"Choosing a category" = "Choix d’une catégorie en cours";
+"Filed under %@" = "Classée dans %@";

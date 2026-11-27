@@ -23,6 +23,8 @@ struct TransactionView: View {
 
     @State private var note = ""
     @State var category: Category?
+    /// The category the page opened with, so saving only changes it when the user did.
+    @State private var openedCategory: Category?
     @State private var date = Date.now
     @State private var repeatType = 0
     @State private var repeatCoefficient = 1
@@ -1204,14 +1206,24 @@ struct TransactionView: View {
                 editedTransaction.note = note.trimmingCharacters(in: .whitespaces)
             }
 
-            // Assigned even when nil, so an edit can remove the category.
-            editedTransaction.category = category
+            // Only a category changed on this page is saved, so one Apple Intelligence filed while the page
+            // was open stays. Assigned even when nil, so an edit can remove the category.
+            if category != openedCategory {
+                editedTransaction.category = category
+
+                // A category taken away on purpose stays away: Apple Intelligence never puts one back.
+                if category == nil {
+                    dataController.autoCategoryQueue.keepUncategorised(editedTransaction)
+                }
+            }
 
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 // Sync can still delete it during this delay.
                 guard !editedTransaction.isGone else {
                     return
                 }
+
+                var occurrences: [Transaction] = []
 
                 withAnimation(.easeInOut(duration: 0.5)) {
                     editedTransaction.amount = price
@@ -1237,7 +1249,7 @@ struct TransactionView: View {
                         editedTransaction.recurringType = Int16(repeatType)
                         editedTransaction.recurringCoefficient = Int16(repeatCoefficient)
 
-                        dataController.updateRecurringTransaction(transaction: editedTransaction)
+                        dataController.updateRecurringTransaction(transaction: editedTransaction) { occurrences.append($0) }
                     } else {
                         editedTransaction.onceRecurring = false
                         editedTransaction.recurringType = Int16(repeatType)
@@ -1250,6 +1262,9 @@ struct TransactionView: View {
                         dataController.refreshExchangeRates()
                     }
                 }
+
+                // Feature Lab: still without a category, and not because the user took it away.
+                AutoCategorizer.shared.categoriseIfNeeded([editedTransaction] + occurrences)
             }
 
             dismiss()
@@ -1290,14 +1305,20 @@ struct TransactionView: View {
 
         transaction.month = calendar.date(from: dateComponents) ?? Date.now
 
+        // Occurrences already due, when it's backdated, which go under the same category.
+        var occurrences: [Transaction] = []
+
         if repeatType > 0 {
             transaction.onceRecurring = true
             transaction.recurringType = Int16(repeatType)
             transaction.recurringCoefficient = Int16(repeatCoefficient)
-            dataController.updateRecurringTransaction(transaction: transaction)
+            dataController.updateRecurringTransaction(transaction: transaction) { occurrences.append($0) }
         }
 
         dataController.save()
+
+        // Feature Lab: a note without a category gets one from Apple Intelligence, while its row glimmers.
+        AutoCategorizer.shared.categoriseIfNeeded([transaction] + occurrences)
 
         if !CurrencyPreferences.isSameCurrency(chosenCurrency, as: nil, mainCurrency: currency) {
             dataController.refreshExchangeRates()
@@ -1344,6 +1365,7 @@ struct TransactionView: View {
 
             if let unwrappedCategory = transaction.category {
                 _category = State(initialValue: unwrappedCategory)
+                _openedCategory = State(initialValue: unwrappedCategory)
             }
 
             if let accounts = transaction.transferAccounts {

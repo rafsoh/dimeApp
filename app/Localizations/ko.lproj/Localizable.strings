@@ -591,3 +591,10 @@
 "Can't Divide by Zero" = "0으로 나눌 수 없음";
 "Total Can't Be Negative" = "합계는 음수일 수 없음";
 "Total Is Too Large" = "합계가 너무 큼";
+/* Feature Lab: Auto-Categorise */
+"Auto-Categorise" = "자동 카테고리 분류";
+"Turn on Apple Intelligence in the Settings app to have it pick a category for transactions you log with a note but no category." = "메모는 있지만 카테고리가 없는 거래에 카테고리를 지정하려면 설정 앱에서 Apple Intelligence를 켜세요.";
+"Apple Intelligence is still getting ready on this iPhone. Once it is, it can pick a category for transactions you log with a note but no category." = "이 iPhone에서 Apple Intelligence가 아직 준비 중입니다. 준비가 완료되면 메모는 있지만 카테고리가 없는 거래에 카테고리를 지정할 수 있습니다.";
+"When you log a transaction with a note but no category, Apple Intelligence picks one of your categories for it, on your iPhone. Notes it can't make sense of stay uncategorised." = "메모를 입력하고 카테고리 없이 거래를 기록하면 Apple Intelligence가 iPhone에서 내 카테고리 중 하나를 골라 줍니다. 의미를 알 수 없는 메모는 카테고리 없이 그대로 둡니다.";
+"Choosing a category" = "카테고리 선택 중";
+"Filed under %@" = "%@(으)로 분류됨";

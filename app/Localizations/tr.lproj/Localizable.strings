@@ -591,3 +591,10 @@
 "Can't Divide by Zero" = "Sıfıra bölünemez";
 "Total Can't Be Negative" = "Toplam negatif olamaz";
 "Total Is Too Large" = "Toplam çok büyük";
+/* Feature Lab: Auto-Categorise */
+"Auto-Categorise" = "Otomatik Kategorilendir";
+"Turn on Apple Intelligence in the Settings app to have it pick a category for transactions you log with a note but no category." = "Not girip kategori seçmeden kaydettiğiniz işlemlere kategori seçmesi için Ayarlar uygulamasında Apple Intelligence’ı açın.";
+"Apple Intelligence is still getting ready on this iPhone. Once it is, it can pick a category for transactions you log with a note but no category." = "Apple Intelligence bu iPhone’da hâlâ hazırlanıyor. Hazır olduğunda, not girip kategori seçmeden kaydettiğiniz işlemlere kategori seçebilecek.";
+"When you log a transaction with a note but no category, Apple Intelligence picks one of your categories for it, on your iPhone. Notes it can't make sense of stay uncategorised." = "Not girip kategori seçmeden bir işlem kaydettiğinizde Apple Intelligence, iPhone’unuzda kategorilerinizden birini seçer. Anlam veremediği notlar kategorisiz kalır.";
+"Choosing a category" = "Kategori seçiliyor";
+"Filed under %@" = "%@ kategorisine eklendi";
