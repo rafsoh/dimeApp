@@ -186,6 +186,8 @@ struct ContentView: View {
             // onboarding a new install sees, at that page.
             let arguments = ProcessInfo.processInfo.arguments
             if let index = arguments.firstIndex(of: "-accountsScreen"), index + 1 < arguments.count, arguments[index + 1] == "intro" {
+                // Someone updating, even when it's the simulator's first launch.
+                showIntro = false
                 showAccountsIntro = true
             }
             if arguments.contains("-onboarding") {

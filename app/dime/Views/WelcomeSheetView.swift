@@ -115,11 +115,20 @@ struct WelcomeSheetView: View {
                         .whiteGlassButtonStyle()
 
                         // Someone switching from another app can bring their history in first. The categories
-                        // and accounts steps that follow then show what the import made, to tidy up.
-                        ConfirmationCancelButton("Import from Another App") {
+                        // and accounts steps that follow then show what the import made, to tidy up. A plain
+                        // link, so it never looks more like the way forward than Get Started.
+                        Button {
                             transactionsBeforeImport = DataController.shared.transactionCount()
                             importing = true
+                        } label: {
+                            Text("Import from Another App")
+                                .font(.app(.body, weight: .semibold))
+                                .foregroundColor(Color.SubtitleText)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 44)
+                                .contentShape(Rectangle())
                         }
+                        .buttonStyle(.plain)
                     }
                 }
                 .padding(.horizontal, 28)
