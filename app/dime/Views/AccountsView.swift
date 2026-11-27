@@ -285,6 +285,25 @@ struct AccountsView: View {
                     dataController.deleteAccount(account)
                 }
             }
+            #if DEBUG
+            .onAppear {
+                // Screenshots, removed with the other accounts launch arguments: `-accountEditor new|typed|edit|icons`
+                // opens the account editor for a new account, a new one with a name typed, Card, or Card with its icons.
+                let arguments = ProcessInfo.processInfo.arguments
+                guard let index = arguments.firstIndex(of: "-accountEditor"), index + 1 < arguments.count else { return }
+
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                    switch arguments[index + 1] {
+                    case "new", "typed":
+                        editing = .new
+                    default:
+                        if let card = accounts.first(where: { $0.wrappedName == "Card" }) ?? accounts.first {
+                            editing = .edit(.account(card))
+                        }
+                    }
+                }
+            }
+            #endif
     }
 
     @ViewBuilder private var list: some View {
@@ -626,6 +645,24 @@ struct AccountEditorSheet: View {
                 }
             }
         }
+        #if DEBUG
+        .onAppear {
+            // `-accountEditor typed` types a name, and `-accountEditor icons` opens the icons (see AccountsView).
+            let arguments = ProcessInfo.processInfo.arguments
+            guard let index = arguments.firstIndex(of: "-accountEditor"), index + 1 < arguments.count else { return }
+
+            switch arguments[index + 1] {
+            case "typed":
+                name = "Visa Platinum"
+            case "icons":
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                    showingIcons = true
+                }
+            default:
+                break
+            }
+        }
+        #endif
         .sideBarSheet {
             SideBarCloseItem { dismiss() }
         }
