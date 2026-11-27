@@ -75,6 +75,28 @@ final class MoneySummingEquivalenceTests: XCTestCase {
         }
     }
 
+    // The log header now loads its totals from one fetch on a background context.
+    @MainActor
+    func testLogSummaryFromABackgroundContextMatchesTheLogTotals() async {
+        for type in 1 ... 5 {
+            for lineGraph in [nil, 1, 2, 3] as [Int?] {
+                let summary = await dataController.loadLogInsightsSummary(type: type, lineGraph: lineGraph)
+
+                XCTAssertEqual(summary.net.value, dataController.logViewNetTotal(type: type).value, accuracy: 0.0001)
+                XCTAssertEqual(summary.spent.value, dataController.getLogViewTotalSpent(type: type), accuracy: 0.0001)
+                XCTAssertEqual(summary.income.value, dataController.getLogViewTotalIncome(type: type), accuracy: 0.0001)
+                XCTAssertEqual(summary.net.report, dataController.logViewNetTotal(type: type).report)
+
+                switch lineGraph {
+                case 1: XCTAssertEqual(summary.lineGraph, dataController.getLineGraphDataNet(type: type))
+                case 2: XCTAssertEqual(summary.lineGraph, dataController.getLineGraphData(income: true, type: type))
+                case 3: XCTAssertEqual(summary.lineGraph, dataController.getLineGraphData(income: false, type: type))
+                default: XCTAssertTrue(summary.lineGraph.isEmpty)
+                }
+            }
+        }
+    }
+
     func testShortcutInsightsAreUnchanged() {
         for type in 1 ... 3 {
             for timeframe in 1 ... 5 {

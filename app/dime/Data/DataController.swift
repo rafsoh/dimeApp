@@ -529,7 +529,18 @@ class DataController: ObservableObject {
         )
 
         do {
-            if let snapshot = try StoreSnapshot.snapshotIfMigrationNeeded(storeAt: storeURL, to: container.managedObjectModel, sourceModels: versions, in: StoreSnapshot.directory(forStoreAt: storeURL)) {
+            let snapshotDirectory = StoreSnapshot.directory(forStoreAt: storeURL)
+            let copiedBySQLite: (Error) -> Void = { error in
+                let nsError = error as NSError
+                DataIntegrityLog.breadcrumb(
+                    "pre-migration snapshot made by SQLite after Core Data refused",
+                    numbers: ["coreDataCode": nsError.code],
+                    flags: ["cloudKit": self.isCloudKitSyncEnabled],
+                    persist: true
+                )
+            }
+
+            if let snapshot = try StoreSnapshot.snapshotIfMigrationNeeded(storeAt: storeURL, to: container.managedObjectModel, sourceModels: versions, in: snapshotDirectory, copiedBySQLite: copiedBySQLite) {
                 logger.notice("Saved the store before migrating it")
                 let bytes = (try? snapshot.resourceValues(forKeys: [.fileSizeKey]))?.fileSize ?? 0
                 DataIntegrityLog.breadcrumb(
@@ -2249,16 +2260,51 @@ class DataController: ObservableObject {
         return allTransactions.total(using: currencyConverter, signed: true)
     }
 
+    /// The log header's net, spent and earned totals from one fetch, and with `lineGraph` (the header's
+    /// display type) its line graph. Call on `context`'s queue.
+    func logInsightsSummary(type: Int, lineGraph displayType: Int?, in context: NSManagedObjectContext) -> LogInsightsSummary {
+        let transactions = results(for: fetchRequestForLogView(type: type, optionalIncome: nil), in: context)
+        let converter = currencyConverter
+        var summary = LogInsightsSummary()
+
+        summary.net = transactions.total(using: converter, signed: true)
+        summary.spent = transactions.filter { !$0.income }.total(using: converter)
+        summary.income = transactions.filter(\.income).total(using: converter)
+
+        if let displayType {
+            if displayType == 1 {
+                summary.lineGraph = lineGraphNet(type: type, in: context).points
+            } else {
+                summary.lineGraph = lineGraph(income: displayType == 2, type: type, in: context).points
+            }
+        }
+
+        return summary
+    }
+
+    /// `logInsightsSummary` worked out on a background context.
+    ///
+    /// The header used to fetch every transaction in its time frame several times over on each redraw, and
+    /// the log redraws it on every change to the view context. While CloudKit merged an import into a store
+    /// of 4,000 transactions, that held the main thread for 10 seconds (DIME-IOS-Q).
+    func loadLogInsightsSummary(type: Int, lineGraph displayType: Int?) async -> LogInsightsSummary {
+        await withCheckedContinuation { continuation in
+            container.performBackgroundTask { context in
+                continuation.resume(returning: self.logInsightsSummary(type: type, lineGraph: displayType, in: context))
+            }
+        }
+    }
+
     func getLineGraphDataNet(type: Int) -> [LineGraphDataPoint] {
         lineGraphNet(type: type).points
     }
 
-    func lineGraphNet(type: Int) -> (points: [LineGraphDataPoint], report: ConversionReport) {
+    func lineGraphNet(type: Int, in context: NSManagedObjectContext? = nil) -> (points: [LineGraphDataPoint], report: ConversionReport) {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date.now)
 
         let fetchRequest = fetchRequestForLineGraph(optionalIncome: nil)
-        let transactions = results(for: fetchRequest)
+        let transactions = results(for: fetchRequest, in: context)
         let converter = currencyConverter
         var report = ConversionReport()
 
@@ -2421,12 +2467,12 @@ class DataController: ObservableObject {
         lineGraph(income: income, type: type).points
     }
 
-    func lineGraph(income: Bool, type: Int) -> (points: [LineGraphDataPoint], report: ConversionReport) {
+    func lineGraph(income: Bool, type: Int, in context: NSManagedObjectContext? = nil) -> (points: [LineGraphDataPoint], report: ConversionReport) {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date.now)
 
         let fetchRequest = fetchRequestForLineGraph(optionalIncome: income)
-        let transactions = results(for: fetchRequest)
+        let transactions = results(for: fetchRequest, in: context)
         let converter = currencyConverter
         var report = ConversionReport()
 
@@ -3332,8 +3378,9 @@ class DataController: ObservableObject {
         }
     }
 
-    func results<T: NSManagedObject>(for fetchRequest: NSFetchRequest<T>) -> [T] {
-        return (try? container.viewContext.fetch(fetchRequest)) ?? []
+    /// Fetches in the view context, or in `context` (on its queue) when given.
+    func results<T: NSManagedObject>(for fetchRequest: NSFetchRequest<T>, in context: NSManagedObjectContext? = nil) -> [T] {
+        return (try? (context ?? container.viewContext).fetch(fetchRequest)) ?? []
     }
 }
 
@@ -3380,6 +3427,13 @@ extension NSManagedObject {
     var isGone: Bool {
         isDeleted || managedObjectContext == nil
     }
+}
+
+struct LogInsightsSummary: Equatable {
+    var net = MoneyTotal()
+    var spent = MoneyTotal()
+    var income = MoneyTotal()
+    var lineGraph: [LineGraphDataPoint] = []
 }
 
 struct LineGraphDataPoint: Equatable {
