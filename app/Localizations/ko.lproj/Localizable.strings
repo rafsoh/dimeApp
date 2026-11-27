@@ -587,6 +587,10 @@
 "Import from Another App" = "다른 앱에서 가져오기";
 "Icon" = "아이콘";
 
+"Calculator" = "계산기";
+"Can't Divide by Zero" = "0으로 나눌 수 없음";
+"Total Can't Be Negative" = "합계는 음수일 수 없음";
+"Total Is Too Large" = "합계가 너무 큼";
 /* Feature Lab: Auto-Categorise */
 "Auto-Categorise" = "자동 카테고리 분류";
 "Turn on Apple Intelligence in the Settings app to have it pick a category for transactions you log with a note but no category." = "메모는 있지만 카테고리가 없는 거래에 카테고리를 지정하려면 설정 앱에서 Apple Intelligence를 켜세요.";

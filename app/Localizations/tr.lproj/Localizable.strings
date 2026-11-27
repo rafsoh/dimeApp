@@ -587,6 +587,10 @@
 "Import from Another App" = "Başka bir uygulamadan içe aktar";
 "Icon" = "Simge";
 
+"Calculator" = "Hesap Makinesi";
+"Can't Divide by Zero" = "Sıfıra bölünemez";
+"Total Can't Be Negative" = "Toplam negatif olamaz";
+"Total Is Too Large" = "Toplam çok büyük";
 /* Feature Lab: Auto-Categorise */
 "Auto-Categorise" = "Otomatik Kategorilendir";
 "Turn on Apple Intelligence in the Settings app to have it pick a category for transactions you log with a note but no category." = "Not girip kategori seçmeden kaydettiğiniz işlemlere kategori seçmesi için Ayarlar uygulamasında Apple Intelligence’ı açın.";

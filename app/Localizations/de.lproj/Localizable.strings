@@ -587,6 +587,10 @@
 "Import from Another App" = "Aus einer anderen App importieren";
 "Icon" = "Symbol";
 
+"Calculator" = "Rechner";
+"Can't Divide by Zero" = "Division durch null nicht möglich";
+"Total Can't Be Negative" = "Summe kann nicht negativ sein";
+"Total Is Too Large" = "Summe ist zu groß";
 /* Feature Lab: Auto-Categorise */
 "Auto-Categorise" = "Automatisch kategorisieren";
 "Turn on Apple Intelligence in the Settings app to have it pick a category for transactions you log with a note but no category." = "Schalte Apple Intelligence in der Einstellungen-App ein, damit es Buchungen, die du mit Notiz, aber ohne Kategorie erfasst, eine Kategorie zuweist.";

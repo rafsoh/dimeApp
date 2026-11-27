@@ -599,6 +599,10 @@
 "Import from Another App" = "Импорт из другого приложения";
 "Icon" = "Значок";
 
+"Calculator" = "Калькулятор";
+"Can't Divide by Zero" = "Нельзя делить на ноль";
+"Total Can't Be Negative" = "Итог не может быть отрицательным";
+"Total Is Too Large" = "Итог слишком большой";
 /* Feature Lab: Auto-Categorise */
 "Auto-Categorise" = "Автокатегории";
 "Turn on Apple Intelligence in the Settings app to have it pick a category for transactions you log with a note but no category." = "Включите Apple Intelligence в приложении «Настройки», чтобы она подбирала категорию для записей, которые вы добавляете с примечанием, но без категории.";

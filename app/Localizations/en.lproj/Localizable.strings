@@ -569,6 +569,10 @@
 "Import from Another App" = "Import from Another App";
 "Icon" = "Icon";
 
+"Calculator" = "Calculator";
+"Can't Divide by Zero" = "Can't Divide by Zero";
+"Total Can't Be Negative" = "Total Can't Be Negative";
+"Total Is Too Large" = "Total Is Too Large";
 /* Feature Lab: Auto-Categorise */
 "Auto-Categorise" = "Auto-Categorise";
 "Turn on Apple Intelligence in the Settings app to have it pick a category for transactions you log with a note but no category." = "Turn on Apple Intelligence in the Settings app to have it pick a category for transactions you log with a note but no category.";

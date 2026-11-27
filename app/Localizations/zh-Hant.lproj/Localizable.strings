@@ -587,6 +587,10 @@
 "Import from Another App" = "從其他 App 匯入";
 "Icon" = "圖像";
 
+"Calculator" = "計算機";
+"Can't Divide by Zero" = "無法除以零";
+"Total Can't Be Negative" = "總額不能為負數";
+"Total Is Too Large" = "總額過大";
 /* Feature Lab: Auto-Categorise */
 "Auto-Categorise" = "自動分類";
 "Turn on Apple Intelligence in the Settings app to have it pick a category for transactions you log with a note but no category." = "在「設定」App 中開啟 Apple Intelligence，即可為有備註但未選類別的交易選擇類別。";

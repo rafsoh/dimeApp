@@ -587,6 +587,10 @@
 "Import from Another App" = "Importeren uit een andere app";
 "Icon" = "Pictogram";
 
+"Calculator" = "Rekenmachine";
+"Can't Divide by Zero" = "Kan niet delen door nul";
+"Total Can't Be Negative" = "Totaal kan niet negatief zijn";
+"Total Is Too Large" = "Totaal is te groot";
 /* Feature Lab: Auto-Categorise */
 "Auto-Categorise" = "Automatisch categoriseren";
 "Turn on Apple Intelligence in the Settings app to have it pick a category for transactions you log with a note but no category." = "Zet Apple Intelligence aan in de Instellingen-app om het een categorie te laten kiezen voor transacties die je vastlegt met een notitie maar zonder categorie.";
