@@ -76,6 +76,10 @@ struct NewTransactionIntent: AppIntent {
         }
 
         let dataController = DataController.shared
+
+        // Without a store the save below would fail after the dialog had already said it was logged.
+        try dataController.requireLoadedStore()
+
         let repeatType: Int
         var currency: String?
 
@@ -229,7 +233,7 @@ struct ShortcutTransactionView: View {
 
     @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode ?? "USD"
 
     var transactionAmountString: String {
         if let code = transaction.currencyCode, code.uppercased() != currency.uppercased() {

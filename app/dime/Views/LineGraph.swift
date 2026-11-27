@@ -47,7 +47,7 @@ struct LineGraph: View {
     @State var graphProgress: CGFloat = 0
 
     func getGradient(totalPoints: Double, range: Double) -> Gradient {
-        let centreLocation = 1 - (range - 1) / (totalPoints - 1)
+        let centreLocation = totalPoints > 1 ? 1 - (range - 1) / (totalPoints - 1) : 0
         let leftLocation = centreLocation - 0.01
 
         return Gradient(stops: [Gradient.Stop(color: Color.Outline, location: leftLocation),
@@ -58,7 +58,8 @@ struct LineGraph: View {
         GeometryReader { proxy in
 
             let height = proxy.size.height
-            let width = (proxy.size.width) / CGFloat(data.count - 1)
+            // With one point (or none) there is no step between points; avoid dividing by zero or a negative.
+            let width = data.count > 1 ? proxy.size.width / CGFloat(data.count - 1) : proxy.size.width
             let dataValues = data.map { $0.amount }
 
             let maxPoint = (dataValues.max() ?? 0.0)
@@ -66,7 +67,8 @@ struct LineGraph: View {
 
             let points = data.enumerated().compactMap { item -> CGPoint in
 
-                let progress = (item.element.amount - minPoint) / (maxPoint - minPoint)
+                // A flat line (every amount equal) sits in the middle instead of producing NaN.
+                let progress = maxPoint > minPoint ? (item.element.amount - minPoint) / (maxPoint - minPoint) : 0.5
 
                 let pathHeight = progress * height
 
@@ -177,12 +179,18 @@ struct LineGraph: View {
             .contentShape(Rectangle())
             .gesture(DragGesture().onChanged { value in
 
-                withAnimation { showPlot = true }
-
                 let translation = value.location.x
 
+                // The data can change, or be empty, while a drag is under way.
+                guard !data.isEmpty, points.count == data.count, width > 0 else {
+                    return
+                }
+
+                withAnimation { showPlot = true }
+
                 // Getting index...
-                let index = max(min(Int((translation / width).rounded() + 1), data.count - 1), 0)
+                let position = (translation / width).rounded() + 1
+                let index = position.isFinite ? Int(min(max(position, 0), CGFloat(data.count - 1))) : 0
 
                 currentPlot = data[index]
                 self.translation = translation

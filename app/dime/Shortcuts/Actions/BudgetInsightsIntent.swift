@@ -31,6 +31,8 @@ struct BudgetIntent: AppIntent {
 //        let dataController = DataController()
 
         let dataController = DataController.shared
+        // Without a store every total would read as zero.
+        try dataController.requireLoadedStore()
 
         var amount: Double = 0
         var report = ConversionReport()
@@ -105,7 +107,7 @@ struct ShortcutBudgetView: View {
 
     @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var showCents: Bool = true
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode ?? "USD"
 
     var budgetType: String {
         switch type {

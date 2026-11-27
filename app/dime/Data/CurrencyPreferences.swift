@@ -21,13 +21,84 @@ enum CurrencyDigits {
 enum MoneyFormatter {
     /// An amount in its own currency's digits, such as ¥1,200 or KWD 1.250.
     static func string(_ amount: Double, currencyCode: String, showCents: Bool = true) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = currencyCode.uppercased()
         let digits = showCents ? CurrencyDigits.fractionDigits(for: currencyCode) : 0
-        formatter.minimumFractionDigits = digits
-        formatter.maximumFractionDigits = digits
+        let formatter = CachedFormatter.currency(currencyCode.uppercased(), fractionDigits: digits)
         return formatter.string(from: NSNumber(value: amount)) ?? "\(currencyCode.uppercased()) \(amount)"
+    }
+}
+
+/// Formatters are slow to create. Transaction lists made several for every row, and building a long list
+/// held the main thread for seconds. These are kept per configuration and dropped when the locale or time
+/// zone changes. Formatting with a shared formatter is thread-safe as long as nobody changes it afterwards.
+enum CachedFormatter {
+    private static let lock = NSLock()
+    private static var cache: [String: Formatter] = [:]
+    private static var isObservingChanges = false
+
+    /// A date formatter with a fixed format, such as "d MMM".
+    static func date(format: String) -> DateFormatter {
+        formatter(for: "date.format.\(format)") {
+            let formatter = DateFormatter()
+            formatter.dateFormat = format
+            return formatter
+        }
+    }
+
+    /// A date formatter built from a localized template, such as "jmm".
+    static func date(template: String) -> DateFormatter {
+        formatter(for: "date.template.\(template)") {
+            let formatter = DateFormatter()
+            formatter.setLocalizedDateFormatFromTemplate(template)
+            return formatter
+        }
+    }
+
+    /// A currency formatter showing at most `maximumFractionDigits` digits, as list rows and totals use.
+    static func currency(_ currencyCode: String, maximumFractionDigits: Int) -> NumberFormatter {
+        formatter(for: "currency.\(currencyCode).max.\(maximumFractionDigits)") {
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .currency
+            formatter.currencyCode = currencyCode
+            formatter.maximumFractionDigits = maximumFractionDigits
+            return formatter
+        }
+    }
+
+    /// A currency formatter showing exactly `fractionDigits` digits.
+    static func currency(_ currencyCode: String, fractionDigits: Int) -> NumberFormatter {
+        formatter(for: "currency.\(currencyCode).exact.\(fractionDigits)") {
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .currency
+            formatter.currencyCode = currencyCode
+            formatter.minimumFractionDigits = fractionDigits
+            formatter.maximumFractionDigits = fractionDigits
+            return formatter
+        }
+    }
+
+    private static func formatter<T: Formatter>(for key: String, make: () -> T) -> T {
+        lock.lock()
+        defer { lock.unlock() }
+
+        if !isObservingChanges {
+            isObservingChanges = true
+
+            for name in [NSLocale.currentLocaleDidChangeNotification, Notification.Name.NSSystemTimeZoneDidChange] {
+                NotificationCenter.default.addObserver(forName: name, object: nil, queue: nil) { _ in
+                    lock.lock()
+                    cache.removeAll()
+                    lock.unlock()
+                }
+            }
+        }
+
+        if let cached = cache[key] as? T {
+            return cached
+        }
+
+        let made = make()
+        cache[key] = made
+        return made
     }
 }
 

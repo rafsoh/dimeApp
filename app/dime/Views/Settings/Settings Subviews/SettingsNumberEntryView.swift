@@ -14,9 +14,9 @@ struct SettingsNumberEntryView: View {
   @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
   @Environment(\.colorScheme) var colorScheme
   @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency:
-    String = Locale.current.currencyCode!
+    String = Locale.current.currencyCode ?? "USD"
   private var currencySymbol: String {
-    return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
+    return (Locale.current.localizedCurrencySymbol(forCurrencyCode: currency) ?? currency)
   }
 
   @State private var price: Double = 0

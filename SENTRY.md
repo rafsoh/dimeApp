@@ -34,7 +34,7 @@ In the Sentry project settings, turn on **Prevent Storing of IP Addresses** (Sec
 - Core Data predicates, SQL, or the contents of a backup file
 - The full store path (it contains the app-container id)
 
-Error objects are reduced to a domain and code chain before they are captured. CloudKit partial failures often embed the record that failed; that record is not included. Network failures during sync are breadcrumbs only, because an offline device would otherwise create an event on every retry.
+Error objects are reduced to a domain and code chain before they are captured. Crash reasons go through `DataIntegrityLog.redactedExceptionReason` in `beforeSend`: Core Data exception reasons describe the record involved (amount, currency, dates, note), so everything from `data: {` on, `x-coredata://` store ids, and quoted text are removed. CloudKit partial failures often embed the record that failed; that record is not included. Network failures during sync are breadcrumbs only, because an offline device would otherwise create an event on every retry.
 
 ## Events that diagnose missing data
 
@@ -47,10 +47,19 @@ These are the captured messages, in addition to ordinary crashes:
 | After iCloud is current, the store has fewer than half the transactions of the newest backup (and at least 10 were in the backup) | Transaction count is far below the newest backup |
 | A CloudKit import or export ends with that same kind of drop, and it was not a bulk delete in the same moment | CloudKit sync reduced the transaction count |
 | Store load, the pre-migration snapshot, a context save, a backup, a restore, or a non-network CloudKit event fails | The caught error, domain and code only |
+| The store failed to open, then opened on the second attempt a second later | Persistent store loaded on the second attempt |
 
 Breadcrumbs (not their own issues) also cover: migration start and the pre-migration snapshot from the store copy kept before migrating, store load counts, iCloud sync preference changes, the legacy iCloud setting being carried over, CloudKit event start and finish, CSV import counts, backup written or skipped, restore started and finished, erase-all, and a bulk delete (a category, or 10 or more transactions). The pre-migration count is an integer read from the old store with migration disabled.
 
 The empty-store and below-backup issues are sent once per app version so a launch loop cannot drain the quota. Erase Data suppresses the empty-store issue.
+
+## Out of storage
+
+Before migrating, the app copies the store only when the volume has room for the copy and for the migration after it (twice the store and its write-ahead log, plus 20 MB). Otherwise it first deletes all but the newest earlier copy, and if that still isn't enough it skips the copy and leaves a `pre-migration snapshot skipped for lack of space` breadcrumb. A copy that fails partway is deleted. When a save fails, the changes stay in the view context and the person is told: "Dime couldn't save your changes", with a storage-specific message when the device is full. The save is tried again each time the app returns to the foreground. Each kind of save failure is sent once per launch; repeats are breadcrumbs, since a full disk fails every save after it.
+
+## When the store won't open
+
+A store that fails to load no longer crashes the app. The app tries once more after a second, and if that fails too it shows a screen that says the data is still on the device, with Try Again and Contact Support, and the error's domain and code. Nothing is changed or deleted. If the failure is the device running out of storage (SQLite code 13, a file write out of space, or ENOSPC anywhere in the error chain), the screen says so and asks the person to free up space first. Only the app migrates the store: the widget and intents extensions open it without migration, so they can't race the app (the cause of `NSMigrationError` 134110 on the first launch after an update) or be stopped partway through by their memory limit. Until the app has migrated the file, an extension leaves it closed and its widgets show nothing; the app reloads them once the migration finishes.
 
 ## Uploading dSYMs
 

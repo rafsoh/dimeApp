@@ -54,6 +54,28 @@ final class StoreMigrationTests: XCTestCase {
         XCTAssertEqual(StoreSnapshot.sourceModel(forStoreAt: storeURL)?.entityVersionHashesByName, model.entityVersionHashesByName)
     }
 
+    // The migration launch opens earlier model versions while the app's own model is loaded. If they claimed
+    // the app's classes, +entity couldn't choose and every @FetchRequest(sortDescriptors:) would crash.
+    func testEarlierModelVersionsLeaveEntityLookupUnambiguous() throws {
+        let models = StoreSnapshot.modelVersions()
+        XCTAssertFalse(models.isEmpty)
+
+        for model in models {
+            XCTAssertEqual(Set(model.entities.compactMap(\.managedObjectClassName)), [NSStringFromClass(NSManagedObject.self)])
+        }
+
+        let coordinators = models.map { NSPersistentStoreCoordinator(managedObjectModel: $0) }
+
+        try withExtendedLifetime(coordinators) {
+            XCTAssertEqual(Transaction.entity().name, "Transaction")
+            XCTAssertEqual(Category.entity().name, "Category")
+
+            let request = NSFetchRequest<Transaction>()
+            request.entity = Transaction.entity()
+            XCTAssertNoThrow(try DataController.shared.container.viewContext.count(for: request))
+        }
+    }
+
     func testTestsNeverOpenTheRealStore() {
         let urls = DataController.shared.container.persistentStoreCoordinator.persistentStores.map(\.url?.path)
 

@@ -8,8 +8,8 @@
 import SwiftUI
 
 class SceneDelegate: NSObject, UIWindowSceneDelegate {
-    @Environment(\.openURL) var openURL
-
+    // Not @Environment(\.openURL): this isn't a view, so SwiftUI never installs an environment here.
+    // Opening the app's own link reaches the scene's onOpenURL handlers the same way.
     func scene(
         _: UIScene,
         willConnectTo _: UISceneSession,
@@ -20,7 +20,7 @@ class SceneDelegate: NSObject, UIWindowSceneDelegate {
                 return
             }
 
-            openURL(url)
+            UIApplication.shared.open(url)
         }
     }
 
@@ -34,6 +34,6 @@ class SceneDelegate: NSObject, UIWindowSceneDelegate {
             return
         }
 
-        openURL(url, completion: completionHandler)
+        UIApplication.shared.open(url, options: [:], completionHandler: completionHandler)
     }
 }
