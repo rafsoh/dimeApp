@@ -525,6 +525,8 @@ final class AccountsTests: XCTestCase {
     // Shortcuts' New Transaction saves on a background context (DIME-IOS-Y); the app must see it in Main.
     @MainActor
     func testShortcutTransactionsAreSavedInTheBackgroundAndSeenInMain() async throws {
+        guard #available(iOS 16, *) else { throw XCTSkip("Shortcuts actions need iOS 16.") }
+
         let category = dime.Category(context: context)
         category.id = UUID()
         category.name = "Shortcut test"

@@ -1392,6 +1392,7 @@ class DataController: ObservableObject {
     /// The action runs on the main actor, and saving in the view context waited there on a slow disk write for
     /// 2–3 seconds (DIME-IOS-Y). The action always logs at the current time, so a recurring transaction has no
     /// earlier occurrences to fill in here; the app catches up on recurring transactions as usual.
+    @available(iOS 16, *)
     @MainActor
     func newTransactionInBackground(note: String, categoryID: NSManagedObjectID?, income: Bool, amount: Double, currencyCode: String?, repeatType: Int) async throws -> NSManagedObjectID {
         let author = container.viewContext.transactionAuthor
