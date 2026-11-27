@@ -8,6 +8,42 @@ import CloudKit
 import XCTest
 
 final class DataIntegrityLogTests: XCTestCase {
+    func testPartialFailuresReportTheirDistinctRecordCodes() {
+        let partial = NSError(domain: CKError.errorDomain, code: CKError.Code.partialFailure.rawValue, userInfo: [
+            CKPartialErrorsByItemIDKey: [
+                "a": NSError(domain: CKError.errorDomain, code: CKError.Code.zoneNotFound.rawValue),
+                "b": NSError(domain: CKError.errorDomain, code: CKError.Code.serverRecordChanged.rawValue),
+                "c": NSError(domain: CKError.errorDomain, code: CKError.Code.zoneNotFound.rawValue)
+            ]
+        ])
+        let wrapped = NSError(domain: NSCocoaErrorDomain, code: 134_400, userInfo: [NSUnderlyingErrorKey: partial])
+
+        let codes = [CKError.Code.serverRecordChanged.rawValue, CKError.Code.zoneNotFound.rawValue].sorted().map(String.init).joined(separator: "_")
+        XCTAssertEqual(DataIntegrityLog.partialErrorCodes(in: wrapped), codes)
+        XCTAssertEqual(DataIntegrityLog.safeToken(codes), codes)
+        XCTAssertEqual(DataIntegrityLog.partialErrorCodes(in: NSError(domain: NSCocoaErrorDomain, code: 134_419)), "")
+    }
+
+    func testNoICloudAccountAtTheLastCheckPausesMirroring() {
+        let defaults = UserDefaults(suiteName: "group.com.rafaelsoh.dime")
+        let key = DataController.lastICloudAccountStatusKey
+        let saved = defaults?.object(forKey: key)
+        defer { defaults?.set(saved, forKey: key) }
+
+        defaults?.removeObject(forKey: key)
+        XCTAssertFalse(DataController.lastKnownICloudAccountIsUnavailable, "Never asked: mirror as before")
+
+        for status in [CKAccountStatus.noAccount, .restricted] {
+            defaults?.set(status.rawValue, forKey: key)
+            XCTAssertTrue(DataController.lastKnownICloudAccountIsUnavailable)
+        }
+
+        for status in [CKAccountStatus.available, .couldNotDetermine, .temporarilyUnavailable] {
+            defaults?.set(status.rawValue, forKey: key)
+            XCTAssertFalse(DataController.lastKnownICloudAccountIsUnavailable)
+        }
+    }
+
     func testOutOfSpaceIsFoundAnywhereInTheErrorChain() {
         // DIME-IOS-J arrived as SQLite's own error; Core Data saves usually wrap it.
         XCTAssertTrue(DataIntegrityLog.isOutOfSpace(NSError(domain: "NSSQLiteErrorDomain", code: 13)))

@@ -432,15 +432,22 @@ final class BackupManager: ObservableObject {
             return
         }
 
-        let currentCount = dataController.transactionCount()
+        // A count that fails isn't evidence of loss, and isn't grounds to offer a restore.
+        guard let currentCount = dataController.readableTransactionCount() else {
+            return
+        }
 
-        if BackupStore.looksLikeDataLoss(currentTransactionCount: currentCount, backupTransactionCount: backup.transactionCount) {
+        // What the person deleted on this device since the backup isn't missing (DIME-IOS-G).
+        let deletedSinceBackup = defaults?.integer(forKey: DataController.deletedSinceBackupKey) ?? 0
+
+        if BackupStore.looksLikeDataLoss(currentTransactionCount: currentCount + deletedSinceBackup, backupTransactionCount: backup.transactionCount) {
             DataIntegrityLog.captureOnce(
                 key: "below-backup",
                 message: "Transaction count is far below the newest backup",
                 numbers: [
                     "transactions": currentCount,
-                    "backupTransactions": backup.transactionCount
+                    "backupTransactions": backup.transactionCount,
+                    "deletedSinceBackup": deletedSinceBackup
                 ],
                 flags: ["cloudKit": dataController.isCloudKitSyncEnabled]
             )
@@ -473,6 +480,7 @@ final class BackupManager: ObservableObject {
 
         isWorking = true
         let reference = referenceBackup(in: store.list())
+        let deletedSinceBackup = defaults?.integer(forKey: DataController.deletedSinceBackupKey) ?? 0
         let finishBackgroundTask = beginBackgroundTask()
 
         dataController.container.performBackgroundTask { [store, logger] context in
@@ -485,7 +493,7 @@ final class BackupManager: ObservableObject {
                 let isEmpty = try transactionCount == 0 && context.count(for: categoryRequest) == 0
                 // Never let a wiped or shrunken store push good backups out of the rotation.
                 let looksLost = reference.map {
-                    BackupStore.looksLikeDataLoss(currentTransactionCount: transactionCount, backupTransactionCount: $0.transactionCount)
+                    BackupStore.looksLikeDataLoss(currentTransactionCount: transactionCount + deletedSinceBackup, backupTransactionCount: $0.transactionCount)
                 } ?? false
 
                 if !automatic || (!isEmpty && !looksLost) {
@@ -514,6 +522,11 @@ final class BackupManager: ObservableObject {
             }
 
             DispatchQueue.main.async {
+                if succeeded {
+                    // The new backup already leaves out what was deleted before it.
+                    self.defaults?.set(0, forKey: DataController.deletedSinceBackupKey)
+                }
+
                 self.isWorking = false
                 self.refreshList()
                 finishBackgroundTask()
