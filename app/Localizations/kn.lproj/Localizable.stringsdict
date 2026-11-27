@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>%lld days left</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@VARIABLE@</string>
+		<key>VARIABLE</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>zero</key>
+			<string>ಖಾಲಿ</string>
+			<key>one</key>
+			<string>1 ದಿನ ಉಳಿದಿದೆ</string>
+			<key>other</key>
+			<string>%lld ದಿನ ಉಳಿದಿವೆ</string>
+		</dict>
+	</dict>
+	<key>%lld hours left</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@VARIABLE@</string>
+		<key>VARIABLE</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>zero</key>
+			<string>ಖಾಲಿ</string>
+			<key>one</key>
+			<string>1 ಗಂಟೆ ಉಳಿದಿದೆ</string>
+			<key>other</key>
+			<string>%lld ಗಂಟೆ ಉಳಿದಿವೆ</string>
+		</dict>
+	</dict>
+	<key>%lld days</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@VARIABLE@</string>
+		<key>VARIABLE</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>zero</key>
+			<string>ದಿನಗಳು</string>
+			<key>one</key>
+			<string>ದಿನ</string>
+			<key>other</key>
+			<string>ದಿನಗಳು</string>
+		</dict>
+	</dict>
+	<key>%lld weeks</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@VARIABLE@</string>
+		<key>VARIABLE</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>zero</key>
+			<string>ವಾರಗಳು</string>
+			<key>one</key>
+			<string>ವಾರ</string>
+			<key>other</key>
+			<string>ವಾರಗಳು</string>
+		</dict>
+	</dict>
+	<key>%lld months</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@VARIABLE@</string>
+		<key>VARIABLE</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>zero</key>
+			<string>ತಿಂಗಳುಗಳು</string>
+			<key>one</key>
+			<string>ತಿಂಗಳು</string>
+			<key>other</key>
+			<string>ತಿಂಗಳುಗಳು</string>
+		</dict>
+	</dict>
+	<key>%lld weeks ago</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@VARIABLE@</string>
+		<key>VARIABLE</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>zero</key>
+			<string>ವಾರಗಳು</string>
+			<key>one</key>
+			<string>%lld ವಾರದ ಹಿಂದೆ</string>
+			<key>other</key>
+			<string>%lld ವಾರಗಳ ಹಿಂದೆ</string>
+		</dict>
+	</dict>
+	<key>%lld months ago</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@VARIABLE@</string>
+		<key>VARIABLE</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>zero</key>
+			<string>ತಿಂಗಳುಗಳು</string>
+			<key>one</key>
+			<string>%lld ತಿಂಗಳ ಹಿಂದೆ</string>
+			<key>other</key>
+			<string>%lld ತಿಂಗಳುಗಳ ಹಿಂದೆ</string>
+		</dict>
+	</dict>
+	<key>%lld years ago</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@VARIABLE@</string>
+		<key>VARIABLE</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>zero</key>
+			<string>ವರ್ಷಗಳು</string>
+			<key>one</key>
+			<string>%lld ವರ್ಷದ ಹಿಂದೆ</string>
+			<key>other</key>
+			<string>%lld ವರ್ಷಗಳ ಹಿಂದೆ</string>
+		</dict>
+	</dict>
+	<key>%lld transactions</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@VARIABLE@</string>
+		<key>VARIABLE</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>one</key>
+			<string>%lld ವಹಿವಾಟು</string>
+			<key>other</key>
+			<string>%lld ವಹಿವಾಟುಗಳು</string>
+		</dict>
+	</dict>
+	<key>%lld excluded</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@VARIABLE@</string>
+		<key>VARIABLE</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>one</key>
+			<string>%lld ಹೊರಗಿಡಲಾಗಿದೆ</string>
+			<key>other</key>
+			<string>%lld ಹೊರಗಿಡಲಾಗಿದೆ</string>
+		</dict>
+	</dict>
+	<key>%lld transactions have no exchange rate yet and are left out</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@VARIABLE@</string>
+		<key>VARIABLE</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>one</key>
+			<string>%lld ವಹಿವಾಟಿಗೆ ಇನ್ನೂ ವಿನಿಮಯ ದರವಿಲ್ಲ, ಆದ್ದರಿಂದ ಅದನ್ನು ಹೊರಗಿಡಲಾಗಿದೆ</string>
+			<key>other</key>
+			<string>%lld ವಹಿವಾಟುಗಳಿಗೆ ಇನ್ನೂ ವಿನಿಮಯ ದರವಿಲ್ಲ, ಆದ್ದರಿಂದ ಅವುಗಳನ್ನು ಹೊರಗಿಡಲಾಗಿದೆ</string>
+		</dict>
+	</dict>
+</dict>
+</plist>
