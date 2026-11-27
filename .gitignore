@@ -17,4 +17,6 @@ fastlane/README.md
 scripts/appstore-screenshots/out/
 
 ## Sentry auth. The public DSN is committed; the upload token is not.
+# Repo-root sentry-cli config ([auth] token=). Also ignores a copy anywhere else in the tree.
+/.sentryclirc
 .sentryclirc

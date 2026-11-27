@@ -57,6 +57,15 @@ Dime is a 100% free, open-source personal finance tracker built with iOS design 
 - Please let all dependecies update automatically but we would recommend to run
   `File > Packages > Resolve Package Versions` to ensure, everything is updated.
 
+Release and Archive builds upload dSYMs to Sentry when a token is available. The build still succeeds without one. Put the token in `~/.sentryclirc`:
+
+```ini
+[auth]
+token=YOUR_TOKEN
+```
+
+Or export `SENTRY_AUTH_TOKEN` in the environment. Do not commit the token. Setup and how to confirm an upload are in [SENTRY.md](SENTRY.md).
+
 ## Third party dependencies
 
 - [Alamofire](https://github.com/Alamofire/Alamofire)
