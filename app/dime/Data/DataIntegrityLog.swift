@@ -282,6 +282,30 @@ enum DataIntegrityLog {
         return true
     }
 
+    /// The distinct per-record codes inside a CloudKit partial failure (CKError 2), such as "14_26" for
+    /// serverRecordChanged and zoneNotFound. Empty when the chain has none.
+    static func partialErrorCodes(in error: Error) -> String {
+        var codes = Set<Int>()
+        var pending: [NSError] = [error as NSError]
+        var seen = 0
+
+        while let next = pending.popLast(), seen < 12 {
+            seen += 1
+
+            if let partial = next.userInfo[CKPartialErrorsByItemIDKey] as? [AnyHashable: Any] {
+                for case let itemError as NSError in partial.values.prefix(50) {
+                    codes.insert(itemError.code)
+                }
+            }
+
+            if let underlying = next.userInfo[NSUnderlyingErrorKey] as? Error {
+                pending.append(underlying as NSError)
+            }
+        }
+
+        return codes.sorted().prefix(5).map(String.init).joined(separator: "_")
+    }
+
     /// Whether the device ran out of storage anywhere in the error chain: SQLite's "database or disk is full"
     /// (code 13, which Core Data often reports under its own error), a file write out of space, or ENOSPC.
     static func isOutOfSpace(_ error: Error) -> Bool {

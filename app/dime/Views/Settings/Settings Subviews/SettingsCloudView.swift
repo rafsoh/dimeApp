@@ -36,7 +36,8 @@ struct SettingsCloudView: View {
           )
         }
 
-      if iCloudStorage && dataController.isCloudKitSyncEnabled {
+      // Also while sync is paused because iCloud has no account: the status then says to sign in.
+      if iCloudStorage && dataController.syncStatus.isEnabled {
         SyncStatusSection(status: dataController.syncStatus)
           .padding(.top, .settingsHeaderSpacing)
       }

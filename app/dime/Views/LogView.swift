@@ -878,10 +878,21 @@ struct ListView: View {
 
     @EnvironmentObject var toastPresenter: OverallToastPresenter
 
+    /// One day of the list as a plain value. SwiftUI's display-link thread lays out lazy stacks, and reading
+    /// SectionedFetchResults there trips its main-actor check (DIME-IOS-7/8/D), so the ForEach is given an
+    /// array built here on the main thread instead.
+    private struct DaySection: Identifiable {
+        let id: Date?
+        let transactions: [Transaction]
+    }
+
     var body: some View {
+        // Collects object references only; the dedupe and totals stay per visible day.
+        let days = transactions.map { DaySection(id: $0.id, transactions: Array($0)) }
+
         LazyVStack(spacing: 0) {
-            ForEach(transactions) { day in
-                let filtered = filterOutDupes(day: day)
+            ForEach(days) { day in
+                let filtered = filterOutDupes(day.transactions)
                 let dateText = dateConverter(date: day.id ?? Date.now).uppercased()
 
                 VStack(spacing: 0) {
@@ -931,7 +942,7 @@ struct ListView: View {
         }
     }
 
-    func filterOutDupes(day: SectionedFetchResults<Date?, Transaction>.Element) -> (transactions: [Transaction], string: String) {
+    func filterOutDupes(_ day: [Transaction]) -> (transactions: [Transaction], string: String) {
         var seen = Set<UUID?>()
         let filtered = day.filter { entity -> Bool in
             seen.insert(entity.id).inserted
@@ -1774,11 +1785,7 @@ struct DateStepperView: View {
     let currentDate = Calendar.current.date(bySettingHour: 0, minute: 0, second: 0, of: Date.now) ?? Date.now
 
     func dateString(_ date: Date) -> String {
-        let dateFormatter = DateFormatter()
-
-        dateFormatter.dateFormat = "d MMM yyyy"
-
-        return dateFormatter.string(from: date)
+        CachedFormatter.date(format: "d MMM yyyy").string(from: date)
     }
 
     func shifted(by days: Int) -> Date? {
@@ -1834,9 +1841,7 @@ struct WeekStepperView: View {
     @State var startDate = Date.now
 
     func dateString(_ weekStart: Date) -> String {
-        let dateFormatter = DateFormatter()
-
-        dateFormatter.dateFormat = "d MMM"
+        let dateFormatter = CachedFormatter.date(format: "d MMM")
 
         let endComponents = DateComponents(day: 7, second: -1)
         let endWeekDate = Calendar.current.date(byAdding: endComponents, to: weekStart) ?? Date.now
@@ -1851,9 +1856,7 @@ struct WeekStepperView: View {
     }
 
     var accessibilityDateString: String {
-        let dateFormatter = DateFormatter()
-
-        dateFormatter.dateFormat = "d MMM"
+        let dateFormatter = CachedFormatter.date(format: "d MMM")
 
         let endComponents = DateComponents(day: 7, second: -1)
         let endWeekDate = Calendar.current.date(byAdding: endComponents, to: showingDate) ?? Date.now
@@ -1918,11 +1921,7 @@ struct MonthStepperView: View {
     @State var startDate = Date.now
 
     func dateString(_ month: Date) -> String {
-        let dateFormatter = DateFormatter()
-
-        dateFormatter.dateFormat = "MMM yyyy"
-
-        return dateFormatter.string(from: month)
+        CachedFormatter.date(format: "MMM yyyy").string(from: month)
     }
 
     func shifted(by months: Int) -> Date? {

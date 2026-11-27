@@ -43,15 +43,22 @@ These are the captured messages, in addition to ordinary crashes:
 | Situation | Message |
 | --- | --- |
 | Migration finishes with fewer transactions, categories, budgets, or templates than before | Store migration reduced record counts |
-| The store opens with zero transactions, the file or a pre-migration snapshot is non-trivial, and the user did not use Erase Data | Store loaded with no transactions |
-| After iCloud is current, the store has fewer than half the transactions of the newest backup (and at least 10 were in the backup) | Transaction count is far below the newest backup |
-| A CloudKit import or export ends with that same kind of drop, and it was not a bulk delete in the same moment | CloudKit sync reduced the transaction count |
-| Store load, the pre-migration snapshot, a context save, a backup, a restore, or a non-network CloudKit event fails | The caught error, domain and code only |
+| The store opens with zero transactions, though the previous load (in any process) had more than the person has deleted since | Store emptied unexpectedly |
+| After iCloud is current, the store plus what the person deleted since the newest backup is under half that backup (and at least 10 were in the backup) | Transaction count is far below the newest backup |
+| A CloudKit import or setup ends with that same kind of drop, and it was not a bulk delete in the same moment. The event names the two history authors that deleted the most transactions since the event began. | CloudKit sync reduced the transaction count |
+| CloudKit setup fails and leaves the store out of the coordinator; the app opens it again without iCloud for the rest of the launch | Store reopened without iCloud after CloudKit setup removed it |
+| Store load, the pre-migration snapshot, a context save, a backup, a restore, or a CloudKit event fails, other than for the network or with 134400 or 134419 | The caught error, domain and code only. Partial CloudKit failures add their per-record codes as `partialCodes`. |
 | The store failed to open, then opened on the second attempt a second later | Persistent store loaded on the second attempt |
 
 Breadcrumbs (not their own issues) also cover: migration start and the pre-migration snapshot from the store copy kept before migrating, store load counts, iCloud sync preference changes, the legacy iCloud setting being carried over, CloudKit event start and finish, CSV import counts, backup written or skipped, restore started and finished, erase-all, and a bulk delete (a category, or 10 or more transactions). The pre-migration count is an integer read from the old store with migration disabled.
 
-The empty-store and below-backup issues are sent once per app version so a launch loop cannot drain the quota. Erase Data suppresses the empty-store issue.
+The empty-store and below-backup issues are sent once per app version so a launch loop cannot drain the quota. Counts that can't be read are left out of these checks rather than read as 0; a failed read used to look like every row was gone.
+
+Counting happens on a background context, and only around CloudKit imports and setup. Exports follow every save, and counting on the main thread for each one waited on the store while CloudKit held it.
+
+## iCloud with no account
+
+The app remembers what CloudKit last said about the iCloud account. When that was no account or a restricted one, the next launch opens the store without mirroring, and the person's sync preference stays as it was. With mirroring on and no account, CloudKit setup failed with 134405 and the transaction count read 0 right after, and CloudKit clears a mirrored store's records when the account goes away. Settings still shows the iCloud status, which asks the person to sign in. The first launch after iCloud reports an account mirrors again.
 
 ## Out of storage
 

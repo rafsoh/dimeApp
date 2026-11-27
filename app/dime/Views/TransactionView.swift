@@ -119,9 +119,7 @@ struct TransactionView: View {
     }
 
     var dateString: String {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "d MMM yyyy"
-        return dateFormatter.string(from: date)
+        CachedFormatter.date(format: "d MMM yyyy").string(from: date)
     }
 
     @State var showPicker = false

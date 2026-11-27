@@ -47,7 +47,10 @@ final class CloudSyncStatus: ObservableObject {
         case problem(Problem)
     }
 
+    /// The person wants sync. It can still be paused for this launch, see `isMirroring`.
     let isEnabled: Bool
+    /// Whether the store is mirrored to CloudKit this launch. Off while iCloud last reported no usable account.
+    let isMirroring: Bool
 
     @Published private(set) var lastSynced: Date?
     @Published private var accountStatus: CKAccountStatus?
@@ -58,8 +61,9 @@ final class CloudSyncStatus: ObservableObject {
     private let containerIdentifier: String
     private var observers: [NSObjectProtocol] = []
 
-    init(isEnabled: Bool, containerIdentifier: String) {
+    init(isEnabled: Bool, isMirroring: Bool, containerIdentifier: String) {
         self.isEnabled = isEnabled
+        self.isMirroring = isMirroring
         self.containerIdentifier = containerIdentifier
         lastSynced = UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.object(forKey: Self.lastSyncedKey) as? Date
 
@@ -76,6 +80,7 @@ final class CloudSyncStatus: ObservableObject {
         })
 
         observers.append(NotificationCenter.default.addObserver(forName: .CKAccountChanged, object: nil, queue: .main) { [weak self] _ in
+            DataIntegrityLog.breadcrumb("iCloud account changed")
             self?.refreshAccountStatus()
         })
 
@@ -89,6 +94,11 @@ final class CloudSyncStatus: ObservableObject {
 
         if let accountProblem {
             return .problem(accountProblem)
+        }
+
+        // The account became usable after launch; mirroring starts the next time Dime opens.
+        guard isMirroring else {
+            return .waiting
         }
 
         // Export failures come first: they mean changes made on this device exist nowhere else.
@@ -150,7 +160,12 @@ final class CloudSyncStatus: ObservableObject {
     }
 
     private func refreshAccountStatus() {
-        CKContainer(identifier: containerIdentifier).accountStatus { [weak self] status, _ in
+        CKContainer(identifier: containerIdentifier).accountStatus { [weak self] status, error in
+            // Read at the next launch to decide whether to mirror. An error leaves the last answer in place.
+            if error == nil {
+                UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.set(status.rawValue, forKey: DataController.lastICloudAccountStatusKey)
+            }
+
             DispatchQueue.main.async {
                 self?.accountStatus = status
             }
@@ -273,6 +288,22 @@ class DataController: ObservableObject {
     static let lastBulkDeletionKey = "lastBulkDeletion"
     static let didEraseAllDataKey = "didEraseAllData"
     static let dataIsCurrentNotification = Notification.Name("DimeDataIsCurrentWithICloud")
+    static let lastICloudAccountStatusKey = "lastICloudAccountStatus"
+    /// Transactions the person deleted on this device since the newest backup was written.
+    static let deletedSinceBackupKey = "integrity.transactionsDeletedSinceBackup"
+    private static let transactionsAtLastLoadKey = "integrity.transactionsAtLastLoad"
+    private static let deletedSinceLastLoadKey = "integrity.transactionsDeletedSinceLastLoad"
+
+    /// iCloud said there's no account, or a restricted one, the last time it was asked.
+    static var lastKnownICloudAccountIsUnavailable: Bool {
+        guard let raw = UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.object(forKey: lastICloudAccountStatusKey) as? Int,
+              let status = CKAccountStatus(rawValue: raw)
+        else {
+            return false
+        }
+
+        return status == .noAccount || status == .restricted
+    }
     private static let cloudKitContainerIdentifier = "iCloud.com.rafaelsoh.dime"
 
     static var isICloudSyncPreferred: Bool {
@@ -337,6 +368,7 @@ class DataController: ObservableObject {
     // Main thread only.
     private var recurringGate: RecurringGenerationGate
     private var transactionCountAtCloudKitEventStart: [UUID: Int] = [:]
+    private var cloudKitEventsInProgress: Set<UUID> = []
     private var recurringFallback: DispatchWorkItem?
     private var pathMonitor: NWPathMonitor?
 
@@ -371,9 +403,19 @@ class DataController: ObservableObject {
             Self.migrateLegacyICloudSyncSetting()
         }
 
-        isCloudKitSyncEnabled = !isAppExtension && !usesDemoData && Self.isICloudSyncPreferred
-        syncStatus = CloudSyncStatus(isEnabled: isCloudKitSyncEnabled, containerIdentifier: Self.cloudKitContainerIdentifier)
+        // With no iCloud account (or a restricted one), mirroring fails its setup (NSCocoaErrorDomain 134405), and
+        // right after that the store read as empty (DIME-IOS-E); CloudKit also clears a mirrored store's records
+        // when the account goes away. So while iCloud last reported no usable account, the store opens on its own.
+        // The preference is untouched, and the next launch after an account appears mirrors again.
+        let syncPreferred = !isAppExtension && !usesDemoData && Self.isICloudSyncPreferred
+        let accountUnavailable = syncPreferred && Self.lastKnownICloudAccountIsUnavailable
+        isCloudKitSyncEnabled = syncPreferred && !accountUnavailable
+        syncStatus = CloudSyncStatus(isEnabled: syncPreferred, isMirroring: isCloudKitSyncEnabled, containerIdentifier: Self.cloudKitContainerIdentifier)
         recurringGate = RecurringGenerationGate(isSyncEnabled: isCloudKitSyncEnabled)
+
+        if accountUnavailable {
+            DataIntegrityLog.breadcrumb("iCloud sync paused: no iCloud account at the last check", persist: true)
+        }
 
         if isCloudKitSyncEnabled {
             description.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: Self.cloudKitContainerIdentifier)
@@ -459,7 +501,9 @@ class DataController: ObservableObject {
     /// Counts the records and keeps a copy of the file before Core Data migrates it. Returns the counts.
     private func prepareForMigration(storeAt storeURL: URL) -> [String: Int]? {
         var countsBeforeMigration: [String: Int]?
-        let sourceModel = StoreSnapshot.sourceModel(forStoreAt: storeURL)
+        // Loaded once for both uses. They claim no app classes either way (see StoreSnapshot.modelVersions).
+        let versions = StoreSnapshot.modelVersions()
+        let sourceModel = StoreSnapshot.sourceModel(forStoreAt: storeURL, among: versions)
 
         if let sourceModel {
             countsBeforeMigration = StoreSnapshot.recordCounts(storeAt: storeURL, model: sourceModel)
@@ -481,7 +525,7 @@ class DataController: ObservableObject {
         )
 
         do {
-            if let snapshot = try StoreSnapshot.snapshotIfMigrationNeeded(storeAt: storeURL, to: container.managedObjectModel, in: StoreSnapshot.directory(forStoreAt: storeURL)) {
+            if let snapshot = try StoreSnapshot.snapshotIfMigrationNeeded(storeAt: storeURL, to: container.managedObjectModel, sourceModels: versions, in: StoreSnapshot.directory(forStoreAt: storeURL)) {
                 logger.notice("Saved the store before migrating it")
                 let bytes = (try? snapshot.resourceValues(forKeys: [.fileSizeKey]))?.fileSize ?? 0
                 DataIntegrityLog.breadcrumb(
@@ -646,82 +690,10 @@ class DataController: ObservableObject {
                 return
             }
 
-            let type = Self.cloudKitEventToken(event.type)
-
             if event.endDate == nil {
-                let transactions = self.transactionCount()
-                self.transactionCountAtCloudKitEventStart[event.identifier] = transactions
-                DataIntegrityLog.breadcrumb(
-                    "CloudKit event started",
-                    numbers: ["transactions": transactions],
-                    tokens: ["type": type]
-                )
-                return
-            }
-
-            let transactionsBefore = self.transactionCountAtCloudKitEventStart.removeValue(forKey: event.identifier)
-            let transactionsAfter = self.transactionCount()
-            var numbers = ["transactions": transactionsAfter]
-            if let transactionsBefore {
-                numbers["transactionsBefore"] = transactionsBefore
-            }
-            if let end = event.endDate {
-                numbers["durationMs"] = Int(end.timeIntervalSince(event.startDate) * 1000)
-            }
-
-            if let error = event.error {
-                let nsError = error as NSError
-                self.logger.error("CloudKit event failed: \(nsError.domain, privacy: .public) \(nsError.code, privacy: .public)")
-                numbers["code"] = nsError.code
-                let networkError = CloudSyncStatus.isNetworkError(error)
-
-                DataIntegrityLog.breadcrumb(
-                    "CloudKit event failed",
-                    numbers: numbers,
-                    flags: ["network": networkError, "succeeded": false],
-                    tokens: ["type": type, "domain": nsError.domain]
-                )
-
-                if !networkError {
-                    let summary = DataIntegrityLog.failureSummary(for: error)
-                    DataIntegrityLog.captureOnce(
-                        key: "ck.\(type).\(summary.domain).\(summary.code)",
-                        message: "CloudKit sync failed",
-                        numbers: numbers,
-                        flags: ["succeeded": false],
-                        tokens: ["type": type, "domain": summary.domain]
-                    )
-                }
+                self.cloudKitEventStarted(event)
             } else {
-                DataIntegrityLog.breadcrumb(
-                    "CloudKit event finished",
-                    numbers: numbers,
-                    flags: ["succeeded": event.succeeded],
-                    tokens: ["type": type]
-                )
-            }
-
-            if let transactionsBefore,
-               transactionsBefore >= 10,
-               transactionsAfter * 2 < transactionsBefore,
-               !Self.bulkDeletionOccurred(from: event.startDate, to: event.endDate) {
-                DataIntegrityLog.capture(
-                    "CloudKit sync reduced the transaction count",
-                    numbers: numbers,
-                    flags: ["succeeded": event.succeeded],
-                    tokens: ["type": type]
-                )
-            }
-
-            if event.type == .import || event.type == .setup {
-                let isNetworkError = event.error.map(CloudSyncStatus.isNetworkError) ?? false
-                self.recurringGate.syncEventFinished(isImport: event.type == .import, succeeded: event.succeeded, isNetworkError: isNetworkError)
-
-                if isNetworkError {
-                    self.scheduleRecurringFallback()
-                }
-
-                self.updateRecurringTransactionsIfReady()
+                self.cloudKitEventFinished(event)
             }
         }
 
@@ -756,6 +728,223 @@ class DataController: ObservableObject {
         self.pathMonitor = pathMonitor
 
         scheduleRecurringFallback()
+    }
+
+    // MARK: CloudKit events
+
+    /// CloudKit errors that mean "no account yet" or "deferred, will retry". They're expected, so they stay
+    /// breadcrumbs rather than events (DIME-IOS-2): NSCocoaErrorDomain 134400 and 134419.
+    private static let expectedCloudKitErrorCodes: Set<Int> = [134_400, 134_419]
+
+    // Counts run on a background context, and only around imports and setup, which are what can remove rows.
+    // Exports follow every save, and counting on the main thread for each one waited on the store while
+    // CloudKit held it (DIME-IOS-9).
+    private static func countsTransactions(around event: NSPersistentCloudKitContainer.Event) -> Bool {
+        event.type == .import || event.type == .setup
+    }
+
+    private func cloudKitEventStarted(_ event: NSPersistentCloudKitContainer.Event) {
+        DataIntegrityLog.breadcrumb("CloudKit event started", tokens: ["type": Self.cloudKitEventToken(event.type)])
+
+        guard Self.countsTransactions(around: event) else {
+            return
+        }
+
+        let id = event.identifier
+        cloudKitEventsInProgress.insert(id)
+
+        countTransactionsInBackground { [weak self] count in
+            guard let self, let count, self.cloudKitEventsInProgress.contains(id) else {
+                return
+            }
+
+            self.transactionCountAtCloudKitEventStart[id] = count
+        }
+    }
+
+    private func cloudKitEventFinished(_ event: NSPersistentCloudKitContainer.Event) {
+        let type = Self.cloudKitEventToken(event.type)
+        cloudKitEventsInProgress.remove(event.identifier)
+        let transactionsBefore = transactionCountAtCloudKitEventStart.removeValue(forKey: event.identifier)
+
+        var numbers: [String: Int] = [:]
+        if let transactionsBefore {
+            numbers["transactionsBefore"] = transactionsBefore
+        }
+        if let end = event.endDate {
+            numbers["durationMs"] = Int(end.timeIntervalSince(event.startDate) * 1000)
+        }
+
+        if let error = event.error {
+            let nsError = error as NSError
+            let networkError = CloudSyncStatus.isNetworkError(error)
+            let summary = DataIntegrityLog.failureSummary(for: error)
+            let expected = nsError.domain == NSCocoaErrorDomain && Self.expectedCloudKitErrorCodes.contains(nsError.code)
+            logger.error("CloudKit event failed: \(nsError.domain, privacy: .public) \(nsError.code, privacy: .public)")
+            numbers["code"] = nsError.code
+
+            // Partial failures carry the per-record codes that say what went wrong.
+            var tokens = ["type": type, "domain": nsError.domain]
+            let partialCodes = DataIntegrityLog.partialErrorCodes(in: error)
+            if !partialCodes.isEmpty {
+                tokens["partialCodes"] = partialCodes
+            }
+
+            let flags = ["network": networkError, "succeeded": false, "expected": expected, "storeLoaded": isStoreLoaded]
+            DataIntegrityLog.breadcrumb("CloudKit event failed", numbers: numbers, flags: flags, tokens: tokens)
+
+            if !networkError, !expected {
+                DataIntegrityLog.captureOnce(
+                    key: "ck.\(type).\(summary.domain).\(summary.code)",
+                    message: "CloudKit sync failed",
+                    numbers: numbers,
+                    flags: flags,
+                    tokens: tokens
+                )
+            }
+
+            if event.type == .setup, !networkError {
+                reopenStoreIfCloudKitRemovedIt(afterSetupError: nsError)
+            }
+        } else {
+            DataIntegrityLog.breadcrumb(
+                "CloudKit event finished",
+                numbers: numbers,
+                flags: ["succeeded": event.succeeded],
+                tokens: ["type": type]
+            )
+        }
+
+        if event.type == .import || event.type == .setup {
+            let isNetworkError = event.error.map(CloudSyncStatus.isNetworkError) ?? false
+            recurringGate.syncEventFinished(isImport: event.type == .import, succeeded: event.succeeded, isNetworkError: isNetworkError)
+
+            if isNetworkError {
+                scheduleRecurringFallback()
+            }
+
+            updateRecurringTransactionsIfReady()
+        }
+
+        guard Self.countsTransactions(around: event), let transactionsBefore else {
+            return
+        }
+
+        let start = event.startDate
+        let end = event.endDate
+        let succeeded = event.succeeded
+
+        countTransactionsInBackground { [weak self] transactionsAfter in
+            guard let self else {
+                return
+            }
+
+            // An unreadable count used to be reported as 0, which made a failed read look like every row was gone.
+            guard let transactionsAfter else {
+                DataIntegrityLog.breadcrumb(
+                    "transaction count unreadable after a CloudKit event",
+                    numbers: numbers,
+                    flags: ["storeLoaded": self.isStoreLoaded],
+                    tokens: ["type": type]
+                )
+                return
+            }
+
+            guard transactionsBefore >= 10,
+                  transactionsAfter * 2 < transactionsBefore,
+                  !Self.bulkDeletionOccurred(from: start, to: end)
+            else {
+                return
+            }
+
+            var dropNumbers = numbers
+            dropNumbers["transactions"] = transactionsAfter
+
+            // Which history authors deleted the rows tells a CloudKit purge apart from an ordinary import.
+            self.transactionDeletionAuthors(since: start) { authors in
+                var tokens = ["type": type]
+                for (index, author) in authors.enumerated() {
+                    tokens["author\(index + 1)"] = author.name
+                    dropNumbers["author\(index + 1)Deletes"] = author.deletes
+                }
+
+                DataIntegrityLog.capture(
+                    "CloudKit sync reduced the transaction count",
+                    numbers: dropNumbers,
+                    flags: ["succeeded": succeeded, "storeLoaded": self.isStoreLoaded],
+                    tokens: tokens
+                )
+            }
+        }
+    }
+
+    /// When CloudKit setup fails, the store can be left out of the coordinator, and the app then shows nothing
+    /// for the rest of the session. It's opened again without mirroring, so the person's data stays in view.
+    private func reopenStoreIfCloudKitRemovedIt(afterSetupError error: NSError) {
+        guard !isStoreLoaded, storeLoadFailure == nil else {
+            return
+        }
+
+        container.persistentStoreDescriptions.first?.cloudKitContainerOptions = nil
+        let reloadError = loadStore()
+
+        DataIntegrityLog.capture(
+            error,
+            message: "Store reopened without iCloud after CloudKit setup removed it",
+            flags: ["reopened": reloadError == nil]
+        )
+
+        if let reloadError {
+            storeFailedToLoad(reloadError)
+        } else {
+            extensionHistoryToken = container.persistentStoreCoordinator.currentPersistentHistoryToken(fromStores: nil)
+        }
+    }
+
+    /// Counts transactions on a background context and reports on the main queue. Nil when the count fails.
+    private func countTransactionsInBackground(_ completion: @escaping (Int?) -> Void) {
+        let context = container.newBackgroundContext()
+
+        context.perform {
+            let request: NSFetchRequest<Transaction> = Transaction.fetchRequest()
+            let count = try? context.count(for: request)
+
+            DispatchQueue.main.async {
+                completion(count)
+            }
+        }
+    }
+
+    /// The history authors that deleted the most transactions since `date`, most first, at most two.
+    private func transactionDeletionAuthors(since date: Date, completion: @escaping ([(name: String, deletes: Int)]) -> Void) {
+        let context = container.newBackgroundContext()
+
+        context.perform {
+            var deletesByAuthor: [String: Int] = [:]
+            let request = NSPersistentHistoryChangeRequest.fetchHistory(after: date)
+
+            if let result = try? context.execute(request) as? NSPersistentHistoryResult,
+               let transactions = result.result as? [NSPersistentHistoryTransaction] {
+                for transaction in transactions {
+                    let deletes = (transaction.changes ?? []).filter {
+                        $0.changeType == .delete && $0.changedObjectID.entity.name == "Transaction"
+                    }.count
+
+                    guard deletes > 0 else {
+                        continue
+                    }
+
+                    let author = transaction.author ?? transaction.contextName ?? "none"
+                    deletesByAuthor[DataIntegrityLog.safeToken(author), default: 0] += deletes
+                }
+            }
+
+            let top = deletesByAuthor.sorted { $0.value > $1.value }.prefix(2).map { (name: $0.key, deletes: $0.value) }
+
+            DispatchQueue.main.async {
+                completion(Array(top))
+            }
+        }
     }
 
     // MARK: Writes from extensions
@@ -903,6 +1092,14 @@ class DataController: ObservableObject {
 
         let deletedTransactions = deletedCounts["Transaction"] ?? 0
         let deletedCategories = deletedCounts["Category"] ?? 0
+
+        // Deletes made here, one at a time or many, so the integrity checks don't read them as data loss
+        // (DIME-IOS-G was someone deleting ten transactions by hand).
+        if deletedTransactions > 0, let defaults = UserDefaults(suiteName: "group.com.rafaelsoh.dime") {
+            for key in [Self.deletedSinceLastLoadKey, Self.deletedSinceBackupKey] {
+                defaults.set(defaults.integer(forKey: key) + deletedTransactions, forKey: key)
+            }
+        }
 
         if deletedCategories > 0 || deletedTransactions >= 10 {
             UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.set(Date.now, forKey: Self.lastBulkDeletionKey)
@@ -2656,27 +2853,47 @@ class DataController: ObservableObject {
         }
     }
 
+    /// For the interface. Integrity checks use `readableTransactionCount()`, which doesn't turn a failure into 0.
     func transactionCount() -> Int {
-        let request: NSFetchRequest<Transaction> = Transaction.fetchRequest()
-        return (try? container.viewContext.count(for: request)) ?? 0
+        readableTransactionCount() ?? 0
     }
 
+    /// Nil when the count fails, as it does with the store out of the coordinator.
+    func readableTransactionCount() -> Int? {
+        count(of: "Transaction")
+    }
+
+    /// Only the counts that could be read. A missing key means the count failed, never that it was 0.
     func integrityCounts() -> [String: Int] {
-        [
-            "transactions": count(of: "Transaction"),
-            "categories": count(of: "Category"),
-            "budgets": count(of: "Budget"),
-            "mainBudgets": count(of: "MainBudget"),
-            "templates": count(of: "TemplateTransaction")
+        let names = [
+            "Transaction": "transactions",
+            "Category": "categories",
+            "Budget": "budgets",
+            "MainBudget": "mainBudgets",
+            "TemplateTransaction": "templates"
         ]
+
+        var counts: [String: Int] = [:]
+        for (entityName, key) in names {
+            counts[key] = count(of: entityName)
+        }
+        return counts
     }
 
-    private func count(of entityName: String) -> Int {
+    private func count(of entityName: String) -> Int? {
         guard container.managedObjectModel.entitiesByName[entityName] != nil else {
             return 0
         }
+
         let request = NSFetchRequest<NSManagedObject>(entityName: entityName)
-        return (try? container.viewContext.count(for: request)) ?? 0
+
+        do {
+            return try container.viewContext.count(for: request)
+        } catch {
+            let nsError = error as NSError
+            logger.error("Counting \(entityName, privacy: .public) failed: \(nsError.domain, privacy: .public) \(nsError.code, privacy: .public)")
+            return nil
+        }
     }
 
     private struct StoreFileFacts {
@@ -2763,13 +2980,32 @@ class DataController: ObservableObject {
             }
         }
 
+        // A count that couldn't be read is left out rather than compared as 0.
         let tracked = ["transactions", "categories", "budgets", "mainBudgets", "templates"]
         let migrationDropped = migrationNeeded && countsBeforeMigration.map { before in
-            tracked.contains { key in (counts[key] ?? 0) < (before[key] ?? 0) }
+            tracked.contains { key in
+                guard let now = counts[key], let earlier = before[key] else {
+                    return false
+                }
+                return now < earlier
+            }
         } ?? false
         let erasedAll = UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.bool(forKey: Self.didEraseAllDataKey) ?? false
-        let fileLooksOccupied = facts.bytes > 65_536 || facts.walBytes > 65_536 || facts.snapshotCount > 0
-        let emptyWithoutErase = (counts["transactions"] ?? 0) == 0 && fileLooksOccupied && !erasedAll
+
+        // Emptied: there were transactions at the previous load, more than the person has deleted since, and
+        // now there are none. A new install's empty store (about 112 KB with CloudKit's tables) used to trip a
+        // file-size check instead (DIME-IOS-1).
+        let defaults = UserDefaults(suiteName: "group.com.rafaelsoh.dime")
+        let transactionsAtLastLoad = defaults?.object(forKey: Self.transactionsAtLastLoadKey) as? Int
+        let deletedSinceLastLoad = defaults?.integer(forKey: Self.deletedSinceLastLoadKey) ?? 0
+        let emptyWithoutErase = counts["transactions"] == 0 && (transactionsAtLastLoad ?? 0) - deletedSinceLastLoad > 0
+        numbers["transactionsAtLastLoad"] = transactionsAtLastLoad
+        numbers["deletedSinceLastLoad"] = deletedSinceLastLoad
+
+        if let transactions = counts["transactions"] {
+            defaults?.set(transactions, forKey: Self.transactionsAtLastLoadKey)
+            defaults?.set(0, forKey: Self.deletedSinceLastLoadKey)
+        }
 
         DataIntegrityLog.breadcrumb(
             "store loaded",
@@ -2779,7 +3015,8 @@ class DataController: ObservableObject {
                 "cloudKit": isCloudKitSyncEnabled,
                 "fileExists": facts.exists,
                 "syncPreferred": Self.isICloudSyncPreferred,
-                "erasedAll": erasedAll
+                "erasedAll": erasedAll,
+                "countsReadable": counts["transactions"] != nil
             ],
             persist: migrationDropped || emptyWithoutErase
         )
@@ -2794,10 +3031,10 @@ class DataController: ObservableObject {
 
         if emptyWithoutErase {
             DataIntegrityLog.captureOnce(
-                key: "empty-store",
-                message: "Store loaded with no transactions",
+                key: "emptied-store",
+                message: "Store emptied unexpectedly",
                 numbers: numbers,
-                flags: ["cloudKit": isCloudKitSyncEnabled, "migrationNeeded": migrationNeeded]
+                flags: ["cloudKit": isCloudKitSyncEnabled, "migrationNeeded": migrationNeeded, "erasedAll": erasedAll]
             )
         }
     }
@@ -2857,19 +3094,11 @@ struct LineGraphDataPoint: Equatable {
     let amount: Double
 
     var dateString: String {
-        let dateFormatter = DateFormatter()
-
-        dateFormatter.dateFormat = "d MMM"
-
-        return dateFormatter.string(from: date)
+        CachedFormatter.date(format: "d MMM").string(from: date)
     }
 
     var monthString: String {
-        let dateFormatter = DateFormatter()
-
-        dateFormatter.dateFormat = "MMM yy"
-
-        return dateFormatter.string(from: date)
+        CachedFormatter.date(format: "MMM yy").string(from: date)
     }
 
     var amountString: String {
