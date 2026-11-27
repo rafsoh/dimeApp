@@ -570,3 +570,5 @@
 "Renames the account" = "重新命名此帳戶";
 "Edits the account" = "編輯此帳戶";
 "%@, %@, %lld percent of spending" = "%1$@，%2$@，佔支出的%3$lld%%";
+"Import from Another App" = "從其他 App 匯入";
+"Icon" = "圖像";

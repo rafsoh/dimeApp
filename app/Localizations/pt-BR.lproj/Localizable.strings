@@ -570,3 +570,5 @@
 "Renames the account" = "Renomeia a conta";
 "Edits the account" = "Edita a conta";
 "%@, %@, %lld percent of spending" = "%1$@, %2$@, %3$lld por cento dos gastos";
+"Import from Another App" = "Importar de outro app";
+"Icon" = "Ícone";

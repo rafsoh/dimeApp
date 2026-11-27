@@ -570,3 +570,5 @@
 "Renames the account" = "Wijzigt de naam van de rekening";
 "Edits the account" = "Bewerkt de rekening";
 "%@, %@, %lld percent of spending" = "%1$@, %2$@, %3$lld procent van de uitgaven";
+"Import from Another App" = "Importeren uit een andere app";
+"Icon" = "Pictogram";

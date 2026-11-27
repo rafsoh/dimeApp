@@ -570,3 +570,5 @@
 "Renames the account" = "계좌 이름을 변경합니다";
 "Edits the account" = "계좌를 편집합니다";
 "%@, %@, %lld percent of spending" = "%1$@, %2$@, 지출의 %3$lld%%";
+"Import from Another App" = "다른 앱에서 가져오기";
+"Icon" = "아이콘";

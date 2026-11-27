@@ -570,3 +570,5 @@
 "Renames the account" = "口座の名前を変更します";
 "Edits the account" = "口座を編集します";
 "%@, %@, %lld percent of spending" = "%1$@、%2$@、支出の%3$lld%%";
+"Import from Another App" = "ほかのアプリから読み込む";
+"Icon" = "アイコン";

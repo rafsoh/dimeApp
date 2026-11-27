@@ -570,3 +570,5 @@
 "Renames the account" = "Hesabı yeniden adlandırır";
 "Edits the account" = "Hesabı düzenler";
 "%@, %@, %lld percent of spending" = "%1$@, %2$@, harcamaların %%%3$lld kadarı";
+"Import from Another App" = "Başka bir uygulamadan içe aktar";
+"Icon" = "Simge";
