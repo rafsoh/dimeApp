@@ -54,26 +54,59 @@ The empty-store and below-backup issues are sent once per app version so a launc
 
 ## Uploading dSYMs
 
-Release builds of the `dime` target run `app/scripts/upload-dsyms.sh` after the other build phases. The script does nothing unless `CONFIGURATION` is `Release` and `SENTRY_AUTH_TOKEN` is set. When both are set, a missing `sentry-cli` or a failed upload fails the build so a release cannot ship without symbols by accident. Debug builds, including CI tests, skip the upload.
+Release and Archive builds upload each shipping target's dSYM. The run script phase "Upload Debug Symbols" is on `dime`, `ExpenditureWidgetExtension`, `BudgetIntent`, and `BudgetIntentUI`, and it runs `app/scripts/upload-dsyms.sh` last. Shortcuts are compiled into the app, so they are in the app dSYM. The test target does not upload.
 
-Create a Sentry organization token (scope `org:ci`) in Settings > Organization Tokens, then expose it as `SENTRY_AUTH_TOKEN`. `scripts/testflight.sh` sources `~/.appstoreconnect/testflight.env`, so an `export SENTRY_AUTH_TOKEN=...` line there reaches the archive. Do not commit the token, and do not put it in the build phase. `.sentryclirc` is gitignored.
+The phase runs only when `CONFIGURATION` is `Release` or the build action is an archive (`ACTION=install`). Debug builds, including the GitHub Actions test job, skip it. Project Release already sets `DEBUG_INFORMATION_FORMAT` to `dwarf-with-dsym`, and each shipping target sets the same value on its Release configuration so an extension cannot ship without a dSYM. `ENABLE_USER_SCRIPT_SANDBOXING` is `NO` so the phase can read the dSYM directory and `~/.sentryclirc`.
 
-Install the CLI on the machine that archives:
+A missing `sentry-cli`, a missing token, a missing dSYM, or a failed upload prints a warning and exits 0. The build is not failed. That includes Debug builds, simulator builds, and forks that do not have a token.
+
+### Where the token lives
+
+The token is never committed and is never passed as a command argument. The script checks, in order:
+
+1. The `SENTRY_AUTH_TOKEN` environment variable.
+2. A gitignored `.sentryclirc` at the repository root.
+3. `~/.sentryclirc`.
+
+Org `dime-1x` and project `dime-ios` are set by the script. They are not secret. The org is on the US region (`sentry.io`), which is sentry-cli's default host.
+
+Create an organization auth token with debug-file upload permission (`project:releases`) under Sentry → Settings → Organization Tokens.
+
+Local archives: put this in `~/.sentryclirc` (or in `.sentryclirc` at the repo root):
+
+```ini
+[auth]
+token=YOUR_TOKEN
+```
+
+Or export `SENTRY_AUTH_TOKEN` in the shell before opening Xcode. Quit and reopen Xcode if it was already open, so the GUI process inherits the variable. Do not put the token in the build phase.
+
+Install the CLI on the machine that archives. The script looks on `PATH`, then Homebrew on Apple Silicon (`/opt/homebrew/bin/sentry-cli`) and Intel (`/usr/local/bin/sentry-cli`), then a `sentry-cli` binary inside the Sentry Cocoa SPM checkout if that package ever provides one. The 9.35.0 package does not, so Homebrew is the path to use:
 
 ```sh
 brew install getsentry/tools/sentry
 ```
 
-For a local archive, put the token in the scheme's environment or in the shell before opening Xcode. For Xcode Cloud, add `SENTRY_AUTH_TOKEN` as a secret environment variable and install the CLI in `ci_scripts/ci_post_clone.sh`:
+### CI
+
+This repo does not archive on CI. `.github/workflows/ios.yml` runs tests in Debug and does not upload symbols. There is no Xcode Cloud `ci_scripts` directory.
+
+The variable name, if a release archive is added later, is `SENTRY_AUTH_TOKEN`:
+
+- GitHub Actions: a repository secret named `SENTRY_AUTH_TOKEN`, passed to the archive step as the environment variable `SENTRY_AUTH_TOKEN`.
+- Xcode Cloud: a secret environment variable named `SENTRY_AUTH_TOKEN` on the workflow. Install the CLI in `ci_scripts/ci_post_clone.sh` with `brew install getsentry/tools/sentry`, because the image may not include it. The build phase reads the same variable.
+
+### Verifying an upload
+
+Archive the `dime` scheme (Product → Archive) with a token and sentry-cli installed. The build log should include `Sentry: dSYM upload finished for dime` and the same line for `ExpenditureWidgetExtension`, `BudgetIntent`, and `BudgetIntentUI`.
+
+Then list what Sentry stored:
 
 ```sh
-#!/bin/sh
-brew install getsentry/tools/sentry
+sentry-cli debug-files list --org dime-1x --project dime-ios
 ```
 
-The existing GitHub Actions workflow runs tests in Debug and does not archive, so it does not upload symbols. An archive job only needs the secret in the environment; the build phase picks it up.
-
-The build phase hides environment variables in the log (`showEnvVarsInLog = 0`). The script never prints the token.
+Match a UUID from that list to the archive with `dwarfdump --uuid` on the `.dSYM` inside the `.xcarchive`. The same files are listed in the Sentry UI under dime-ios → Settings → Debug Files. A crash from a build that uploaded its dSYMs shows file, function, and line. An older event stays unsymbolicated until it is reprocessed.
 
 ## App Store privacy
 
