@@ -21,6 +21,19 @@ enum AutoCategoryGlimmerStyle {
     static var ring: Gradient {
         Gradient(colors: colours + [colours[0]])
     }
+
+    #if DEBUG
+    /// Screenshots only: `-autoCategoryGlimmerPhase 0.4` holds the glimmer at that point of its sweep.
+    static let heldPhase: Double? = {
+        let arguments = ProcessInfo.processInfo.arguments
+        guard let index = arguments.firstIndex(of: "-autoCategoryGlimmerPhase"), index + 1 < arguments.count else {
+            return nil
+        }
+        return Double(arguments[index + 1])
+    }()
+    #else
+    static let heldPhase: Double? = nil
+    #endif
 }
 
 extension View {
@@ -75,7 +88,7 @@ private struct GlimmerBand: View {
                         .opacity(0.35 + 0.3 * sin(time * 2.2))
                 } else {
                     let band = max(proxy.size.width * 0.5, 140)
-                    let progress = CGFloat(time.truncatingRemainder(dividingBy: Self.period) / Self.period)
+                    let progress = CGFloat(AutoCategoryGlimmerStyle.heldPhase ?? time.truncatingRemainder(dividingBy: Self.period) / Self.period)
 
                     LinearGradient(colors: [.clear] + AutoCategoryGlimmerStyle.colours + [.clear], startPoint: .leading, endPoint: .trailing)
                         .frame(width: band)
@@ -96,7 +109,7 @@ struct AutoCategoryTileRing: View {
 
     var body: some View {
         TimelineView(.animation(paused: reduceMotion)) { timeline in
-            let degrees = (timeline.date.timeIntervalSinceReferenceDate * 200).truncatingRemainder(dividingBy: 360)
+            let degrees = AutoCategoryGlimmerStyle.heldPhase.map { $0 * 360 } ?? (timeline.date.timeIntervalSinceReferenceDate * 200).truncatingRemainder(dividingBy: 360)
             let gradient = AngularGradient(gradient: AutoCategoryGlimmerStyle.ring, center: .center, angle: .degrees(degrees))
             let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
 
