@@ -1,8 +1,12 @@
-Novità di Dime 3.0.2
+Novità di Dime 3.0.3
 
-• Riporto del budget: ciò che avanza in un budget, o ciò che hai speso in eccesso, passa al periodo successivo. Attivalo quando crei o modifichi un budget.
-• I modelli di Aggiunta rapida ora appaiono in una griglia simile al widget. Tieni premuto un modello e trascinalo per riordinarlo.
-• Quando elimini una categoria, Dime ti chiede se spostare le sue transazioni in un'altra categoria o eliminarle.
-• Nuovi font in Impostazioni > Aspetto: SF Pro, Allo, Atkinson Hyperlegible, Fraunces e Geist Pixel.
-• Dime è ora disponibile in spagnolo, tedesco, portoghese, italiano, olandese, turco, giapponese, coreano e cinese (semplificato e tradizionale).
-• I rapporti anonimi sugli arresti anomali aiutano a trovare e correggere i bug. Non includono mai transazioni, importi, note o categorie.
+• Dime è ora disponibile in altre 15 lingue: hindi, bengalese, marathi, telugu, tamil, gujarati, kannada, malayalam, punjabi, oriya, urdu, indonesiano, malese, vietnamita e thailandese.
+• Su iPhone Duo, i pulsanti dei pannelli ora si trovano nella barra laterale.
+
+Correzioni
+• Risolti gli arresti anomali al primo avvio dopo un aggiornamento.
+• Se Dime non riesce ad aprire i tuoi dati, ora spiega cosa è successo e ti permette di riprovare invece di chiudersi. I tuoi dati sono al sicuro.
+• Dime ora ti avvisa quando una modifica non può essere salvata, ad esempio quando l'iPhone non ha spazio, e riprova più tardi.
+• Le tue voci non sembrano più scomparse quando sei disconnesso da iCloud con la sincronizzazione attiva.
+• Risolto un arresto anomalo quando una categoria veniva eliminata mentre modificavi una transazione.
+• Risolti arresti anomali e blocchi in Budget, Analisi, registro e tastiera emoji.

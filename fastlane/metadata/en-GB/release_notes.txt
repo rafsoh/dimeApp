@@ -1,8 +1,12 @@
-New in Dime 3.0.2
+New in Dime 3.0.3
 
-• Budget rollover: carry what's left in a budget, or what you overspent, into the next period. Turn it on when you create or edit a budget.
-• Quick Add templates now appear as a grid that looks like the widget. Hold and drag a template to reorder it.
-• Deleting a category now asks whether to move its transactions to another category or delete them.
-• New fonts in Settings > Appearance: SF Pro, Allo, Atkinson Hyperlegible, Fraunces and Geist Pixel.
-• Dime is now available in Spanish, German, Portuguese, Italian, Dutch, Turkish, Japanese, Korean and Chinese (Simplified and Traditional).
-• Anonymous crash reports help find and fix bugs. They never include your transactions, amounts, notes or categories.
+• Dime is now available in 15 more languages: Hindi, Bengali, Marathi, Telugu, Tamil, Gujarati, Kannada, Malayalam, Punjabi, Odia, Urdu, Indonesian, Malay, Vietnamese and Thai.
+• On iPhone Duo, the buttons in sheets now sit in the side bar.
+
+Fixes
+• Fixed crashes on the first launch after updating.
+• If Dime can't open your data, it now explains what happened and lets you try again instead of crashing. Your entries stay safe.
+• Dime now tells you when a change can't be saved, for example when your iPhone is out of storage, and tries again later.
+• Your entries no longer look missing when you're signed out of iCloud with sync turned on.
+• Fixed a crash when a category was deleted while you were editing a transaction.
+• Fixed crashes and freezes in Budgets, Insights, the log and the emoji keyboard.
