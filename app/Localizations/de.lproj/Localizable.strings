@@ -539,3 +539,8 @@
 
 "Font" = "Schrift";
 "Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo ist eine Schrift von Josh Puckett, lizenziert unter der SIL Open Font License.";
+
+"Calculator" = "Rechner";
+"Can't Divide by Zero" = "Division durch null nicht möglich";
+"Total Can't Be Negative" = "Summe kann nicht negativ sein";
+"Total Is Too Large" = "Summe ist zu groß";

@@ -539,3 +539,8 @@
 
 "Font" = "Yazı Tipi";
 "Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo, Josh Puckett'ın SIL Open Font License ile lisanslanan yazı tipidir.";
+
+"Calculator" = "Hesap Makinesi";
+"Can't Divide by Zero" = "Sıfıra bölünemez";
+"Total Can't Be Negative" = "Toplam negatif olamaz";
+"Total Is Too Large" = "Toplam çok büyük";

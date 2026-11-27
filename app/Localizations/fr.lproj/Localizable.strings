@@ -551,3 +551,8 @@
 
 "Font" = "Police";
 "Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo est une police de Josh Puckett, sous licence SIL Open Font License.";
+
+"Calculator" = "Calculatrice";
+"Can't Divide by Zero" = "Division par zéro impossible";
+"Total Can't Be Negative" = "Le total ne peut pas être négatif";
+"Total Is Too Large" = "Le total est trop élevé";

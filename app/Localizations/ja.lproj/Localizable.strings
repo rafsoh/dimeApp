@@ -539,3 +539,8 @@
 
 "Font" = "フォント";
 "Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "AlloはJosh Puckettによる書体で、SIL Open Font Licenseのもとで提供されています。";
+
+"Calculator" = "計算機";
+"Can't Divide by Zero" = "0で割ることはできません";
+"Total Can't Be Negative" = "合計をマイナスにはできません";
+"Total Is Too Large" = "合計が大きすぎます";

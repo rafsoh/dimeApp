@@ -539,3 +539,8 @@
 
 "Font" = "서체";
 "Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo는 Josh Puckett이 만든 서체로, SIL Open Font License에 따라 제공됩니다.";
+
+"Calculator" = "계산기";
+"Can't Divide by Zero" = "0으로 나눌 수 없음";
+"Total Can't Be Negative" = "합계는 음수일 수 없음";
+"Total Is Too Large" = "합계가 너무 큼";

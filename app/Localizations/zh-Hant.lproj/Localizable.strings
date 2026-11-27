@@ -539,3 +539,8 @@
 
 "Font" = "字體";
 "Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo 是 Josh Puckett 設計的字體，採用 SIL Open Font License 授權。";
+
+"Calculator" = "計算機";
+"Can't Divide by Zero" = "無法除以零";
+"Total Can't Be Negative" = "總額不能為負數";
+"Total Is Too Large" = "總額過大";

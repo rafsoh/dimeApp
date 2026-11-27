@@ -198,3 +198,133 @@ final class CurrencyPreferencesTests: XCTestCase {
         XCTAssertEqual(AmountEntry.truncated(1.005, fractionDigits: 3), 1.005, accuracy: 1e-12)
     }
 }
+
+final class CalculatorExpressionTests: XCTestCase {
+    /// Types keys the way the pad would: digits, ".", + - * / and < for delete.
+    private func typed(_ keys: String, fractionDigits: Int = 2) -> CalculatorExpression {
+        var sum = CalculatorExpression()
+
+        for key in keys {
+            switch key {
+            case "0"..."9":
+                sum.append(digit: Int(String(key))!, fractionDigits: fractionDigits)
+            case ".":
+                sum.appendDecimalPoint(fractionDigits: fractionDigits)
+            case "+":
+                sum.apply(.add)
+            case "-":
+                sum.apply(.subtract)
+            case "*":
+                sum.apply(.multiply)
+            case "/":
+                sum.apply(.divide)
+            case "<":
+                sum.deleteLast()
+            default:
+                XCTFail("No key for \(key)")
+            }
+        }
+
+        return sum
+    }
+
+    func testSplittingABill() {
+        let sum = typed("86.40/3")
+        XCTAssertEqual(sum.text(), "86.40 ÷ 3")
+        XCTAssertEqual(sum.total(fractionDigits: 2), .success(28.8))
+    }
+
+    func testTimesAndDivideGoFirst() {
+        XCTAssertEqual(typed("2+3*4").total(fractionDigits: 2), .success(14))
+        XCTAssertEqual(typed("10-4/2").total(fractionDigits: 2), .success(8))
+        XCTAssertEqual(typed("4.50+12.90+3.20").total(fractionDigits: 2), .success(20.6))
+    }
+
+    func testRoundsOnceAtTheEnd() {
+        XCTAssertEqual(typed("10/3").total(fractionDigits: 2), .success(3.33))
+        XCTAssertEqual(typed("0.1+0.2").total(fractionDigits: 2), .success(0.3))
+        XCTAssertEqual(typed("10/3*3").total(fractionDigits: 2), .success(10))
+        XCTAssertEqual(typed("1000/3", fractionDigits: 0).total(fractionDigits: 0), .success(333))
+    }
+
+    func testAnOperatorWaitingForItsNumberIsIgnored() {
+        let sum = typed("12.50+")
+        XCTAssertEqual(sum.pendingOperator, .add)
+        XCTAssertEqual(sum.total(fractionDigits: 2), .success(12.5))
+    }
+
+    func testASecondOperatorReplacesTheFirst() {
+        let sum = typed("5+*2")
+        XCTAssertEqual(sum.text(), "5 × 2")
+        XCTAssertEqual(sum.total(fractionDigits: 2), .success(10))
+    }
+
+    func testAnOperatorNeedsANumberFirst() {
+        var sum = CalculatorExpression()
+        XCTAssertFalse(sum.apply(.add))
+        XCTAssertTrue(sum.isEmpty)
+    }
+
+    func testAmountsTakeTheCurrencysDecimalsAndFactorsTakeMore() {
+        XCTAssertEqual(typed("1.234").text(), "1.23")
+        XCTAssertEqual(typed("64*1.15").total(fractionDigits: 2), .success(73.6))
+        XCTAssertEqual(typed("100*1.08255").text(), "100 × 1.0825")
+        XCTAssertEqual(typed("1.234", fractionDigits: 3).text(), "1.234")
+    }
+
+    func testZeroDecimalCurrencies() {
+        XCTAssertEqual(typed("12.5", fractionDigits: 0).text(), "125")
+        XCTAssertEqual(typed("1000*1.1", fractionDigits: 0).total(fractionDigits: 0), .success(1100))
+    }
+
+    func testTypingNumbers() {
+        XCTAssertEqual(typed("05").text(), "5")
+        XCTAssertEqual(typed(".5").text(), "0.5")
+        XCTAssertEqual(typed("12..5").text(), "12.5")
+        XCTAssertEqual(typed("12.+3").text(), "12 + 3")
+        XCTAssertEqual(typed("1234567890").text(), "123456789")
+    }
+
+    func testDeleteRemovesOperatorsToo() {
+        XCTAssertEqual(typed("12+3<").text(), "12 +")
+        XCTAssertEqual(typed("12+3<<").text(), "12")
+        XCTAssertTrue(typed("12+3<<<<").isEmpty)
+        XCTAssertTrue(typed("<").isEmpty)
+    }
+
+    func testWhatCantBeWorkedOut() {
+        XCTAssertEqual(typed("5/0").total(fractionDigits: 2), .failure(.divisionByZero))
+        XCTAssertEqual(typed("5-8").total(fractionDigits: 2), .failure(.negative))
+        XCTAssertEqual(typed("5-5").total(fractionDigits: 2), .success(0))
+        XCTAssertEqual(typed("99999999*2").total(fractionDigits: 2), .failure(.tooLarge))
+    }
+
+    func testEqualsPutsTheTotalInPlaceOfTheSum() {
+        var sum = typed("86.40/3")
+        XCTAssertEqual(sum.collapse(fractionDigits: 2), .success(28.8))
+        XCTAssertEqual(sum.text(), "28.80")
+        XCTAssertFalse(sum.hasOperator)
+
+        sum.apply(.add)
+        sum.append(digit: 1, fractionDigits: 2)
+        XCTAssertEqual(sum.total(fractionDigits: 2), .success(29.8))
+
+        var broken = typed("5/0")
+        XCTAssertEqual(broken.collapse(fractionDigits: 2), .failure(.divisionByZero))
+        XCTAssertEqual(broken.text(), "5 ÷ 0")
+
+        var empty = typed("5-5")
+        empty.collapse(fractionDigits: 2)
+        XCTAssertTrue(empty.isEmpty)
+    }
+
+    func testStartingFromAnAmount() {
+        XCTAssertEqual(CalculatorExpression(number: "12.").text(), "12.")
+        XCTAssertEqual(CalculatorExpression(number: "12.50").text(), "12.50")
+        XCTAssertTrue(CalculatorExpression(number: "0").isEmpty)
+        XCTAssertEqual(CalculatorExpression(amount: 5.8, fractionDigits: 2).text(), "5.80")
+        XCTAssertEqual(CalculatorExpression(amount: 12, fractionDigits: 2).text(), "12")
+        XCTAssertTrue(CalculatorExpression(amount: 0, fractionDigits: 2).isEmpty)
+        XCTAssertEqual(typed("8.6/3").text(decimalSeparator: ","), "8,6 ÷ 3")
+    }
+}

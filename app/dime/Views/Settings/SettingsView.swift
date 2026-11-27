@@ -105,6 +105,10 @@ struct SettingsView: View {
   @AppStorage("showCents", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
   var showCents: Bool = true
 
+  /// Shows a button beside the amount that brings up + − × ÷ above the number pad.
+  @AppStorage("showCalculator", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+  var showCalculator: Bool = false
+
   @AppStorage("animated", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var animated:
     Bool = true
 
@@ -203,6 +207,13 @@ struct SettingsView: View {
                   systemImage: "keyboard.fill", title: "Number Entry", colour: 104,
                   optionalText: numberEntryString)
               }
+
+              ToggleRow(
+                icon: "plus.forwardslash.minus", color: "115", text: "Calculator", bool: showCalculator,
+                smaller: true,
+                onTap: {
+                  showCalculator.toggle()
+                })
 
               ToggleRow(
                 icon: "faceid", color: "105", text: "Authentication",

@@ -539,3 +539,8 @@
 
 "Font" = "Lettertype";
 "Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo is een lettertype van Josh Puckett, gelicentieerd onder de SIL Open Font License.";
+
+"Calculator" = "Rekenmachine";
+"Can't Divide by Zero" = "Kan niet delen door nul";
+"Total Can't Be Negative" = "Totaal kan niet negatief zijn";
+"Total Is Too Large" = "Totaal is te groot";

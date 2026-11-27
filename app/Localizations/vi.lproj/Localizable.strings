@@ -553,3 +553,8 @@
 
 "Font" = "Phông chữ";
 "Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo là kiểu chữ của Josh Puckett, được cấp phép theo SIL Open Font License.";
+
+"Calculator" = "Máy tính";
+"Can't Divide by Zero" = "Không thể chia cho 0";
+"Total Can't Be Negative" = "Tổng không thể là số âm";
+"Total Is Too Large" = "Tổng quá lớn";
