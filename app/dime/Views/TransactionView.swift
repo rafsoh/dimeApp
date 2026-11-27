@@ -23,6 +23,8 @@ struct TransactionView: View {
 
     @State private var note = ""
     @State var category: Category?
+    /// The category the page opened with, so saving only changes it when the user did.
+    @State private var openedCategory: Category?
     @State private var date = Date.now
     @State private var repeatType = 0
     @State private var repeatCoefficient = 1
@@ -1023,11 +1025,16 @@ struct TransactionView: View {
                 editedTransaction.note = note.trimmingCharacters(in: .whitespaces)
             }
 
-            // A category removed on purpose isn't put back by Apple Intelligence.
-            let removedCategory = editedTransaction.category != nil && category == nil
+            // Only a category changed on this page is saved, so one Apple Intelligence filed while the page
+            // was open stays. Assigned even when nil, so an edit can remove the category.
+            if category != openedCategory {
+                editedTransaction.category = category
 
-            // Assigned even when nil, so an edit can remove the category.
-            editedTransaction.category = category
+                // A category taken away on purpose stays away: Apple Intelligence never puts one back.
+                if category == nil {
+                    dataController.autoCategoryQueue.keepUncategorised(editedTransaction)
+                }
+            }
 
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 // Sync can still delete it during this delay.
@@ -1075,9 +1082,8 @@ struct TransactionView: View {
                     }
                 }
 
-                if !removedCategory {
-                    AutoCategorizer.shared.categoriseIfNeeded([editedTransaction] + occurrences)
-                }
+                // Feature Lab: still without a category, and not because the user took it away.
+                AutoCategorizer.shared.categoriseIfNeeded([editedTransaction] + occurrences)
             }
 
             dismiss()
@@ -1178,6 +1184,7 @@ struct TransactionView: View {
 
             if let unwrappedCategory = transaction.category {
                 _category = State(initialValue: unwrappedCategory)
+                _openedCategory = State(initialValue: unwrappedCategory)
             }
 
             if let accounts = transaction.transferAccounts {

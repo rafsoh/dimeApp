@@ -48,18 +48,22 @@ final class AutoCategorizerTests: XCTestCase {
 
     private let suiteName = "AutoCategorizerTests"
     private lazy var defaults = UserDefaults(suiteName: suiteName)!
+    private lazy var queue = AutoCategoryQueue(defaults: defaults)
     private let chooser = FakeChooser()
-    private lazy var categorizer = AutoCategorizer(defaults: defaults, minimumGlimmer: 0, makeChooser: { [chooser] in chooser })
+    private lazy var categorizer = AutoCategorizer(queue: queue, minimumGlimmer: 0, makeChooser: { [chooser] in chooser })
 
     /// Category names unique to the run, as the store can hold the user's own.
     private let tag = UUID().uuidString.prefix(6)
 
     override func setUpWithError() throws {
         defaults.removePersistentDomain(forName: suiteName)
-        defaults.set(true, forKey: AutoCategorizer.enabledKey)
+        defaults.set(true, forKey: AutoCategoryQueue.enabledKey)
+        // What Shortcuts, Quick Add and recurring transactions queue lands in this test's queue.
+        dataController.autoCategoryQueue = queue
     }
 
     override func tearDownWithError() throws {
+        dataController.autoCategoryQueue = AutoCategoryQueue()
         for object in created where !object.isGone {
             context.delete(object)
         }
@@ -203,12 +207,7 @@ final class AutoCategorizerTests: XCTestCase {
     @MainActor
     func testRecurringOccurrencesAreFiledToo() async throws {
         let fun = makeCategory("Fun")
-        let calendar = Calendar.current
-        let start = try XCTUnwrap(calendar.date(byAdding: .month, value: -2, to: calendar.startOfDay(for: .now)))
-        let streaming = makeTransaction(note: "Netflix", date: start)
-        streaming.onceRecurring = true
-        streaming.recurringType = 3
-        streaming.recurringCoefficient = 1
+        let streaming = makeRecurring(note: "Netflix", monthsAgo: 2)
 
         var occurrences: [Transaction] = []
         dataController.updateRecurringTransaction(transaction: streaming) { occurrences.append($0) }
@@ -232,7 +231,7 @@ final class AutoCategorizerTests: XCTestCase {
         _ = makeCategory("Food")
         let lunch = makeTransaction(note: "Lunch")
         try context.save()
-        defaults.set(false, forKey: AutoCategorizer.enabledKey)
+        defaults.set(false, forKey: AutoCategoryQueue.enabledKey)
 
         XCTAssertNil(categorizer.categoriseIfNeeded([lunch]))
         XCTAssertTrue(categorizer.pending.isEmpty)
@@ -243,7 +242,7 @@ final class AutoCategorizerTests: XCTestCase {
         _ = makeCategory("Food")
         let lunch = makeTransaction(note: "Lunch")
         try context.save()
-        let noModel = AutoCategorizer(defaults: defaults, minimumGlimmer: 0, makeChooser: { nil })
+        let noModel = AutoCategorizer(queue: queue, minimumGlimmer: 0, makeChooser: { nil })
 
         XCTAssertNil(noModel.categoriseIfNeeded([lunch]))
         XCTAssertTrue(noModel.pending.isEmpty)
@@ -263,11 +262,167 @@ final class AutoCategorizerTests: XCTestCase {
     }
 
     func testMeaningfulText() {
-        XCTAssertTrue(AutoCategorizer.hasMeaningfulText("Kopi"))
-        XCTAssertTrue(AutoCategorizer.hasMeaningfulText("拉面"))
-        XCTAssertTrue(AutoCategorizer.hasMeaningfulText("🍕"))
-        XCTAssertFalse(AutoCategorizer.hasMeaningfulText("  "))
-        XCTAssertFalse(AutoCategorizer.hasMeaningfulText("123 #4 - 5.00"))
+        XCTAssertTrue(AutoCategoryQueue.hasMeaningfulText("Kopi"))
+        XCTAssertTrue(AutoCategoryQueue.hasMeaningfulText("拉面"))
+        XCTAssertTrue(AutoCategoryQueue.hasMeaningfulText("🍕"))
+        XCTAssertFalse(AutoCategoryQueue.hasMeaningfulText("  "))
+        XCTAssertFalse(AutoCategoryQueue.hasMeaningfulText("123 #4 - 5.00"))
+    }
+
+    // MARK: The user's choice sticks
+
+    func testACategoryTheUserRemovedIsNeverPutBack() throws {
+        _ = makeCategory("Food")
+        let lunch = makeTransaction(note: "Lunch")
+        try context.save()
+
+        queue.keepUncategorised(lunch)
+
+        XCTAssertFalse(queue.wantsCategory(lunch))
+        XCTAssertNil(categorizer.categoriseIfNeeded([lunch]))
+        XCTAssertFalse(queue.add([lunch]))
+        XCTAssertTrue(chooser.questions.isEmpty)
+    }
+
+    @MainActor
+    func testARemovalWhileTheModelThinksWins() async throws {
+        let food = makeCategory("Food")
+        let lunch = makeTransaction(note: "Lunch")
+        try context.save()
+        chooser.answer = food.wrappedName
+        chooser.whileThinking = { [queue] in queue.keepUncategorised(lunch) }
+
+        await categorizer.categoriseIfNeeded([lunch])?.value
+
+        XCTAssertNil(lunch.category)
+        XCTAssertTrue(queue.entries.isEmpty)
+    }
+
+    func testOccurrencesOfARecurringTransactionLeftUncategorisedStayThatWay() throws {
+        _ = makeCategory("Fun")
+        let streaming = makeRecurring(note: "Netflix", monthsAgo: 2)
+        queue.keepUncategorised(streaming)
+
+        var occurrences: [Transaction] = []
+        dataController.updateRecurringTransaction(transaction: streaming) { occurrences.append($0) }
+        for occurrence in occurrences {
+            created.append(occurrence)
+        }
+
+        XCTAssertFalse(occurrences.isEmpty)
+        XCTAssertTrue(queue.entries.isEmpty)
+        XCTAssertTrue(occurrences.allSatisfy { queue.isKeptUncategorised($0) })
+    }
+
+    // MARK: Shortcuts, Quick Add and recurring transactions
+
+    @MainActor
+    func testAShortcutOrQuickAddTransactionIsQueuedThenFiled() async throws {
+        let coffee = makeCategory("Coffee")
+        let template = TemplateTransaction(context: context)
+        template.id = UUID()
+        template.note = "Flat white"
+        template.amount = 5
+        template.order = 99
+        created.append(template)
+        try context.save()
+        chooser.answer = coffee.wrappedName
+
+        // Quick Add and the New Transaction shortcut both log through newTransaction.
+        let logged = dataController.logQuickAddTemplate(template)
+        created.append(logged)
+
+        XCTAssertNotNil(queue.entries[try XCTUnwrap(logged.id)], "Queued, so a widget's transaction is categorised when Dime opens")
+
+        await categorizer.waitForCategory(of: logged, upTo: 5)
+
+        XCTAssertEqual(logged.category, coffee)
+        XCTAssertTrue(queue.entries.isEmpty)
+    }
+
+    func testImportsAndSwitchedOffSavesAreNotQueued() throws {
+        _ = makeCategory("Food")
+
+        let imported = dataController.insertTransaction(note: "Imported lunch", category: nil, income: false, amount: 5, date: .now)
+        created.append(imported)
+        try context.save()
+        XCTAssertTrue(queue.entries.isEmpty)
+
+        defaults.set(false, forKey: AutoCategoryQueue.enabledKey)
+        let logged = dataController.newTransaction(note: "Lunch", category: nil, income: false, amount: 5, date: .now, repeatType: 0, repeatCoefficient: 1, delay: false)
+        created.append(logged)
+        XCTAssertTrue(queue.entries.isEmpty)
+    }
+
+    @MainActor
+    func testNewRecurringOccurrencesAreFiledWithOneQuestion() async throws {
+        let fun = makeCategory("Fun")
+        let streaming = makeRecurring(note: "Spotify", monthsAgo: 2)
+        try context.save()
+        chooser.answer = fun.wrappedName
+
+        // As when Dime opens and logs the occurrences that came due.
+        var occurrences: [Transaction] = []
+        dataController.updateRecurringTransaction(transaction: streaming) { occurrences.append($0) }
+        for occurrence in occurrences {
+            created.append(occurrence)
+        }
+        XCTAssertEqual(queue.entries.count, occurrences.count)
+
+        let first = try XCTUnwrap(occurrences.first)
+        await categorizer.waitForCategory(of: first, upTo: 5)
+
+        XCTAssertEqual(chooser.questions.count, 1, "Occurrences with the same note are asked about together")
+        XCTAssertTrue(occurrences.allSatisfy { $0.category == fun })
+        XCTAssertTrue(queue.entries.isEmpty)
+    }
+
+    @MainActor
+    func testFailedTriesAreRetriedThenForgotten() async throws {
+        _ = makeCategory("Food")
+        let lunch = makeTransaction(note: "Lunch")
+        try context.save()
+        chooser.error = ModelUnavailable()
+        let id = try XCTUnwrap(lunch.id)
+
+        for attempt in 1 ..< AutoCategoryQueue.maximumAttempts {
+            await categorizer.categoriseIfNeeded([lunch])?.value
+            XCTAssertEqual(queue.entries[id]?.attempts, attempt, "Kept for another try")
+        }
+
+        await categorizer.categoriseIfNeeded([lunch])?.value
+        XCTAssertNil(queue.entries[id])
+        XCTAssertNil(lunch.category)
+    }
+
+    func testTheQueueForgetsWhatNoLongerNeedsACategory() throws {
+        let food = makeCategory("Food")
+        let lunch = makeTransaction(note: "Lunch")
+        try context.save()
+        XCTAssertTrue(queue.add([lunch], announce: false))
+
+        lunch.category = food
+        try context.save()
+        categorizer.processQueue()
+
+        XCTAssertTrue(queue.entries.isEmpty)
+        XCTAssertTrue(chooser.questions.isEmpty)
+    }
+
+    func testOldEntriesExpireAndSwitchingOffClearsTheQueue() throws {
+        _ = makeCategory("Food")
+        let lunch = makeTransaction(note: "Lunch")
+        let dinner = makeTransaction(note: "Dinner")
+        try context.save()
+        XCTAssertTrue(queue.add([lunch, dinner], announce: false))
+
+        queue.removeExpired(now: .now.addingTimeInterval(AutoCategoryQueue.lifetime + 60))
+        XCTAssertTrue(queue.entries.isEmpty)
+
+        XCTAssertTrue(queue.add([lunch], announce: false))
+        defaults.set(false, forKey: AutoCategoryQueue.enabledKey)
+        categorizer.processQueue()
+        XCTAssertTrue(queue.entries.isEmpty)
     }
 
     // MARK: What it offers
@@ -335,6 +490,17 @@ final class AutoCategorizerTests: XCTestCase {
         category.dateCreated = .now
         created.append(category)
         return category
+    }
+
+    /// A monthly transaction that started some months ago, so occurrences have come due since.
+    private func makeRecurring(note: String, monthsAgo: Int) -> Transaction {
+        let calendar = Calendar.current
+        let start = calendar.date(byAdding: .month, value: -monthsAgo, to: calendar.startOfDay(for: .now)) ?? .now
+        let recurring = makeTransaction(note: note, date: start)
+        recurring.onceRecurring = true
+        recurring.recurringType = 3
+        recurring.recurringCoefficient = 1
+        return recurring
     }
 
     private func makeTransaction(note: String, income: Bool = false, category: dime.Category? = nil, date: Date = .now) -> Transaction {

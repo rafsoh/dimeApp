@@ -126,6 +126,10 @@ struct NewTransactionIntent: AppIntent {
 
         let transaction = dataController.newTransaction(note: note ?? "", category: category, income: isIncome, amount: amount, currencyCode: currency, date: Date.now, repeatType: repeatType, repeatCoefficient: 1, delay: false)
 
+        // Feature Lab: without a category, Apple Intelligence picks one first, so the result shows it. If it
+        // can't (busy, or Dime in the background), the transaction stays queued for when Dime next opens.
+        await AutoCategorizer.shared.waitForCategory(of: transaction, upTo: 10)
+
         return .result(dialog: isIncome ? "Income successfully logged." : "Expense successfully logged.") {
             ShortcutTransactionView(transaction: transaction)
         }

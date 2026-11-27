@@ -43,35 +43,38 @@ enum AutoCategoryAvailability: Equatable {
 final class AutoCategorizer: ObservableObject {
     static let shared = AutoCategorizer()
 
-    /// The Feature Lab switch.
-    static let enabledKey = "autoCategorise"
-
     /// Transactions waiting on the model, so their rows can glimmer.
     @Published private(set) var pending: Set<NSManagedObjectID> = []
 
     /// The latest run for each pending transaction. An older run that finishes late leaves it alone.
     private var runs: [NSManagedObjectID: UUID] = [:]
 
-    private let defaults: UserDefaults?
+    /// The task of each pending transaction's latest run, for Shortcuts to wait on.
+    private var tasks: [NSManagedObjectID: Task<Void, Never>] = [:]
+
+    let queue: AutoCategoryQueue
     private let minimumGlimmer: TimeInterval
     private let makeChooser: () -> AutoCategoryChooser?
     private let logger = Logger(subsystem: "com.rafaelsoh.dime", category: "AutoCategorizer")
+
+    private var observers: [NSObjectProtocol] = []
+    private var processingScheduled = false
 
     /// - Parameters:
     ///   - minimumGlimmer: The shortest time a row glimmers, so a quick answer doesn't just flicker.
     ///   - makeChooser: The model to ask, or nil when there's none to use.
     init(
-        defaults: UserDefaults? = UserDefaults(suiteName: "group.com.rafaelsoh.dime"),
+        queue: AutoCategoryQueue = AutoCategoryQueue(),
         minimumGlimmer: TimeInterval = 1.2,
         makeChooser: @escaping () -> AutoCategoryChooser? = AutoCategorizer.systemChooser
     ) {
-        self.defaults = defaults
+        self.queue = queue
         self.minimumGlimmer = minimumGlimmer
         self.makeChooser = makeChooser
     }
 
     var isEnabled: Bool {
-        defaults?.bool(forKey: Self.enabledKey) == true
+        queue.isEnabled
     }
 
     // MARK: Availability
@@ -114,21 +117,120 @@ final class AutoCategorizer: ObservableObject {
         return nil
     }
 
-    // MARK: Categorising
+    // MARK: The queue
 
-    /// Whether the transaction is one to categorise: it has no category, and its note has words or emoji in it.
-    static func wantsCategory(_ transaction: Transaction) -> Bool {
-        guard !transaction.isGone, transaction.category == nil, !transaction.isTransfer else {
-            return false
+    /// Starts on queued transactions now and whenever more are queued or Dime comes back to the
+    /// foreground: Shortcuts and recurring transactions queue them in the app, widgets while it's closed.
+    @MainActor
+    func start() {
+        guard observers.isEmpty else {
+            return
         }
 
-        return hasMeaningfulText(transaction.wrappedNote)
+        let names = [
+            AutoCategoryQueue.didQueueNotification,
+            UIApplication.didBecomeActiveNotification,
+            DataController.dataIsCurrentNotification,
+        ]
+
+        for name in names {
+            let observer = NotificationCenter.default.addObserver(forName: name, object: nil, queue: nil) { [weak self] _ in
+                self?.scheduleProcessing()
+            }
+
+            observers.append(observer)
+        }
+
+        scheduleProcessing()
     }
 
-    /// A note of only numbers and punctuation can't say what something was, so it isn't worth asking about.
-    static func hasMeaningfulText(_ note: String) -> Bool {
-        note.unicodeScalars.contains { CharacterSet.letters.contains($0) || $0.properties.isEmojiPresentation }
+    /// Works through the queue on the main thread's next turn, once whatever queued them has saved.
+    /// Many requests in one turn make one pass.
+    func scheduleProcessing() {
+        DispatchQueue.main.async { [self] in
+            guard !processingScheduled else {
+                return
+            }
+
+            processingScheduled = true
+
+            DispatchQueue.main.async { [self] in
+                processingScheduled = false
+                processQueue()
+            }
+        }
     }
+
+    /// Asks the model about every queued transaction that isn't being categorised already. Recurring
+    /// occurrences share a note, so each note is asked about once.
+    func processQueue() {
+        guard isEnabled else {
+            // Switched off: nothing queued earlier is categorised later, out of the blue.
+            queue.clear()
+            return
+        }
+
+        queue.removeExpired()
+
+        let entries = queue.entries
+
+        guard !entries.isEmpty else {
+            return
+        }
+
+        let context = DataController.shared.container.viewContext
+        let request: NSFetchRequest<Transaction> = Transaction.fetchRequest()
+        request.predicate = NSPredicate(format: "id IN %@", argumentArray: [Array(entries.keys)])
+        request.sortDescriptors = [NSSortDescriptor(key: "date", ascending: true)]
+
+        // One that isn't found yet may still be on its way from a widget or iCloud, so it stays queued.
+        let found = (try? context.fetch(request)) ?? []
+        var settled: [UUID] = []
+        var groups: [String: [Transaction]] = [:]
+
+        for transaction in found where runs[transaction.objectID] == nil {
+            if queue.wantsCategory(transaction) {
+                let key = "\(transaction.income)|\(Self.trimmed(transaction.wrappedNote))"
+                groups[key, default: []].append(transaction)
+            } else if let id = transaction.id {
+                settled.append(id)
+            }
+        }
+
+        queue.remove(ids: settled)
+
+        for group in groups.values {
+            categoriseIfNeeded(group)
+        }
+    }
+
+    /// Waits for the transaction's category, for at most `seconds`, so a shortcut can show it. Starts on the
+    /// queue first if it hasn't yet.
+    @MainActor
+    func waitForCategory(of transaction: Transaction, upTo seconds: TimeInterval) async {
+        if tasks[transaction.objectID] == nil {
+            processQueue()
+        }
+
+        guard let run = tasks[transaction.objectID] else {
+            return
+        }
+
+        await withTaskGroup(of: Void.self) { group in
+            group.addTask {
+                await run.value
+            }
+
+            group.addTask {
+                try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+            }
+
+            _ = await group.next()
+            group.cancelAll()
+        }
+    }
+
+    // MARK: Categorising
 
     /// Asks the model to file the transactions under a category, when the Feature Lab switch is on and they
     /// have a note but no category. Call it once they're saved. The first is the one the user logged; any
@@ -137,7 +239,7 @@ final class AutoCategorizer: ObservableObject {
     /// - Returns: The run, for tests to wait on, or nil when there's nothing to ask.
     @discardableResult
     func categoriseIfNeeded(_ transactions: [Transaction]) -> Task<Void, Never>? {
-        guard isEnabled, let logged = transactions.first, Self.wantsCategory(logged),
+        guard isEnabled, let logged = transactions.first, queue.wantsCategory(logged),
               let context = logged.managedObjectContext, let chooser = makeChooser()
         else {
             return nil
@@ -145,7 +247,7 @@ final class AutoCategorizer: ObservableObject {
 
         let note = Self.trimmed(logged.wrappedNote)
         let income = logged.income
-        let batch = transactions.filter { Self.wantsCategory($0) && $0.income == income && Self.trimmed($0.wrappedNote) == note }
+        let batch = transactions.filter { queue.wantsCategory($0) && $0.income == income && Self.trimmed($0.wrappedNote) == note }
 
         let candidates = Self.candidates(income: income, in: context)
 
@@ -159,7 +261,14 @@ final class AutoCategorizer: ObservableObject {
             try? context.obtainPermanentIDs(for: unsaved)
         }
 
+        // Kept in the queue until it's done, so it's picked up again if Dime is closed meanwhile.
+        queue.add(batch, announce: false)
+
         let ids = batch.map(\.objectID)
+        var queueIDs: [NSManagedObjectID: UUID] = [:]
+        for transaction in batch {
+            queueIDs[transaction.objectID] = transaction.id
+        }
         let run = UUID()
 
         for id in ids {
@@ -171,29 +280,39 @@ final class AutoCategorizer: ObservableObject {
 
         let options = candidates.map(\.option)
 
-        return Task { @MainActor in
+        let task = Task { @MainActor in
             let started = Date()
             var chosen: String?
+            var failed = false
 
             do {
                 chosen = try await chooser.chooseCategory(for: note, income: income, from: options)
             } catch {
-                // Guardrails, an unsupported language, a busy model: all leave it as the user logged it.
+                // A busy model or Dime in the background are tried again later; guardrails or an
+                // unsupported language leave it as the user logged it, after a few tries.
+                failed = true
                 self.logger.info("Couldn't categorise a transaction: \(String(describing: error), privacy: .public)")
             }
 
+            // Only worth waiting for when someone can see the glimmer.
             let remaining = self.minimumGlimmer - Date().timeIntervalSince(started)
-            if remaining > 0 {
+            if remaining > 0, UIApplication.shared.applicationState == .active {
                 try? await Task.sleep(nanoseconds: UInt64(remaining * 1_000_000_000))
             }
 
             let categoryID = chosen.flatMap { name in candidates.first { $0.option.name == name }?.objectID }
-            self.finish(ids, run: run, note: note, income: income, categoryID: categoryID, in: context)
+            self.finish(ids, queueIDs: queueIDs, run: run, failed: failed, note: note, income: income, categoryID: categoryID, in: context)
         }
+
+        for id in ids {
+            tasks[id] = task
+        }
+
+        return task
     }
 
     @MainActor
-    private func finish(_ ids: [NSManagedObjectID], run: UUID, note: String, income: Bool, categoryID: NSManagedObjectID?, in context: NSManagedObjectContext) {
+    private func finish(_ ids: [NSManagedObjectID], queueIDs: [NSManagedObjectID: UUID], run: UUID, failed: Bool, note: String, income: Bool, categoryID: NSManagedObjectID?, in context: NSManagedObjectContext) {
         let current = ids.filter { runs[$0] == run }
 
         guard !current.isEmpty else {
@@ -202,6 +321,16 @@ final class AutoCategorizer: ObservableObject {
 
         for id in current {
             runs[id] = nil
+            tasks[id] = nil
+        }
+
+        // A newer run has the rest, and keeps them queued.
+        let finished = current.compactMap { queueIDs[$0] }
+
+        if failed {
+            queue.recordFailedAttempt(ids: finished)
+        } else {
+            queue.remove(ids: finished)
         }
 
         var category = categoryID.flatMap { try? context.existingObject(with: $0) as? Category }
@@ -221,9 +350,9 @@ final class AutoCategorizer: ObservableObject {
             }
 
             for id in current {
-                // Whatever the user did meanwhile wins: a category they picked, a new note, a deletion.
+                // Whatever the user did meanwhile wins: a category they picked or removed, a new note, a deletion.
                 guard let transaction = try? context.existingObject(with: id) as? Transaction,
-                      Self.wantsCategory(transaction),
+                      queue.wantsCategory(transaction),
                       transaction.income == income,
                       Self.trimmed(transaction.wrappedNote) == note
                 else {
@@ -243,7 +372,7 @@ final class AutoCategorizer: ObservableObject {
             return
         }
 
-        if (defaults?.object(forKey: "haptics") as? Int ?? 1) != 0 {
+        if (queue.defaults?.object(forKey: "haptics") as? Int ?? 1) != 0, UIApplication.shared.applicationState == .active {
             UIImpactFeedbackGenerator(style: .soft).impactOccurred()
         }
 

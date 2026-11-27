@@ -29,7 +29,7 @@ struct SettingsGoofyView: View {
     "showTransactionRecommendations", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
   var showRecommendations: Bool = false
 
-  @AppStorage(AutoCategorizer.enabledKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+  @AppStorage(AutoCategoryQueue.enabledKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
   var autoCategorise: Bool = false
 
   /// Read again on the way back from the Settings app, where Apple Intelligence is turned on.

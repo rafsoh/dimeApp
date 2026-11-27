@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1D86EAC6F60A9B4034E1810D /* AutoCategoryQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FB3B5A79288192E123C3061 /* AutoCategoryQueue.swift */; };
+		781CF04F652AC66C23F54CDC /* AutoCategoryQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FB3B5A79288192E123C3061 /* AutoCategoryQueue.swift */; };
+		0E0220E9447B0798236001A2 /* AutoCategoryQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FB3B5A79288192E123C3061 /* AutoCategoryQueue.swift */; };
+		FE601A583AA09DF87A1AB05E /* AutoCategoryQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FB3B5A79288192E123C3061 /* AutoCategoryQueue.swift */; };
 		0282B1BC151D564BA7E0C016 /* AutoCategorizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12ECAADBFE7E2534A89B6AA /* AutoCategorizerTests.swift */; };
 		7563F4F2D3E6E6F64F82694D /* AutoCategoryGlimmer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 853DF0C1C86E7AA78EC67A98 /* AutoCategoryGlimmer.swift */; };
 		AAD4D77C2841FC03A2A9F2FE /* AutoCategorizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F41D9F009939E5BE8F8BB81D /* AutoCategorizer.swift */; };
@@ -311,6 +315,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		2FB3B5A79288192E123C3061 /* AutoCategoryQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoCategoryQueue.swift; sourceTree = "<group>"; };
 		F12ECAADBFE7E2534A89B6AA /* AutoCategorizerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoCategorizerTests.swift; sourceTree = "<group>"; };
 		853DF0C1C86E7AA78EC67A98 /* AutoCategoryGlimmer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoCategoryGlimmer.swift; sourceTree = "<group>"; };
 		F41D9F009939E5BE8F8BB81D /* AutoCategorizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoCategorizer.swift; sourceTree = "<group>"; };
@@ -766,6 +771,7 @@
 				F8AA3384CBE3F80582BE7112 /* CurrencyConverter.swift */,
 				B836338BBA573E260BA57B8E /* ExchangeRateStore.swift */,
 				F41D9F009939E5BE8F8BB81D /* AutoCategorizer.swift */,
+				2FB3B5A79288192E123C3061 /* AutoCategoryQueue.swift */,
 				032CF5BD18809C03DAAA5FF2 /* CurrencyPreferences.swift */,
 				C9104AD882C4292ADE2F51B2 /* MainCurrencyChange.swift */,
 			);
@@ -1379,6 +1385,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				781CF04F652AC66C23F54CDC /* AutoCategoryQueue.swift in Sources */,
 				0CDBCA47DBC8A9593159CFB1 /* Accounts.swift in Sources */,
 				53BC2A442A8B234F0019E4A8 /* MainModel.xcdatamodeld in Sources */,
 				5313EC6028ACE941000EAB0C /* IntentHandler.swift in Sources */,
@@ -1399,6 +1406,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1D86EAC6F60A9B4034E1810D /* AutoCategoryQueue.swift in Sources */,
 				C5F98CF43670EABA55536902 /* Accounts.swift in Sources */,
 				53BC2A452A8B234F0019E4A8 /* MainModel.xcdatamodeld in Sources */,
 				5313EC6B28ACE941000EAB0C /* IntentViewController.swift in Sources */,
@@ -1419,6 +1427,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FE601A583AA09DF87A1AB05E /* AutoCategoryQueue.swift in Sources */,
 				7563F4F2D3E6E6F64F82694D /* AutoCategoryGlimmer.swift in Sources */,
 				AAD4D77C2841FC03A2A9F2FE /* AutoCategorizer.swift in Sources */,
 				607E2038F6BBEA27541C26AA /* AccountsView.swift in Sources */,
@@ -1538,6 +1547,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0E0220E9447B0798236001A2 /* AutoCategoryQueue.swift in Sources */,
 				F8725A966530F3F5DDF859E9 /* Accounts.swift in Sources */,
 				D7C0E1A12F2B000300A1B2C3 /* OpenNewExpenseIntent.swift in Sources */,
 				D7C0E1A12F2B000500A1B2C3 /* NewExpenseControl.swift in Sources */,

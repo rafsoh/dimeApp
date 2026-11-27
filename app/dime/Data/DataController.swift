@@ -365,6 +365,9 @@ class DataController: ObservableObject {
 
     private let logger = Logger(subsystem: "com.rafaelsoh.dime", category: "DataController")
 
+    /// Feature Lab: new transactions without a category wait here for Apple Intelligence to pick one.
+    var autoCategoryQueue = AutoCategoryQueue()
+
     // Main thread only.
     private var recurringGate: RecurringGenerationGate
     private var transactionCountAtCloudKitEventStart: [UUID: Int] = [:]
@@ -1291,6 +1294,9 @@ class DataController: ObservableObject {
             occurrence.recurringType = 0
         }
 
+        // Queued for a category once it's saved, unless the user left the recurring one without a category.
+        autoCategoryQueue.addOccurrence(occurrence, of: transaction)
+
         return occurrence
     }
 
@@ -1358,6 +1364,10 @@ class DataController: ObservableObject {
         let transaction = insertTransaction(note: note, category: category, income: income, amount: amount, currencyCode: currencyCode, account: account, date: date, repeatType: repeatType, repeatCoefficient: repeatCoefficient)
 
         save()
+
+        // Shortcuts, automations and Quick Add log through here, in the app or in a widget. Imports don't,
+        // so they never queue thousands of transactions at once.
+        autoCategoryQueue.add([transaction])
 
         return transaction
     }
