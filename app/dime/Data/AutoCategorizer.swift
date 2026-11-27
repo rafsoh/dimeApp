@@ -142,10 +142,6 @@ final class AutoCategorizer: ObservableObject {
         }
 
         scheduleProcessing()
-
-        #if DEBUG
-        showScreenshotDemoIfAsked()
-        #endif
     }
 
     /// Works through the queue on the main thread's next turn, once whatever queued them has saved.
@@ -532,62 +528,6 @@ struct AppleIntelligenceCategoryChooser: AutoCategoryChooser {
         let chosen = try response.content.value(String.self, forProperty: "category")
 
         return chosen == none ? nil : chosen
-    }
-}
-#endif
-
-#if DEBUG
-// MARK: - Screenshots
-
-extension AutoCategorizer {
-    /// Screenshots only: `-autoCategoryDemo glimmer` logs three transactions without a category that glimmer for
-    /// good, as no model is asked. `-autoCategoryDemo filed` logs them as Apple Intelligence would leave them:
-    /// two filed, and the gibberish one left without a category.
-    @MainActor
-    func showScreenshotDemoIfAsked() {
-        let arguments = ProcessInfo.processInfo.arguments
-
-        guard let index = arguments.firstIndex(of: "-autoCategoryDemo"), index + 1 < arguments.count else {
-            return
-        }
-
-        let filed = arguments[index + 1] == "filed"
-        let dataController = DataController.shared
-        let context = dataController.container.viewContext
-        let categories = dataController.results(for: dataController.fetchRequestForCategoriesMigration(income: false))
-        let calendar = Calendar.current
-
-        let demo: [(note: String, amount: Double, minutesAgo: Double, category: String?)] = [
-            ("Grab to the airport", 23.4, 1, "Transport"),
-            ("Kopi and kaya toast", 4.2, 3, "Coffee"),
-            ("jdkslaq", 12, 5, nil),
-        ]
-
-        var logged: [Transaction] = []
-
-        for entry in demo {
-            let date = Date.now.addingTimeInterval(-entry.minutesAgo * 60)
-            let transaction = Transaction(context: context)
-            transaction.id = UUID()
-            transaction.note = entry.note
-            transaction.amount = entry.amount
-            transaction.income = false
-            transaction.date = date
-            transaction.day = calendar.startOfDay(for: date)
-            transaction.month = calendar.date(from: calendar.dateComponents([.year, .month], from: date))
-
-            if filed, let name = entry.category {
-                transaction.category = categories.first { $0.wrappedName == name }
-            }
-
-            logged.append(transaction)
-        }
-
-        dataController.save()
-
-        if !filed {
-            pending.formUnion(logged.map(\.objectID))
-        }
     }
 }
 #endif
