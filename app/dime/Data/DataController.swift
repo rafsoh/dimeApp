@@ -1411,6 +1411,7 @@ class DataController: ObservableObject {
         let author = container.viewContext.transactionAuthor
         let mergePolicy = container.viewContext.mergePolicy
         let resolvedCurrency = currencyCode ?? currencyForNewTransaction()
+        let categoryQueue = self.autoCategoryQueue
 
         let objectID: NSManagedObjectID = try await withCheckedThrowingContinuation { continuation in
             container.performBackgroundTask { context in
@@ -1423,6 +1424,8 @@ class DataController: ObservableObject {
 
                 do {
                     try context.save()
+                    // Feature Lab: queued for Apple Intelligence, like any other new transaction.
+                    categoryQueue.add([transaction])
                     continuation.resume(returning: transaction.objectID)
                 } catch {
                     let nsError = error as NSError

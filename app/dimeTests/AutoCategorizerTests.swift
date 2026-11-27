@@ -340,6 +340,29 @@ final class AutoCategorizerTests: XCTestCase {
         XCTAssertTrue(queue.entries.isEmpty)
     }
 
+    @MainActor
+    func testAShortcutSavedInTheBackgroundIsQueuedThenFiled() async throws {
+        guard #available(iOS 16, *) else {
+            throw XCTSkip("The New Transaction shortcut saves in the background from iOS 16")
+        }
+
+        let transport = makeCategory("Transport")
+        try context.save()
+        chooser.answer = transport.wrappedName
+
+        let objectID = try await dataController.newTransactionInBackground(note: "Grab home", categoryID: nil, income: false, amount: 12, currencyCode: nil, repeatType: 0)
+        let logged = try XCTUnwrap(try context.existingObject(with: objectID) as? Transaction)
+        created.append(logged)
+
+        XCTAssertNotNil(queue.entries[try XCTUnwrap(logged.id)])
+
+        // What the shortcut does before showing its result.
+        await categorizer.waitForCategory(of: logged, upTo: 5)
+
+        XCTAssertEqual(logged.category, transport)
+        XCTAssertTrue(queue.entries.isEmpty)
+    }
+
     func testImportsAndSwitchedOffSavesAreNotQueued() throws {
         _ = makeCategory("Food")
 
