@@ -377,4 +377,113 @@ final class AccountsTests: XCTestCase {
         dataController.deleteAccount(card)
         XCTAssertTrue(mainOnly.evaluate(with: spend))
     }
+
+    // MARK: - Import
+
+    func testExportedTransfersPairUpOnImport() {
+        let date = Date(timeIntervalSinceReferenceDate: 700_000_000)
+        let rows = [
+            ImportedRow(date: date, amount: 50, note: "", categoryName: "", income: false, currencyCode: "EUR", accountName: "Main", isTransferLeg: true),
+            ImportedRow(date: date, amount: 12, note: "Lunch", categoryName: "Food", income: false, currencyCode: "EUR", accountName: "Card"),
+            ImportedRow(date: date, amount: 50, note: "", categoryName: "", income: true, currencyCode: "EUR", accountName: "Savings", isTransferLeg: true),
+            // A lone leg stays an ordinary row.
+            ImportedRow(date: date, amount: 7, note: "", categoryName: "", income: true, currencyCode: "EUR", accountName: "Savings", isTransferLeg: true)
+        ]
+
+        let pairs = ImportedRow.transferPairs(in: rows)
+        XCTAssertEqual(pairs.count, 1)
+        XCTAssertEqual(pairs.first?.outgoing, 0)
+        XCTAssertEqual(pairs.first?.incoming, 2)
+    }
+
+    func testExportWritesAccountsAndTransferTypes() throws {
+        let savings = makeAccount("Savings")
+        let legs = transfer(25, from: .main, to: .account(savings))
+        let spend = add(3, account: savings)
+
+        let csv = ExportCSV.text(for: [legs.outgoing, legs.incoming, spend], mainCurrency: mainCurrency)
+        let table = try XCTUnwrap(CSVTable.parse(csv))
+        let mapping = ColumnMapping.detect(in: table)
+
+        XCTAssertNotNil(mapping[.account])
+        let parsed = ImportParseResult.build(table: table, mapping: mapping, dateFormat: ExportCSV.dateFormat)
+        XCTAssertEqual(parsed.rows.count, 3)
+        XCTAssertEqual(parsed.rows.filter(\.isTransferLeg).count, 2)
+        XCTAssertEqual(Set(parsed.rows.map(\.accountName)), [MainAccount.name, "Savings"])
+        XCTAssertEqual(ImportedRow.transferPairs(in: parsed.rows).count, 1)
+    }
+
+    // MARK: - Icons
+
+    func testEveryIconExistsAndAppearsOnce() {
+        XCTAssertEqual(Set(AccountIcons.all).count, AccountIcons.all.count)
+        XCTAssertTrue(AccountIcons.all.contains(AccountIcons.defaultSymbol))
+
+        for symbol in AccountIcons.all {
+            XCTAssertEqual(AccountIcons.displayable(symbol), symbol, "\(symbol) isn't an SF Symbol here")
+        }
+    }
+
+    func testIconsAreGuessedFromNames() {
+        XCTAssertEqual(AccountIcons.guess(for: "Amex Gold"), "creditcard")
+        XCTAssertEqual(AccountIcons.guess(for: "Gift card"), "giftcard")
+        XCTAssertEqual(AccountIcons.guess(for: "Rainy day fund"), "umbrella")
+        XCTAssertEqual(AccountIcons.guess(for: "Brokerage"), "chart.line.uptrend.xyaxis")
+        XCTAssertEqual(AccountIcons.guess(for: "Joint account"), "person.2")
+        // Whole words: a card isn't a car.
+        XCTAssertEqual(AccountIcons.guess(for: "Car loan"), "car")
+        XCTAssertEqual(AccountIcons.guess(for: "Wallet"), AccountIcons.defaultSymbol)
+        XCTAssertTrue(AccountIcons.all.contains(AccountIcons.guess(for: "Anything at all")))
+    }
+
+    func testAccountsKeepThePickedIconAndGuessOneOtherwise() throws {
+        let picked = dataController.addAccount(named: "Travel", symbol: "globe")
+        inserted.append(picked)
+        let guessed = makeAccount("Holiday")
+
+        XCTAssertEqual(picked.wrappedSymbol, "globe")
+        XCTAssertEqual(guessed.wrappedSymbol, "airplane")
+
+        dataController.renameAccount(.account(picked), to: "Trips", symbol: "airplane")
+        XCTAssertEqual(picked.wrappedName, "Trips")
+        XCTAssertEqual(picked.wrappedSymbol, "airplane")
+
+        // An account without one, such as from before icons, still has an icon.
+        guessed.symbol = nil
+        XCTAssertEqual(guessed.wrappedSymbol, "airplane")
+    }
+
+    // MARK: - Import
+
+    func testImportListsAccountNamesOnceEachMostUsedFirst() {
+        let date = Date(timeIntervalSinceReferenceDate: 700_000_000)
+        let rows = [
+            ImportedRow(date: date, amount: 1, note: "", categoryName: "Food", income: false, accountName: "Card"),
+            ImportedRow(date: date, amount: 2, note: "", categoryName: "Food", income: false, accountName: " cash "),
+            ImportedRow(date: date, amount: 3, note: "", categoryName: "Food", income: false, accountName: "CARD"),
+            ImportedRow(date: date, amount: 4, note: "", categoryName: "Food", income: false, accountName: "")
+        ]
+
+        let names = ImportParseResult(rows: rows, skipped: [:]).accountNames
+
+        XCTAssertEqual(names.map(\.name), ["Card", "cash", ""])
+        XCTAssertEqual(names.map(\.count), [2, 1, 1])
+    }
+
+    // Transfers take no category, so linking categories leaves them out; a lone leg is an ordinary row and stays.
+    func testImportedTransfersAreLeftOutOfCategories() {
+        let date = Date(timeIntervalSinceReferenceDate: 700_000_000)
+        let rows = [
+            ImportedRow(date: date, amount: 50, note: "", categoryName: "", income: false, accountName: "Main", isTransferLeg: true),
+            ImportedRow(date: date, amount: 50, note: "", categoryName: "", income: true, accountName: "Savings", isTransferLeg: true),
+            ImportedRow(date: date, amount: 12, note: "Lunch", categoryName: "Food", income: false, accountName: "Card"),
+            ImportedRow(date: date, amount: 7, note: "", categoryName: "", income: true, accountName: "Savings", isTransferLeg: true)
+        ]
+
+        let parsed = ImportParseResult(rows: rows, skipped: [:])
+
+        XCTAssertEqual(parsed.pairedTransferRows, [0, 1])
+        XCTAssertEqual(parsed.categoryKeys.map(\.key.name), ["Food", ""])
+        XCTAssertEqual(parsed.categoryKeys.map(\.count), [1, 1])
+    }
 }

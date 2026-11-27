@@ -505,6 +505,15 @@ struct ImportedRow {
         MoneyEntry(id: nil, amount: amount, currencyCode: currencyCode, date: date, income: income)
     }
 
+    /// The account name as it's matched: without case or surrounding spaces.
+    var accountKey: String {
+        Self.normalizedAccountName(accountName)
+    }
+
+    static func normalizedAccountName(_ name: String) -> String {
+        name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
+
     /// The transfers in an import, as indices of their outgoing and incoming legs. Each outgoing leg pairs with
     /// the first unpaired incoming leg of the same date, amount and currency.
     static func transferPairs(in rows: [ImportedRow]) -> [(outgoing: Int, incoming: Int)] {
@@ -593,11 +602,36 @@ struct ImportParseResult {
         return ImportParseResult(rows: rows, skipped: skipped)
     }
 
-    /// The file's categories, most used first.
+    /// Rows that pair up into transfers. They take no category and are neither spending nor income.
+    var pairedTransferRows: Set<Int> {
+        Set(ImportedRow.transferPairs(in: rows).flatMap { [$0.outgoing, $0.incoming] })
+    }
+
+    /// The file's account names, most used first, each spelled as it first appears. Names that differ only
+    /// in case are one account; an empty name is rows that don't say.
+    var accountNames: [(name: String, count: Int)] {
+        var counts: [String: Int] = [:]
+        var spellings: [String: String] = [:]
+        var order: [String] = []
+        for row in rows {
+            let key = row.accountKey
+            if counts[key] == nil {
+                order.append(key)
+                spellings[key] = row.accountName.trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+            counts[key, default: 0] += 1
+        }
+        return order.map { (name: spellings[$0] ?? $0, count: counts[$0] ?? 0) }.enumerated().sorted { lhs, rhs in
+            lhs.element.count == rhs.element.count ? lhs.offset < rhs.offset : lhs.element.count > rhs.element.count
+        }.map(\.element)
+    }
+
+    /// The file's categories, most used first. Transfers aren't in any.
     var categoryKeys: [(key: ImportCategoryKey, count: Int)] {
         var counts: [ImportCategoryKey: Int] = [:]
         var order: [ImportCategoryKey] = []
-        for row in rows {
+        let transfers = pairedTransferRows
+        for (index, row) in rows.enumerated() where !transfers.contains(index) {
             let key = ImportCategoryKey(name: row.categoryName, income: row.income)
             if counts[key] == nil {
                 order.append(key)

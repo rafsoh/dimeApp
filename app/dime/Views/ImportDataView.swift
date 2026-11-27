@@ -11,11 +11,17 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 private enum ImportStep: Int, Comparable {
-    case start, columns, categories, review, finished
+    case start, columns, categories, accounts, review, finished
 
     static func < (lhs: ImportStep, rhs: ImportStep) -> Bool {
         lhs.rawValue < rhs.rawValue
     }
+}
+
+/// Where a file's account name goes: into an account Dime has (Main included), or a new one named as in the file.
+private enum ImportAccountChoice: Hashable {
+    case create
+    case existing(AccountChoice)
 }
 
 private enum ImportCategoryChoice: Hashable {
@@ -46,6 +52,13 @@ struct ImportDataView: View {
     @State private var categories: [Category] = []
     @State private var choices: [ImportCategoryKey: ImportCategoryChoice] = [:]
     @State private var incomeOverrides: [ImportCategoryKey: Bool] = [:]
+
+    @State private var accounts: [Account] = []
+    /// What each account name in the file was linked to, by `ImportedRow.accountKey`.
+    @State private var accountLinks: [String: ImportAccountChoice] = [:]
+    /// Where every row goes when the file doesn't name accounts.
+    @State private var destination: AccountChoice = .main
+    @State private var creatingAccount = false
 
     @State private var duplicateRows: Set<Int> = []
     @State private var skipDuplicates = true
@@ -130,8 +143,8 @@ struct ImportDataView: View {
 
             Spacer()
 
-            if step > .start, step < .finished {
-                StepLabel(current: step.rawValue, total: 3)
+            if let index = steps.firstIndex(of: step) {
+                StepLabel(current: index + 1, total: steps.count)
             }
         }
         .frame(height: 44)
@@ -160,6 +173,15 @@ struct ImportDataView: View {
             }
         case .categories:
             PrimaryImportButton(title: "Continue") {
+                if showsAccountsStep {
+                    advance(to: .accounts)
+                } else {
+                    findDuplicates()
+                    advance(to: .review)
+                }
+            }
+        case .accounts:
+            PrimaryImportButton(title: "Continue") {
                 findDuplicates()
                 advance(to: .review)
             }
@@ -186,6 +208,8 @@ struct ImportDataView: View {
             columnsStep
         case .categories:
             categoriesStep
+        case .accounts:
+            accountsStep
         case .review:
             reviewStep
         case .finished:
@@ -205,6 +229,11 @@ struct ImportDataView: View {
                     RequirementRow(systemImage: ImportField.amount.systemImage, title: "Amount", subtitle: "Currency symbols, separators and negative amounts are fine.")
                     RequirementRow(systemImage: ImportField.category.systemImage, title: "Category", subtitle: "Matched to your categories, or created for you.")
                     RequirementRow(systemImage: ImportField.note.systemImage, title: "Note", subtitle: "Optional.")
+
+                    // Accounts stay out of sight until there's one besides Main.
+                    if dataController.accountCount() > 0 {
+                        RequirementRow(systemImage: ImportField.account.systemImage, title: "Account", subtitle: "Optional. Matched to your accounts, or you pick one for the whole file.")
+                    }
                 }
             }
             .padding(.top, 16)
@@ -485,16 +514,176 @@ struct ImportDataView: View {
         .importRowHeight()
     }
 
+    // MARK: - Accounts
+
+    var accountsStep: some View {
+        ScrollView(showsIndicators: false) {
+            VStack(alignment: .leading, spacing: 24) {
+                if linksAccounts {
+                    StepTitle(title: "Link Accounts", subtitle: "Each account in your file is linked to one in Dime. Anything new is created for you, and you can edit it later.")
+
+                    let names = parsed.accountNames
+
+                    VStack(spacing: 0) {
+                        ForEach(names.indices, id: \.self) { index in
+                            accountRow(names[index].name, count: names[index].count)
+
+                            if index < names.count - 1 {
+                                Divider()
+                            }
+                        }
+                    }
+                    .settingsSectionRows()
+                } else {
+                    StepTitle(title: "Choose Account", subtitle: "Your file doesn't say which account these transactions are in. Pick the one they go into.")
+
+                    VStack(spacing: 0) {
+                        ForEach(accountOptions) { choice in
+                            destinationRow(choice)
+
+                            Divider()
+                        }
+
+                        newAccountRow
+                    }
+                    .settingsSectionRows()
+                }
+            }
+            .padding(.top, 16)
+            .padding(.bottom, 20)
+            .padding(.horizontal, .settingsPageInset)
+        }
+        .sheet(isPresented: $creatingAccount) {
+            AccountEditorSheet(target: .new) { created in
+                accounts = dataController.accounts()
+                destination = created
+            }
+            .environmentObject(dataController)
+        }
+    }
+
+    /// One account name from the file, and the account in Dime it goes into.
+    func accountRow(_ name: String, count: Int) -> some View {
+        let current = accountChoice(for: name)
+        let key = ImportedRow.normalizedAccountName(name)
+
+        return HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Group {
+                    if name.isEmpty {
+                        Text("No Account")
+                    } else {
+                        Text(verbatim: name)
+                    }
+                }
+                .font(.app(.body, weight: .medium))
+                .foregroundColor(Color.PrimaryText)
+                .lineLimit(1)
+
+                Text(count == 1 ? "1 transaction" : "\(count) transactions")
+                    .font(.app(.footnote))
+                    .foregroundColor(Color.SubtitleText)
+                    .lineLimit(1)
+            }
+
+            Spacer(minLength: 8)
+
+            Menu {
+                // A row without an account name can't name a new account.
+                if !name.isEmpty {
+                    Button {
+                        accountLinks[key] = .create
+                    } label: {
+                        Label("New Account", systemImage: current == .create ? "checkmark" : "plus")
+                    }
+                }
+
+                Section("Accounts") {
+                    ForEach(accountOptions) { choice in
+                        Button {
+                            accountLinks[key] = .existing(choice)
+                        } label: {
+                            Label(choice.name, systemImage: current == .existing(choice) ? "checkmark" : AccountIcons.displayable(choice.symbol))
+                        }
+                    }
+                }
+            } label: {
+                AccountChip(choice: current, name: name)
+            }
+        }
+        .importRowHeight()
+    }
+
+    /// An account every row can go into, for a file that doesn't name accounts.
+    func destinationRow(_ choice: AccountChoice) -> some View {
+        let isSelected = choice == destination
+
+        return Button {
+            UISelectionFeedbackGenerator().selectionChanged()
+            destination = choice
+        } label: {
+            HStack(spacing: 12) {
+                AccountIconView(symbol: choice.symbol)
+                    .font(.app(.body, weight: .medium))
+                    .foregroundColor(Color.SubtitleText)
+                    .frame(width: 26)
+
+                Text(choice.name)
+                    .font(.app(.body, weight: .medium))
+                    .foregroundColor(Color.PrimaryText)
+                    .lineLimit(1)
+
+                Spacer(minLength: 8)
+
+                Image(systemName: "checkmark")
+                    .font(.app(.body, weight: .bold))
+                    .foregroundColor(Color.PrimaryText)
+                    .opacity(isSelected ? 1 : 0)
+            }
+            .importRowHeight()
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
+    }
+
+    var newAccountRow: some View {
+        Button {
+            creatingAccount = true
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "plus")
+                    .font(.app(.body, weight: .semibold))
+                    .foregroundColor(Color.SubtitleText)
+                    .frame(width: 26)
+
+                Text("New Account")
+                    .font(.app(.body, weight: .medium))
+                    .foregroundColor(Color.PrimaryText)
+
+                Spacer(minLength: 8)
+            }
+            .importRowHeight()
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
     // MARK: - Review
 
     var reviewStep: some View {
         let rows = rowsToImport
         let converter = CurrencyConverter.current()
-        let expenseTotal = converter.total(of: rows.filter { !income(for: $0) }.map { $0.money(income: false) })
-        let incomeTotal = converter.total(of: rows.filter { income(for: $0) }.map { $0.money(income: true) })
+        // Transfers move money between accounts, so they're neither expenses nor income here either.
+        let transfers = ImportedRow.transferPairs(in: rows)
+        let transferRows = Set(transfers.flatMap { [$0.outgoing, $0.incoming] })
+        let counted = rows.enumerated().filter { !transferRows.contains($0.offset) }.map(\.element)
+        let expenseTotal = converter.total(of: counted.filter { !income(for: $0) }.map { $0.money(income: false) })
+        let incomeTotal = converter.total(of: counted.filter { income(for: $0) }.map { $0.money(income: true) })
         let expenses = expenseTotal.value
         let incomes = incomeTotal.value
         let newCategories = parsed.categoryKeys.filter { choice(for: $0.key) == .create }.count
+        let newAccounts = linksAccounts ? parsed.accountNames.filter { accountChoice(for: $0.name) == .create }.count : 0
 
         return ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 24) {
@@ -514,6 +703,19 @@ struct ImportDataView: View {
                     SummaryRow(title: "Income", value: incomeTotal.report.marking(formatted(incomes, income: nil)), color: Color.IncomeGreen)
                     Divider()
                     SummaryRow(title: "New Categories", value: "\(newCategories)", color: Color.PrimaryText)
+
+                    if !transfers.isEmpty {
+                        Divider()
+                        SummaryRow(title: "Transfers", value: "\(transfers.count)", color: Color.PrimaryText)
+                    }
+
+                    if linksAccounts {
+                        Divider()
+                        SummaryRow(title: "New Accounts", value: "\(newAccounts)", color: Color.PrimaryText)
+                    } else if showsAccountsStep {
+                        Divider()
+                        SummaryRow(title: "Account", value: destination.name, color: Color.PrimaryText)
+                    }
 
                     if !duplicateRows.isEmpty {
                         Divider()
@@ -614,10 +816,15 @@ struct ImportDataView: View {
             withAnimation(stepAnimation) {
                 step = .columns
             }
-        case .review:
+        case .accounts:
             movingForward = false
             withAnimation(stepAnimation) {
                 step = .categories
+            }
+        case .review:
+            movingForward = false
+            withAnimation(stepAnimation) {
+                step = showsAccountsStep ? .accounts : .categories
             }
         }
     }
@@ -658,6 +865,9 @@ struct ImportDataView: View {
         fileName = url.lastPathComponent
         mapping = ColumnMapping.detect(in: table)
         categories = dataController.getAllCategories(income: false) + dataController.getAllCategories(income: true)
+        accounts = dataController.accounts()
+        accountLinks = [:]
+        destination = .main
         choices = [:]
         incomeOverrides = [:]
         editingCustomFormat = false
@@ -745,6 +955,71 @@ struct ImportDataView: View {
         return .create
     }
 
+    // MARK: - Accounts
+
+    /// Whether the file names accounts, so each name is linked to one in Dime.
+    var linksAccounts: Bool {
+        mapping[.account] != nil && parsed.accountNames.contains { !$0.name.isEmpty }
+    }
+
+    /// Accounts get a step when the file names them, or when there's more than Main to put its rows in.
+    /// Someone with only Main, importing a file without accounts, never sees accounts at all.
+    var showsAccountsStep: Bool {
+        linksAccounts || !accounts.isEmpty
+    }
+
+    private var steps: [ImportStep] {
+        [.columns, .categories] + (showsAccountsStep ? [.accounts] : []) + [.review]
+    }
+
+    var accountOptions: [AccountChoice] {
+        [.main] + accounts.filter { !$0.isGone }.map(AccountChoice.account)
+    }
+
+    /// The account a name in the file already is: Main by its name, an account by its name, or Main by
+    /// Dime's own name for it, which is what Dime's exports say when Main was never renamed.
+    func matchedAccount(_ name: String) -> AccountChoice? {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !trimmed.isEmpty else {
+            return .main
+        }
+
+        func same(_ other: String) -> Bool {
+            other.compare(trimmed, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame
+        }
+
+        if same(MainAccount.name) {
+            return .main
+        }
+
+        if let account = accounts.first(where: { !$0.isGone && same($0.wrappedName) }) {
+            return .account(account)
+        }
+
+        if same(MainAccount.defaultName) || same("Main") {
+            return .main
+        }
+
+        return nil
+    }
+
+    /// The user's link while its account still exists, otherwise an account with the same name, otherwise a new one.
+    private func accountChoice(for name: String) -> ImportAccountChoice {
+        let key = ImportedRow.normalizedAccountName(name)
+
+        switch accountLinks[key] {
+        case let .existing(choice) where choice.account?.isGone != true:
+            return .existing(choice)
+        case .create where !key.isEmpty:
+            return .create
+        case .existing, .create, nil:
+            break
+        }
+
+        return matchedAccount(name).map(ImportAccountChoice.existing) ?? .create
+    }
+
     // MARK: - Duplicates
 
     var rowsToImport: [ImportedRow] {
@@ -809,29 +1084,40 @@ struct ImportDataView: View {
             ]
             var unusedColours = Color.colorArray.filter { colour in !categories.contains { $0.wrappedColour == colour } }
 
-            // Accounts are matched by name, Main included; a name the store doesn't have becomes a new account.
-            var accountsByName: [String: AccountChoice] = [:]
-            for choice in dataController.accountChoices() {
-                accountsByName[choice.name.lowercased()] = choice
-            }
+            // Accounts as linked on the accounts step. A name linked to a new account makes it once; a file
+            // that names no accounts goes into the one picked for it, Main unless there are others. An account
+            // deleted meanwhile, such as by sync, can't be linked, so its rows go to Main.
+            var createdAccounts: [String: Account] = [:]
             var nextAccountOrder = (dataController.accounts().map(\.order).max() ?? -1) + 1
+            let usesLinks = linksAccounts
+            let fileDestination = destination.account.flatMap { $0.isGone ? nil : $0 }
 
             func account(named name: String) -> Account? {
-                let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !trimmed.isEmpty else { return nil }
-
-                if let match = accountsByName[trimmed.lowercased()] {
-                    return match.account
+                guard usesLinks else {
+                    return fileDestination
                 }
 
-                let new = Account(context: dataController.container.viewContext)
-                new.id = UUID()
-                new.name = trimmed
-                new.dateCreated = Date.now
-                new.order = nextAccountOrder
-                nextAccountOrder += 1
-                accountsByName[trimmed.lowercased()] = .account(new)
-                return new
+                switch accountChoice(for: name) {
+                case let .existing(choice):
+                    return choice.account.flatMap { $0.isGone ? nil : $0 }
+                case .create:
+                    let key = ImportedRow.normalizedAccountName(name)
+
+                    if let made = createdAccounts[key] {
+                        return made
+                    }
+
+                    let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let new = Account(context: dataController.container.viewContext)
+                    new.id = UUID()
+                    new.name = trimmed
+                    new.symbol = AccountIcons.guess(for: trimmed)
+                    new.dateCreated = Date.now
+                    new.order = nextAccountOrder
+                    nextAccountOrder += 1
+                    createdAccounts[key] = new
+                    return new
+                }
             }
 
             // A leg without its other half is imported as an ordinary expense or income, so nothing is dropped.
@@ -892,6 +1178,7 @@ struct ImportDataView: View {
                 numbers: [
                     "rows": rows.count,
                     "categoriesCreated": created.count,
+                    "accountsCreated": createdAccounts.count,
                     "transactionsBefore": transactionsBefore,
                     "transactionsAfter": dataController.transactionCount()
                 ]
@@ -1121,6 +1408,44 @@ private struct CategoryChip: View {
                 Capsule().fill(Color(hex: category.wrappedColour).opacity(0.18))
             }
         }
+        .glassBackground(in: Capsule(), tint: .glassTint)
+        .contentShape(Capsule())
+        .frame(maxWidth: 170, alignment: .trailing)
+    }
+}
+
+private struct AccountChip: View {
+    let choice: ImportAccountChoice
+    let name: String
+
+    var body: some View {
+        HStack(spacing: 6) {
+            switch choice {
+            case let .existing(account):
+                AccountIconView(symbol: account.symbol)
+                    .font(.app(.footnote, weight: .semibold))
+                    .foregroundColor(Color.SubtitleText)
+
+                Text(account.name)
+                    .font(.app(.subheadline, weight: .semibold))
+                    .foregroundColor(Color.PrimaryText)
+                    .lineLimit(1)
+            case .create:
+                AccountIconView(symbol: AccountIcons.guess(for: name))
+                    .font(.app(.footnote, weight: .semibold))
+                    .foregroundColor(Color.SubtitleText)
+
+                Text("New")
+                    .font(.app(.subheadline, weight: .semibold))
+                    .foregroundColor(Color.PrimaryText)
+            }
+
+            Image(systemName: "chevron.up.chevron.down")
+                .font(.app(.caption, weight: .semibold))
+                .foregroundColor(Color.SubtitleText)
+        }
+        .padding(.horizontal, 12)
+        .frame(height: 36)
         .glassBackground(in: Capsule(), tint: .glassTint)
         .contentShape(Capsule())
         .frame(maxWidth: 170, alignment: .trailing)
