@@ -521,6 +521,7 @@
 "No logs in this account" = "No logs in this account";
 "Spending by account" = "Spending by account";
 "Its transactions and Quick Add templates move to %@. Nothing else is deleted." = "Its transactions and Quick Add templates move to %@. Nothing else is deleted.";
+"Its transactions and Quick Add templates move to %@. Its transfers with %@ are deleted, since both sides would be %@." = "Its transactions and Quick Add templates move to %1$@. Its transfers with %2$@ are deleted, since both sides would be %3$@.";
 "Transactions not in another account are in %@. You can rename %@, but not delete it." = "Transactions not in another account are in %@. You can rename %@, but not delete it.";
 "Only %@" = "Only %@";
 "%lld accounts" = "%lld accounts";

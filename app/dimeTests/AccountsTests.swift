@@ -245,6 +245,28 @@ final class AccountsTests: XCTestCase {
         XCTAssertEqual(try count(NSPredicate(format: "self == %@", spend)), 1)
     }
 
+    // A transfer with Main would be from Main to Main, so it goes with the account. One with another account
+    // stays, now from Main, and everything else in the account moves to Main.
+    func testDeletingAnAccountRemovesOnlyItsTransfersWithMain() throws {
+        let savings = makeAccount("Savings")
+        let card = makeAccount("Card")
+        let withMain = transfer(100, from: .main, to: .account(savings))
+        let withCard = transfer(40, from: .account(savings), to: .account(card))
+        let spend = add(12, account: savings)
+
+        XCTAssertEqual(dataController.transfersWithMain(of: savings), [withMain.incoming])
+
+        dataController.deleteAccount(savings)
+
+        XCTAssertNil(withMain.outgoing.managedObjectContext)
+        XCTAssertNil(withMain.incoming.managedObjectContext)
+        XCTAssertNil(withCard.outgoing.account)
+        XCTAssertEqual(withCard.incoming.account, card)
+        XCTAssertEqual(withCard.outgoing.transferID, withCard.incoming.transferID)
+        XCTAssertNil(spend.account)
+        XCTAssertNotNil(spend.managedObjectContext)
+    }
+
     func testDeletingAnAccountNeverCountsAsABulkDeletion() throws {
         let defaults = UserDefaults(suiteName: "group.com.rafaelsoh.dime")
         let previous = defaults?.object(forKey: DataController.lastBulkDeletionKey)

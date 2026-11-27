@@ -507,6 +507,7 @@
 "No logs in this account" = "Bu hesapta kayıt yok";
 "Spending by account" = "Hesaba göre harcama";
 "Its transactions and Quick Add templates move to %@. Nothing else is deleted." = "İşlemleri ve hızlı ekle şablonları “%@” hesabına taşınır. Başka hiçbir şey silinmez.";
+"Its transactions and Quick Add templates move to %@. Its transfers with %@ are deleted, since both sides would be %@." = "İşlemleri ve hızlı ekle şablonları “%1$@” hesabına taşınır. “%2$@” ile olan transferleri silinir, çünkü iki taraf da “%3$@” olurdu.";
 "Transactions not in another account are in %@. You can rename %@, but not delete it." = "Başka hesapta olmayan işlemler “%@” içinde. “%@” hesabının adını değiştirebilirsin ama silemezsin.";
 "Only %@" = "Yalnızca %@";
 "%lld accounts" = "%lld hesap";

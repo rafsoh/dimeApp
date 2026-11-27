@@ -507,6 +507,7 @@
 "No logs in this account" = "이 계좌에 기록이 없습니다";
 "Spending by account" = "계좌별 지출";
 "Its transactions and Quick Add templates move to %@. Nothing else is deleted." = "거래와 빠른 추가 템플릿은 '%@'(으)로 이동합니다. 다른 것은 삭제되지 않습니다.";
+"Its transactions and Quick Add templates move to %@. Its transfers with %@ are deleted, since both sides would be %@." = "거래와 빠른 추가 템플릿은 '%1$@'(으)로 이동합니다. '%2$@'과(와)의 이체는 양쪽 모두 '%3$@'이(가) 되므로 삭제됩니다.";
 "Transactions not in another account are in %@. You can rename %@, but not delete it." = "다른 계좌에 없는 거래는 '%@'에 있습니다. '%@'의 이름은 바꿀 수 있지만 삭제할 수는 없습니다.";
 "Only %@" = "%@만";
 "%lld accounts" = "계좌 %lld개";

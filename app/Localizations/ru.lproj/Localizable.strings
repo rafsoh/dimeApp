@@ -519,6 +519,7 @@
 "No logs in this account" = "На этом счёте нет записей";
 "Spending by account" = "Расходы по счетам";
 "Its transactions and Quick Add templates move to %@. Nothing else is deleted." = "Его транзакции и шаблоны быстрого добавления перейдут в «%@». Больше ничего не удалится.";
+"Its transactions and Quick Add templates move to %@. Its transfers with %@ are deleted, since both sides would be %@." = "Его транзакции и шаблоны быстрого добавления перейдут в «%1$@». Его переводы с «%2$@» удалятся, так как обе стороны были бы «%3$@».";
 "Transactions not in another account are in %@. You can rename %@, but not delete it." = "Транзакции без другого счёта находятся в «%@». «%@» можно переименовать, но не удалить.";
 "Only %@" = "Только %@";
 "%lld accounts" = "Счетов: %lld";

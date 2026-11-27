@@ -279,7 +279,13 @@ struct AccountsView: View {
             .confirmationSheet(
                 item: $toDelete,
                 title: { "Delete '\($0.wrappedName)'?" },
-                message: { _ in "Its transactions and Quick Add templates move to \(MainAccount.name). Nothing else is deleted." }
+                message: { account in
+                    // Transfers with Main would be from Main to Main once this account's side moves there.
+                    if dataController.transfersWithMain(of: account).isEmpty {
+                        return "Its transactions and Quick Add templates move to \(MainAccount.name). Nothing else is deleted."
+                    }
+                    return "Its transactions and Quick Add templates move to \(MainAccount.name). Its transfers with \(MainAccount.name) are deleted, since both sides would be \(MainAccount.name)."
+                }
             ) { account in
                 withAnimation {
                     dataController.deleteAccount(account)

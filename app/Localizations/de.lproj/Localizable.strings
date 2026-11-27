@@ -507,6 +507,7 @@
 "No logs in this account" = "Keine Einträge in diesem Konto";
 "Spending by account" = "Ausgaben nach Konto";
 "Its transactions and Quick Add templates move to %@. Nothing else is deleted." = "Seine Transaktionen und Schnellerfassungs-Vorlagen werden nach „%@“ verschoben. Sonst wird nichts gelöscht.";
+"Its transactions and Quick Add templates move to %@. Its transfers with %@ are deleted, since both sides would be %@." = "Seine Transaktionen und Schnellerfassungs-Vorlagen werden nach „%1$@“ verschoben. Seine Umbuchungen mit „%2$@“ werden gelöscht, da beide Seiten „%3$@“ wären.";
 "Transactions not in another account are in %@. You can rename %@, but not delete it." = "Transaktionen ohne anderes Konto sind in „%@“. Du kannst „%@“ umbenennen, aber nicht löschen.";
 "Only %@" = "Nur %@";
 "%lld accounts" = "%lld Konten";

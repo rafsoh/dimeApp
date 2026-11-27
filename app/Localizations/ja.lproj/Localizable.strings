@@ -507,6 +507,7 @@
 "No logs in this account" = "この口座には記録がありません";
 "Spending by account" = "口座別の支出";
 "Its transactions and Quick Add templates move to %@. Nothing else is deleted." = "取引とクイック追加テンプレートは「%@」に移動します。ほかには何も削除されません。";
+"Its transactions and Quick Add templates move to %@. Its transfers with %@ are deleted, since both sides would be %@." = "取引とクイック追加テンプレートは「%1$@」に移動します。「%2$@」との振替は、両側とも「%3$@」になるため削除されます。";
 "Transactions not in another account are in %@. You can rename %@, but not delete it." = "ほかの口座にない取引は「%@」にあります。「%@」は名前を変更できますが、削除はできません。";
 "Only %@" = "%@のみ";
 "%lld accounts" = "%lld口座";

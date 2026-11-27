@@ -507,6 +507,7 @@
 "No logs in this account" = "此帳戶中沒有記錄";
 "Spending by account" = "按帳戶的支出";
 "Its transactions and Quick Add templates move to %@. Nothing else is deleted." = "其交易和快速新增範本將移至「%@」。不會刪除其他內容。";
+"Its transactions and Quick Add templates move to %@. Its transfers with %@ are deleted, since both sides would be %@." = "其交易和快速新增範本將移至「%1$@」。它與「%2$@」之間的轉帳將被刪除，因為兩邊都會是「%3$@」。";
 "Transactions not in another account are in %@. You can rename %@, but not delete it." = "不在其他帳戶中的交易都在「%@」裡。「%@」可以重新命名，但不能刪除。";
 "Only %@" = "僅%@";
 "%lld accounts" = "%lld 個帳戶";

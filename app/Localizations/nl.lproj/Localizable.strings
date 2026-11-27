@@ -507,6 +507,7 @@
 "No logs in this account" = "Geen items op deze rekening";
 "Spending by account" = "Uitgaven per rekening";
 "Its transactions and Quick Add templates move to %@. Nothing else is deleted." = "De transacties en snel-toevoegen-sjablonen gaan naar ‘%@’. Verder wordt niets verwijderd.";
+"Its transactions and Quick Add templates move to %@. Its transfers with %@ are deleted, since both sides would be %@." = "De transacties en snel-toevoegen-sjablonen gaan naar ‘%1$@’. De overboekingen met ‘%2$@’ worden verwijderd, omdat beide kanten ‘%3$@’ zouden zijn.";
 "Transactions not in another account are in %@. You can rename %@, but not delete it." = "Transacties zonder andere rekening staan op ‘%@’. Je kunt ‘%@’ hernoemen, maar niet verwijderen.";
 "Only %@" = "Alleen %@";
 "%lld accounts" = "%lld rekeningen";

@@ -1186,15 +1186,34 @@ class DataController: ObservableObject {
         objectWillChange.send()
     }
 
-    /// Deletes an account. Its transactions and Quick Add templates move to Main; nothing else is deleted.
+    /// The transfers between an account and Main, as the legs in the account. Once the account is deleted and
+    /// its side moves to Main, each would move money from Main to Main.
+    func transfersWithMain(of account: Account) -> [Transaction] {
+        let legs = (account.transactions as? Set<Transaction> ?? []).filter { $0.isTransfer && !$0.isDeleted }
+
+        return legs.filter { leg in
+            guard let other = leg.transferCounterpart else { return false }
+            return other.account == nil || other.account == account
+        }
+    }
+
+    /// Deletes an account. Its transactions and Quick Add templates move to Main. The only thing deleted with it
+    /// is its transfers with Main, which would be from Main to Main, and the confirmation says so first.
     ///
-    /// The model's delete rule would also leave them in Main, but they're moved here first so that no
+    /// The model's delete rule would also leave the rest in Main, but they're moved here first so that no
     /// transaction ever depends on a delete rule to survive.
     func deleteAccount(_ account: Account) {
         // Sync can delete it while the confirmation is up, and deleting an object with no context throws.
         guard !account.isDeleted, account.managedObjectContext != nil else { return }
 
-        for transaction in account.transactions as? Set<Transaction> ?? [] {
+        for leg in transfersWithMain(of: account) where !leg.isDeleted {
+            if let other = leg.transferCounterpart {
+                container.viewContext.delete(other)
+            }
+            container.viewContext.delete(leg)
+        }
+
+        for transaction in account.transactions as? Set<Transaction> ?? [] where !transaction.isDeleted {
             transaction.account = nil
         }
 
