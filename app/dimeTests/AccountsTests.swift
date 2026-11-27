@@ -521,4 +521,31 @@ final class AccountsTests: XCTestCase {
         XCTAssertEqual(parsed.categoryKeys.map(\.key.name), ["Food", ""])
         XCTAssertEqual(parsed.categoryKeys.map(\.count), [1, 1])
     }
+
+    // Shortcuts' New Transaction saves on a background context (DIME-IOS-Y); the app must see it in Main.
+    @MainActor
+    func testShortcutTransactionsAreSavedInTheBackgroundAndSeenInMain() async throws {
+        guard #available(iOS 16, *) else { throw XCTSkip("Shortcuts actions need iOS 16.") }
+
+        let category = dime.Category(context: context)
+        category.id = UUID()
+        category.name = "Shortcut test"
+        category.emoji = "⚡️"
+        inserted.append(category)
+        try context.save()
+
+        let objectID = try await dataController.newTransactionInBackground(note: "", categoryID: category.objectID, income: false, amount: 12.5, currencyCode: mainCurrency, repeatType: 2)
+        let transaction = try XCTUnwrap(try context.existingObject(with: objectID) as? Transaction)
+        inserted.append(transaction)
+
+        XCTAssertFalse(objectID.isTemporaryID)
+        XCTAssertEqual(transaction.amount, 12.5)
+        XCTAssertEqual(transaction.currencyCode, mainCurrency)
+        XCTAssertEqual(transaction.category, category)
+        XCTAssertEqual(transaction.note, "Shortcut test")
+        XCTAssertNil(transaction.account)
+        XCTAssertEqual(transaction.recurringType, 2)
+        XCTAssertTrue(transaction.onceRecurring)
+        XCTAssertNotNil(transaction.id)
+    }
 }

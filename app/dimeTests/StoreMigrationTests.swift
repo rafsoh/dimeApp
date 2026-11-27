@@ -304,6 +304,26 @@ final class StoreMigrationTests: XCTestCase {
         try close(context)
     }
 
+    // The fallback for when Core Data refuses the copy (DIME-IOS-P). The copy must open as the same store.
+    func testSQLiteCopyOfAStoreHoldsTheSameTransactions() throws {
+        let model = try XCTUnwrap(earlierModels.first)
+        let storeURL = directory.appendingPathComponent("Main.sqlite")
+        let copyURL = directory.appendingPathComponent("Copy.sqlite")
+        let expected = try writeFixture(to: storeURL, model: model)
+
+        try StoreSnapshot.copyWithSQLite(from: storeURL, to: copyURL)
+
+        XCTAssertEqual(try readTransactions(at: copyURL, model: model), expected)
+        XCTAssertTrue(StoreSnapshot.needsMigration(storeAt: copyURL, to: currentModel))
+    }
+
+    func testSQLiteCopyOfAMissingStoreThrows() {
+        let storeURL = directory.appendingPathComponent("Missing.sqlite")
+        let copyURL = directory.appendingPathComponent("Copy.sqlite")
+
+        XCTAssertThrowsError(try StoreSnapshot.copyWithSQLite(from: storeURL, to: copyURL))
+    }
+
     func testStoreOnTheCurrentModelIsNotSnapshotted() throws {
         let storeURL = directory.appendingPathComponent("Main.sqlite")
         _ = try writeFixture(to: storeURL, model: currentModel)

@@ -29,6 +29,8 @@ struct InsightsView: View {
     @State private var periodStart: Date?
     @State private var route: InsightsRoute?
     @State private var refreshID = UUID()
+    @State private var dashboard: LoadedDashboard?
+    @AppStorage("firstWeekday", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var firstWeekday: Int = 0
 
     @FetchRequest(sortDescriptors: [SortDescriptor(\.order), SortDescriptor(\.dateCreated)]) private var accounts: FetchedResults<Account>
     /// The account Insights shows; empty for every account.
@@ -83,6 +85,47 @@ struct InsightsView: View {
         transactions.first?.day
     }
 
+    /// Everything the dashboard's numbers depend on. They're worked out again only when this changes.
+    struct DashboardKey: Equatable {
+        let period: InsightsPeriod
+        let incomeTracking: Bool
+        let firstDay: Date?
+        let breaksDownByAccount: Bool
+        let account: String
+        let currency: String
+        let firstWeekday: Int
+        let refreshID: UUID
+
+        /// Whether only the data moved on, not what's being looked at.
+        func isSameView(as other: DashboardKey) -> Bool {
+            period == other.period && incomeTracking == other.incomeTracking && breaksDownByAccount == other.breaksDownByAccount
+                && account == other.account && currency == other.currency && firstWeekday == other.firstWeekday
+        }
+    }
+
+    struct LoadedDashboard {
+        let key: DashboardKey
+        let data: InsightsDashboardData
+    }
+
+    var dashboardKey: DashboardKey {
+        DashboardKey(period: period, incomeTracking: incomeTracking, firstDay: firstDay, breaksDownByAccount: !accounts.isEmpty && selectedAccount == nil, account: insightsAccount, currency: currency, firstWeekday: firstWeekday, refreshID: refreshID)
+    }
+
+    // Saves arrive in bursts while CloudKit imports, each one changing the key. Waiting a moment lets the
+    // burst cancel this and be counted once. Stepping to another period or account doesn't wait.
+    private func loadDashboard() async {
+        let key = dashboardKey
+
+        if let dashboard, dashboard.key.isSameView(as: key) {
+            try? await Task.sleep(nanoseconds: 250_000_000)
+        }
+
+        guard !Task.isCancelled else { return }
+
+        dashboard = LoadedDashboard(key: key, data: InsightsDashboardData(period: key.period, dataController: dataController, incomeTracking: key.incomeTracking, firstDay: key.firstDay, breaksDownByAccount: key.breaksDownByAccount))
+    }
+
     var body: some View {
         Group {
             if transactions.isEmpty {
@@ -92,17 +135,22 @@ struct InsightsView: View {
                 ScrollViewReader { scroller in
                     ScrollView(showsIndicators: false) {
                         VStack(spacing: 12) {
-                            InsightsDashboard(period: period, dataController: dataController, incomeTracking: incomeTracking, firstDay: firstDay, formatter: formatter, breaksDownByAccount: !accounts.isEmpty && selectedAccount == nil, onSelectAccount: { choice in
-                                withAnimation(.easeInOut(duration: 0.2)) {
-                                    insightsAccount = choice.key
+                            if let dashboard {
+                                InsightsDashboard(data: dashboard.data, incomeTracking: dashboard.key.incomeTracking, formatter: formatter, onSelectAccount: { choice in
+                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                        insightsAccount = choice.key
+                                    }
+                                }) { selection in
+                                    route = selection
                                 }
-                            }) { selection in
-                                route = selection
+                                .id(dashboard.key.refreshID)
                             }
-                            .id(refreshID)
                         }
                         .padding(.horizontal, 16)
                         .padding(.top, 4)
+                    }
+                    .task(id: dashboardKey) {
+                        await loadDashboard()
                     }
                     #if DEBUG
                     .onAppear {
@@ -157,6 +205,10 @@ struct InsightsView: View {
         .background(Color.PrimaryBackground)
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .onReceive(didSave) { _ in
+            refreshID = UUID()
+        }
+        // New exchange rates, among others.
+        .onReceive(dataController.objectWillChange) { _ in
             refreshID = UUID()
         }
         .onChange(of: chartType) { _ in
@@ -1186,12 +1238,53 @@ struct InsightsDashboard: View {
         }
     }
 
-    init(period: InsightsPeriod, dataController: DataController, incomeTracking: Bool, firstDay: Date?, formatter: InsightsFormatter, breaksDownByAccount: Bool = false, onSelectAccount: ((AccountChoice) -> Void)? = nil, onSelect: @escaping (InsightsRoute) -> Void) {
-        self.period = period
+    init(data: InsightsDashboardData, incomeTracking: Bool, formatter: InsightsFormatter, onSelectAccount: ((AccountChoice) -> Void)? = nil, onSelect: @escaping (InsightsRoute) -> Void) {
+        period = data.period
         self.incomeTracking = incomeTracking
         self.formatter = formatter
         self.onSelect = onSelect
         self.onSelectAccount = onSelectAccount
+        buckets = data.buckets
+        spent = data.spent
+        spentReport = data.spentReport
+        average = data.average
+        income = data.income
+        net = data.net
+        change = data.change
+        projection = data.projection
+        cashFlow = data.cashFlow
+        // The data can trail a save by a moment, so a record deleted in it, or synced away, is left out until
+        // the totals catch up rather than drawn from a deleted object.
+        categories = data.categories.filter { $0.slice.category?.isGone != true }
+        largest = data.largest.filter { !$0.isGone }
+        recurring = data.recurring.filter { !$0.transaction.isGone }
+        accountTotals = data.accountTotals.filter { total in
+            if case let .account(account) = total.account { return !account.isGone }
+            return true
+        }
+    }
+}
+
+/// What the dashboard shows. Each card fetches, so this is worked out when what it depends on changes, not
+/// on every redraw of Insights: a menu opening or the stepper's width settling used to redo all of it.
+struct InsightsDashboardData {
+    let period: InsightsPeriod
+    let buckets: [InsightsBucket]
+    let spent: Double
+    let spentReport: ConversionReport
+    let average: Double
+    let income: Double
+    let net: Double
+    let change: Double?
+    let projection: InsightsProjection?
+    let categories: [InsightsCategoryTotal]
+    let largest: [Transaction]
+    let cashFlow: InsightsCashFlow?
+    let recurring: [InsightsRecurringCharge]
+    let accountTotals: [InsightsAccountTotal]
+
+    init(period: InsightsPeriod, dataController: DataController, incomeTracking: Bool, firstDay: Date?, breaksDownByAccount: Bool = false) {
+        self.period = period
         let accounts = InsightsAccountFilter.predicate(in: dataController)
         let spentInsights = dataController.getInsights(type: period.type, date: period.start, income: false, accounts: accounts)
         buckets = InsightsBucket.make(dates: spentInsights.dates, values: spentInsights.dateDictionary, type: period.type)

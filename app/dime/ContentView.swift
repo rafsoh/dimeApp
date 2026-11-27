@@ -44,6 +44,30 @@ struct ContentView: View {
         #endif
     }
 
+    /// Takes the main currency from iCloud key-value storage, or stores `fallback` there when it has none.
+    ///
+    /// Reading it can wait on the system's sync daemon; at launch on the main thread, that ended in the
+    /// watchdog killing the app (DIME-IOS-W). It's read on a background queue, and the currency changes on the
+    /// main thread only if nobody picked one meanwhile, such as during onboarding.
+    private func adoptICloudCurrency(storingIfMissing fallback: String) {
+        let currencyBefore = currency
+
+        DispatchQueue.global(qos: .userInitiated).async {
+            let store = NSUbiquitousKeyValueStore.default
+
+            guard let stored = store.string(forKey: "currency") else {
+                store.set(fallback, forKey: "currency")
+                return
+            }
+
+            DispatchQueue.main.async {
+                guard currency == currencyBefore, stored != currency else { return }
+                currency = stored
+                dataController.refreshExchangeRates()
+            }
+        }
+    }
+
     @AppStorage("topEdge", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var savedTopEdge: Double = 30
     @AppStorage("bottomEdge", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var savedBottomEdge: Double = 15
 
@@ -134,23 +158,17 @@ struct ContentView: View {
 
                 if isUsingDemoData {
                     // Demo data sets its own currency, and must not reach iCloud's copy.
-                } else if NSUbiquitousKeyValueStore.default.string(forKey: "currency") == nil {
-                    NSUbiquitousKeyValueStore.default.set(Locale.current.currencyCode ?? "USD", forKey: "currency")
                 } else {
-                    currency = NSUbiquitousKeyValueStore.default.string(forKey: "currency")!
+                    adoptICloudCurrency(storingIfMissing: Locale.current.currencyCode ?? "USD")
                 }
 
                 defaults.set(2, forKey: "numberEntryType")
             } else if isUsingDemoData {
                 // Demo data sets its own currency, and must not reach iCloud's copy.
             } else {
-                if let holdingCurrency = NSUbiquitousKeyValueStore.default.string(forKey: "currency") {
-                    currency = holdingCurrency
-                } else {
-                    // Before iCloud's copy arrives, keep this device's currency rather than the locale's:
-                    // transactions name their currency, so a silent switch would make them all foreign.
-                    NSUbiquitousKeyValueStore.default.set(currency, forKey: "currency")
-                }
+                // Before iCloud's copy arrives, keep this device's currency rather than the locale's:
+                // transactions name their currency, so a silent switch would make them all foreign.
+                adoptICloudCurrency(storingIfMissing: currency)
             }
 
             dataController.refreshExchangeRates()

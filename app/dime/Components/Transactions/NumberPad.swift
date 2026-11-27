@@ -53,8 +53,6 @@ struct NumberPad: View {
 
     var numPadNumbers = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
 
-    @State private var engine: CHHapticEngine?
-
     var body: some View {
         GeometryReader { proxy in
             VStack(spacing: proxy.size.height * 0.04) {
@@ -120,65 +118,20 @@ struct NumberPad: View {
         .padding(.bottom, 15)
         .keyboardAwareHeight(showToolbar: showingNotePicker)
         .onAppear(perform: prepareHaptics)
+        .onChange(of: hapticType) { _ in
+            prepareHaptics()
+        }
     }
 
+    // Only the number pad's own haptic setting plays through the engine, so nothing else needs one made.
     func prepareHaptics() {
-        guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
-
-        do {
-            engine = try CHHapticEngine()
-            try engine?.start()
-        } catch {
-            print("There was an error creating the engine: \(error.localizedDescription)")
+        if hapticType == 2 {
+            NumberPadHaptics.shared.prepare()
         }
     }
 
     func hapticTap() {
-        // make sure that the device supports haptics
-        guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
-
-        let hapticDict = [
-            CHHapticPattern.Key.pattern: [
-                [CHHapticPattern.Key.event: [
-                    CHHapticPattern.Key.eventType: CHHapticEvent.EventType.hapticTransient,
-                    CHHapticPattern.Key.time: CHHapticTimeImmediate,
-                    CHHapticPattern.Key.eventDuration: 1.0]
-                ]
-            ]
-        ]
-
-        do {
-            let pattern = try CHHapticPattern(dictionary: hapticDict)
-
-            let player = try engine?.makePlayer(with: pattern)
-
-            engine?.notifyWhenPlayersFinished { _ in
-                return .stopEngine
-            }
-
-            try engine?.start()
-            try player?.start(atTime: 0)
-        } catch {
-            print("Failed to play pattern: \(error.localizedDescription).")
-        }
-
-//        
-//        var events = [CHHapticEvent]()
-//
-//        // create one intense, sharp tap
-//        let intensity = CHHapticEventParameter(parameterID: .hapticIntensity, value: 1)
-//        let sharpness = CHHapticEventParameter(parameterID: .hapticSharpness, value: 1)
-//        let event = CHHapticEvent(eventType: .hapticTransient, parameters: [intensity, sharpness], relativeTime: 0)
-//        events.append(event)
-//
-//        // convert those events into a pattern and play it immediately
-//        do {
-//            let pattern = try CHHapticPattern(events: events, parameters: [])
-//            let player = try engine?.makePlayer(with: pattern)
-//            try player?.start(atTime: 0)
-//        } catch {
-//            print("Failed to play pattern: \(error.localizedDescription).")
-//        }
+        NumberPadHaptics.shared.tap()
     }
 
     public func deleteLastDigit() {
@@ -385,6 +338,77 @@ struct NumberPadTextView: View {
         } else {
             price = AmountEntry.removingDecimal(from: price, assigned: decimalValuesAssigned.count)
             decimalValuesAssigned = AssignedDecimal(count: decimalValuesAssigned.count - 1)
+        }
+    }
+}
+
+/// The number pad's haptic engine, made, started and played on a queue of its own.
+///
+/// Making a CHHapticEngine opens an audio session with a synchronous call to the audio server, and starting
+/// one waits on it too. When the server was slow to answer, that held the main thread for about 10 seconds
+/// as the entry sheet opened (DIME-IOS-X). One engine is kept for the app rather than one per number pad.
+final class NumberPadHaptics {
+    static let shared = NumberPadHaptics()
+
+    private let queue = DispatchQueue(label: "com.rafaelsoh.dime.numberPadHaptics", qos: .userInitiated)
+    // Only touched on `queue`.
+    private var engine: CHHapticEngine?
+    private var pattern: CHHapticPattern?
+    private var unsupported = false
+
+    private init() {}
+
+    func prepare() {
+        queue.async {
+            _ = self.readyEngine()
+        }
+    }
+
+    func tap() {
+        queue.async {
+            guard let engine = self.readyEngine(), let pattern = self.pattern else { return }
+
+            do {
+                let player = try engine.makePlayer(with: pattern)
+                try engine.start()
+                try player.start(atTime: CHHapticTimeImmediate)
+            } catch {
+                print("Failed to play pattern: \(error.localizedDescription).")
+            }
+        }
+    }
+
+    // Call on `queue`.
+    private func readyEngine() -> CHHapticEngine? {
+        if let engine {
+            return engine
+        }
+
+        guard !unsupported else { return nil }
+
+        guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else {
+            unsupported = true
+            return nil
+        }
+
+        do {
+            let engine = try CHHapticEngine()
+            // Stopped between taps so it doesn't hold the audio session; each tap starts it again.
+            engine.notifyWhenPlayersFinished { _ in
+                .stopEngine
+            }
+            // A reset (the audio server restarting) stops the engine. The next tap starts it again.
+            engine.resetHandler = {}
+
+            pattern = try CHHapticPattern(events: [
+                CHHapticEvent(eventType: .hapticTransient, parameters: [], relativeTime: 0, duration: 1)
+            ], parameters: [])
+
+            self.engine = engine
+            return engine
+        } catch {
+            print("There was an error creating the engine: \(error.localizedDescription)")
+            return nil
         }
     }
 }
