@@ -1197,10 +1197,33 @@ struct SingleTransactionView: View {
     @State var refreshID = UUID()
 
     @ObservedObject var dataController = DataController.shared
+    @ObservedObject var autoCategorizer = AutoCategorizer.shared
     @EnvironmentObject var transactionManager: OverallTransactionManager
 
     @Environment(\.logAccount) private var logAccount
     @Environment(\.showsAccountNames) private var showsAccountNames
+
+    /// Apple Intelligence is picking a category for it (Feature Lab).
+    var isCategorising: Bool {
+        autoCategorizer.pending.contains(transaction.objectID)
+    }
+
+    /// The category tile, with sparkles and a turning ring while Apple Intelligence picks the category.
+    var categoryTile: some View {
+        var tile = EmojiLogView(transaction: transaction, future: future)
+
+        if isCategorising {
+            tile.symbol = "sparkles"
+        }
+
+        return tile
+            .overlay {
+                if isCategorising {
+                    AutoCategoryTileRing()
+                        .transition(.opacity)
+                }
+            }
+    }
 
     /// A transfer in a list of every account is neither spending nor income, so it has no sign or colour.
     /// In an account's own list it's money leaving or arriving, like any other.
@@ -1293,7 +1316,7 @@ struct SingleTransactionView: View {
                 .accessibilityHidden(true)
 
             HStack(spacing: 12) {
-                EmojiLogView(transaction: transaction, future: future)
+                categoryTile
                     .fixedSize(horizontal: true, vertical: true)
                     .overlay(alignment: .bottomTrailing) {
                         if transaction.recurringType > 0 {
@@ -1356,6 +1379,7 @@ struct SingleTransactionView: View {
                     .fill(Color.SettingsBackground)
                     .opacity(isPressed ? 1 : 0)
             }
+            .autoCategoryGlimmer(isCategorising)
             .scaleEffect(isPressed ? 0.98 : 1)
             .contentShape(RoundedRectangle(cornerRadius: 10))
             .onTapGesture {
@@ -1398,6 +1422,7 @@ struct SingleTransactionView: View {
             .offset(x: offset)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("\(transaction.displayTitle), \(accessibilityAmount), Transaction Category: \(transaction.wrappedCategoryName), Transaction made at \(timeConverterAccessibilityLabel(date: transaction.wrappedDate))")
+            .accessibilityValue(isCategorising ? Text("Choosing a category") : Text(verbatim: ""))
         }
         .background {
             GeometryReader { proxy in

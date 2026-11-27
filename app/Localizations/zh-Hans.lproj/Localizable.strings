@@ -586,3 +586,11 @@
 "%@, %@, %lld percent of spending" = "%1$@，%2$@，占支出的%3$lld%%";
 "Import from Another App" = "从其他应用导入";
 "Icon" = "图标";
+
+/* Feature Lab: Auto-Categorise */
+"Auto-Categorise" = "自动分类";
+"Turn on Apple Intelligence in the Settings app to have it pick a category for transactions you log with a note but no category." = "在“设置”App 中打开 Apple 智能，即可为带备注但未选类别的交易选择类别。";
+"Apple Intelligence is still getting ready on this iPhone. Once it is, it can pick a category for transactions you log with a note but no category." = "此 iPhone 上的 Apple 智能仍在准备中。准备就绪后，它可以为带备注但未选类别的交易选择类别。";
+"When you log a transaction with a note but no category, Apple Intelligence picks one of your categories for it, on your iPhone. Notes it can't make sense of stay uncategorised." = "当你记录带备注但未选类别的交易时，Apple 智能会在你的 iPhone 上从你的类别中为其选择一个。无法理解的备注将保持无类别。";
+"Choosing a category" = "正在选择类别";
+"Filed under %@" = "已归入“%@”";

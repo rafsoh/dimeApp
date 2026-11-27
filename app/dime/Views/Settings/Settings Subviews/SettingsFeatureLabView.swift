@@ -29,6 +29,12 @@ struct SettingsGoofyView: View {
     "showTransactionRecommendations", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
   var showRecommendations: Bool = false
 
+  @AppStorage(AutoCategoryQueue.enabledKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+  var autoCategorise: Bool = false
+
+  /// Read again on the way back from the Settings app, where Apple Intelligence is turned on.
+  @State private var autoCategoryAvailability = AutoCategorizer.availability
+
   @Namespace var animation
 
   var body: some View {
@@ -60,6 +66,25 @@ struct SettingsGoofyView: View {
 
       SettingsSectionFooter("Displays transaction suggestions whilst you type in the 'Note' field of the new transaction page.")
 
+      // Only where Apple Intelligence can run, though it may still be off or downloading.
+      if autoCategoryAvailability != .unsupported {
+        let available = autoCategoryAvailability == .available
+
+        ToggleRow(text: "Auto-Categorise", bool: available ? $autoCategorise : .constant(false))
+          .disabled(!available)
+          .settingsSectionRows()
+          .padding(.top, .settingsHeaderSpacing)
+
+        switch autoCategoryAvailability {
+        case .turnedOff:
+          SettingsSectionFooter("Turn on Apple Intelligence in the Settings app to have it pick a category for transactions you log with a note but no category.")
+        case .notReady:
+          SettingsSectionFooter("Apple Intelligence is still getting ready on this iPhone. Once it is, it can pick a category for transactions you log with a note but no category.")
+        default:
+          SettingsSectionFooter("When you log a transaction with a note but no category, Apple Intelligence picks one of your categories for it, on your iPhone. Notes it can't make sense of stay uncategorised.")
+        }
+      }
+
       //            ToggleRow(text: "Miles-Morales Effect", bool: $chromatic, id: 5)
       //            .background(Color.SettingsBackground, in: RoundedRectangle(cornerRadius: 9))
       //
@@ -71,6 +96,11 @@ struct SettingsGoofyView: View {
       //                .padding(.bottom, 30)
     }
     .modifier(SettingsSubviewModifier(title: "Feature Lab"))
+    .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
+      withAnimation {
+        autoCategoryAvailability = AutoCategorizer.availability
+      }
+    }
   }
 
   func ToggleRow(text: String, bool: Binding<Bool>) -> some View {

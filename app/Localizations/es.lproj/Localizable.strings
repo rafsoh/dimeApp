@@ -586,3 +586,11 @@
 "%@, %@, %lld percent of spending" = "%1$@, %2$@, %3$lld por ciento del gasto";
 "Import from Another App" = "Importar desde otra app";
 "Icon" = "Icono";
+
+/* Feature Lab: Auto-Categorise */
+"Auto-Categorise" = "Categorizar automáticamente";
+"Turn on Apple Intelligence in the Settings app to have it pick a category for transactions you log with a note but no category." = "Activa Apple Intelligence en la app Ajustes para que elija una categoría para las transacciones que registres con una nota pero sin categoría.";
+"Apple Intelligence is still getting ready on this iPhone. Once it is, it can pick a category for transactions you log with a note but no category." = "Apple Intelligence aún se está preparando en este iPhone. Cuando esté lista, podrá elegir una categoría para las transacciones que registres con una nota pero sin categoría.";
+"When you log a transaction with a note but no category, Apple Intelligence picks one of your categories for it, on your iPhone. Notes it can't make sense of stay uncategorised." = "Cuando registras una transacción con una nota pero sin categoría, Apple Intelligence elige una de tus categorías para ella, en tu iPhone. Las notas que no logra entender se quedan sin categoría.";
+"Choosing a category" = "Eligiendo una categoría";
+"Filed under %@" = "Archivada en %@";

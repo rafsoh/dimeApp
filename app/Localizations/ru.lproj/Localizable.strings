@@ -598,3 +598,11 @@
 "%@, %@, %lld percent of spending" = "%1$@, %2$@, %3$lld%% расходов";
 "Import from Another App" = "Импорт из другого приложения";
 "Icon" = "Значок";
+
+/* Feature Lab: Auto-Categorise */
+"Auto-Categorise" = "Автокатегории";
+"Turn on Apple Intelligence in the Settings app to have it pick a category for transactions you log with a note but no category." = "Включите Apple Intelligence в приложении «Настройки», чтобы она подбирала категорию для записей, которые вы добавляете с примечанием, но без категории.";
+"Apple Intelligence is still getting ready on this iPhone. Once it is, it can pick a category for transactions you log with a note but no category." = "Apple Intelligence ещё готовится на этом iPhone. Когда всё будет готово, она сможет подбирать категорию для записей, которые вы добавляете с примечанием, но без категории.";
+"When you log a transaction with a note but no category, Apple Intelligence picks one of your categories for it, on your iPhone. Notes it can't make sense of stay uncategorised." = "Когда вы добавляете запись с примечанием, но без категории, Apple Intelligence прямо на вашем iPhone подбирает для неё одну из ваших категорий. Примечания, которые она не может понять, остаются без категории.";
+"Choosing a category" = "Подбор категории";
+"Filed under %@" = "Отнесено к «%@»";
