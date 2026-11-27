@@ -312,6 +312,7 @@
 		64D591C139E5526C2F17E652 /* AccountsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountsTests.swift; sourceTree = "<group>"; };
 		823A3BD58AB1C6E3436CF9FC /* Accounts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Accounts.swift; sourceTree = "<group>"; };
 		490ECA28C2F358F1275FEA4E /* MainModel 6.xcdatamodel */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = wrapper.xcdatamodel; path = "MainModel 6.xcdatamodel"; sourceTree = "<group>"; };
+		A7F3C2E19B4D5E6F70812345 /* MainModel 7.xcdatamodel */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = wrapper.xcdatamodel; path = "MainModel 7.xcdatamodel"; sourceTree = "<group>"; };
 		A110F0022F0C000000A110F0 /* Allo-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Allo-Regular.ttf"; sourceTree = "<group>"; };
 		A110F0052F0C000000A110F0 /* Allo-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Allo-Medium.ttf"; sourceTree = "<group>"; };
 		A110F0082F0C000000A110F0 /* Allo-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Allo-SemiBold.ttf"; sourceTree = "<group>"; };
@@ -2132,13 +2133,14 @@
 			isa = XCVersionGroup;
 			children = (
 				490ECA28C2F358F1275FEA4E /* MainModel 6.xcdatamodel */,
+				A7F3C2E19B4D5E6F70812345 /* MainModel 7.xcdatamodel */,
 				53BC2A402A8B21920019E4A8 /* MainModel 2.xcdatamodel */,
 				53BC2A412A8B21920019E4A8 /* MainModel.xcdatamodel */,
 				55E30C4DCFF029D0E8F8975B /* MainModel 3.xcdatamodel */,
 				D7C0E1A12F2C000100A1B2C3 /* MainModel 4.xcdatamodel */,
 				D7E9F3B12F31000100A1B2C3 /* MainModel 5.xcdatamodel */,
 			);
-			currentVersion = 490ECA28C2F358F1275FEA4E /* MainModel 6.xcdatamodel */;
+			currentVersion = A7F3C2E19B4D5E6F70812345 /* MainModel 7.xcdatamodel */;
 			path = MainModel.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;
