@@ -551,4 +551,63 @@ final class AccountsTests: XCTestCase {
         XCTAssertTrue(transaction.onceRecurring)
         XCTAssertNotNil(transaction.id)
     }
+
+    // Shortcuts can pick the account; one deleted before the save lands is Main, like any account deleted meanwhile.
+    @MainActor
+    func testShortcutTransactionsGoIntoTheirAccount() async throws {
+        guard #available(iOS 16, *) else { throw XCTSkip("Shortcuts actions need iOS 16.") }
+
+        let card = makeAccount("Shortcut card")
+        let objectID = try await dataController.newTransactionInBackground(note: "Coffee", categoryID: nil, income: false, amount: 4, currencyCode: mainCurrency, accountID: card.objectID, repeatType: 0)
+        let transaction = try XCTUnwrap(try context.existingObject(with: objectID) as? Transaction)
+        inserted.append(transaction)
+
+        XCTAssertEqual(transaction.account, card)
+
+        let gone = makeAccount("Shortcut gone")
+        let goneID = gone.objectID
+        dataController.deleteAccount(gone)
+
+        let laterID = try await dataController.newTransactionInBackground(note: "Lunch", categoryID: nil, income: false, amount: 9, currencyCode: mainCurrency, accountID: goneID, repeatType: 0)
+        let later = try XCTUnwrap(try context.existingObject(with: laterID) as? Transaction)
+        inserted.append(later)
+
+        XCTAssertNil(later.account)
+    }
+
+    @MainActor
+    func testShortcutAccountsAreMainAndEveryAccount() async throws {
+        guard #available(iOS 16, *) else { throw XCTSkip("Shortcuts actions need iOS 16.") }
+
+        let savings = makeAccount("Shortcut savings")
+        let query = AccountQuery()
+
+        let suggested = try await query.suggestedEntities().map(\.id)
+        XCTAssertEqual(suggested.first, MainAccount.key)
+        XCTAssertTrue(suggested.contains(savings.key))
+
+        let matched = try await query.entities(matching: "shortcut sav").map(\.id)
+        XCTAssertEqual(matched, [savings.key])
+
+        let key = savings.key
+        dataController.deleteAccount(savings)
+        let resolved = try await query.entities(for: [MainAccount.key, key]).map(\.id)
+        XCTAssertEqual(resolved, [MainAccount.key])
+    }
+
+    func testShortcutInsightsCountOnlyTheirAccounts() throws {
+        let card = makeAccount("Insights card")
+        let everythingBefore = dataController.shortcutInsightsTotal(type: 3, timeframe: 5, optionalIncome: false, categories: []).value
+
+        add(10, account: card)
+        add(5)
+        transfer(100, from: .main, to: .account(card))
+        try context.save()
+
+        let cardOnly = AccountScope(keys: [card.key]).predicate(in: context)
+        XCTAssertEqual(dataController.shortcutInsightsTotal(type: 3, timeframe: 5, optionalIncome: false, categories: [], accounts: cardOnly).value, 10, accuracy: 0.001)
+
+        let everything = dataController.shortcutInsightsTotal(type: 3, timeframe: 5, optionalIncome: false, categories: []).value
+        XCTAssertEqual(everything - everythingBefore, 15, accuracy: 0.001)
+    }
 }

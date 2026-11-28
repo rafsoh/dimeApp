@@ -599,3 +599,33 @@
 "When you log a transaction with a note but no category, Apple Intelligence picks one of your categories for it, on your iPhone. Notes it can't make sense of stay uncategorised." = "Quando registri una transazione con una nota ma senza categoria, Apple Intelligence sceglie una delle tue categorie, direttamente sul tuo iPhone. Le note che non riesce a interpretare restano senza categoria.";
 "Choosing a category" = "Scelta della categoria in corso";
 "Filed under %@" = "Archiviata in %@";
+
+/* Accounts, transfers, import and Shortcuts strings missing until 3.1 */
+"Close" = "Chiudi";
+"Save" = "Salva";
+"Done" = "Fine";
+"Reorder" = "Riordina";
+"New Category" = "Nuova categoria";
+"Everything" = "Tutto";
+"Everything, overall budget" = "Tutto, budget complessivo";
+"Link Accounts" = "Collega i conti";
+"Each account in your file is linked to one in Dime. Anything new is created for you, and you can edit it later." = "Ogni conto del file viene collegato a un conto in Dime. Quelli nuovi vengono creati per te e puoi modificarli in seguito.";
+"Choose Account" = "Scegli conto";
+"Your file doesn't say which account these transactions are in. Pick the one they go into." = "Il file non indica in quale conto si trovano queste transazioni. Scegli il conto in cui inserirle.";
+"Optional. Matched to your accounts, or you pick one for the whole file." = "Facoltativo. Abbinato ai tuoi conti, oppure ne scegli uno per tutto il file.";
+"No Account" = "Nessun conto";
+"1 transaction" = "1 transazione";
+"%lld transactions" = "%lld transazioni";
+"Transfers" = "Trasferimenti";
+"New Accounts" = "Nuovi conti";
+"The account to log it in. Leave it empty to log it in your main account." = "Il conto in cui registrarla. Lascia vuoto per registrarla nel conto principale.";
+"Which account? The one this shortcut used was deleted." = "Quale conto? Il conto usato da questa scorciatoia è stato eliminato.";
+"Only count transactions in these accounts. Leave it empty to count every account." = "Conta solo le transazioni di questi conti. Lascia vuoto per contare tutti i conti.";
+"Category for an expense. Choose No Category to log it without one." = "Categoria di una spesa. Scegli Nessuna categoria per registrarla senza.";
+"Category for an income. Choose No Category to log it without one." = "Categoria di un'entrata. Scegli Nessuna categoria per registrarla senza.";
+"Edits the template" = "Modifica il modello";
+"Move Earlier" = "Sposta prima";
+"Move Later" = "Sposta dopo";
+"Tap a template to edit it, or hold and drag it to a new spot. The Quick Add widget logs each one with one tap, without opening Dime, and editing or deleting a template never changes what you've logged." = "Tocca un modello per modificarlo, oppure tienilo premuto e trascinalo in un'altra posizione. Il widget Aggiunta rapida registra ciascuno con un tocco, senza aprire Dime, e modificare o eliminare un modello non cambia mai ciò che hai già registrato.";
+"no rollover" = "nessun riporto";
+"rollover" = "riporto";
