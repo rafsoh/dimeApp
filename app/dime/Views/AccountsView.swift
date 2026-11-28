@@ -123,16 +123,11 @@ struct AccountsIntroSheet: View {
 
     var body: some View {
         if #available(iOS 16.0, *) {
-            NavigationStack {
-                AccountsView(mode: .announcement)
-            }
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
+            AccountsView(mode: .announcement)
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
         } else {
-            NavigationView {
-                AccountsView(mode: .announcement)
-            }
-            .navigationViewStyle(.stack)
+            AccountsView(mode: .announcement)
         }
     }
 }
@@ -197,23 +192,46 @@ struct AccountsView: View {
         case .settings:
             content
                 .modifier(SettingsPageHeader(title: "Accounts"))
-        case .welcome, .announcement:
+        case .announcement:
+            // A sheet of its own, headed like the app's other sheets: close, the title centred, and New, which
+            // a half sheet has no room to float over its list.
+            content
+                .tabHeader {
+                    HStack {
+                        GlassIconButton(systemName: "xmark", accessibilityLabel: "Close") {
+                            dismiss()
+                        }
+                        .hiddenInSideBar()
+
+                        Spacer()
+
+                        GlassIconButton(systemName: "plus", accessibilityLabel: "New Account") {
+                            editing = .new
+                        }
+                        .hiddenInSideBar()
+                    }
+                    .frame(height: 44)
+                    .overlay {
+                        CategoryEditorTitle(title: "Accounts")
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 20)
+                }
+                .sideBarSheet {
+                    SideBarCloseItem { dismiss() }
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            editing = .new
+                        } label: {
+                            Label("New Account", systemImage: "plus")
+                        }
+                    }
+                }
+        case .welcome:
             content
                 .navigationTitle(Text("Accounts"))
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
-                    // A half sheet has no room for a floating button over its list, so New moves up here.
-                    if mode == .announcement {
-                        ToolbarItem(placement: .navigationBarLeading) {
-                            Button {
-                                editing = .new
-                            } label: {
-                                Label("New Account", systemImage: "plus")
-                            }
-                            .prominentToolbarButton(tint: Color.PrimaryText, isProminent: false)
-                        }
-                    }
-
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button {
                             if let finishOnboarding {
