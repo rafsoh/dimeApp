@@ -236,17 +236,59 @@ struct AccountIconKeyboard: UIViewRepresentable {
     }
 }
 
-/// Stands in for a text field whose keyboard is the icons. It has no size and draws nothing.
-final class AccountIconKeyboardHost: UIView {
-    var iconKeyboard: UIView?
-    var onFocusChange: ((Bool) -> Void)?
-
-    override var canBecomeFirstResponder: Bool {
-        true
+/// A text field whose keyboard is the icons. It has no size, draws nothing and takes no text.
+///
+/// It's a text field rather than a plain view with an input view: the sheet only rises above the keyboard of
+/// a text field, and with a plain view the icons covered the sheet.
+final class AccountIconKeyboardHost: UITextField, UITextFieldDelegate {
+    var iconKeyboard: UIView? {
+        didSet {
+            inputView = iconKeyboard
+        }
     }
 
-    override var inputView: UIView? {
-        iconKeyboard
+    var onFocusChange: ((Bool) -> Void)?
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        delegate = self
+        borderStyle = .none
+        backgroundColor = .clear
+        textColor = .clear
+        tintColor = .clear
+        autocorrectionType = .no
+        spellCheckingType = .no
+        autocapitalizationType = .none
+        // No undo, redo and paste bar above the icons on iPad.
+        inputAssistantItem.leadingBarButtonGroups = []
+        inputAssistantItem.trailingBarButtonGroups = []
+        isAccessibilityElement = false
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func caretRect(for _: UITextPosition) -> CGRect {
+        .zero
+    }
+
+    override func selectionRects(for _: UITextRange) -> [UITextSelectionRect] {
+        []
+    }
+
+    override func canPerformAction(_: Selector, withSender _: Any?) -> Bool {
+        false
+    }
+
+    // Typing on a hardware keyboard goes nowhere.
+    func textField(_: UITextField, shouldChangeCharactersIn _: NSRange, replacementString _: String) -> Bool {
+        false
+    }
+
+    func textFieldShouldReturn(_: UITextField) -> Bool {
+        false
     }
 
     override func becomeFirstResponder() -> Bool {
