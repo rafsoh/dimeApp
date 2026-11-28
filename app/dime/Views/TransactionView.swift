@@ -60,13 +60,10 @@ struct TransactionView: View {
         case expense, income, transfer
     }
 
-    /// Accounts only show once there's one besides Main. A transfer being edited always shows, so it can be changed.
-    var showsAccounts: Bool {
-        !accountObjects.isEmpty || toEdit?.isTransfer == true
-    }
-
+    /// Every entry shows its account, Main included, so accounts are there to find before there's a second one.
+    /// A transfer needs two, so Transfer only shows once there's an account besides Main, or when editing one.
     var allowsTransfer: Bool {
-        showsAccounts && !isTemplate
+        (!accountObjects.isEmpty || toEdit?.isTransfer == true) && !isTemplate
     }
 
     var kindSelection: Binding<EntryKind> {
@@ -725,16 +722,11 @@ struct TransactionView: View {
                     stackedFilingTokens
                 }
             }
-        } else if dynamicTypeSize > .xLarge || showsAccounts {
+        } else {
+            // With the account always shown, the line rarely fits side by side, and there's no ViewThatFits.
             VStack(spacing: 0) {
                 leadingToken
                 stackedFilingTokens
-            }
-        } else {
-            HStack(spacing: 8) {
-                leadingToken
-                lineSeparator
-                categoryToken
             }
         }
     }
@@ -743,12 +735,10 @@ struct TransactionView: View {
     @ViewBuilder var filingTokens: some View {
         if isTransfer {
             transferTokens
-        } else if showsAccounts {
+        } else {
             categoryToken
             lineSeparator
             accountToken
-        } else {
-            categoryToken
         }
     }
 
@@ -758,9 +748,7 @@ struct TransactionView: View {
             transferTokens
         } else {
             categoryToken
-            if showsAccounts {
-                accountToken
-            }
+            accountToken
         }
     }
 
