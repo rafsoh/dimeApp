@@ -101,7 +101,7 @@ struct TransactionView: View {
 
     /// The first account that isn't where the transfer comes from.
     var defaultTransferDestination: AccountChoice? {
-        ([.main] + accountObjects.map(AccountChoice.account)).first { $0 != account }
+        firstAccount(otherThan: account)
     }
 
     @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode ?? "USD"
@@ -807,7 +807,7 @@ struct TransactionView: View {
         case .to:
             AccountPickerSheet(title: "To", selection: Binding(get: { transferTo }, set: { picked in
                 if let picked, picked == account {
-                    account = transferTo ?? firstAccount(otherThan: picked)
+                    account = transferTo ?? firstAccount(otherThan: picked) ?? .main
                 }
                 transferTo = picked
             }))
@@ -826,8 +826,8 @@ struct TransactionView: View {
     }
 
     /// Main or an account, whichever comes first that isn't `choice`.
-    func firstAccount(otherThan choice: AccountChoice) -> AccountChoice {
-        ([.main] + accountObjects.map(AccountChoice.account)).first { $0 != choice } ?? .main
+    func firstAccount(otherThan choice: AccountChoice) -> AccountChoice? {
+        ([.main] + accountObjects.map(AccountChoice.account)).first { $0 != choice }
     }
 
     /// The date, or on a template, which has no date, a label saying it's a Quick Add template.

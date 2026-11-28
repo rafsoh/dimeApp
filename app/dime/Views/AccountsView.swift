@@ -101,18 +101,77 @@ struct AccountIconKeyboard: UIViewRepresentable {
     let selection: String
     let onPick: (String) -> Void
 
+    /// Used until the name's keyboard has been seen, such as with a hardware keyboard.
+    static let fallbackHeight: CGFloat = 270
+    /// Four rows of icons.
+    static let minimumHeight: CGFloat = 240
+
     final class Coordinator {
         var isActive: Binding<Bool>
         var hosting: UIHostingController<AccountIconKeyboardContent>?
+        weak var host: AccountIconKeyboardHost?
+        /// How tall the name's keyboard is, so the icons can be as tall and the sheet above them stays put.
+        private var textKeyboardHeight: CGFloat?
+        /// What the system adds below a custom keyboard, such as room for the home indicator. Measured the first
+        /// time the icons show.
+        private static var systemPadding: CGFloat?
+        private var observer: NSObjectProtocol?
 
         init(isActive: Binding<Bool>) {
             self.isActive = isActive
+            observer = NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillChangeFrameNotification, object: nil, queue: .main) { [weak self] notification in
+                guard let frame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else { return }
+                self?.keyboardWillChange(to: frame.height)
+            }
+        }
+
+        deinit {
+            if let observer {
+                NotificationCenter.default.removeObserver(observer)
+            }
         }
 
         func focusChanged(_ focused: Bool) {
             DispatchQueue.main.async { [weak self] in
                 guard let self, self.isActive.wrappedValue != focused else { return }
                 self.isActive.wrappedValue = focused
+            }
+        }
+
+        /// Makes the icons as tall as the name's keyboard, before they show.
+        func sizeIcons() {
+            guard let host, let keyboard = host.iconKeyboard else { return }
+            let padding = Self.systemPadding ?? host.window?.safeAreaInsets.bottom ?? 0
+            let height = iconsHeight(padding: padding)
+
+            if keyboard.frame.height != height {
+                keyboard.frame.size.height = height
+            }
+        }
+
+        private func iconsHeight(padding: CGFloat) -> CGFloat {
+            // A hardware keyboard leaves only a short bar, which the icons can't fit in.
+            guard let textKeyboardHeight, textKeyboardHeight >= 200 else {
+                return AccountIconKeyboard.fallbackHeight
+            }
+            return max(AccountIconKeyboard.minimumHeight, (textKeyboardHeight - padding).rounded())
+        }
+
+        private func keyboardWillChange(to height: CGFloat) {
+            guard height > 0, let host, let keyboard = host.iconKeyboard else { return }
+
+            guard host.isFirstResponder else {
+                textKeyboardHeight = height
+                return
+            }
+
+            // The icons are showing: learn what the system added below them, and if the guess was off, correct it once.
+            Self.systemPadding = height - keyboard.frame.height
+            let corrected = iconsHeight(padding: height - keyboard.frame.height)
+
+            if abs(corrected - keyboard.frame.height) > 1 {
+                keyboard.frame.size.height = corrected
+                host.reloadInputViews()
             }
         }
     }
@@ -123,12 +182,13 @@ struct AccountIconKeyboard: UIViewRepresentable {
 
     func makeUIView(context: Context) -> AccountIconKeyboardHost {
         let host = AccountIconKeyboardHost()
-        let hosting = UIHostingController(rootView: AccountIconKeyboardContent(selection: selection, onPick: onPick))
+        let hosting = UIHostingController(rootView: AccountIconKeyboardContent(selection: selection, colorScheme: context.environment.colorScheme, onPick: onPick))
         hosting.view.backgroundColor = .clear
         hosting.view.translatesAutoresizingMaskIntoConstraints = false
 
         // Drawn on the keyboard's own background, like the emoji keyboard.
-        let keyboard = UIInputView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 270), inputViewStyle: .keyboard)
+        // The system sets the width; the height is the name's keyboard's, once that's known (see Coordinator).
+        let keyboard = UIInputView(frame: CGRect(x: 0, y: 0, width: 320, height: Self.fallbackHeight), inputViewStyle: .keyboard)
         keyboard.allowsSelfSizing = false
         keyboard.addSubview(hosting.view)
         NSLayoutConstraint.activate([
@@ -143,16 +203,30 @@ struct AccountIconKeyboard: UIViewRepresentable {
             coordinator?.focusChanged(focused)
         }
         context.coordinator.hosting = hosting
+        context.coordinator.host = host
         return host
     }
 
     func updateUIView(_ host: AccountIconKeyboardHost, context: Context) {
-        context.coordinator.isActive = $isActive
-        context.coordinator.hosting?.rootView = AccountIconKeyboardContent(selection: selection, onPick: onPick)
+        let coordinator = context.coordinator
+        coordinator.isActive = $isActive
+        coordinator.hosting?.rootView = AccountIconKeyboardContent(selection: selection, colorScheme: context.environment.colorScheme, onPick: onPick)
+
+        // The keyboard has its own window, which doesn't follow the app's appearance setting.
+        let style: UIUserInterfaceStyle = context.environment.colorScheme == .dark ? .dark : .light
+        if host.iconKeyboard?.overrideUserInterfaceStyle != style {
+            host.iconKeyboard?.overrideUserInterfaceStyle = style
+        }
 
         if isActive, !host.isFirstResponder {
-            DispatchQueue.main.async {
-                _ = host.becomeFirstResponder()
+            DispatchQueue.main.async { [weak coordinator] in
+                guard !host.isFirstResponder else { return }
+                coordinator?.sizeIcons()
+
+                // If the icons can't take focus, the tile goes back to unfocused, so tapping it tries again.
+                if !host.becomeFirstResponder() {
+                    coordinator?.focusChanged(false)
+                }
             }
         } else if !isActive, host.isFirstResponder {
             DispatchQueue.main.async {
@@ -194,6 +268,7 @@ final class AccountIconKeyboardHost: UIView {
 
 struct AccountIconKeyboardContent: View {
     let selection: String
+    let colorScheme: ColorScheme
     let onPick: (String) -> Void
 
     var body: some View {
@@ -201,6 +276,7 @@ struct AccountIconKeyboardContent: View {
             .padding(.horizontal, 16)
             .padding(.top, 18)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .environment(\.colorScheme, colorScheme)
     }
 }
 
@@ -872,8 +948,6 @@ struct AccountPickerSheet: View {
     private var scope: Binding<AccountScope>?
     /// Adds an All Accounts row, which picks nil.
     private var allowsAll = false
-    /// An account that can't be picked, such as where a transfer comes from when picking where it goes.
-    private var unavailable: AccountChoice?
 
     @ObservedObject var dataController = DataController.shared
     @Environment(\.dismiss) private var dismiss
@@ -885,11 +959,10 @@ struct AccountPickerSheet: View {
     @State private var showNewAccount = false
 
     /// Picks one account; with `allowsAll`, nil stands for every account.
-    init(title: LocalizedStringKey, selection: Binding<AccountChoice?>, allowsAll: Bool = false, unavailable: AccountChoice? = nil) {
+    init(title: LocalizedStringKey, selection: Binding<AccountChoice?>, allowsAll: Bool = false) {
         self.title = title
         self.selection = selection
         self.allowsAll = allowsAll
-        self.unavailable = unavailable
     }
 
     /// Picks which accounts something counts.
@@ -928,13 +1001,13 @@ struct AccountPickerSheet: View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 8) {
                 if allowsAll {
-                    row(Text("All Accounts"), symbol: "rectangle.stack", isSelected: isAllSelected, isDisabled: false) {
+                    row(Text("All Accounts"), symbol: "rectangle.stack", isSelected: isAllSelected) {
                         selectAll()
                     }
                 }
 
                 ForEach(choices) { choice in
-                    row(Text(choice.name), symbol: choice.symbol, isSelected: isSelected(choice), isDisabled: choice == unavailable) {
+                    row(Text(choice.name), symbol: choice.symbol, isSelected: isSelected(choice)) {
                         select(choice)
                     }
                 }
@@ -994,20 +1067,20 @@ struct AccountPickerSheet: View {
         }
     }
 
-    private func row(_ name: Text, symbol: String, isSelected: Bool, isDisabled: Bool, action: @escaping () -> Void) -> some View {
+    private func row(_ name: Text, symbol: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
         let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
 
         return Button(action: action) {
             HStack(spacing: 12) {
                 AccountIconView(symbol: symbol)
                     .font(.app(.body, weight: .semibold))
-                    .foregroundColor(isDisabled ? Color.SubtitleText.opacity(0.6) : Color.SubtitleText)
+                    .foregroundColor(Color.SubtitleText)
                     .frame(width: 24)
 
                 name
                     .font(.app(.body, weight: .semibold))
                     .lineLimit(1)
-                    .foregroundColor(isDisabled ? Color.SubtitleText.opacity(0.6) : Color.PrimaryText)
+                    .foregroundColor(Color.PrimaryText)
 
                 Spacer(minLength: 8)
 
@@ -1023,7 +1096,6 @@ struct AccountPickerSheet: View {
             .contentShape(shape)
         }
         .buttonStyle(.plain)
-        .disabled(isDisabled)
         .glassBackground(in: shape, tint: isSelected ? Color.PrimaryText.opacity(0.16) : Color.glassTint, fallback: isSelected ? Color.PrimaryText.opacity(0.12) : Color.SecondaryBackground)
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     }
