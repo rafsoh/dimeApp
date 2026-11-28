@@ -768,10 +768,19 @@ struct TransactionView: View {
             }
             .accessibilityLabel(Text("From") + Text(", ") + Text(account.name))
 
-            Image(systemName: "arrow.right")
-                .font(.app(.subheadline, weight: .bold))
-                .foregroundColor(Color.SubtitleText.opacity(0.6))
-                .accessibilityHidden(true)
+            // Turns the transfer around, so money can go either way with only two accounts.
+            Button {
+                swapTransferSides()
+            } label: {
+                Image(systemName: "arrow.right")
+                    .font(.app(.subheadline, weight: .bold))
+                    .foregroundColor(Color.SubtitleText.opacity(0.6))
+                    .frame(width: 28, height: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(transferTo == nil)
+            .accessibilityLabel(Text("Swap Accounts"))
 
             AccountToken(name: transferTo?.name ?? String(localized: "Account"), symbol: transferTo?.symbol, isError: account == transferTo) {
                 UIApplication.shared.endEditing()
@@ -787,10 +796,38 @@ struct TransactionView: View {
         case .account:
             AccountPickerSheet(title: "Account", selection: Binding(get: { account }, set: { account = $0 ?? .main }))
         case .from:
-            AccountPickerSheet(title: "From", selection: Binding(get: { account }, set: { account = $0 ?? .main }), unavailable: transferTo)
+            // Picking where the transfer goes as where it comes from swaps the two, rather than being refused.
+            AccountPickerSheet(title: "From", selection: Binding(get: { account }, set: { picked in
+                let from = picked ?? .main
+                if from == transferTo {
+                    transferTo = account
+                }
+                account = from
+            }))
         case .to:
-            AccountPickerSheet(title: "To", selection: $transferTo, unavailable: account)
+            AccountPickerSheet(title: "To", selection: Binding(get: { transferTo }, set: { picked in
+                if let picked, picked == account {
+                    account = transferTo ?? firstAccount(otherThan: picked)
+                }
+                transferTo = picked
+            }))
         }
+    }
+
+    /// Where the transfer comes from becomes where it goes, and the other way round.
+    func swapTransferSides() {
+        guard let destination = transferTo else { return }
+
+        UISelectionFeedbackGenerator().selectionChanged()
+        withAnimation(.easeInOut(duration: 0.2)) {
+            transferTo = account
+            account = destination
+        }
+    }
+
+    /// Main or an account, whichever comes first that isn't `choice`.
+    func firstAccount(otherThan choice: AccountChoice) -> AccountChoice {
+        ([.main] + accountObjects.map(AccountChoice.account)).first { $0 != choice } ?? .main
     }
 
     /// The date, or on a template, which has no date, a label saying it's a Quick Add template.

@@ -586,3 +586,4 @@
 "%@, %@, %lld percent of spending" = "%1$@, %2$@, 지출의 %3$lld%%";
 "Import from Another App" = "다른 앱에서 가져오기";
 "Icon" = "아이콘";
+"Swap Accounts" = "계좌 바꾸기";

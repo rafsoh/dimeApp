@@ -598,3 +598,4 @@
 "%@, %@, %lld percent of spending" = "%1$@, %2$@, %3$lld%% расходов";
 "Import from Another App" = "Импорт из другого приложения";
 "Icon" = "Значок";
+"Swap Accounts" = "Поменять счета местами";

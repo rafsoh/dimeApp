@@ -586,3 +586,4 @@
 "%@, %@, %lld percent of spending" = "%1$@、%2$@、支出の%3$lld%%";
 "Import from Another App" = "ほかのアプリから読み込む";
 "Icon" = "アイコン";
+"Swap Accounts" = "口座を入れ替える";
