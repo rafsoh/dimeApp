@@ -407,7 +407,8 @@ struct AccountsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.finishOnboarding) private var finishOnboarding
 
-    @FetchRequest(sortDescriptors: [SortDescriptor(\.order), SortDescriptor(\.dateCreated)]) private var accounts: FetchedResults<Account>
+    /// Everyday accounts. Goals and debts are on the Budget tab.
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.order), SortDescriptor(\.dateCreated)], predicate: AccountKind.everyday.predicate) private var accounts: FetchedResults<Account>
 
     /// Redraws Main's row when it's renamed or given another icon, here or on another device.
     @AppStorage(MainAccount.nameKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var mainName = ""
@@ -994,7 +995,8 @@ struct AccountPickerSheet: View {
     @ObservedObject var dataController = DataController.shared
     @Environment(\.dismiss) private var dismiss
 
-    @FetchRequest(sortDescriptors: [SortDescriptor(\.order), SortDescriptor(\.dateCreated)]) private var accounts: FetchedResults<Account>
+    /// Every account that hasn't been put away: everyday ones, then goals and debts under their own headings.
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.order), SortDescriptor(\.dateCreated)], predicate: Account.openPredicate) private var accounts: FetchedResults<Account>
     @AppStorage(MainAccount.nameKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var mainName = ""
     @AppStorage(MainAccount.symbolKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var mainSymbol = ""
 
@@ -1008,11 +1010,20 @@ struct AccountPickerSheet: View {
     }
 
     var choices: [AccountChoice] {
-        [.main] + accounts.map(AccountChoice.account)
+        [.main] + accounts.filter { $0.accountKind == .everyday }.map(AccountChoice.account)
+    }
+
+    var goals: [AccountChoice] {
+        accounts.filter(\.isGoal).map(AccountChoice.account)
+    }
+
+    var debts: [AccountChoice] {
+        accounts.filter(\.isDebt).map(AccountChoice.account)
     }
 
     private var rowCount: Int {
-        choices.count + (allowsAll ? 1 : 0)
+        // A heading is about as tall as a row.
+        choices.count + goals.count + debts.count + (allowsAll ? 1 : 0) + (goals.isEmpty ? 0 : 1) + (debts.isEmpty ? 0 : 1)
     }
 
     var body: some View {
@@ -1044,6 +1055,26 @@ struct AccountPickerSheet: View {
                 ForEach(choices) { choice in
                     row(Text(choice.name), symbol: choice.symbol, isSelected: isSelected(choice)) {
                         select(choice)
+                    }
+                }
+
+                if !goals.isEmpty {
+                    sectionTitle("Goals")
+
+                    ForEach(goals) { choice in
+                        row(Text(choice.name), symbol: choice.symbol, isSelected: isSelected(choice)) {
+                            select(choice)
+                        }
+                    }
+                }
+
+                if !debts.isEmpty {
+                    sectionTitle("Debts")
+
+                    ForEach(debts) { choice in
+                        row(Text(choice.name), symbol: choice.symbol, isSelected: isSelected(choice)) {
+                            select(choice)
+                        }
                     }
                 }
             }
@@ -1096,6 +1127,18 @@ struct AccountPickerSheet: View {
                 }
             }
         }
+    }
+
+    private func sectionTitle(_ title: LocalizedStringKey) -> some View {
+        Text(title)
+            .font(.app(.subheadline, weight: .semibold))
+            .foregroundColor(Color.SubtitleText)
+            .textCase(.uppercase)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 18)
+            .padding(.top, 14)
+            .padding(.bottom, 2)
+            .accessibilityAddTraits(.isHeader)
     }
 
     private func row(_ name: Text, symbol: String, isSelected: Bool, action: @escaping () -> Void) -> some View {

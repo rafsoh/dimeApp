@@ -32,6 +32,10 @@ struct BudgetView: View {
     @State private var detail: BudgetDetailRoute?
     @State private var refreshID = UUID()
 
+    /// Budgets, goals or debts. Remembered, so the tab opens where it was left.
+    @AppStorage("planSection", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var section: PlanSection = .budgets
+    @State private var newSavings: SavingsEditorView.Target?
+
     private let didSave = NSManagedObjectContext.recordsDidSave
 
     private var orderedBudgets: [Budget] {
@@ -51,6 +55,39 @@ struct BudgetView: View {
     }
 
     var body: some View {
+        Group {
+            switch section {
+            case .budgets:
+                budgetsPage
+            case .goals:
+                SavingsList(kind: .goal)
+            case .debts:
+                SavingsList(kind: .debt)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .tabHeader {
+            PlanHeader(section: $section) {
+                switch section {
+                case .budgets:
+                    newBudget = true
+                case .goals:
+                    newSavings = .new(.goal)
+                case .debts:
+                    newSavings = .new(.debt)
+                }
+            }
+        }
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+        .background(Color.PrimaryBackground)
+        .sheet(item: $newSavings) { target in
+            SavingsEditorView(target: target)
+        }
+    }
+
+    /// The budgets, with their sheets.
+
+    private var budgetsPage: some View {
         Group {
             if budgets.isEmpty && mainBudget.isEmpty {
                 EmptyStateView(systemImage: "chart.bar", title: "No budgets yet")
@@ -103,15 +140,6 @@ struct BudgetView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .tabHeader {
-            TabHeader("Budgets") {
-                GlassIconButton(systemName: "plus", accessibilityLabel: "New Budget") {
-                    newBudget = true
-                }
-            }
-        }
-        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-        .background(Color.PrimaryBackground)
         .onAppear {
             dataController.updateBudgetDates()
         }

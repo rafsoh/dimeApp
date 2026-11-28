@@ -66,6 +66,15 @@ private struct AccountRecord: Codable {
     var dateCreated: Date?
     /// Missing from backups made before accounts had icons; those guess one from their name.
     var symbol: String?
+    /// Goals and debts. All missing from backups made before them, which restore as everyday accounts.
+    var kind: Int16?
+    var targetAmount: Double?
+    var targetDate: Date?
+    var repeatsMonthly: Bool?
+    var startingBalance: Double?
+    var interestRate: Double?
+    var paymentAmount: Double?
+    var closedAt: Date?
 }
 
 private struct CategoryRecord: Codable {
@@ -95,6 +104,8 @@ private struct TransactionRecord: Codable {
     /// Nil for Main.
     var accountRef: String?
     var transferID: UUID?
+    /// The payment a debt's interest was logged with.
+    var splitID: UUID?
 
     // Matches transactions from versions that didn't assign ids. Leaves out the currency so backups
     // written before it existed still match.
@@ -206,7 +217,7 @@ struct BackupStore {
                 CategoryRecord(ref: Self.reference(for: $0), id: $0.id, name: $0.name, emoji: $0.emoji, colour: $0.colour, income: $0.income, order: $0.order, dateCreated: $0.dateCreated)
             },
             transactions: transactions.map {
-                TransactionRecord(id: $0.id, note: $0.note, amount: $0.amount, date: $0.date, day: $0.day, month: $0.month, income: $0.income, onceRecurring: $0.onceRecurring, recurringType: $0.recurringType, recurringCoefficient: $0.recurringCoefficient, categoryRef: $0.category.map(Self.reference(for:)), currencyCode: $0.currencyCode, accountRef: $0.account?.key, transferID: $0.transferID)
+                TransactionRecord(id: $0.id, note: $0.note, amount: $0.amount, date: $0.date, day: $0.day, month: $0.month, income: $0.income, onceRecurring: $0.onceRecurring, recurringType: $0.recurringType, recurringCoefficient: $0.recurringCoefficient, categoryRef: $0.category.map(Self.reference(for:)), currencyCode: $0.currencyCode, accountRef: $0.account?.key, transferID: $0.transferID, splitID: $0.splitID)
             },
             budgets: budgets.map {
                 BudgetRecord(id: $0.id, amount: $0.amount, dateCreated: $0.dateCreated, green: $0.green, startDate: $0.startDate, type: $0.type, categoryRef: $0.category.map(Self.reference(for:)), rolloverEnabled: $0.rolloverEnabled, rolloverAnchor: $0.rolloverAnchor, rolloverBalance: $0.rolloverBalance, accountScope: $0.accountScope)
@@ -218,7 +229,7 @@ struct BackupStore {
                 TemplateRecord(id: $0.id, amount: $0.amount, income: $0.income, note: $0.note, order: $0.order, recurringCoefficient: $0.recurringCoefficient, recurringType: $0.recurringType, categoryRef: $0.category.map(Self.reference(for:)), currencyCode: $0.currencyCode, accountRef: $0.account?.key)
             },
             accounts: accounts.map {
-                AccountRecord(ref: $0.key, id: $0.id, name: $0.name, order: $0.order, dateCreated: $0.dateCreated, symbol: $0.symbol)
+                AccountRecord(ref: $0.key, id: $0.id, name: $0.name, order: $0.order, dateCreated: $0.dateCreated, symbol: $0.symbol, kind: $0.kind, targetAmount: $0.targetAmount, targetDate: $0.targetDate, repeatsMonthly: $0.repeatsMonthly, startingBalance: $0.startingBalance, interestRate: $0.interestRate, paymentAmount: $0.paymentAmount, closedAt: $0.closedAt)
             },
             mainAccountName: UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.string(forKey: MainAccount.nameKey),
             mainAccountSymbol: UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.string(forKey: MainAccount.symbolKey)
@@ -271,6 +282,14 @@ struct BackupStore {
             account.name = record.name
             account.symbol = record.symbol ?? record.name.map(AccountIcons.guess(for:))
             account.dateCreated = record.dateCreated
+            account.kind = record.kind ?? AccountKind.everyday.rawValue
+            account.targetAmount = record.targetAmount ?? 0
+            account.targetDate = record.targetDate
+            account.repeatsMonthly = record.repeatsMonthly ?? false
+            account.startingBalance = record.startingBalance ?? 0
+            account.interestRate = record.interestRate ?? 0
+            account.paymentAmount = record.paymentAmount ?? 0
+            account.closedAt = record.closedAt
             // After the store's own accounts, in the backup's order.
             account.order = nextAccountOrder + record.order
             accountsByRef[record.ref] = account
@@ -353,6 +372,7 @@ struct BackupStore {
             transaction.category = record.categoryRef.flatMap { categoriesByRef[$0] }
             transaction.account = record.accountRef.flatMap { accountsByRef[$0] }
             transaction.transferID = record.transferID
+            transaction.splitID = record.splitID
             result.transactions += 1
         }
 

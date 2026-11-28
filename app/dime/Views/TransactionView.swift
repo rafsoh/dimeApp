@@ -1205,7 +1205,12 @@ struct TransactionView: View {
                 }
 
                 withAnimation(.easeInOut(duration: 0.5)) {
-                    _ = dataController.saveTransfer(editing: edited, from: from, to: destination, amount: amount, currencyCode: chosenCurrency, date: transferDate, note: transferNote)
+                    let legs = dataController.saveTransfer(editing: edited, from: from, to: destination, amount: amount, currencyCode: chosenCurrency, date: transferDate, note: transferNote)
+
+                    // A new payment towards a debt with a rate pays that month's interest first.
+                    if edited == nil {
+                        dataController.logInterest(forPayment: legs.incoming)
+                    }
                 }
             }
 
@@ -1322,7 +1327,11 @@ struct TransactionView: View {
         }
 
         transaction.account = account.account
-        AccountPreferences.record(account)
+
+        // Spending from a goal is now and then; the next entry still opens on the usual account.
+        if account.account?.isGoal != true {
+            AccountPreferences.record(account)
+        }
 
         transaction.amount = price
 
@@ -1433,6 +1442,22 @@ struct TransactionView: View {
         }
 
         _account = State(initialValue: AccountPreferences.lastUsed(among: DataController.shared.accounts()))
+        toEdit = nil
+        template = nil
+    }
+
+    /// Opens on a transfer, such as money going into a goal or a payment towards a debt.
+    init(transferFrom from: AccountChoice, to destination: AccountChoice) {
+        _isTransfer = State(initialValue: true)
+        _account = State(initialValue: from)
+        _transferTo = State(initialValue: destination)
+        toEdit = nil
+        template = nil
+    }
+
+    /// Opens on an expense in an account, such as spending from a goal or a new charge on a debt.
+    init(expenseIn choice: AccountChoice) {
+        _account = State(initialValue: choice)
         toEdit = nil
         template = nil
     }

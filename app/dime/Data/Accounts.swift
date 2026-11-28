@@ -168,6 +168,69 @@ enum AccountIcons {
     ]
 }
 
+// MARK: - Goals and debts
+
+/// What an account is for, stored as `Account.kind`. Goals and debts are accounts, so money moves into them with
+/// transfers, which spending and income already leave out. A kind this version doesn't know reads as an
+/// everyday account, so nothing a newer version writes can hide an account here.
+enum AccountKind: Int16 {
+    case everyday = 0
+    /// Money set aside: a balance that grows towards a target, or by an amount every month.
+    case goal = 1
+    /// Money owed, such as a loan or a card: a balance below zero that payments bring back up.
+    case debt = 2
+
+    /// Matches the accounts of this kind. Everyday matches any kind it doesn't know too.
+    var predicate: NSPredicate {
+        switch self {
+        case .everyday:
+            return NSPredicate(format: "kind != %d AND kind != %d", AccountKind.goal.rawValue, AccountKind.debt.rawValue)
+        case .goal, .debt:
+            return NSPredicate(format: "kind == %d", rawValue)
+        }
+    }
+}
+
+extension Account {
+    var accountKind: AccountKind {
+        get { AccountKind(rawValue: kind) ?? .everyday }
+        set { kind = newValue.rawValue }
+    }
+
+    var isGoal: Bool {
+        accountKind == .goal
+    }
+
+    var isDebt: Bool {
+        accountKind == .debt
+    }
+
+    /// A goal that's done with or a debt that's paid off, put away by the user. It keeps its transactions, but
+    /// leaves the lists and pickers.
+    var isClosed: Bool {
+        closedAt != nil
+    }
+
+    /// Matches accounts that haven't been put away.
+    static var openPredicate: NSPredicate {
+        NSPredicate(format: "%K == nil", #keyPath(Account.closedAt))
+    }
+
+    /// Matches the accounts a budget can be limited to: everyday accounts and debts, such as a card. Spending from a
+    /// goal never counts towards a budget.
+    static var budgetablePredicate: NSPredicate {
+        NSPredicate(format: "kind != %d", AccountKind.goal.rawValue)
+    }
+}
+
+enum GoalPredicate {
+    /// Leaves out spending from a goal. Budgets use it: the money was set aside when it moved into the goal,
+    /// so spending it later doesn't count against this period's budget. Insights still count it as spending.
+    static var notFromGoals: NSPredicate {
+        NSPredicate(format: "%K == nil OR account.kind != %d", #keyPath(Transaction.account), AccountKind.goal.rawValue)
+    }
+}
+
 // MARK: - Choosing an account
 
 /// An account a transaction can be in: Main, or one of the user's accounts.
@@ -470,11 +533,11 @@ extension RolloverBudget {
         set { accountScope = newValue.storage }
     }
 
-    /// Matches the transactions in the budget's accounts, or nil when it counts every account.
-    var accountPredicate: NSPredicate? {
-        guard let context = managedObjectContext else {
-            return nil
+    /// Matches the transactions the budget counts: those in its accounts, and never spending from a goal.
+    var accountPredicate: NSPredicate {
+        guard let context = managedObjectContext, let accounts = countedAccounts.predicate(in: context) else {
+            return GoalPredicate.notFromGoals
         }
-        return countedAccounts.predicate(in: context)
+        return NSCompoundPredicate(andPredicateWithSubpredicates: [accounts, GoalPredicate.notFromGoals])
     }
 }

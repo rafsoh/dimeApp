@@ -1244,6 +1244,11 @@ class DataController: ObservableObject {
             container.viewContext.delete(counterpart)
         }
 
+        // A payment towards a debt takes the interest logged with it.
+        if !transaction.isGone, transaction.isTransfer {
+            deleteInterestCharges(forTransfer: transaction.transferID)
+        }
+
         delete(transaction)
     }
 
@@ -1688,6 +1693,8 @@ class DataController: ObservableObject {
             if let other = leg.transferCounterpart {
                 container.viewContext.delete(other)
             }
+            // A debt's payments from Main go, so the interest logged with them goes too.
+            deleteInterestCharges(forTransfer: leg.transferID)
             container.viewContext.delete(leg)
         }
 
@@ -1792,6 +1799,7 @@ class DataController: ObservableObject {
             container.viewContext.delete(counterpart)
         }
 
+        deleteInterestCharges(forTransfer: leg.transferID)
         leg.transferID = nil
     }
 
@@ -2744,7 +2752,7 @@ class DataController: ObservableObject {
         let endPredicate = NSPredicate(format: "%K <= %@", #keyPath(Transaction.date), Date.now as CVarArg)
         let incomePredicate = NSPredicate(format: "income = %d", false)
 
-        let predicates = [startPredicate, endPredicate, incomePredicate, TransferPredicate.excluded] + [budget.accountPredicate].compactMap { $0 }
+        let predicates = [startPredicate, endPredicate, incomePredicate, TransferPredicate.excluded] + [budget.accountPredicate]
 
         itemRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
 
@@ -2759,7 +2767,7 @@ class DataController: ObservableObject {
         let categoryPredicate = NSPredicate(format: "%K == %@", #keyPath(Transaction.category), budget.category!)
         let incomePredicate = NSPredicate(format: "income = %d", false)
 
-        let predicates = [startPredicate, endPredicate, categoryPredicate, incomePredicate, TransferPredicate.excluded] + [budget.accountPredicate].compactMap { $0 }
+        let predicates = [startPredicate, endPredicate, categoryPredicate, incomePredicate, TransferPredicate.excluded] + [budget.accountPredicate]
 
         itemRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
 

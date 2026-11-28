@@ -131,7 +131,12 @@ final class StoreMigrationTests: XCTestCase {
     }
 
     private var modelSix: NSManagedObjectModel? {
-        earlierModels.first { $0.entitiesByName["Account"] != nil }
+        earlierModels.first { $0.entitiesByName["Account"] != nil && $0.entitiesByName["Account"]?.attributesByName["symbol"] == nil }
+    }
+
+    // Model 7 gave accounts an icon; model 8 made goals and debts kinds of account.
+    private var modelSeven: NSManagedObjectModel? {
+        earlierModels.first { $0.entitiesByName["Account"]?.attributesByName["symbol"] != nil && $0.entitiesByName["Account"]?.attributesByName["kind"] == nil }
     }
 
     func testModelThreeOnlyAddsAnOptionalCurrencyToTransactions() throws {
@@ -170,12 +175,12 @@ final class StoreMigrationTests: XCTestCase {
         }
     }
 
-    /// Models 6 and 7 add accounts and transfers. Older app versions keep syncing every field they know, a
+    /// Models 6 to 8 add accounts and transfers. Older app versions keep syncing every field they know, a
     /// transaction they write has no account (so it's in Main), and nothing about accounts can ever delete a transaction.
     func testCurrentModelOnlyAddsAccountsAndTransfers() throws {
         let previous = try XCTUnwrap(modelFive)
         let added: [String: Set<String>] = [
-            "Transaction": ["account", "transferID"],
+            "Transaction": ["account", "transferID", "splitID"],
             "TemplateTransaction": ["account"],
             "Budget": ["accountScope"],
             "MainBudget": ["accountScope"]
@@ -221,13 +226,14 @@ final class StoreMigrationTests: XCTestCase {
     /// ran it, so model 6 stays exactly as they had it and their stores still open.
     func testModelSevenOnlyAddsAnOptionalIconToAccounts() throws {
         let previous = try XCTUnwrap(modelSix)
-        XCTAssertEqual(Set(currentModel.entitiesByName.keys), Set(previous.entitiesByName.keys))
+        let model = try XCTUnwrap(modelSeven)
+        XCTAssertEqual(Set(model.entitiesByName.keys), Set(previous.entitiesByName.keys))
 
-        for (name, entity) in currentModel.entitiesByName where name != "Account" {
+        for (name, entity) in model.entitiesByName where name != "Account" {
             XCTAssertEqual(entity.versionHash, previous.entitiesByName[name]?.versionHash, "\(name) changed")
         }
 
-        let account = try XCTUnwrap(currentModel.entitiesByName["Account"])
+        let account = try XCTUnwrap(model.entitiesByName["Account"])
         let previousAccount = try XCTUnwrap(previous.entitiesByName["Account"])
         XCTAssertEqual(Set(account.propertiesByName.keys), Set(previousAccount.propertiesByName.keys).union(["symbol"]))
 
@@ -236,6 +242,69 @@ final class StoreMigrationTests: XCTestCase {
         }
 
         XCTAssertTrue(try XCTUnwrap(account.attributesByName["symbol"]).isOptional)
+    }
+
+    /// Model 8 makes goals and debts kinds of account, and links a debt's interest to its payment. Every field is
+    /// optional with a default that leaves an account everyday, so older versions keep syncing what they know.
+    func testModelEightOnlyAddsGoalsAndDebts() throws {
+        let previous = try XCTUnwrap(modelSeven)
+        XCTAssertEqual(Set(currentModel.entitiesByName.keys), Set(previous.entitiesByName.keys))
+
+        let added: [String: Set<String>] = [
+            "Account": ["kind", "targetAmount", "targetDate", "repeatsMonthly", "startingBalance", "interestRate", "paymentAmount", "closedAt"],
+            "Transaction": ["splitID"]
+        ]
+
+        for (name, entity) in currentModel.entitiesByName {
+            let previousEntity = try XCTUnwrap(previous.entitiesByName[name])
+            let newProperties = added[name] ?? []
+            XCTAssertEqual(Set(entity.propertiesByName.keys), Set(previousEntity.propertiesByName.keys).union(newProperties), "\(name)")
+
+            for (property, description) in previousEntity.propertiesByName {
+                XCTAssertEqual(entity.propertiesByName[property]?.versionHash, description.versionHash, "\(name).\(property) changed")
+            }
+
+            for property in newProperties {
+                XCTAssertTrue(try XCTUnwrap(entity.propertiesByName[property]).isOptional, "\(name).\(property) isn't optional")
+            }
+
+            if newProperties.isEmpty {
+                XCTAssertEqual(entity.versionHash, previousEntity.versionHash, "\(name) changed")
+            }
+        }
+
+        let account = try XCTUnwrap(currentModel.entitiesByName["Account"])
+        XCTAssertEqual(account.attributesByName["kind"]?.defaultValue as? Int16, AccountKind.everyday.rawValue)
+        XCTAssertEqual(account.attributesByName["startingBalance"]?.defaultValue as? Double, 0)
+        XCTAssertEqual(account.attributesByName["repeatsMonthly"]?.defaultValue as? Bool, false)
+    }
+
+    /// A model 7 store's accounts stay everyday accounts with what's in them.
+    func testModelSevenStoreKeepsItsAccountsEveryday() throws {
+        let model = try XCTUnwrap(modelSeven)
+        let storeURL = directory.appendingPathComponent("seven", isDirectory: true).appendingPathComponent("Main.sqlite")
+        try FileManager.default.createDirectory(at: storeURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+
+        let context = try openStore(at: storeURL, model: model)
+        let account = NSEntityDescription.insertNewObject(forEntityName: "Account", into: context)
+        set(account, ["id": UUID(), "name": "Savings", "order": Int64(0), "symbol": "building.columns"])
+        let spend = NSEntityDescription.insertNewObject(forEntityName: "Transaction", into: context)
+        set(spend, ["id": UUID(), "amount": 20.0, "note": "Fee", "date": Date(timeIntervalSinceReferenceDate: 700_000_000), "income": false, "account": account])
+        try context.save()
+        try close(context)
+
+        let migrated = try openStore(at: storeURL, model: currentModel)
+        defer { try? close(migrated) }
+
+        let accounts = try migrated.fetch(NSFetchRequest<NSManagedObject>(entityName: "Account"))
+        XCTAssertEqual(accounts.count, 1)
+        XCTAssertEqual(accounts.first?.value(forKey: "kind") as? Int16, AccountKind.everyday.rawValue)
+        XCTAssertEqual(accounts.first?.value(forKey: "startingBalance") as? Double, 0)
+        XCTAssertNil(accounts.first?.value(forKey: "closedAt"))
+
+        let transactions = try migrated.fetch(NSFetchRequest<NSManagedObject>(entityName: "Transaction"))
+        XCTAssertEqual(transactions.count, 1)
+        XCTAssertNil(transactions.first?.value(forKey: "splitID"))
     }
 
     /// A model 6 store keeps its accounts, what's in them and its transfers on the way to the current model.

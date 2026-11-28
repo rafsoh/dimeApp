@@ -398,7 +398,7 @@ final class AccountsTests: XCTestCase {
         // With every account it counts deleted, the budget counts everything rather than nothing.
         budget.countedAccounts = AccountScope([.account(card)])
         dataController.deleteAccount(card)
-        XCTAssertNil(budget.accountPredicate)
+        XCTAssertNil(budget.countedAccounts.predicate(in: context))
         XCTAssertEqual(100 - dataController.budgetLeftover(overallBudget: budget).value, everything, accuracy: 0.0001)
     }
 

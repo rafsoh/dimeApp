@@ -15,11 +15,17 @@
 		7563F4F2D3E6E6F64F82694D /* AutoCategoryGlimmer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 853DF0C1C86E7AA78EC67A98 /* AutoCategoryGlimmer.swift */; };
 		AAD4D77C2841FC03A2A9F2FE /* AutoCategorizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F41D9F009939E5BE8F8BB81D /* AutoCategorizer.swift */; };
 		607E2038F6BBEA27541C26AA /* AccountsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95CFEEC3EBA6255562875218 /* AccountsView.swift */; };
+		568D7EF54759F285754334CA /* GoalsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED72ADAF718068856BA247E0 /* GoalsView.swift */; };
 		F4343515FBB246810EB3B0D6 /* AccountsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64D591C139E5526C2F17E652 /* AccountsTests.swift */; };
+		C37E568310B234A7AA810320 /* GoalsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE3D920CC4528BDE830475E4 /* GoalsTests.swift */; };
 		C5F98CF43670EABA55536902 /* Accounts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 823A3BD58AB1C6E3436CF9FC /* Accounts.swift */; };
+		9C57F830A0CBBEA22D9A1037 /* Goals.swift in Sources */ = {isa = PBXBuildFile; fileRef = 620F7033456C64048A5F8C4C /* Goals.swift */; };
 		0CDBCA47DBC8A9593159CFB1 /* Accounts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 823A3BD58AB1C6E3436CF9FC /* Accounts.swift */; };
+		54C2E99A22C825F3ED9344F7 /* Goals.swift in Sources */ = {isa = PBXBuildFile; fileRef = 620F7033456C64048A5F8C4C /* Goals.swift */; };
 		F8725A966530F3F5DDF859E9 /* Accounts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 823A3BD58AB1C6E3436CF9FC /* Accounts.swift */; };
+		91E5B7B2D148418BC803B218 /* Goals.swift in Sources */ = {isa = PBXBuildFile; fileRef = 620F7033456C64048A5F8C4C /* Goals.swift */; };
 		4527BF8BB996382C06E6B358 /* Accounts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 823A3BD58AB1C6E3436CF9FC /* Accounts.swift */; };
+		E3EFB3672F8288FF2201FF18 /* Goals.swift in Sources */ = {isa = PBXBuildFile; fileRef = 620F7033456C64048A5F8C4C /* Goals.swift */; };
 		A110F0032F0C000000A110F0 /* Allo-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A110F0022F0C000000A110F0 /* Allo-Regular.ttf */; };
 		A110F0042F0C000000A110F0 /* Allo-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A110F0022F0C000000A110F0 /* Allo-Regular.ttf */; };
 		A110F0062F0C000000A110F0 /* Allo-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A110F0052F0C000000A110F0 /* Allo-Medium.ttf */; };
@@ -320,10 +326,14 @@
 		853DF0C1C86E7AA78EC67A98 /* AutoCategoryGlimmer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoCategoryGlimmer.swift; sourceTree = "<group>"; };
 		F41D9F009939E5BE8F8BB81D /* AutoCategorizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoCategorizer.swift; sourceTree = "<group>"; };
 		95CFEEC3EBA6255562875218 /* AccountsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountsView.swift; sourceTree = "<group>"; };
+		ED72ADAF718068856BA247E0 /* GoalsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalsView.swift; sourceTree = "<group>"; };
 		64D591C139E5526C2F17E652 /* AccountsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountsTests.swift; sourceTree = "<group>"; };
+		BE3D920CC4528BDE830475E4 /* GoalsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalsTests.swift; sourceTree = "<group>"; };
 		823A3BD58AB1C6E3436CF9FC /* Accounts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Accounts.swift; sourceTree = "<group>"; };
+		620F7033456C64048A5F8C4C /* Goals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Goals.swift; sourceTree = "<group>"; };
 		490ECA28C2F358F1275FEA4E /* MainModel 6.xcdatamodel */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = wrapper.xcdatamodel; path = "MainModel 6.xcdatamodel"; sourceTree = "<group>"; };
 		A7F3C2E19B4D5E6F70812345 /* MainModel 7.xcdatamodel */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = wrapper.xcdatamodel; path = "MainModel 7.xcdatamodel"; sourceTree = "<group>"; };
+		B8E4D3F2AC5E6F7081923456 /* MainModel 8.xcdatamodel */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = wrapper.xcdatamodel; path = "MainModel 8.xcdatamodel"; sourceTree = "<group>"; };
 		A110F0022F0C000000A110F0 /* Allo-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Allo-Regular.ttf"; sourceTree = "<group>"; };
 		A110F0052F0C000000A110F0 /* Allo-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Allo-Medium.ttf"; sourceTree = "<group>"; };
 		A110F0082F0C000000A110F0 /* Allo-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Allo-SemiBold.ttf"; sourceTree = "<group>"; };
@@ -762,6 +772,7 @@
 			isa = PBXGroup;
 			children = (
 				823A3BD58AB1C6E3436CF9FC /* Accounts.swift */,
+				620F7033456C64048A5F8C4C /* Goals.swift */,
 				53BC2A3F2A8B21920019E4A8 /* MainModel.xcdatamodeld */,
 				53980E5B28A77B62009CC4E2 /* Helper.swift */,
 				5327D2AC287C6AD200F76ADF /* DataController.swift */,
@@ -782,6 +793,7 @@
 			isa = PBXGroup;
 			children = (
 				95CFEEC3EBA6255562875218 /* AccountsView.swift */,
+				ED72ADAF718068856BA247E0 /* GoalsView.swift */,
 				53D6BDC62AF73B1D00F5728E /* Settings */,
 				53B907972AE817D50001F496 /* Shapes */,
 				5327D2CD287C6B5E00F76ADF /* CategoryView.swift */,
@@ -959,6 +971,7 @@
 			isa = PBXGroup;
 			children = (
 				64D591C139E5526C2F17E652 /* AccountsTests.swift */,
+				BE3D920CC4528BDE830475E4 /* GoalsTests.swift */,
 				726F48F68CFB577527C9FD9B /* StoreMigrationTests.swift */,
 				D7E1F2A12F30000100A1B2C3 /* BudgetRolloverTests.swift */,
 				D7C0E1A12F2C000600A1B2C3 /* QuickAddTemplateTests.swift */,
@@ -1366,6 +1379,7 @@
 			files = (
 				0282B1BC151D564BA7E0C016 /* AutoCategorizerTests.swift in Sources */,
 				F4343515FBB246810EB3B0D6 /* AccountsTests.swift in Sources */,
+				C37E568310B234A7AA810320 /* GoalsTests.swift in Sources */,
 				CFF3458851630E5DDD45BF0C /* StoreMigrationTests.swift in Sources */,
 				E6BEA10F2D26000100A1B2C1 /* DataIntegrityLogTests.swift in Sources */,
 				D7E1F2A12F30000200A1B2C3 /* BudgetRolloverTests.swift in Sources */,
@@ -1387,6 +1401,7 @@
 			files = (
 				781CF04F652AC66C23F54CDC /* AutoCategoryQueue.swift in Sources */,
 				0CDBCA47DBC8A9593159CFB1 /* Accounts.swift in Sources */,
+				54C2E99A22C825F3ED9344F7 /* Goals.swift in Sources */,
 				53BC2A442A8B234F0019E4A8 /* MainModel.xcdatamodeld in Sources */,
 				5313EC6028ACE941000EAB0C /* IntentHandler.swift in Sources */,
 				537152E328AD0EC100E93EC4 /* Helper.swift in Sources */,
@@ -1408,6 +1423,7 @@
 			files = (
 				1D86EAC6F60A9B4034E1810D /* AutoCategoryQueue.swift in Sources */,
 				C5F98CF43670EABA55536902 /* Accounts.swift in Sources */,
+				9C57F830A0CBBEA22D9A1037 /* Goals.swift in Sources */,
 				53BC2A452A8B234F0019E4A8 /* MainModel.xcdatamodeld in Sources */,
 				5313EC6B28ACE941000EAB0C /* IntentViewController.swift in Sources */,
 				537152E428AD0EC100E93EC4 /* Helper.swift in Sources */,
@@ -1431,7 +1447,9 @@
 				7563F4F2D3E6E6F64F82694D /* AutoCategoryGlimmer.swift in Sources */,
 				AAD4D77C2841FC03A2A9F2FE /* AutoCategorizer.swift in Sources */,
 				607E2038F6BBEA27541C26AA /* AccountsView.swift in Sources */,
+				568D7EF54759F285754334CA /* GoalsView.swift in Sources */,
 				4527BF8BB996382C06E6B358 /* Accounts.swift in Sources */,
+				E3EFB3672F8288FF2201FF18 /* Goals.swift in Sources */,
 				D7C0E1A12F2B000200A1B2C3 /* OpenNewExpenseIntent.swift in Sources */,
 				D7A1B2C32E9F000200A1B2C3 /* BudgetModel.swift in Sources */,
 				D7A1B2C32E9F001100A1B2C3 /* InsightsStyle.swift in Sources */,
@@ -1549,6 +1567,7 @@
 			files = (
 				0E0220E9447B0798236001A2 /* AutoCategoryQueue.swift in Sources */,
 				F8725A966530F3F5DDF859E9 /* Accounts.swift in Sources */,
+				91E5B7B2D148418BC803B218 /* Goals.swift in Sources */,
 				D7C0E1A12F2B000300A1B2C3 /* OpenNewExpenseIntent.swift in Sources */,
 				D7C0E1A12F2B000500A1B2C3 /* NewExpenseControl.swift in Sources */,
 				D7C0E1A12F2C000500A1B2C3 /* QuickAddWidget.swift in Sources */,
@@ -2313,13 +2332,14 @@
 			children = (
 				490ECA28C2F358F1275FEA4E /* MainModel 6.xcdatamodel */,
 				A7F3C2E19B4D5E6F70812345 /* MainModel 7.xcdatamodel */,
+				B8E4D3F2AC5E6F7081923456 /* MainModel 8.xcdatamodel */,
 				53BC2A402A8B21920019E4A8 /* MainModel 2.xcdatamodel */,
 				53BC2A412A8B21920019E4A8 /* MainModel.xcdatamodel */,
 				55E30C4DCFF029D0E8F8975B /* MainModel 3.xcdatamodel */,
 				D7C0E1A12F2C000100A1B2C3 /* MainModel 4.xcdatamodel */,
 				D7E9F3B12F31000100A1B2C3 /* MainModel 5.xcdatamodel */,
 			);
-			currentVersion = A7F3C2E19B4D5E6F70812345 /* MainModel 7.xcdatamodel */;
+			currentVersion = B8E4D3F2AC5E6F7081923456 /* MainModel 8.xcdatamodel */;
 			path = MainModel.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;

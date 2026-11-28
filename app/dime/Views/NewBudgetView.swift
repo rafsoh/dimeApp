@@ -67,7 +67,7 @@ struct BrandNewBudgetView: View {
 
     /// Which accounts the budget counts. Only offered once there's an account besides Main.
     @State private var accountScope: AccountScope
-    @FetchRequest(sortDescriptors: [SortDescriptor(\.order), SortDescriptor(\.dateCreated)]) private var accounts: FetchedResults<Account>
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.order), SortDescriptor(\.dateCreated)], predicate: Account.budgetablePredicate) private var accounts: FetchedResults<Account>
     @AppStorage(MainAccount.nameKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var mainAccountName = ""
 
     @State private var showToast = false
@@ -1171,7 +1171,7 @@ struct BrandNewBudgetView: View {
 
 // MARK: - Sentence token
 
-private struct SentenceTokenButton: View {
+struct SentenceTokenButton: View {
     let text: String
     let font: Font
     let foreground: Color
@@ -1237,14 +1237,14 @@ private struct SentenceTokenButton: View {
 // MARK: - Wrapping sentence layout
 
 @available(iOS 16.0, *)
-private struct KeepWithNext: LayoutValueKey {
+struct KeepWithNext: LayoutValueKey {
     static let defaultValue = false
 }
 
 /// Lays out words and tokens like wrapping text. A subview marked `KeepWithNext` moves to the next line
 /// together with the following subview, so a lead word ("on", "every") never ends a line without its token.
 @available(iOS 16.0, *)
-private struct SentenceFlowLayout: Layout {
+struct SentenceFlowLayout: Layout {
     var spacing: CGFloat
     var lineSpacing: CGFloat
 
@@ -1389,7 +1389,7 @@ private struct BudgetAccountGrid: View {
     let onSelectAll: () -> Void
 
     @ObservedObject var dataController = DataController.shared
-    @FetchRequest(sortDescriptors: [SortDescriptor(\.order), SortDescriptor(\.dateCreated)]) private var accounts: FetchedResults<Account>
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.order), SortDescriptor(\.dateCreated)], predicate: Account.budgetablePredicate) private var accounts: FetchedResults<Account>
     // Read so renaming Main, or changing its icon, redraws its tile.
     @AppStorage(MainAccount.nameKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var mainName = ""
     @AppStorage(MainAccount.symbolKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var mainSymbol = ""
@@ -1614,7 +1614,7 @@ private struct BudgetStartDateSheetHeightKey: PreferenceKey {
     }
 }
 
-private extension View {
+extension View {
     @ViewBuilder func budgetScrollBounceBasedOnSize() -> some View {
         if #available(iOS 16.4, *) {
             scrollBounceBehavior(.basedOnSize)
