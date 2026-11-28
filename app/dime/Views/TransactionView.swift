@@ -421,14 +421,7 @@ struct TransactionView: View {
                                 }
                             )
 
-                            // What the sum comes to takes the place of the converted amount, which comes back once it's worked out.
-                            if let calculatorPreview {
-                                calculatorPreview.text
-                                    .font(.app(.subheadline, weight: .medium))
-                                    .foregroundColor(calculatorPreview.isError ? Color.AlertRed : Color.SubtitleText)
-                                    .lineLimit(1)
-                                    .minimumScaleFactor(0.7)
-                            } else if let convertedPreview {
+                            if let convertedPreview {
                                 Text(convertedPreview)
                                     .font(.app(.subheadline, weight: .medium))
                                     .foregroundColor(Color.SubtitleText)
@@ -491,14 +484,6 @@ struct TransactionView: View {
                             .padding(.bottom, 4)
                     }
 
-                    // Hidden while the note's keyboard covers the pad.
-                    if isCalculating && !textFieldFocused {
-                        CalculatorOperatorRow(expression: $expression, equals: useTotal)
-                            .padding(.bottom, 4)
-                            .disabled(isDismissDragging)
-                            .transition(.move(edge: .bottom).combined(with: .opacity))
-                    }
-
                     NumberPad(
                         price: $price,
                         category: $category,
@@ -506,10 +491,10 @@ struct TransactionView: View {
                         decimalValuesAssigned: $decimalValuesAssigned,
                         showingNotePicker: showingNotePicker,
                         fractionDigits: fractionDigits,
-                        expression: isCalculating ? $expression : nil
-                    ) {
-                        submit()
-                    }
+                        expression: isCalculating ? $expression : nil,
+                        submit: submit,
+                        equals: useTotal
+                    )
                     .disabled(isDismissDragging)
                 }
                 .padding(.vertical, 17)
@@ -675,6 +660,12 @@ struct TransactionView: View {
         .onChange(of: expression) { _ in
             syncPriceFromExpression()
         }
+        // The note's keyboard is the one that covers the number pad, so its height is what the pad is sized to next time.
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidShowNotification)) { notification in
+            if textFieldFocused {
+                KeyboardHeightCache.recordNoteKeyboard(height: notification.keyboardHeight)
+            }
+        }
         .onChange(of: price) { newValue in
             guard isCalculating, newValue != expressionPrice else { return }
             expression = CalculatorExpression(amount: newValue, fractionDigits: fractionDigits)
@@ -745,20 +736,6 @@ struct TransactionView: View {
                 || !CurrencyPreferences.isSameCurrency(transaction.currencyCode, as: transactionCurrency, mainCurrency: currency)
         } else {
             return price > 0 || !note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        }
-    }
-
-    /// What the sum comes to while it has an operator in it, or why it can't be worked out.
-    var calculatorPreview: (text: Text, isError: Bool)? {
-        guard isCalculating, expression.hasOperator else {
-            return nil
-        }
-
-        switch expression.total(fractionDigits: fractionDigits) {
-        case .success(let total):
-            return (Text(verbatim: "= " + MoneyFormatter.string(total, currencyCode: transactionCurrency)), false)
-        case .failure(let failure):
-            return (Text(LocalizedStringKey(failure.title)), true)
         }
     }
 
@@ -1585,6 +1562,16 @@ struct NoteView: View {
         }
         .onChange(of: textFocused) { newValue in
             focused = newValue
+        }
+        .onAppear {
+            #if DEBUG
+            // `-screenshotKeyboard` opens the page with the note's keyboard up, for screenshots.
+            if ProcessInfo.processInfo.arguments.contains("-screenshotKeyboard") {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    textFocused = true
+                }
+            }
+            #endif
         }
     }
 
