@@ -417,6 +417,7 @@ struct AccountsView: View {
     @State private var isReordering = false
     @State private var editing: AccountEditorSheet.Target?
     @State private var toDelete: Account?
+    @State private var conversion: AccountConversion?
 
     var body: some View {
         switch mode {
@@ -515,6 +516,9 @@ struct AccountsView: View {
                 AccountEditorSheet(target: target)
                     .environmentObject(dataController)
             }
+            .sheet(item: $conversion) { conversion in
+                AccountConversionSheet(conversion: conversion) {}
+            }
             .confirmationSheet(
                 item: $toDelete,
                 title: { "Delete '\($0.wrappedName)'?" },
@@ -592,6 +596,31 @@ struct AccountsView: View {
                                 Image(systemName: "pencil")
                             }
                             .tint(Color("Yellow"))
+                        }
+                        .contextMenu {
+                            Button {
+                                editing = .edit(.account(account))
+                            } label: {
+                                Label("Edit Account", systemImage: "pencil")
+                            }
+
+                            Button {
+                                conversion = AccountConversion(account: account, kind: .goal)
+                            } label: {
+                                Label("Make It a Goal", systemImage: "target")
+                            }
+
+                            Button {
+                                conversion = AccountConversion(account: account, kind: .debt)
+                            } label: {
+                                Label("Make It a Debt", systemImage: "creditcard")
+                            }
+
+                            Button(role: .destructive) {
+                                toDelete = account
+                            } label: {
+                                Label("Delete Account", systemImage: "trash")
+                            }
                         }
                 }
                 .onMove { source, destination in

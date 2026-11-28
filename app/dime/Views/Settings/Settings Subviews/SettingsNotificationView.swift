@@ -433,18 +433,21 @@ final class NotificationScheduler {
   private func rescheduleNow() {
     center.removeAllPendingNotificationRequests()
 
+    let time = deliveryTime()
+
+    // Each goal's or debt's reminder was asked for on its own, so it doesn't wait for the Notifications switch.
+    let savingsReminders = addSavingsReminders(at: time)
+
     guard defaults.bool(forKey: "showNotifications") else {
       return
     }
-
-    let time = deliveryTime()
 
     if bool(Self.dailyReminderKey, default: Self.dailyReminderDefault) {
       addDailyReminder(at: time)
     }
 
     if bool(Self.upcomingChargesKey, default: Self.upcomingChargesDefault) {
-      addUpcomingChargeReminders(at: time)
+      addUpcomingChargeReminders(at: time, limit: max(0, Self.upcomingLimit - savingsReminders))
     }
   }
 
@@ -469,7 +472,7 @@ final class NotificationScheduler {
     let fireDate: Date
   }
 
-  private func addUpcomingChargeReminders(at time: DateComponents) {
+  private func addUpcomingChargeReminders(at time: DateComponents, limit: Int) {
     let leadDays = min(max(integer(Self.upcomingChargesLeadDaysKey, default: Self.upcomingChargesLeadDaysDefault), Self.leadDaysRange.lowerBound), Self.leadDaysRange.upperBound)
 
     let calendar = Calendar.current
@@ -485,7 +488,8 @@ final class NotificationScheduler {
     var charges: [UpcomingCharge] = []
 
     for transaction in dataController.results(for: dataController.fetchRequestForRecurringTransactions()) {
-      guard !transaction.income, (1 ... 3).contains(transaction.recurringType) else { continue }
+      // Repeating transfers, such as saving towards a goal, aren't charges.
+      guard !transaction.income, !transaction.isTransfer, (1 ... 3).contains(transaction.recurringType) else { continue }
 
       // Sync can leave duplicate copies of a recurring transaction under the same id; only the first counts.
       if let id = transaction.id, !seen.insert(id).inserted { continue }
@@ -505,7 +509,7 @@ final class NotificationScheduler {
 
     charges.sort { $0.fireDate < $1.fireDate }
 
-    for charge in charges.prefix(Self.upcomingLimit) {
+    for charge in charges.prefix(limit) {
       add(charge, leadDays: leadDays, calendar: calendar)
     }
   }
@@ -553,6 +557,69 @@ final class NotificationScheduler {
     center.add(UNNotificationRequest(identifier: identifier, content: content, trigger: trigger))
   }
 
+  // MARK: Goals and debts
+
+  private static let savingsPrefix = "savings-reminder-"
+
+  /// A monthly reminder for each goal and debt that has one, until the goal is reached or the debt paid off.
+  /// Returns how many it added.
+  private func addSavingsReminders(at time: DateComponents) -> Int {
+    let days = SavingsReminders.all()
+    guard !days.isEmpty else { return 0 }
+
+    let dataController = DataController.shared
+    let converter = dataController.currencyConverter
+    let formatter = BudgetFormatter.current
+    var added = 0
+
+    for account in dataController.accounts(of: .goal) + dataController.accounts(of: .debt) {
+      guard let day = days[account.key], (1 ... 28).contains(day) else { continue }
+
+      let content = UNMutableNotificationContent()
+      content.sound = .default
+      content.threadIdentifier = "savings-reminders"
+
+      if account.isDebt {
+        guard !account.debtStatus(using: converter).isPaidOff else { continue }
+
+        content.title = String(localized: "\(account.wrappedName) payment")
+        content.body = account.paymentAmount > 0
+          ? String(localized: "\(formatter.money(account.paymentAmount)) is due. Log it in Dime once it's paid.")
+          : String(localized: "Log a payment in Dime once you've made one.")
+      } else {
+        let progress = account.goalProgress(using: converter)
+        guard account.repeatsMonthly || !progress.isReached else { continue }
+
+        content.title = String(localized: "Put money towards \(account.wrappedName)")
+        if account.repeatsMonthly, progress.hasTarget {
+          content.body = String(localized: "\(formatter.money(account.targetAmount)) this month keeps it on track.")
+        } else if let perMonth = progress.perMonth {
+          content.body = String(localized: "About \(formatter.approx(perMonth)) this month keeps it on track.")
+        } else {
+          content.body = String(localized: "\(formatter.money(progress.remaining)) to go.")
+        }
+      }
+
+      var components = DateComponents()
+      components.day = day
+      components.hour = time.hour ?? 8
+      components.minute = time.minute ?? 0
+
+      let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
+      center.add(UNNotificationRequest(identifier: Self.savingsPrefix + account.key, content: content, trigger: trigger))
+      added += 1
+    }
+
+    return added
+  }
+
+  /// Asks to send notifications, if it hasn't yet, then schedules them again. For a reminder set on a goal or debt.
+  func requestAuthorizationAndReschedule() {
+    center.requestAuthorization(options: [.alert, .badge, .sound]) { [weak self] _, _ in
+      self?.reschedule()
+    }
+  }
+
   // MARK: Helpers
 
   /// The hour and minute picked on the Notifications page: 8:00 AM, 8:00 PM or a custom time.
@@ -587,7 +654,8 @@ final class NotificationScheduler {
 
     return keys.contains { key in
       guard let objects = note.userInfo?[key] as? Set<NSManagedObject> else { return false }
-      return objects.contains { $0 is Transaction }
+      // Goals and debts carry their reminders' wording and when they stop.
+      return objects.contains { $0 is Transaction || $0 is Account }
     }
   }
 }

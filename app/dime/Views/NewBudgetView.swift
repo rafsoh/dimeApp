@@ -1479,7 +1479,7 @@ private struct BudgetTileStrip<Content: View>: View {
 
 /// The start-day editor for monthly budgets: the days 1 to 28 as plain numerals, with one filled circle on the chosen day.
 /// It stops at the 28th because not every month has later days.
-private struct BudgetDayGrid: View {
+struct BudgetDayGrid: View {
     @Binding var selection: Int
     let title: (Int) -> String
     let onPick: () -> Void

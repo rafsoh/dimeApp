@@ -26,5 +26,20 @@ struct DimeShortcuts: AppShortcutsProvider {
             phrases: ["Extract leftover amount for your budgets in \(.applicationName)"],
             systemImageName: "circle.grid.2x2.fill"
         )
+        AppShortcut(
+            intent: AddToGoalIntent(),
+            phrases: ["Add money to a goal in \(.applicationName)", "Save towards a goal in \(.applicationName)"],
+            systemImageName: "target"
+        )
+        AppShortcut(
+            intent: PayDebtIntent(),
+            phrases: ["Pay towards a debt in \(.applicationName)"],
+            systemImageName: "creditcard"
+        )
+        AppShortcut(
+            intent: GetSavingsIntent(),
+            phrases: ["Check a goal or debt in \(.applicationName)"],
+            systemImageName: "chart.bar.fill"
+        )
     }
 }

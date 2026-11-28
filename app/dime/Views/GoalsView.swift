@@ -10,6 +10,26 @@ import CoreData
 import Popovers
 import SwiftUI
 
+#if DEBUG
+/// Launch arguments for screenshots of goals and debts. Remove before merging, with the other screenshot arguments.
+/// `-planSection goals|debts` opens that page of the Budget tab; `-planDetail <name>` its sheet;
+/// `-detailAction add|takeOut|pay|charge|everyday` a button or menu item on that sheet; `-planEditor new|<name>`
+/// the editor, with `-editorFill` to fill in a new one and `-editorField amount|saved|deadline|rate|payment|reminder|timing`
+/// to open one of its parts; `-planConvert <name>` the sheet that makes an everyday account a goal or debt.
+enum PlanScreenshot {
+    static func value(after flag: String) -> String? {
+        let arguments = ProcessInfo.processInfo.arguments
+        guard let index = arguments.firstIndex(of: flag), index + 1 < arguments.count else { return nil }
+        return arguments[index + 1]
+    }
+
+    static func account(named name: String?) -> Account? {
+        guard let name else { return nil }
+        return DataController.shared.accounts().first { $0.wrappedName == name }
+    }
+}
+#endif
+
 // MARK: - Sections
 
 /// What the Budget tab shows.
@@ -21,6 +41,11 @@ enum PlanSection: String, CaseIterable {
 struct PlanHeader: View {
     @Binding var section: PlanSection
     let onNew: () -> Void
+    /// An everyday account to make a goal or debt.
+    let onConvert: (AccountConversion) -> Void
+
+    /// Everyday accounts, which New offers to make goals or debts.
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.order), SortDescriptor(\.dateCreated)], predicate: AccountKind.everyday.predicate) private var accounts: FetchedResults<Account>
 
     var body: some View {
         HStack(spacing: 12) {
@@ -32,12 +57,48 @@ struct PlanHeader: View {
 
             Spacer(minLength: 0)
 
-            GlassIconButton(systemName: "plus", accessibilityLabel: newLabel, action: onNew)
+            if section == .budgets || accounts.isEmpty {
+                GlassIconButton(systemName: "plus", accessibilityLabel: newLabel, action: onNew)
+            } else {
+                newMenu
+            }
         }
         .frame(maxWidth: .infinity, minHeight: 44)
         .padding(.horizontal, 20)
         .padding(.top, 20)
         .padding(.bottom, 12)
+    }
+
+    /// New, or an account the user already has, made a goal or debt.
+    var newMenu: some View {
+        let kind: AccountKind = section == .goals ? .goal : .debt
+
+        return Menu {
+            Button(action: onNew) {
+                Label(newLabel, systemImage: "plus")
+            }
+
+            Section {
+                ForEach(accounts, id: \.objectID) { account in
+                    Button {
+                        onConvert(AccountConversion(account: account, kind: kind))
+                    } label: {
+                        Label(account.wrappedName, systemImage: AccountIcons.displayable(account.wrappedSymbol))
+                    }
+                }
+            } header: {
+                kind == .goal ? Text("Make an Account a Goal") : Text("Make an Account a Debt")
+            }
+        } label: {
+            Image(systemName: "plus")
+                .font(.app(.body, weight: .semibold))
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                .foregroundColor(Color.PrimaryText)
+                .frame(width: 44, height: 44)
+                .contentShape(Circle())
+        }
+        .glassBackground(in: Circle(), tint: .glassTint)
+        .accessibilityLabel(newLabel)
     }
 
     var newLabel: LocalizedStringKey {
@@ -135,6 +196,14 @@ struct SavingsList: View {
         .onReceive(didSave) { _ in
             refreshID = UUID()
         }
+        #if DEBUG
+        .onAppear {
+            guard let account = PlanScreenshot.account(named: PlanScreenshot.value(after: "-planDetail")), account.accountKind == kind else { return }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                detail = account
+            }
+        }
+        #endif
         .sheet(item: $detail) { account in
             SavingsDetailSheet(account: account)
                 .environmentObject(dataController)
@@ -256,87 +325,6 @@ struct SavingsTile: View {
     }
 }
 
-/// The words and numbers a goal's or debt's tile and sheet show.
-struct SavingsSummary {
-    let amount: Double
-    let word: String
-    let status: String
-    /// A sentence for under the sheet's ring.
-    let detail: String
-    let share: Double
-    let colour: Color
-    let isDone: Bool
-
-    init(account: Account, formatter: BudgetFormatter, converter: CurrencyConverter = .current(), now: Date = .now) {
-        if account.isDebt {
-            let debt = account.debtStatus(using: converter, now: now)
-            amount = max(debt.owed, 0)
-            word = String(localized: "left")
-            share = debt.paidShare
-            colour = Color.PrimaryText
-            isDone = debt.isPaidOff
-
-            if debt.isPaidOff {
-                status = String(localized: "Paid off")
-                detail = String(localized: "Nothing left to pay.")
-            } else if let projection = debt.projection {
-                let date = projection.payoffDate(from: now).formatted(.dateTime.month(.abbreviated).year())
-                status = String(localized: "Paid off by \(date)")
-                if projection.interest >= 1 {
-                    detail = String(localized: "Paying \(formatter.whole(account.paymentAmount)) a month, it's paid off by \(date), with about \(formatter.approx(projection.interest)) in interest.")
-                } else {
-                    detail = String(localized: "Paying \(formatter.whole(account.paymentAmount)) a month, it's paid off by \(date).")
-                }
-            } else if account.paymentAmount > 0 {
-                status = String(localized: "Payment below interest")
-                detail = String(localized: "\(formatter.whole(account.paymentAmount)) a month doesn't cover the interest, so this debt won't go down.")
-            } else if debt.borrowed > 0 {
-                status = String(localized: "of \(formatter.whole(debt.borrowed))")
-                detail = String(localized: "\(formatter.whole(max(debt.borrowed - debt.owed, 0))) paid off of \(formatter.whole(debt.borrowed)).")
-            } else {
-                status = ""
-                detail = ""
-            }
-        } else {
-            let goal = account.goalProgress(using: converter, now: now)
-            share = goal.share
-            colour = Color.IncomeGreen
-            isDone = goal.isReached
-
-            if goal.repeatsMonthly {
-                amount = max(goal.savedThisMonth, 0)
-                word = String(localized: "this month")
-                status = String(localized: "of \(formatter.whole(goal.target)) a month")
-                detail = goal.isReached
-                    ? String(localized: "This month's \(formatter.whole(goal.target)) is put aside. \(formatter.whole(goal.saved)) saved in all.")
-                    : String(localized: "\(formatter.money(goal.remaining)) to go this month. \(formatter.whole(goal.saved)) saved in all.")
-            } else {
-                amount = max(goal.saved, 0)
-                word = String(localized: "saved")
-
-                let deadline = goal.deadline?.formatted(.dateTime.day().month(.abbreviated).year())
-
-                if !goal.hasTarget {
-                    status = String(localized: "No target")
-                    detail = ""
-                } else if goal.isReached {
-                    status = String(localized: "of \(formatter.whole(goal.target)) · reached")
-                    detail = String(localized: "You've saved all \(formatter.whole(goal.target)).")
-                } else if let perMonth = goal.perMonth, let deadline {
-                    status = String(localized: "of \(formatter.whole(goal.target)) by \(deadline)")
-                    detail = String(localized: "Put aside about \(formatter.approx(perMonth)) a month to reach it by \(deadline).")
-                } else if goal.isOverdue, let deadline {
-                    status = String(localized: "of \(formatter.whole(goal.target)) · was due \(deadline)")
-                    detail = String(localized: "\(formatter.money(goal.remaining)) to go.")
-                } else {
-                    status = String(localized: "of \(formatter.whole(goal.target))")
-                    detail = String(localized: "\(formatter.money(goal.remaining)) to go.")
-                }
-            }
-        }
-    }
-}
-
 // MARK: - Detail sheet
 
 /// One goal or debt: its ring, where it's heading, a way to put money in or take it out, and what's in it.
@@ -352,6 +340,7 @@ struct SavingsDetailSheet: View {
     @State private var showDelete = false
     @State private var confirmedDelete = false
     @State private var entry: SavingsEntry?
+    @State private var conversion: AccountConversion?
     private let didSave = NSManagedObjectContext.recordsDidSave
     let formatter = BudgetFormatter.current
 
@@ -407,6 +396,14 @@ struct SavingsDetailSheet: View {
         .sheet(isPresented: $showEdit) {
             SavingsEditorView(target: .edit(account))
         }
+        .sheet(item: $conversion) { conversion in
+            AccountConversionSheet(conversion: conversion) {
+                // It's not a goal or debt any more, so it leaves this page.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                    dismiss()
+                }
+            }
+        }
         .confirmationSheet(isPresented: $showDelete, title: deleteTitle, message: deleteMessage, onDismiss: deleteIfConfirmed) {
             confirmedDelete = true
         }
@@ -414,6 +411,28 @@ struct SavingsDetailSheet: View {
         .onReceive(didSave) { _ in
             refreshID = UUID()
         }
+        #if DEBUG
+        .onAppear {
+            let everyday = AccountPreferences.lastUsed(among: dataController.accounts(of: .everyday))
+            let here = AccountChoice.account(account)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                switch PlanScreenshot.value(after: "-detailAction") {
+                case "add", "pay":
+                    entry = .transfer(from: everyday, to: here)
+                case "takeOut":
+                    entry = .transfer(from: here, to: everyday)
+                case "charge":
+                    entry = .expense(here)
+                case "everyday":
+                    conversion = AccountConversion(account: account, kind: .everyday)
+                case "delete":
+                    showDelete = true
+                default:
+                    break
+                }
+            }
+        }
+        #endif
         .sideBarSheet {
             SideBarCloseItem { dismiss() }
             ToolbarItem(placement: .topBarTrailing) {
@@ -565,6 +584,12 @@ struct SavingsDetailSheet: View {
             }
         }
 
+        Button {
+            conversion = AccountConversion(account: account, kind: .everyday)
+        } label: {
+            Label("Make It an Everyday Account", systemImage: "wallet.bifold")
+        }
+
         Button(role: .destructive) {
             showDelete = true
         } label: {
@@ -635,7 +660,7 @@ struct SavingsEditorView: View {
 
     /// The parts of the sentence that open an editor at the bottom.
     private enum Field: Hashable {
-        case amount, saved, deadline, rate, payment
+        case amount, saved, deadline, rate, payment, reminder
     }
 
     /// When a goal is for.
@@ -667,6 +692,8 @@ struct SavingsEditorView: View {
     @State private var payment: Entry
     @State private var timing: Timing
     @State private var deadline: Date
+    /// The day of the month to be reminded on, or 0 for never.
+    @State private var reminderDay: Int
 
     @State private var activeField: Field?
     @State private var showTimingMenu = false
@@ -695,7 +722,9 @@ struct SavingsEditorView: View {
             _payment = State(initialValue: Entry())
             _timing = State(initialValue: .anyTime)
             _deadline = State(initialValue: nextYear)
+            _reminderDay = State(initialValue: 0)
         case let .edit(account):
+            _reminderDay = State(initialValue: SavingsReminders.day(for: account) ?? 0)
             _name = State(initialValue: account.wrappedName)
             _pickedSymbol = State(initialValue: account.wrappedSymbol)
             _rate = State(initialValue: Self.entry(account.interestRate))
@@ -828,6 +857,48 @@ struct SavingsEditorView: View {
                 }
             }
         }
+        #if DEBUG
+        .onAppear {
+            if editing == nil, ProcessInfo.processInfo.arguments.contains("-editorFill") {
+                if isDebt {
+                    name = "Student loan"
+                    amount = Self.entry(DemoLocale.amount(8_400))
+                    rate = Entry(value: 4.5, isEditingDecimal: true, decimals: .first)
+                    payment = Self.entry(DemoLocale.amount(250))
+                    reminderDay = 20
+                } else {
+                    name = "Wedding"
+                    amount = Self.entry(DemoLocale.amount(12_000))
+                    saved = Self.entry(DemoLocale.amount(1_500))
+                    timing = .byDate
+                    deadline = Calendar.current.date(byAdding: .month, value: 18, to: Date.now) ?? deadline
+                    reminderDay = 1
+                }
+            }
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                UIApplication.shared.endEditing()
+                switch PlanScreenshot.value(after: "-editorField") {
+                case "amount":
+                    activeField = .amount
+                case "saved":
+                    activeField = .saved
+                case "deadline":
+                    activeField = .deadline
+                case "rate":
+                    activeField = .rate
+                case "payment":
+                    activeField = .payment
+                case "reminder":
+                    activeField = .reminder
+                case "timing":
+                    showTimingMenu = true
+                default:
+                    break
+                }
+            }
+        }
+        #endif
         .sideBarSheet {
             SideBarCloseItem { dismiss() }
         }
@@ -936,6 +1007,11 @@ struct SavingsEditorView: View {
                         lead("paying").layoutValue(key: KeepWithNext.self, value: true)
                         token(.payment).layoutValue(key: KeepWithNext.self, value: true)
                         lead("a month.")
+                        lead("Remind me").layoutValue(key: KeepWithNext.self, value: true)
+                        HStack(spacing: 0) {
+                            reminderToken
+                            fullStop
+                        }
                     } else {
                         lead("goal-sentence-save").layoutValue(key: KeepWithNext.self, value: true)
                         token(.amount)
@@ -946,6 +1022,11 @@ struct SavingsEditorView: View {
                         lead("starting with").layoutValue(key: KeepWithNext.self, value: true)
                         HStack(spacing: 0) {
                             token(.saved)
+                            fullStop
+                        }
+                        lead("Remind me").layoutValue(key: KeepWithNext.self, value: true)
+                        HStack(spacing: 0) {
+                            reminderToken
                             fullStop
                         }
                     }
@@ -962,6 +1043,7 @@ struct SavingsEditorView: View {
                         timingToken
                         clause("starting with") { token(.saved) }
                     }
+                    clause("Remind me") { reminderToken }
                 }
             }
         }
@@ -1015,6 +1097,39 @@ struct SavingsEditorView: View {
         ) {
             toggle(field)
         }
+    }
+
+    var reminderToken: some View {
+        let isFocused = activeField == .reminder
+
+        return SentenceTokenButton(
+            text: reminderText,
+            font: sentenceFont,
+            foreground: reminderDay == 0 && !isFocused ? Color.SubtitleText : Color.PrimaryText,
+            tint: nil,
+            isFocused: isFocused,
+            isError: false,
+            shake: false,
+            accessibilityLabel: Text("Remind me") + Text(", ") + Text(reminderText),
+            clear: isFocused && reminderDay != 0 ? {
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                reminderDay = 0
+            } : nil
+        ) {
+            toggle(.reminder)
+        }
+        .accessibilityHint("A notification on this day every month")
+    }
+
+    var reminderText: String {
+        guard reminderDay > 0 else {
+            return String(localized: "never")
+        }
+
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .ordinal
+        let day = formatter.string(from: NSNumber(value: reminderDay)) ?? "\(reminderDay)"
+        return String(localized: "on the \(day)")
     }
 
     var timingToken: some View {
@@ -1078,6 +1193,8 @@ struct SavingsEditorView: View {
             return "Interest"
         case .payment:
             return "Monthly payment"
+        case .reminder:
+            return "Remind me"
         }
     }
 
@@ -1175,6 +1292,20 @@ struct SavingsEditorView: View {
                 .padding(.top, bottomBarTopPadding - 4)
                 .padding(.bottom, 15)
                 .transition(.opacity)
+            case .reminder:
+                BudgetDayGrid(selection: $reminderDay, title: { day in
+                    let formatter = NumberFormatter()
+                    formatter.numberStyle = .ordinal
+                    return formatter.string(from: NSNumber(value: day)) ?? "\(day)"
+                }) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        guard activeField == .reminder else { return }
+                        closeField()
+                    }
+                }
+                .padding(.top, bottomBarTopPadding - 4)
+                .padding(.bottom, 15)
+                .transition(.opacity)
             default:
                 NumberPad(
                     price: binding(field).value,
@@ -1193,7 +1324,7 @@ struct SavingsEditorView: View {
 
     private func entry(_ field: Field) -> Entry {
         switch field {
-        case .amount, .deadline:
+        case .amount, .deadline, .reminder:
             return amount
         case .saved:
             return saved
@@ -1206,7 +1337,7 @@ struct SavingsEditorView: View {
 
     private func binding(_ field: Field) -> Binding<Entry> {
         switch field {
-        case .amount, .deadline:
+        case .amount, .deadline, .reminder:
             return $amount
         case .saved:
             return $saved
@@ -1320,21 +1451,137 @@ struct SavingsEditorView: View {
 
         UINotificationFeedbackGenerator().notificationOccurred(.success)
 
+        let saved: Account
+
         if isDebt {
             if let editing {
                 dataController.updateDebt(editing, name: name, symbol: symbol, owed: amount.value, yearlyRate: rate.value, payment: payment.value)
+                saved = editing
             } else {
-                dataController.addDebt(named: name, symbol: symbol, owed: amount.value, yearlyRate: rate.value, payment: payment.value)
+                saved = dataController.addDebt(named: name, symbol: symbol, owed: amount.value, yearlyRate: rate.value, payment: payment.value)
             }
         } else {
             let date = timing == .byDate ? deadline : nil
             if let editing {
-                dataController.updateGoal(editing, name: name, symbol: symbol, target: amount.value, repeatsMonthly: timing == .everyMonth, deadline: date, alreadySaved: saved.value)
+                dataController.updateGoal(editing, name: name, symbol: symbol, target: amount.value, repeatsMonthly: timing == .everyMonth, deadline: date, alreadySaved: self.saved.value)
+                saved = editing
             } else {
-                dataController.addGoal(named: name, symbol: symbol, target: amount.value, repeatsMonthly: timing == .everyMonth, deadline: date, alreadySaved: saved.value)
+                saved = dataController.addGoal(named: name, symbol: symbol, target: amount.value, repeatsMonthly: timing == .everyMonth, deadline: date, alreadySaved: self.saved.value)
             }
         }
 
+        let previousDay = SavingsReminders.day(for: saved)
+        SavingsReminders.set(reminderDay == 0 ? nil : reminderDay, for: saved)
+
+        if reminderDay != 0 {
+            NotificationScheduler.shared.requestAuthorizationAndReschedule()
+        } else if previousDay != nil {
+            NotificationScheduler.shared.reschedule()
+        }
+
         dismiss()
+    }
+}
+
+// MARK: - Converting accounts
+
+/// An account to make a goal, a debt or an everyday account again.
+struct AccountConversion: Identifiable {
+    let account: Account
+    let kind: AccountKind
+
+    var id: String {
+        "\(account.key)-\(kind.rawValue)"
+    }
+}
+
+/// Says what converting an account changes before it's done. Nothing is deleted either way, but what its expenses
+/// and income count towards changes.
+struct AccountConversionSheet: View {
+    let conversion: AccountConversion
+    let onConvert: () -> Void
+
+    @ObservedObject var dataController = DataController.shared
+    @Environment(\.dismiss) private var dismiss
+    let formatter = BudgetFormatter.current
+
+    var body: some View {
+        ConfirmationSheet(title: title, message: message, systemImage: systemImage) {
+            Button {
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+                dataController.convertAccount(conversion.account, to: conversion.kind)
+                dismiss()
+                onConvert()
+            } label: {
+                Text(confirmTitle)
+                    .font(.app(.body, weight: .semibold))
+                    .foregroundColor(Color.LightIcon)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 50)
+                    .contentShape(Capsule())
+            }
+            .buttonStyle(.plain)
+            .glassBackground(in: Capsule(), tint: Color.DarkBackground, fallback: Color.DarkBackground)
+
+            ConfirmationCancelButton {
+                dismiss()
+            }
+        }
+    }
+
+    var name: String {
+        conversion.account.wrappedName
+    }
+
+    var systemImage: String {
+        switch conversion.kind {
+        case .goal:
+            return "target"
+        case .debt:
+            return "creditcard"
+        case .everyday:
+            return "wallet.bifold"
+        }
+    }
+
+    var title: LocalizedStringKey {
+        switch conversion.kind {
+        case .goal:
+            return "Make '\(name)' a goal?"
+        case .debt:
+            return "Make '\(name)' a debt?"
+        case .everyday:
+            return "Make '\(name)' an everyday account?"
+        }
+    }
+
+    var confirmTitle: LocalizedStringKey {
+        switch conversion.kind {
+        case .goal:
+            return "Make It a Goal"
+        case .debt:
+            return "Make It a Debt"
+        case .everyday:
+            return "Make It an Everyday Account"
+        }
+    }
+
+    var message: LocalizedStringKey {
+        let counts = dataController.entryCounts(in: conversion.account)
+        let balance = conversion.account.balance(using: dataController.currencyConverter).value
+
+        switch conversion.kind {
+        case .goal:
+            let saved = formatter.money(max(balance, 0))
+            if counts.expenses == 0 {
+                return "It starts with the \(saved) in it now. Nothing is deleted."
+            }
+            return "It starts with the \(saved) in it now. Its \(counts.expenses) expenses become spending from the goal: they still count in Insights, but no longer against your budgets. Nothing is deleted."
+        case .debt:
+            let owed = formatter.money(max(-balance, 0))
+            return "It starts out owing \(owed): its spending less what's come into it. Its expenses still count as spending and against your budgets, and new ones add to what it owes. Nothing is deleted."
+        case .everyday:
+            return "It moves back to Settings › Accounts with everything in it, and no longer shows a target or what's owed. Nothing is deleted."
+        }
     }
 }

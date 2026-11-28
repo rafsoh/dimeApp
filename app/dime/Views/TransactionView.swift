@@ -75,8 +75,8 @@ struct TransactionView: View {
             let becomesTransfer = kind == .transfer
 
             if becomesTransfer && !isTransfer {
-                // Transfers don't repeat, and go somewhere other than where they come from.
-                repeatType = 0
+                // A transfer goes somewhere other than where it comes from. It can repeat, such as saving
+                // towards a goal or paying off a debt every month.
                 if transferTo == nil || transferTo == account {
                     transferTo = defaultTransferDestination
                 }
@@ -333,7 +333,7 @@ struct TransactionView: View {
 
                             Spacer()
 
-                            if !isTemplate && !isTransfer {
+                            if !isTemplate {
                                 RecurringMenu(
                                     repeatType: $repeatType, repeatCoefficient: $repeatCoefficient,
                                     showPicker: $showPicker, accessibilityLabel: repeatButtonAccessibility)
@@ -595,8 +595,10 @@ struct TransactionView: View {
 
             DispatchQueue.main.async {
                 if let transaction = toEdit {
-                    repeatType = Int(transaction.recurringType)
-                    repeatCoefficient = Int(transaction.recurringCoefficient)
+                    // A transfer repeats on its outgoing leg, whichever leg was opened.
+                    let recurring = transaction.isTransfer && transaction.income ? (transaction.transferCounterpart ?? transaction) : transaction
+                    repeatType = Int(recurring.recurringType)
+                    repeatCoefficient = Int(recurring.recurringCoefficient)
                     price = transaction.wrappedAmount
 
                     if transaction.wrappedAmount.truncatingRemainder(dividingBy: 1) > 0 && numberEntryType == 2 && fractionDigits > 0 {
@@ -724,6 +726,12 @@ struct TransactionView: View {
         } else if arguments.contains("-entryKind") {
             price = 18.4
             note = "Groceries"
+        }
+
+        // `-entryRepeat monthly` shows a transfer or expense repeating every month.
+        if value(after: "-entryRepeat") == "monthly" {
+            repeatType = 3
+            repeatCoefficient = 1
         }
 
         if value(after: "-entrySheet") == "account" {
@@ -1196,6 +1204,7 @@ struct TransactionView: View {
             let amount = price
             let transferDate = date
             let transferNote = note
+            let transferRepeat = (type: repeatType, coefficient: repeatCoefficient)
 
             // Edits wait for the sheet to start closing, like other edits, so the list animates the change.
             DispatchQueue.main.asyncAfter(deadline: .now() + (edited == nil ? 0 : 0.3)) {
@@ -1205,7 +1214,7 @@ struct TransactionView: View {
                 }
 
                 withAnimation(.easeInOut(duration: 0.5)) {
-                    let legs = dataController.saveTransfer(editing: edited, from: from, to: destination, amount: amount, currencyCode: chosenCurrency, date: transferDate, note: transferNote)
+                    let legs = dataController.saveTransfer(editing: edited, from: from, to: destination, amount: amount, currencyCode: chosenCurrency, date: transferDate, note: transferNote, repeatType: transferRepeat.type, repeatCoefficient: transferRepeat.coefficient)
 
                     // A new payment towards a debt with a rate pays that month's interest first.
                     if edited == nil {

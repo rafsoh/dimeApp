@@ -262,6 +262,10 @@ struct HomeView: View {
                 currentTab = "Insights"
             } else if url.host == "budget" {
                 currentTab = "Budget"
+            } else if url.host == "goals" || url.host == "debts" {
+                // The goal and debt widgets open their page of the Budget tab.
+                UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.set(url.host == "goals" ? PlanSection.goals.rawValue : PlanSection.debts.rawValue, forKey: "planSection")
+                currentTab = "Budget"
             } else if url.host == "quickAdd" {
                 currentTab = "Settings"
             }
@@ -287,6 +291,10 @@ struct HomeView: View {
             // `-screenshotTab Log|Insights|Budget|Settings` on that tab, and `-screenshotAdd` opens a filled-in
             // add screen (see TransactionView), for screenshots.
             if arguments.contains("-budgetTab") || arguments.contains("-budgetSheet") || arguments.contains("-budgetEdit") {
+                currentTab = "Budget"
+            }
+            // `-planSection goals|debts` (see PlanScreenshot) starts on the Budget tab too.
+            if arguments.contains("-planSection") {
                 currentTab = "Budget"
             }
             if let index = arguments.firstIndex(of: "-screenshotTab"), index + 1 < arguments.count {

@@ -13,7 +13,7 @@ Each line is `name: launch arguments`. The app is relaunched with those argument
 
 Shots are taken on the first iPhone simulator, usually the iPhone Duo. A line `@also-iphone` takes every
 shot a second time on a regular iPhone (SIM_OTHER_UDID), saved as `<name>-iphone.png`, to check a change
-doesn't affect other devices.
+doesn't affect other devices. A line `@iphone-only` takes them on the regular iPhone alone, under their own names.
 
 The list lives only in the description, so it goes away with the pull request: nothing has to be
 reverted after testing, and later runs never take another feature's screenshots. Launch arguments
@@ -88,7 +88,13 @@ def main():
     os.makedirs(out, exist_ok=True)
     devices = [(udid, "")]
     body = os.environ.get("PR_BODY", "")
-    if re.search(r"^[ \t]*@also-iphone[ \t]*\r?$", body, re.M):
+    if re.search(r"^[ \t]*@iphone-only[ \t]*\r?$", body, re.M):
+        other = os.environ.get("SIM_OTHER_UDID")
+        if other:
+            devices = [(other, "")]
+        else:
+            print("No regular iPhone simulator; taking the shots on the first one instead.")
+    elif re.search(r"^[ \t]*@also-iphone[ \t]*\r?$", body, re.M):
         other = os.environ.get("SIM_OTHER_UDID")
         if other:
             devices.append((other, "-iphone"))

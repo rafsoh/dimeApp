@@ -154,10 +154,13 @@ struct InsightsView: View {
                     }
                     #if DEBUG
                     .onAppear {
-                        // `-insightsScroll accounts` brings the accounts card into view, for screenshots.
-                        if ProcessInfo.processInfo.arguments.contains("-insightsScroll") {
+                        // `-insightsScroll accounts` brings the accounts card into view, and `-insightsScroll setAside`
+                        // the goals card, for screenshots.
+                        let arguments = ProcessInfo.processInfo.arguments
+                        if let index = arguments.firstIndex(of: "-insightsScroll") {
+                            let target = index + 1 < arguments.count && arguments[index + 1] == "setAside" ? InsightsDashboard.setAsideCardID : InsightsDashboard.accountsCardID
                             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                                scroller.scrollTo(InsightsDashboard.accountsCardID, anchor: .center)
+                                scroller.scrollTo(target, anchor: .center)
                             }
                         }
                     }
@@ -887,7 +890,8 @@ struct InsightsRecurringCharge: Identifiable {
 
         return dataController.results(for: request)
             .filter { transaction in
-                guard !transaction.income, (1 ... 3).contains(transaction.recurringType) else { return false }
+                // Repeating transfers, such as saving towards a goal, aren't charges.
+                guard !transaction.income, !transaction.isTransfer, (1 ... 3).contains(transaction.recurringType) else { return false }
                 guard let id = transaction.id else { return true }
                 return seen.insert(id).inserted
             }
@@ -981,6 +985,7 @@ struct InsightsDashboard: View {
     let cashFlow: InsightsCashFlow?
     let recurring: [InsightsRecurringCharge]
     let accountTotals: [InsightsAccountTotal]
+    let setAside: InsightsSetAside?
     let onSelectAccount: ((AccountChoice) -> Void)?
 
     // Without income anywhere in the chart's window, income and net would only restate spending.
@@ -1003,6 +1008,12 @@ struct InsightsDashboard: View {
 
             if showsCashFlow {
                 cashFlowCard
+                    .transition(.opacity)
+            }
+
+            if let setAside {
+                setAsideCard(setAside)
+                    .id(Self.setAsideCardID)
                     .transition(.opacity)
             }
 
@@ -1122,6 +1133,63 @@ struct InsightsDashboard: View {
         .accessibilityAddTraits(.isButton)
     }
 
+    /// What went into goals this period, as a share of income, then each goal.
+    func setAsideCard(_ setAside: InsightsSetAside) -> some View {
+        InsightsCard {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    InsightsCardTitle("Set Aside")
+                        .layoutPriority(1)
+
+                    Spacer(minLength: 0)
+
+                    if incomeTracking, income > 0, setAside.total > 0 {
+                        Text("\(Int((setAside.total / income * 100).rounded()))% of income")
+                            .font(.app(.subheadline, weight: .medium))
+                            .foregroundColor(Color.SubtitleText)
+                            .lineLimit(1)
+                    }
+                }
+
+                InsightsAmountText(amount: abs(setAside.total), sign: setAside.total < 0 ? "−" : "", formatter: formatter, font: .app(.title2, weight: .semibold))
+                    .padding(.top, 6)
+
+                if setAside.goals.isEmpty {
+                    Text("Nothing put into goals in this period")
+                        .font(.app(.subheadline, weight: .medium))
+                        .foregroundColor(Color.SubtitleText)
+                        .padding(.top, 8)
+                } else {
+                    VStack(spacing: 10) {
+                        ForEach(setAside.goals) { goal in
+                            HStack(spacing: 10) {
+                                AccountIconView(symbol: goal.account.wrappedSymbol)
+                                    .font(.app(.body, weight: .semibold))
+                                    .foregroundColor(Color.SubtitleText)
+                                    .frame(width: 24)
+
+                                Text(goal.account.wrappedName)
+                                    .font(.app(.body, weight: .medium))
+                                    .foregroundColor(Color.PrimaryText)
+                                    .lineLimit(1)
+
+                                Spacer(minLength: 8)
+
+                                Text((goal.amount < 0 ? "−" : "") + formatter.string(abs(goal.amount)))
+                                    .font(.app(.body, weight: .medium))
+                                    .foregroundColor(Color.SubtitleText)
+                                    .monospacedDigit()
+                            }
+                            .accessibilityElement(children: .combine)
+                        }
+                    }
+                    .padding(.top, 14)
+                }
+            }
+            .padding(16)
+        }
+    }
+
     func cashFlowFigure(title: LocalizedStringKey, amount: Double, sign: String) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             InsightsCardTitle(title)
@@ -1156,6 +1224,7 @@ struct InsightsDashboard: View {
     }
 
     static let accountsCardID = "accountsCard"
+    static let setAsideCardID = "setAsideCard"
 
     var accountsCard: some View {
         InsightsCard {
@@ -1262,6 +1331,9 @@ struct InsightsDashboard: View {
             if case let .account(account) = total.account { return !account.isGone }
             return true
         }
+        setAside = data.setAside.map { setAside in
+            InsightsSetAside(total: setAside.total, goals: setAside.goals.filter { !$0.account.isGone })
+        }
     }
 }
 
@@ -1282,6 +1354,7 @@ struct InsightsDashboardData {
     let cashFlow: InsightsCashFlow?
     let recurring: [InsightsRecurringCharge]
     let accountTotals: [InsightsAccountTotal]
+    let setAside: InsightsSetAside?
 
     init(period: InsightsPeriod, dataController: DataController, incomeTracking: Bool, firstDay: Date?, breaksDownByAccount: Bool = false) {
         self.period = period
@@ -1306,6 +1379,54 @@ struct InsightsDashboardData {
 
         recurring = period.isCurrent ? InsightsRecurringCharge.make(dataController) : []
         projection = InsightsProjection.make(period: period, expenses: expenses, previous: previous, firstDay: firstDay, recurring: recurring)
+        // Across every account only: what moved into goals isn't one account's.
+        setAside = InsightsAccountFilter.selection.isEmpty ? InsightsSetAside.make(dataController, from: period.start, to: period.queryEnd) : nil
+    }
+}
+
+/// What moved into goals in a period, less what came back out: transfers only, so spending from a goal isn't
+/// counted here (it's spending). Nil without any goals.
+struct InsightsSetAside {
+    struct Goal: Identifiable {
+        let account: Account
+        let amount: Double
+
+        var id: NSManagedObjectID { account.objectID }
+    }
+
+    let total: Double
+    let goals: [Goal]
+
+    static func make(_ dataController: DataController, from start: Date, to end: Date) -> InsightsSetAside? {
+        guard !dataController.accounts(of: .goal, includingClosed: true).isEmpty else { return nil }
+
+        let request: NSFetchRequest<Transaction> = Transaction.fetchRequest()
+        request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+            NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), start as CVarArg),
+            NSPredicate(format: "%K < %@", #keyPath(Transaction.date), end as CVarArg),
+            NSPredicate(format: "%K <= %@", #keyPath(Transaction.date), Date.now as CVarArg),
+            NSPredicate(format: "%K != nil", #keyPath(Transaction.transferID)),
+            NSPredicate(format: "account.kind == %d", AccountKind.goal.rawValue)
+        ])
+
+        let converter = CurrencyConverter.current()
+        var byGoal: [NSManagedObjectID: (account: Account, amount: Double)] = [:]
+
+        for leg in dataController.results(for: request) {
+            guard let account = leg.account, !account.isGone else { continue }
+            // Between two goals, it was already set aside.
+            if let other = leg.transferCounterpart?.account, other.isGoal { continue }
+
+            let amount = converter.amountInBreakdown(of: leg.money)
+            byGoal[account.objectID, default: (account, 0)].amount += leg.income ? amount : -amount
+        }
+
+        let goals = byGoal.values
+            .filter { abs($0.amount) >= 0.005 }
+            .sorted { $0.amount > $1.amount }
+            .map { Goal(account: $0.account, amount: $0.amount) }
+
+        return InsightsSetAside(total: goals.reduce(0) { $0 + $1.amount }, goals: goals)
     }
 }
 

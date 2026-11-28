@@ -20,6 +20,7 @@ struct DimeWidgets: WidgetBundle {
 
         if #available(iOSApplicationExtension 17.0, *) {
             QuickAddWidget()
+            SavingsWidget()
         }
 
         if #available(iOSApplicationExtension 18.0, *) {

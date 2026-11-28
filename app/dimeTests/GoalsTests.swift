@@ -231,6 +231,99 @@ final class GoalsTests: XCTestCase {
         XCTAssertFalse(Account.budgetablePredicate.evaluate(with: trip))
     }
 
+    // MARK: - Repeating transfers
+
+    /// Every transaction in an account and the other leg of each transfer, so the test can clean them up.
+    private func adoptTransactions(in account: Account) -> [Transaction] {
+        let legs = (account.transactions as? Set<Transaction> ?? []).sorted { $0.wrappedDate < $1.wrappedDate }
+        for leg in legs {
+            inserted.append(leg)
+            if let other = leg.transferCounterpart {
+                inserted.append(other)
+            }
+        }
+        return legs
+    }
+
+    func testARepeatingTransferLogsBothLegsOfEachOccurrence() throws {
+        let trip = goal(target: 10_000)
+        let start = try XCTUnwrap(Calendar.current.date(byAdding: .day, value: -20, to: Date.now))
+        dataController.saveTransfer(from: .main, to: .account(trip), amount: 100, currencyCode: mainCurrency, date: start, note: "Saving", repeatType: 1, repeatCoefficient: 7)
+
+        let legs = adoptTransactions(in: trip)
+
+        // The first, then one 7 and one 14 days later.
+        XCTAssertEqual(legs.count, 3)
+        XCTAssertEqual(trip.balance(using: converter).value, 300, accuracy: 0.0001)
+        XCTAssertEqual(Set(legs.compactMap(\.transferID)).count, 3)
+
+        let outgoing = legs.compactMap(\.transferCounterpart)
+        XCTAssertEqual(outgoing.count, 3)
+        XCTAssertTrue(outgoing.allSatisfy { $0.account == nil && !$0.income })
+        // Only the latest carries the repeat on, and never an incoming leg.
+        XCTAssertEqual(outgoing.filter { $0.recurringType > 0 }.count, 1)
+        XCTAssertEqual(outgoing.last?.recurringType, 1)
+        XCTAssertTrue(legs.allSatisfy { $0.recurringType == 0 })
+    }
+
+    func testARepeatingTransferStopsOnceTheGoalIsReached() throws {
+        let trip = goal(target: 200)
+        let start = try XCTUnwrap(Calendar.current.date(byAdding: .day, value: -20, to: Date.now))
+        dataController.saveTransfer(from: .main, to: .account(trip), amount: 100, currencyCode: mainCurrency, date: start, note: "", repeatType: 1, repeatCoefficient: 7)
+
+        let legs = adoptTransactions(in: trip)
+
+        XCTAssertEqual(legs.count, 2)
+        XCTAssertEqual(trip.balance(using: converter).value, 200, accuracy: 0.0001)
+        XCTAssertTrue(legs.compactMap(\.transferCounterpart).allSatisfy { $0.recurringType == 0 })
+    }
+
+    func testRepeatingTransfersAreNotCharges() throws {
+        let trip = goal()
+        let legs = transfer(50, from: .main, to: .account(trip))
+        legs.outgoing.recurringType = 3
+        legs.outgoing.recurringCoefficient = 1
+        try context.save()
+
+        XCTAssertTrue(dataController.results(for: dataController.fetchRequestForRecurringTransactions()).contains(legs.outgoing))
+        XCTAssertFalse(InsightsRecurringCharge.make(dataController).contains { $0.transaction == legs.outgoing })
+    }
+
+    // MARK: - Converting accounts
+
+    func testMakingACardADebtOwesWhatWasSpentOnIt() {
+        let card = dataController.addAccount(named: "Card \(UUID().uuidString.prefix(6))")
+        inserted.append(card)
+        spend(120, in: card)
+        spend(30, in: card)
+        transfer(50, from: .main, to: .account(card))
+
+        dataController.convertAccount(card, to: .debt)
+
+        XCTAssertTrue(card.isDebt)
+        XCTAssertEqual(card.debtStatus(using: converter).owed, 100, accuracy: 0.0001)
+        XCTAssertEqual(card.targetAmount, 100, accuracy: 0.0001)
+        XCTAssertEqual(dataController.entryCounts(in: card).expenses, 2)
+        XCTAssertEqual(dataController.entryCounts(in: card).income, 0)
+
+        dataController.convertAccount(card, to: .everyday)
+        XCTAssertEqual(card.accountKind, .everyday)
+        XCTAssertEqual(card.transactionCount, 3)
+    }
+
+    func testMakingSavingsAGoalStartsWithWhatsInIt() {
+        let savings = dataController.addAccount(named: "Savings \(UUID().uuidString.prefix(6))")
+        inserted.append(savings)
+        transfer(500, from: .main, to: .account(savings))
+
+        dataController.convertAccount(savings, to: .goal)
+        let progress = savings.goalProgress(using: converter)
+
+        XCTAssertTrue(savings.isGoal)
+        XCTAssertEqual(progress.saved, 500, accuracy: 0.0001)
+        XCTAssertFalse(progress.hasTarget)
+    }
+
     // MARK: - Debts in the store
 
     func testADebtStartsAtWhatsOwedAndPaymentsBringItDown() {

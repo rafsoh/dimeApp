@@ -211,14 +211,17 @@ final class AccountsTests: XCTestCase {
         XCTAssertFalse(legs.outgoing.isDeleted)
     }
 
-    func testRecurringGenerationSkipsTransferLegs() throws {
+    /// A repeating transfer repeats on its outgoing leg. An incoming leg that carries a repeat, such as from a bad
+    /// sync, is left out, so no occurrence is logged twice.
+    func testRecurringGenerationSkipsIncomingTransferLegs() throws {
         let savings = makeAccount("Savings")
         let legs = transfer(10, from: .main, to: .account(savings), minutesAgo: 60 * 24 * 5)
-        legs.outgoing.recurringType = 1
-        legs.outgoing.recurringCoefficient = 1
+        legs.incoming.recurringType = 1
+        legs.incoming.recurringCoefficient = 1
         try context.save()
 
         let request = dataController.fetchRequestForRecurringTransactions()
+        XCTAssertFalse(dataController.results(for: request).contains(legs.incoming))
         XCTAssertFalse(dataController.results(for: request).contains(legs.outgoing))
     }
 

@@ -35,6 +35,7 @@ struct BudgetView: View {
     /// Budgets, goals or debts. Remembered, so the tab opens where it was left.
     @AppStorage("planSection", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var section: PlanSection = .budgets
     @State private var newSavings: SavingsEditorView.Target?
+    @State private var conversion: AccountConversion?
 
     private let didSave = NSManagedObjectContext.recordsDidSave
 
@@ -76,12 +77,50 @@ struct BudgetView: View {
                 case .debts:
                     newSavings = .new(.debt)
                 }
+            } onConvert: { picked in
+                conversion = picked
             }
         }
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .background(Color.PrimaryBackground)
         .sheet(item: $newSavings) { target in
             SavingsEditorView(target: target)
+        }
+        #if DEBUG
+        .onAppear {
+            switch PlanScreenshot.value(after: "-planSection") {
+            case "goals":
+                section = .goals
+            case "debts":
+                section = .debts
+            case "budgets":
+                section = .budgets
+            default:
+                break
+            }
+
+            let kind: AccountKind = section == .debts ? .debt : .goal
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                if let editor = PlanScreenshot.value(after: "-planEditor") {
+                    if editor == "new" {
+                        newSavings = .new(kind)
+                    } else if let account = PlanScreenshot.account(named: editor) {
+                        newSavings = .edit(account)
+                    }
+                }
+                if let account = PlanScreenshot.account(named: PlanScreenshot.value(after: "-planConvert")) {
+                    conversion = AccountConversion(account: account, kind: kind)
+                }
+            }
+        }
+        #endif
+        .sheet(item: $conversion) { conversion in
+            AccountConversionSheet(conversion: conversion) {
+                // Then straight on to its target, or its rate and payment.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    newSavings = .edit(conversion.account)
+                }
+            }
         }
     }
 

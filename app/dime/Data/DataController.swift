@@ -1287,7 +1287,17 @@ class DataController: ObservableObject {
                 break
             }
 
-            inserted(insertOccurrence(of: transaction, on: occurrenceDate, carriesRecurrence: followingDate >= startOfTomorrow))
+            let carriesRecurrence = followingDate >= startOfTomorrow
+
+            if transaction.isTransfer {
+                // Stops once its goal is reached or its debt is paid off, or once the other side is gone.
+                guard let occurrence = insertTransferOccurrence(of: transaction, on: occurrenceDate, carriesRecurrence: carriesRecurrence) else {
+                    break
+                }
+                inserted(occurrence)
+            } else {
+                inserted(insertOccurrence(of: transaction, on: occurrenceDate, carriesRecurrence: carriesRecurrence))
+            }
             occurrenceDate = followingDate
         }
 
@@ -1296,6 +1306,43 @@ class DataController: ObservableObject {
         save()
 
         return true
+    }
+
+    /// Logs the next occurrence of a repeating transfer, both legs of it, from its outgoing leg. Nil, logging
+    /// nothing, when the transfer has nowhere to go any more, or goes into a goal that's reached or a debt that's
+    /// paid off: saving or paying more would overshoot.
+    private func insertTransferOccurrence(of outgoing: Transaction, on date: Date, carriesRecurrence: Bool) -> Transaction? {
+        guard let incoming = outgoing.transferCounterpart, !incoming.isGone else {
+            return nil
+        }
+
+        if let destination = incoming.account, !destination.isGone {
+            if destination.isGoal, !destination.repeatsMonthly, destination.targetAmount > 0,
+               destination.balance(using: currencyConverter, asOf: date).value >= destination.targetAmount - 0.005 {
+                return nil
+            }
+
+            if destination.isDebt, -destination.balance(using: currencyConverter, asOf: date).value < 0.005 {
+                return nil
+            }
+        }
+
+        let legs = saveTransfer(
+            from: outgoing.accountChoice,
+            to: incoming.accountChoice,
+            amount: outgoing.amount,
+            currencyCode: outgoing.currencyCode ?? currencyConverter.mainCurrency,
+            date: date,
+            note: outgoing.wrappedNote,
+            repeatType: carriesRecurrence ? Int(outgoing.recurringType) : 0,
+            repeatCoefficient: Int(outgoing.recurringCoefficient)
+        )
+
+        // Every occurrence is an occurrence of a repeating transfer, like other repeating transactions.
+        legs.outgoing.onceRecurring = true
+        logInterest(forPayment: legs.incoming)
+
+        return legs.outgoing
     }
 
     private func insertOccurrence(of transaction: Transaction, on date: Date, carriesRecurrence: Bool) -> Transaction {
@@ -1742,7 +1789,7 @@ class DataController: ObservableObject {
     /// becomes the outgoing leg of a new transfer. A missing other leg is recreated, so a transfer that lost
     /// its other half ends up whole again.
     @discardableResult
-    func saveTransfer(editing leg: Transaction? = nil, from: AccountChoice, to: AccountChoice, amount: Double, currencyCode: String, date: Date, note: String) -> (outgoing: Transaction, incoming: Transaction) {
+    func saveTransfer(editing leg: Transaction? = nil, from: AccountChoice, to: AccountChoice, amount: Double, currencyCode: String, date: Date, note: String, repeatType: Int = 0, repeatCoefficient: Int = 1) -> (outgoing: Transaction, incoming: Transaction) {
         let context = container.viewContext
         let transferID = leg?.transferID ?? UUID()
         let counterpart = leg?.transferCounterpart
@@ -1782,13 +1829,19 @@ class DataController: ObservableObject {
             transaction.currencyCode = currencyCode
             setDate(date, on: transaction)
 
-            // Transfers don't repeat: the legs would each log their own occurrences.
-            transaction.recurringType = 0
-            transaction.recurringCoefficient = 1
-            transaction.onceRecurring = false
+            // Only the outgoing leg repeats, so each occurrence is logged once, with both its legs.
+            let repeats = !isIncoming && (1 ... 3).contains(repeatType)
+            transaction.recurringType = repeats ? Int16(repeatType) : 0
+            transaction.recurringCoefficient = repeats ? Int16(max(1, repeatCoefficient)) : 1
+            transaction.onceRecurring = repeats
         }
 
         save()
+
+        // A backdated repeating transfer logs the occurrences already due.
+        if outgoing.recurringType > 0 {
+            updateRecurringTransaction(transaction: outgoing)
+        }
 
         return (outgoing, incoming)
     }
@@ -1814,10 +1867,11 @@ class DataController: ObservableObject {
 
     // fetching
 
-    // Transfers never repeat, but a leg could reach here from an older backup or a bad sync; it must not log copies.
+    /// Repeating transactions, and repeating transfers by their outgoing leg. An incoming leg never carries the
+    /// repeat; one that does, from a bad sync, is left out so it can't log a second copy of each occurrence.
     func fetchRequestForRecurringTransactions() -> NSFetchRequest<Transaction> {
         let itemRequest: NSFetchRequest<Transaction> = Transaction.fetchRequest()
-        itemRequest.predicate = TransferPredicate.excluding(NSPredicate(format: "%K > %i", #keyPath(Transaction.recurringType), 0))
+        itemRequest.predicate = NSPredicate(format: "%K > %i AND (%K == nil OR %K == NO)", #keyPath(Transaction.recurringType), 0, #keyPath(Transaction.transferID), #keyPath(Transaction.income))
         return itemRequest
     }
 
@@ -3920,6 +3974,7 @@ extension DataController {
             // `-demoAccounts none` leaves everything in Main, as for someone updating from before accounts.
             if !ProcessInfo.processInfo.arguments.contains("-demoAccounts") {
                 seedDemoAccounts(groceries: groceries, shopping: shopping, coffee: coffee, firstOfMonth: firstOfMonth)
+                seedDemoGoals(firstOfMonth: firstOfMonth)
             }
             seedDemoBudgets(food: food, groceries: groceries, coffee: coffee, shopping: shopping, health: health)
 
@@ -3986,6 +4041,89 @@ extension DataController {
             let key = [card, cash, savings].first { $0.wrappedName == arguments[index + 1] }?.key ?? ""
             UserDefaults(suiteName: "group.com.rafaelsoh.dime")?.set(key, forKey: "insightsAccount")
         }
+    }
+
+    /// Goals and debts in every state the Budget tab shows: a trip on track for its deadline and saved into every
+    /// month by a repeating transfer, an emergency fund without a deadline, a monthly investing goal halfway through
+    /// this month, a reached laptop goal and one marked done; a car loan with a rate and monthly payments, a card
+    /// owing a balance, and one paid off. Savings stays an everyday account, to convert. `-demoGoals none` leaves
+    /// them all out.
+    private func seedDemoGoals(firstOfMonth: Date) {
+        let arguments = ProcessInfo.processInfo.arguments
+        if let index = arguments.firstIndex(of: "-demoGoals"), index + 1 < arguments.count, arguments[index + 1] == "none" {
+            return
+        }
+
+        let calendar = Calendar.current
+        let now = Date.now
+        let currencyCode = currencyConverter.mainCurrency
+
+        func date(monthsAgo: Int, day: Int, hour: Int = 9) -> Date? {
+            guard let month = calendar.date(byAdding: .month, value: -monthsAgo, to: firstOfMonth),
+                  let dayOfMonth = calendar.date(byAdding: .day, value: day - 1, to: month),
+                  let date = calendar.date(bySettingHour: hour, minute: 0, second: 0, of: dayOfMonth),
+                  date < now
+            else { return nil }
+            return date
+        }
+
+        /// A transfer from Main on `day` of each month, the latest repeating monthly when `repeats`.
+        @discardableResult
+        func monthly(_ amount: Double, into account: Account, months: [Int], day: Int, repeats: Bool = false) -> [(outgoing: Transaction, incoming: Transaction)] {
+            var legs: [(outgoing: Transaction, incoming: Transaction)] = []
+            for monthsAgo in months.sorted(by: >) {
+                guard let date = date(monthsAgo: monthsAgo, day: day) else { continue }
+                let transfer = saveTransfer(from: .main, to: .account(account), amount: DemoLocale.amount(amount), currencyCode: currencyCode, date: date, note: "")
+                legs.append(transfer)
+            }
+            if repeats, let latest = legs.last?.outgoing {
+                latest.recurringType = 3
+                latest.recurringCoefficient = 1
+                latest.onceRecurring = true
+            }
+            return legs
+        }
+
+        let deadline = calendar.date(byAdding: .month, value: 7, to: firstOfMonth) ?? now
+
+        let trip = addGoal(named: "Japan trip", symbol: "airplane", target: DemoLocale.amount(3_000), repeatsMonthly: false, deadline: deadline, alreadySaved: DemoLocale.amount(600))
+        monthly(300, into: trip, months: [0, 1, 2, 3], day: 2, repeats: true)
+        if let flights = date(monthsAgo: 0, day: 1, hour: 18) ?? date(monthsAgo: 1, day: 20, hour: 18) {
+            _ = insertTransaction(note: "Flights to Tokyo", category: nil, income: false, amount: DemoLocale.amount(420), currencyCode: currencyCode, account: trip, date: flights)
+        }
+        SavingsReminders.set(2, for: trip)
+
+        let emergency = addGoal(named: "Emergency fund", symbol: "umbrella", target: DemoLocale.amount(6_000), repeatsMonthly: false, deadline: nil, alreadySaved: DemoLocale.amount(2_500))
+        monthly(250, into: emergency, months: [0, 1, 2, 3], day: 2)
+
+        let investing = addGoal(named: "Investing", symbol: "chart.line.uptrend.xyaxis", target: DemoLocale.amount(300), repeatsMonthly: true, deadline: nil, alreadySaved: DemoLocale.amount(2_100))
+        monthly(300, into: investing, months: [1, 2, 3], day: 1)
+        if let thisMonth = date(monthsAgo: 0, day: 1, hour: 10) {
+            saveTransfer(from: .main, to: .account(investing), amount: DemoLocale.amount(150), currencyCode: currencyCode, date: thisMonth, note: "")
+        }
+
+        addGoal(named: "New laptop", symbol: "star", target: DemoLocale.amount(1_200), repeatsMonthly: false, deadline: nil, alreadySaved: DemoLocale.amount(1_200))
+
+        let concert = addGoal(named: "Concert tickets", symbol: "gift", target: DemoLocale.amount(250), repeatsMonthly: false, deadline: nil, alreadySaved: DemoLocale.amount(250))
+        concert.closedAt = now
+
+        let car = addDebt(named: "Car loan", symbol: "car", owed: DemoLocale.amount(7_480), yearlyRate: 6.9, payment: DemoLocale.amount(310))
+        car.targetAmount = DemoLocale.amount(12_000)
+        for legs in monthly(310, into: car, months: [0, 1, 2], day: 15, repeats: true) {
+            logInterest(forPayment: legs.incoming)
+        }
+        SavingsReminders.set(15, for: car)
+
+        let visa = addDebt(named: "Visa", symbol: "creditcard", owed: DemoLocale.amount(1_340), yearlyRate: 0, payment: 0)
+        if let hotel = date(monthsAgo: 0, day: 1, hour: 21) ?? date(monthsAgo: 1, day: 25, hour: 21) {
+            _ = insertTransaction(note: "Hotel", category: nil, income: false, amount: DemoLocale.amount(180), currencyCode: currencyCode, account: visa, date: hotel)
+        }
+
+        let phone = addDebt(named: "Phone", symbol: "iphone", owed: 0, yearlyRate: 0, payment: 0)
+        phone.targetAmount = DemoLocale.amount(900)
+        phone.closedAt = now
+
+        save()
     }
 
     /// Budgets sized from the seeded spending so each lands in a known state: overall and Food on track,

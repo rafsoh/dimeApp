@@ -281,6 +281,38 @@ extension DataController {
         save()
     }
 
+    /// Makes an account a goal, a debt or an everyday account again. Nothing in it changes: a goal starts with
+    /// what's in it now, and a debt with what it owes now, its spending less what came in. Its target, deadline,
+    /// rate and payment are set in the editor afterwards.
+    func convertAccount(_ account: Account, to kind: AccountKind) {
+        guard !account.isGone, account.accountKind != kind else { return }
+
+        let balance = account.balance(using: currencyConverter).value
+        account.accountKind = kind
+        account.closedAt = nil
+
+        switch kind {
+        case .goal:
+            account.repeatsMonthly = false
+            account.targetDate = nil
+            account.targetAmount = 0
+        case .debt:
+            // Paid off from what it owes today.
+            account.targetAmount = max(-balance, 0)
+        case .everyday:
+            break
+        }
+
+        save()
+    }
+
+    /// How many expenses and incomes, not transfers, an account has: what changes meaning when it's converted.
+    func entryCounts(in account: Account) -> (expenses: Int, income: Int) {
+        let transactions = (account.transactions as? Set<Transaction> ?? []).filter { !$0.isGone && !$0.isTransfer }
+        let income = transactions.filter(\.income).count
+        return (transactions.count - income, income)
+    }
+
     /// Puts a goal or debt away, or brings it back. Its transactions stay.
     func setClosed(_ account: Account, _ closed: Bool) {
         guard !account.isGone else { return }
@@ -333,5 +365,36 @@ extension DataController {
         for charge in interestCharges(forTransfer: transferID) where !charge.isGone {
             container.viewContext.delete(charge)
         }
+    }
+}
+
+// MARK: - Reminders
+
+/// The day of the month each goal or debt reminds the user on, by account key. Kept on this device, like the
+/// other notification settings: each device schedules its own notifications.
+enum SavingsReminders {
+    static let storageKey = "savingsReminderDays"
+
+    private static var defaults: UserDefaults? {
+        UserDefaults(suiteName: "group.com.rafaelsoh.dime")
+    }
+
+    static func all() -> [String: Int] {
+        (defaults?.dictionary(forKey: storageKey) as? [String: Int]) ?? [:]
+    }
+
+    /// The day of the month, 1 to 28, or nil for no reminder.
+    static func day(for account: Account) -> Int? {
+        all()[account.key].flatMap { (1 ... 28).contains($0) ? $0 : nil }
+    }
+
+    static func set(_ day: Int?, for account: Account) {
+        var days = all()
+        if let day, (1 ... 28).contains(day) {
+            days[account.key] = day
+        } else {
+            days.removeValue(forKey: account.key)
+        }
+        defaults?.set(days, forKey: storageKey)
     }
 }
