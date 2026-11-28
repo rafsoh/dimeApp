@@ -331,7 +331,8 @@ enum AccountsViewMode {
 
 /// Introduces accounts, once, to people who used Dime before them. New installs meet accounts in onboarding instead.
 enum AccountsIntro {
-    private static let seenKey = "accountsIntroSeen"
+    /// Renamed from "accountsIntroSeen" so that people who saw it in the first TestFlight build see it again.
+    private static let seenKey = "accountsIntroSeen2"
 
     private static var defaults: UserDefaults {
         UserDefaults(suiteName: "group.com.rafaelsoh.dime") ?? .standard
