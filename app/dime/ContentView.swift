@@ -309,14 +309,12 @@ struct ContentView: View {
             }
 
             // Accounts get their own sheet, ahead of the release notes, which wait for the next launch
-            // rather than following straight after. Anyone who already has accounts, say from another
-            // device, has found them.
+            // rather than following straight after. New installs never see it: onboarding has its own
+            // accounts step, and marks it seen.
             if !AccountsIntro.isSeen {
                 AccountsIntro.markSeen()
-                if dataController.accountCount() == 0 {
-                    showAccountsIntro = true
-                    return
-                }
+                showAccountsIntro = true
+                return
             }
 
             guard !whatsNewReleases.isEmpty else { return }

@@ -93,6 +93,235 @@ struct AccountIconGrid: View {
     }
 }
 
+/// The icons as a keyboard. The account editor's icon tile takes focus with it, the way the category editor's
+/// emoji tile brings up the emoji keyboard: moving between the tile and the name swaps one keyboard for the
+/// other in place, so the sheet above them never moves.
+struct AccountIconKeyboard: UIViewRepresentable {
+    @Binding var isActive: Bool
+    let selection: String
+    let onPick: (String) -> Void
+
+    /// Used until the name's keyboard has been seen, such as with a hardware keyboard.
+    static let fallbackHeight: CGFloat = 270
+    /// Four rows of icons.
+    static let minimumHeight: CGFloat = 240
+
+    final class Coordinator {
+        var isActive: Binding<Bool>
+        var hosting: UIHostingController<AccountIconKeyboardContent>?
+        weak var host: AccountIconKeyboardHost?
+        /// How tall the name's keyboard is, so the icons can be as tall and the sheet above them stays put.
+        private var textKeyboardHeight: CGFloat?
+        /// What the system adds below a custom keyboard, such as room for the home indicator. Measured the first
+        /// time the icons show.
+        private static var systemPadding: CGFloat?
+        private var observer: NSObjectProtocol?
+
+        init(isActive: Binding<Bool>) {
+            self.isActive = isActive
+            observer = NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillChangeFrameNotification, object: nil, queue: .main) { [weak self] notification in
+                guard let frame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else { return }
+                self?.keyboardWillChange(to: frame.height)
+            }
+        }
+
+        deinit {
+            if let observer {
+                NotificationCenter.default.removeObserver(observer)
+            }
+        }
+
+        func focusChanged(_ focused: Bool) {
+            DispatchQueue.main.async { [weak self] in
+                guard let self, self.isActive.wrappedValue != focused else { return }
+                self.isActive.wrappedValue = focused
+            }
+        }
+
+        /// Makes the icons as tall as the name's keyboard, before they show.
+        func sizeIcons() {
+            guard let host, let keyboard = host.iconKeyboard else { return }
+            let padding = Self.systemPadding ?? host.window?.safeAreaInsets.bottom ?? 0
+            let height = iconsHeight(padding: padding)
+
+            if keyboard.frame.height != height {
+                keyboard.frame.size.height = height
+            }
+        }
+
+        private func iconsHeight(padding: CGFloat) -> CGFloat {
+            // A hardware keyboard leaves only a short bar, which the icons can't fit in.
+            guard let textKeyboardHeight, textKeyboardHeight >= 200 else {
+                return AccountIconKeyboard.fallbackHeight
+            }
+            return max(AccountIconKeyboard.minimumHeight, (textKeyboardHeight - padding).rounded())
+        }
+
+        private func keyboardWillChange(to height: CGFloat) {
+            guard height > 0, let host, let keyboard = host.iconKeyboard else { return }
+
+            guard host.isFirstResponder else {
+                textKeyboardHeight = height
+                return
+            }
+
+            // The icons are showing: learn what the system added below them, and if the guess was off, correct it once.
+            Self.systemPadding = height - keyboard.frame.height
+            let corrected = iconsHeight(padding: height - keyboard.frame.height)
+
+            if abs(corrected - keyboard.frame.height) > 1 {
+                keyboard.frame.size.height = corrected
+                host.reloadInputViews()
+            }
+        }
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(isActive: $isActive)
+    }
+
+    func makeUIView(context: Context) -> AccountIconKeyboardHost {
+        let host = AccountIconKeyboardHost()
+        let hosting = UIHostingController(rootView: AccountIconKeyboardContent(selection: selection, colorScheme: context.environment.colorScheme, onPick: onPick))
+        hosting.view.backgroundColor = .clear
+        hosting.view.translatesAutoresizingMaskIntoConstraints = false
+
+        // Drawn on the keyboard's own background, like the emoji keyboard.
+        // The system sets the width; the height is the name's keyboard's, once that's known (see Coordinator).
+        let keyboard = UIInputView(frame: CGRect(x: 0, y: 0, width: 320, height: Self.fallbackHeight), inputViewStyle: .keyboard)
+        keyboard.allowsSelfSizing = false
+        keyboard.addSubview(hosting.view)
+        NSLayoutConstraint.activate([
+            hosting.view.leadingAnchor.constraint(equalTo: keyboard.leadingAnchor),
+            hosting.view.trailingAnchor.constraint(equalTo: keyboard.trailingAnchor),
+            hosting.view.topAnchor.constraint(equalTo: keyboard.topAnchor),
+            hosting.view.bottomAnchor.constraint(equalTo: keyboard.bottomAnchor)
+        ])
+
+        host.iconKeyboard = keyboard
+        host.onFocusChange = { [weak coordinator = context.coordinator] focused in
+            coordinator?.focusChanged(focused)
+        }
+        context.coordinator.hosting = hosting
+        context.coordinator.host = host
+        return host
+    }
+
+    func updateUIView(_ host: AccountIconKeyboardHost, context: Context) {
+        let coordinator = context.coordinator
+        coordinator.isActive = $isActive
+        coordinator.hosting?.rootView = AccountIconKeyboardContent(selection: selection, colorScheme: context.environment.colorScheme, onPick: onPick)
+
+        // The keyboard has its own window, which doesn't follow the app's appearance setting.
+        let style: UIUserInterfaceStyle = context.environment.colorScheme == .dark ? .dark : .light
+        if host.iconKeyboard?.overrideUserInterfaceStyle != style {
+            host.iconKeyboard?.overrideUserInterfaceStyle = style
+        }
+
+        if isActive, !host.isFirstResponder {
+            DispatchQueue.main.async { [weak coordinator] in
+                guard !host.isFirstResponder else { return }
+                coordinator?.sizeIcons()
+
+                // If the icons can't take focus, the tile goes back to unfocused, so tapping it tries again.
+                if !host.becomeFirstResponder() {
+                    coordinator?.focusChanged(false)
+                }
+            }
+        } else if !isActive, host.isFirstResponder {
+            DispatchQueue.main.async {
+                _ = host.resignFirstResponder()
+            }
+        }
+    }
+}
+
+/// A text field whose keyboard is the icons. It has no size, draws nothing and takes no text.
+///
+/// It's a text field rather than a plain view with an input view: the sheet only rises above the keyboard of
+/// a text field, and with a plain view the icons covered the sheet.
+final class AccountIconKeyboardHost: UITextField, UITextFieldDelegate {
+    var iconKeyboard: UIView? {
+        didSet {
+            inputView = iconKeyboard
+        }
+    }
+
+    var onFocusChange: ((Bool) -> Void)?
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        delegate = self
+        borderStyle = .none
+        backgroundColor = .clear
+        textColor = .clear
+        tintColor = .clear
+        autocorrectionType = .no
+        spellCheckingType = .no
+        autocapitalizationType = .none
+        // No undo, redo and paste bar above the icons on iPad.
+        inputAssistantItem.leadingBarButtonGroups = []
+        inputAssistantItem.trailingBarButtonGroups = []
+        isAccessibilityElement = false
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func caretRect(for _: UITextPosition) -> CGRect {
+        .zero
+    }
+
+    override func selectionRects(for _: UITextRange) -> [UITextSelectionRect] {
+        []
+    }
+
+    override func canPerformAction(_: Selector, withSender _: Any?) -> Bool {
+        false
+    }
+
+    // Typing on a hardware keyboard goes nowhere.
+    func textField(_: UITextField, shouldChangeCharactersIn _: NSRange, replacementString _: String) -> Bool {
+        false
+    }
+
+    func textFieldShouldReturn(_: UITextField) -> Bool {
+        false
+    }
+
+    override func becomeFirstResponder() -> Bool {
+        let became = super.becomeFirstResponder()
+        if became {
+            onFocusChange?(true)
+        }
+        return became
+    }
+
+    override func resignFirstResponder() -> Bool {
+        let resigned = super.resignFirstResponder()
+        if resigned {
+            onFocusChange?(false)
+        }
+        return resigned
+    }
+}
+
+struct AccountIconKeyboardContent: View {
+    let selection: String
+    let colorScheme: ColorScheme
+    let onPick: (String) -> Void
+
+    var body: some View {
+        AccountIconGrid(selection: selection, onPick: onPick)
+            .padding(.horizontal, 16)
+            .padding(.top, 18)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .environment(\.colorScheme, colorScheme)
+    }
+}
+
 enum AccountsViewMode {
     /// In Settings; in onboarding, after categories; and once, as a half sheet, for people updating from before accounts.
     case settings, welcome, announcement
@@ -102,7 +331,8 @@ enum AccountsViewMode {
 
 /// Introduces accounts, once, to people who used Dime before them. New installs meet accounts in onboarding instead.
 enum AccountsIntro {
-    private static let seenKey = "accountsIntroSeen"
+    /// Renamed from "accountsIntroSeen" so that people who saw it in the first TestFlight build see it again.
+    private static let seenKey = "accountsIntroSeen2"
 
     private static var defaults: UserDefaults {
         UserDefaults(suiteName: "group.com.rafaelsoh.dime") ?? .standard
@@ -123,16 +353,11 @@ struct AccountsIntroSheet: View {
 
     var body: some View {
         if #available(iOS 16.0, *) {
-            NavigationStack {
-                AccountsView(mode: .announcement)
-            }
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
+            AccountsView(mode: .announcement)
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
         } else {
-            NavigationView {
-                AccountsView(mode: .announcement)
-            }
-            .navigationViewStyle(.stack)
+            AccountsView(mode: .announcement)
         }
     }
 }
@@ -197,23 +422,46 @@ struct AccountsView: View {
         case .settings:
             content
                 .modifier(SettingsPageHeader(title: "Accounts"))
-        case .welcome, .announcement:
+        case .announcement:
+            // A sheet of its own, headed like the app's other sheets: close, the title centred, and New, which
+            // a half sheet has no room to float over its list.
+            content
+                .tabHeader {
+                    HStack {
+                        GlassIconButton(systemName: "xmark", accessibilityLabel: "Close") {
+                            dismiss()
+                        }
+                        .hiddenInSideBar()
+
+                        Spacer()
+
+                        GlassIconButton(systemName: "plus", accessibilityLabel: "New Account") {
+                            editing = .new
+                        }
+                        .hiddenInSideBar()
+                    }
+                    .frame(height: 44)
+                    .overlay {
+                        CategoryEditorTitle(title: "Accounts")
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 20)
+                }
+                .sideBarSheet {
+                    SideBarCloseItem { dismiss() }
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            editing = .new
+                        } label: {
+                            Label("New Account", systemImage: "plus")
+                        }
+                    }
+                }
+        case .welcome:
             content
                 .navigationTitle(Text("Accounts"))
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
-                    // A half sheet has no room for a floating button over its list, so New moves up here.
-                    if mode == .announcement {
-                        ToolbarItem(placement: .navigationBarLeading) {
-                            Button {
-                                editing = .new
-                            } label: {
-                                Label("New Account", systemImage: "plus")
-                            }
-                            .prominentToolbarButton(tint: Color.PrimaryText, isProminent: false)
-                        }
-                    }
-
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button {
                             if let finishOnboarding {
@@ -586,9 +834,9 @@ struct AccountEditorSheet: View {
 
     var body: some View {
         if #available(iOS 16.0, *) {
-            // The icons take the keyboard's place, so the sheet grows to hold them while it's down.
+            // The icons are a keyboard of their own, so the sheet keeps one height above whichever is showing.
             content(fixedHeight: false)
-                .presentationDetents([.height(showingIcons ? 540 : 300)])
+                .presentationDetents([.height(300)])
                 .presentationDragIndicator(.hidden)
         } else {
             content(fixedHeight: true)
@@ -631,21 +879,11 @@ struct AccountEditorSheet: View {
 
                 CategoryConfirmButton(systemImage: editingChoice == nil ? "plus" : "checkmark", accessibilityLabel: editingChoice == nil ? "Add Account" : "Save", action: save)
             }
-
-            if showingIcons {
-                AccountIconGrid(selection: symbol) { picked in
-                    withAnimation(.easeOut(duration: 0.15)) {
-                        pickedSymbol = picked
-                    }
-                }
-                .padding(.top, 24)
-                .transition(.opacity.combined(with: .move(edge: .bottom)))
-            }
         }
         .padding(.horizontal, 20)
         .padding(.top, 20)
         .padding(.bottom, 16)
-        .frame(maxHeight: fixedHeight && !showingIcons ? 350 : .infinity, alignment: .top)
+        .frame(maxHeight: fixedHeight ? 350 : .infinity, alignment: .top)
         .frame(maxHeight: .infinity, alignment: .top)
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .sheetBackground()
@@ -655,14 +893,6 @@ struct AccountEditorSheet: View {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                     showToast = false
                 }
-            }
-        }
-        // Tapping the name brings the keyboard back in place of the icons.
-        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
-            guard showingIcons else { return }
-
-            withAnimation(.easeOut(duration: 0.25)) {
-                showingIcons = false
             }
         }
         #if DEBUG
@@ -704,14 +934,20 @@ struct AccountEditorSheet: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Text("Icon"))
+        .background {
+            // Takes focus from the name, which swaps the keyboard for the icons; tapping the name swaps back.
+            AccountIconKeyboard(isActive: $showingIcons, selection: symbol) { picked in
+                withAnimation(.easeOut(duration: 0.15)) {
+                    pickedSymbol = picked
+                }
+            }
+            .frame(width: 0, height: 0)
+            .accessibilityHidden(true)
+        }
     }
 
     private func showIcons() {
-        UIApplication.shared.endEditing()
-
-        withAnimation(.easeOut(duration: 0.25)) {
-            showingIcons = true
-        }
+        showingIcons = true
     }
 
     func save() {
@@ -755,8 +991,6 @@ struct AccountPickerSheet: View {
     private var scope: Binding<AccountScope>?
     /// Adds an All Accounts row, which picks nil.
     private var allowsAll = false
-    /// An account that can't be picked, such as where a transfer comes from when picking where it goes.
-    private var unavailable: AccountChoice?
 
     @ObservedObject var dataController = DataController.shared
     @Environment(\.dismiss) private var dismiss
@@ -768,11 +1002,10 @@ struct AccountPickerSheet: View {
     @State private var showNewAccount = false
 
     /// Picks one account; with `allowsAll`, nil stands for every account.
-    init(title: LocalizedStringKey, selection: Binding<AccountChoice?>, allowsAll: Bool = false, unavailable: AccountChoice? = nil) {
+    init(title: LocalizedStringKey, selection: Binding<AccountChoice?>, allowsAll: Bool = false) {
         self.title = title
         self.selection = selection
         self.allowsAll = allowsAll
-        self.unavailable = unavailable
     }
 
     /// Picks which accounts something counts.
@@ -811,13 +1044,13 @@ struct AccountPickerSheet: View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 8) {
                 if allowsAll {
-                    row(Text("All Accounts"), symbol: "rectangle.stack", isSelected: isAllSelected, isDisabled: false) {
+                    row(Text("All Accounts"), symbol: "rectangle.stack", isSelected: isAllSelected) {
                         selectAll()
                     }
                 }
 
                 ForEach(choices) { choice in
-                    row(Text(choice.name), symbol: choice.symbol, isSelected: isSelected(choice), isDisabled: choice == unavailable) {
+                    row(Text(choice.name), symbol: choice.symbol, isSelected: isSelected(choice)) {
                         select(choice)
                     }
                 }
@@ -877,20 +1110,20 @@ struct AccountPickerSheet: View {
         }
     }
 
-    private func row(_ name: Text, symbol: String, isSelected: Bool, isDisabled: Bool, action: @escaping () -> Void) -> some View {
+    private func row(_ name: Text, symbol: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
         let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
 
         return Button(action: action) {
             HStack(spacing: 12) {
                 AccountIconView(symbol: symbol)
                     .font(.app(.body, weight: .semibold))
-                    .foregroundColor(isDisabled ? Color.SubtitleText.opacity(0.6) : Color.SubtitleText)
+                    .foregroundColor(Color.SubtitleText)
                     .frame(width: 24)
 
                 name
                     .font(.app(.body, weight: .semibold))
                     .lineLimit(1)
-                    .foregroundColor(isDisabled ? Color.SubtitleText.opacity(0.6) : Color.PrimaryText)
+                    .foregroundColor(Color.PrimaryText)
 
                 Spacer(minLength: 8)
 
@@ -906,7 +1139,6 @@ struct AccountPickerSheet: View {
             .contentShape(shape)
         }
         .buttonStyle(.plain)
-        .disabled(isDisabled)
         .glassBackground(in: shape, tint: isSelected ? Color.PrimaryText.opacity(0.16) : Color.glassTint, fallback: isSelected ? Color.PrimaryText.opacity(0.12) : Color.SecondaryBackground)
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     }

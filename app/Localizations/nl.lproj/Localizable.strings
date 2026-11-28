@@ -586,6 +586,7 @@
 "%@, %@, %lld percent of spending" = "%1$@, %2$@, %3$lld procent van de uitgaven";
 "Import from Another App" = "Importeren uit een andere app";
 "Icon" = "Pictogram";
+"Swap Accounts" = "Rekeningen omwisselen";
 
 "Calculator" = "Rekenmachine";
 "Can't Divide by Zero" = "Kan niet delen door nul";

@@ -586,6 +586,7 @@
 "%@, %@, %lld percent of spending" = "%1$@, %2$@, %3$lld percento delle spese";
 "Import from Another App" = "Importa da un'altra app";
 "Icon" = "Icona";
+"Swap Accounts" = "Scambia i conti";
 
 "Calculator" = "Calcolatrice";
 "Can't Divide by Zero" = "Impossibile dividere per zero";

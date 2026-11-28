@@ -586,6 +586,7 @@
 "%@, %@, %lld percent of spending" = "%1$@，%2$@，佔支出的%3$lld%%";
 "Import from Another App" = "從其他 App 匯入";
 "Icon" = "圖像";
+"Swap Accounts" = "交換帳戶";
 
 "Calculator" = "計算機";
 "Can't Divide by Zero" = "無法除以零";

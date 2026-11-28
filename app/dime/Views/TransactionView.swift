@@ -62,13 +62,10 @@ struct TransactionView: View {
         case expense, income, transfer
     }
 
-    /// Accounts only show once there's one besides Main. A transfer being edited always shows, so it can be changed.
-    var showsAccounts: Bool {
-        !accountObjects.isEmpty || toEdit?.isTransfer == true
-    }
-
+    /// Every entry shows its account, Main included, so accounts are there to find before there's a second one.
+    /// A transfer needs two, so Transfer only shows once there's an account besides Main, or when editing one.
     var allowsTransfer: Bool {
-        showsAccounts && !isTemplate
+        (!accountObjects.isEmpty || toEdit?.isTransfer == true) && !isTemplate
     }
 
     var kindSelection: Binding<EntryKind> {
@@ -106,7 +103,7 @@ struct TransactionView: View {
 
     /// The first account that isn't where the transfer comes from.
     var defaultTransferDestination: AccountChoice? {
-        ([.main] + accountObjects.map(AccountChoice.account)).first { $0 != account }
+        firstAccount(otherThan: account)
     }
 
     @AppStorage("currency", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var currency: String = Locale.current.currencyCode ?? "USD"
@@ -873,16 +870,11 @@ struct TransactionView: View {
                     stackedFilingTokens
                 }
             }
-        } else if dynamicTypeSize > .xLarge || showsAccounts {
+        } else {
+            // With the account always shown, the line rarely fits side by side, and there's no ViewThatFits.
             VStack(spacing: 0) {
                 leadingToken
                 stackedFilingTokens
-            }
-        } else {
-            HStack(spacing: 8) {
-                leadingToken
-                lineSeparator
-                categoryToken
             }
         }
     }
@@ -891,12 +883,10 @@ struct TransactionView: View {
     @ViewBuilder var filingTokens: some View {
         if isTransfer {
             transferTokens
-        } else if showsAccounts {
+        } else {
             categoryToken
             lineSeparator
             accountToken
-        } else {
-            categoryToken
         }
     }
 
@@ -906,9 +896,7 @@ struct TransactionView: View {
             transferTokens
         } else {
             categoryToken
-            if showsAccounts {
-                accountToken
-            }
+            accountToken
         }
     }
 
@@ -928,10 +916,19 @@ struct TransactionView: View {
             }
             .accessibilityLabel(Text("From") + Text(", ") + Text(account.name))
 
-            Image(systemName: "arrow.right")
-                .font(.app(.subheadline, weight: .bold))
-                .foregroundColor(Color.SubtitleText.opacity(0.6))
-                .accessibilityHidden(true)
+            // Turns the transfer around, so money can go either way with only two accounts.
+            Button {
+                swapTransferSides()
+            } label: {
+                Image(systemName: "arrow.right")
+                    .font(.app(.subheadline, weight: .bold))
+                    .foregroundColor(Color.SubtitleText.opacity(0.6))
+                    .frame(width: 28, height: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(transferTo == nil)
+            .accessibilityLabel(Text("Swap Accounts"))
 
             AccountToken(name: transferTo?.name ?? String(localized: "Account"), symbol: transferTo?.symbol, isError: account == transferTo) {
                 UIApplication.shared.endEditing()
@@ -947,10 +944,38 @@ struct TransactionView: View {
         case .account:
             AccountPickerSheet(title: "Account", selection: Binding(get: { account }, set: { account = $0 ?? .main }))
         case .from:
-            AccountPickerSheet(title: "From", selection: Binding(get: { account }, set: { account = $0 ?? .main }), unavailable: transferTo)
+            // Picking where the transfer goes as where it comes from swaps the two, rather than being refused.
+            AccountPickerSheet(title: "From", selection: Binding(get: { account }, set: { picked in
+                let from = picked ?? .main
+                if from == transferTo {
+                    transferTo = account
+                }
+                account = from
+            }))
         case .to:
-            AccountPickerSheet(title: "To", selection: $transferTo, unavailable: account)
+            AccountPickerSheet(title: "To", selection: Binding(get: { transferTo }, set: { picked in
+                if let picked, picked == account {
+                    account = transferTo ?? firstAccount(otherThan: picked) ?? .main
+                }
+                transferTo = picked
+            }))
         }
+    }
+
+    /// Where the transfer comes from becomes where it goes, and the other way round.
+    func swapTransferSides() {
+        guard let destination = transferTo else { return }
+
+        UISelectionFeedbackGenerator().selectionChanged()
+        withAnimation(.easeInOut(duration: 0.2)) {
+            transferTo = account
+            account = destination
+        }
+    }
+
+    /// Main or an account, whichever comes first that isn't `choice`.
+    func firstAccount(otherThan choice: AccountChoice) -> AccountChoice? {
+        ([.main] + accountObjects.map(AccountChoice.account)).first { $0 != choice }
     }
 
     /// The date, or on a template, which has no date, a label saying it's a Quick Add template.
