@@ -553,3 +553,8 @@
 
 "Font" = "แบบอักษร";
 "Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo เป็นแบบอักษรโดย Josh Puckett ซึ่งได้รับอนุญาตภายใต้ SIL Open Font License";
+
+"Calculator" = "เครื่องคิดเลข";
+"Can't Divide by Zero" = "หารด้วยศูนย์ไม่ได้";
+"Total Can't Be Negative" = "ยอดรวมติดลบไม่ได้";
+"Total Is Too Large" = "ยอดรวมมากเกินไป";

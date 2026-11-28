@@ -365,6 +365,9 @@ class DataController: ObservableObject {
 
     private let logger = Logger(subsystem: "com.rafaelsoh.dime", category: "DataController")
 
+    /// Feature Lab: new transactions without a category wait here for Apple Intelligence to pick one.
+    var autoCategoryQueue = AutoCategoryQueue()
+
     // Main thread only.
     private var recurringGate: RecurringGenerationGate
     private var transactionCountAtCloudKitEventStart: [UUID: Int] = [:]
@@ -1255,8 +1258,9 @@ class DataController: ObservableObject {
         save()
     }
 
+    /// Logs the occurrences of a recurring transaction that are due by today, telling `inserted` about each.
     @discardableResult
-    func updateRecurringTransaction(transaction: Transaction) -> Bool {
+    func updateRecurringTransaction(transaction: Transaction, inserted: (Transaction) -> Void = { _ in }) -> Bool {
         guard (1 ... 3).contains(transaction.recurringType) else {
             return false
         }
@@ -1278,7 +1282,7 @@ class DataController: ObservableObject {
                 break
             }
 
-            insertOccurrence(of: transaction, on: occurrenceDate, carriesRecurrence: followingDate >= startOfTomorrow)
+            inserted(insertOccurrence(of: transaction, on: occurrenceDate, carriesRecurrence: followingDate >= startOfTomorrow))
             occurrenceDate = followingDate
         }
 
@@ -1289,7 +1293,7 @@ class DataController: ObservableObject {
         return true
     }
 
-    private func insertOccurrence(of transaction: Transaction, on date: Date, carriesRecurrence: Bool) {
+    private func insertOccurrence(of transaction: Transaction, on date: Date, carriesRecurrence: Bool) -> Transaction {
         let occurrence = Transaction(context: container.viewContext)
         occurrence.note = transaction.wrappedNote
         occurrence.category = transaction.category
@@ -1316,6 +1320,11 @@ class DataController: ObservableObject {
         } else {
             occurrence.recurringType = 0
         }
+
+        // Queued for a category once it's saved, unless the user left the recurring one without a category.
+        autoCategoryQueue.addOccurrence(occurrence, of: transaction)
+
+        return occurrence
     }
 
     func updateRecurringTransactions() {
@@ -1383,6 +1392,10 @@ class DataController: ObservableObject {
 
         save()
 
+        // Shortcuts, automations and Quick Add log through here, in the app or in a widget. Imports don't,
+        // so they never queue thousands of transactions at once.
+        autoCategoryQueue.add([transaction])
+
         return transaction
     }
 
@@ -1398,6 +1411,7 @@ class DataController: ObservableObject {
         let author = container.viewContext.transactionAuthor
         let mergePolicy = container.viewContext.mergePolicy
         let resolvedCurrency = currencyCode ?? currencyForNewTransaction()
+        let categoryQueue = self.autoCategoryQueue
 
         let objectID: NSManagedObjectID = try await withCheckedThrowingContinuation { continuation in
             container.performBackgroundTask { context in
@@ -1410,6 +1424,8 @@ class DataController: ObservableObject {
 
                 do {
                     try context.save()
+                    // Feature Lab: queued for Apple Intelligence, like any other new transaction.
+                    categoryQueue.add([transaction])
                     continuation.resume(returning: transaction.objectID)
                 } catch {
                     let nsError = error as NSError

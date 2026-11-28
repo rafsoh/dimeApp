@@ -66,6 +66,9 @@ struct dimeApp: App {
 
         KeyboardHeightCache.shared.start()
 
+        // Feature Lab: categorises transactions queued by Shortcuts, widgets and recurring transactions.
+        AutoCategorizer.shared.start()
+
         // The New Expense control (Control Center, Lock Screen, Action Button) runs
         // OpenNewExpenseIntent in the app; route it through the same dimeapp://newExpense
         // link the widgets use, so app lock and the add sheet behave the same way.

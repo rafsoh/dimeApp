@@ -553,3 +553,8 @@
 
 "Font" = "فونٹ";
 "Allo is a typeface by Josh Puckett, licensed under the SIL Open Font License." = "Allo، Josh Puckett کا بنایا ہوا ٹائپ فیس ہے، جو SIL Open Font License کے تحت لائسنس یافتہ ہے۔";
+
+"Calculator" = "کیلکولیٹر";
+"Can't Divide by Zero" = "صفر سے تقسیم نہیں کیا جا سکتا";
+"Total Can't Be Negative" = "کل منفی نہیں ہو سکتا";
+"Total Is Too Large" = "کل بہت زیادہ ہے";

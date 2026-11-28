@@ -23,6 +23,8 @@ struct TransactionView: View {
 
     @State private var note = ""
     @State var category: Category?
+    /// The category the page opened with, so saving only changes it when the user did.
+    @State private var openedCategory: Category?
     @State private var date = Date.now
     @State private var repeatType = 0
     @State private var repeatCoefficient = 1
@@ -229,6 +231,26 @@ struct TransactionView: View {
     @State var decimalValuesAssigned: AssignedDecimal = .none
     @State private var priceString: String = "0"
 
+    // calculator
+
+    /// Settings › Calculator, off by default: shows the button that brings up the operator row.
+    @AppStorage("showCalculator", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+    var showCalculator: Bool = false
+    /// Whether the operator row was left open, so it's there next time for people who calculate a lot.
+    @AppStorage("calculatorShown", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
+    var calculatorShown: Bool = false
+    @State private var expression = CalculatorExpression()
+    /// The amount last taken from the sum. Any other change to the amount, such as a suggestion or the
+    /// transaction being opened, starts the sum again from it.
+    @State private var expressionPrice: Double?
+
+    /// The keys type into the sum rather than the amount.
+    var isCalculating: Bool {
+        showCalculator && calculatorShown
+    }
+
+    private let calculatorAnimation = Animation.spring(response: 0.35, dampingFraction: 0.85)
+
     @State private var selectedCurrency: String?
     @State private var showCurrencyPicker = false
 
@@ -383,11 +405,27 @@ struct TransactionView: View {
 
                         // number display and note view
                         VStack(spacing: 8) {
-                            NumberPadTextView(price: $price, isEditingDecimal: $isEditingDecimal, decimalValuesAssigned: $decimalValuesAssigned, fractionDigits: fractionDigits, currencyCode: usesMainCurrency ? nil : transactionCurrency) {
-                                showCurrencyPicker = true
-                            }
+                            NumberPadTextView(
+                                price: $price,
+                                isEditingDecimal: $isEditingDecimal,
+                                decimalValuesAssigned: $decimalValuesAssigned,
+                                fractionDigits: fractionDigits,
+                                currencyCode: usesMainCurrency ? nil : transactionCurrency,
+                                expression: isCalculating ? $expression : nil,
+                                calculatorButton: showCalculator ? NumberPadTextView.CalculatorButton(isShowingOperators: calculatorShown, action: toggleCalculator) : nil,
+                                onCurrencyTap: {
+                                    showCurrencyPicker = true
+                                }
+                            )
 
-                            if let convertedPreview {
+                            // What the sum comes to takes the place of the converted amount, which comes back once it's worked out.
+                            if let calculatorPreview {
+                                calculatorPreview.text
+                                    .font(.app(.subheadline, weight: .medium))
+                                    .foregroundColor(calculatorPreview.isError ? Color.AlertRed : Color.SubtitleText)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.7)
+                            } else if let convertedPreview {
                                 Text(convertedPreview)
                                     .font(.app(.subheadline, weight: .medium))
                                     .foregroundColor(Color.SubtitleText)
@@ -450,13 +488,22 @@ struct TransactionView: View {
                             .padding(.bottom, 4)
                     }
 
+                    // Hidden while the note's keyboard covers the pad.
+                    if isCalculating && !textFieldFocused {
+                        CalculatorOperatorRow(expression: $expression, equals: useTotal)
+                            .padding(.bottom, 4)
+                            .disabled(isDismissDragging)
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
+
                     NumberPad(
                         price: $price,
                         category: $category,
                         isEditingDecimal: $isEditingDecimal,
                         decimalValuesAssigned: $decimalValuesAssigned,
                         showingNotePicker: showingNotePicker,
-                        fractionDigits: fractionDigits
+                        fractionDigits: fractionDigits,
+                        expression: isCalculating ? $expression : nil
                     ) {
                         submit()
                     }
@@ -565,6 +612,32 @@ struct TransactionView: View {
                         decimalValuesAssigned = AssignedDecimal(count: fractionDigits)
                     }
                 }
+
+                // With -screenshotAdd, `-screenshotCalculator closed|open|currency|total` turns the calculator on with its
+                // operators hidden, or open on 86.40 ÷ 3 (in euros for currency, worked out for total), for its screenshots.
+                let arguments = ProcessInfo.processInfo.arguments
+                if toEdit == nil && editedTemplate == nil, let index = arguments.firstIndex(of: "-screenshotCalculator"), index + 1 < arguments.count {
+                    let mode = arguments[index + 1]
+                    showCalculator = true
+                    calculatorShown = mode != "closed"
+
+                    if mode == "currency" || mode == "total" {
+                        selectedCurrency = "EUR"
+                    }
+
+                    if calculatorShown {
+                        var sum = CalculatorExpression(number: "86.40")
+                        sum.apply(.divide)
+                        sum.append(digit: 3, fractionDigits: fractionDigits)
+                        if mode == "total" {
+                            sum.collapse(fractionDigits: fractionDigits)
+                        }
+                        expression = sum
+                        syncPriceFromExpression()
+                        note = DemoLocale.text("Dinner, split 3 ways")
+                        category = dataController.results(for: dataController.fetchRequestForCategoriesMigration(income: false)).first { $0.name == DemoLocale.text("Food") }
+                    }
+                }
                 #endif
             }
         }
@@ -595,6 +668,14 @@ struct TransactionView: View {
         }
         .onChange(of: dateString) { _ in
             animateIcon = date > Date.now
+        }
+        .onChange(of: expression) { _ in
+            syncPriceFromExpression()
+        }
+        .onChange(of: price) { newValue in
+            guard isCalculating, newValue != expressionPrice else { return }
+            expression = CalculatorExpression(amount: newValue, fractionDigits: fractionDigits)
+            expressionPrice = newValue
         }
         .onChange(of: dynamicTypeSize) { _ in
             if income {
@@ -664,6 +745,85 @@ struct TransactionView: View {
         }
     }
 
+    /// What the sum comes to while it has an operator in it, or why it can't be worked out.
+    var calculatorPreview: (text: Text, isError: Bool)? {
+        guard isCalculating, expression.hasOperator else {
+            return nil
+        }
+
+        switch expression.total(fractionDigits: fractionDigits) {
+        case .success(let total):
+            return (Text(verbatim: "= " + MoneyFormatter.string(total, currencyCode: transactionCurrency)), false)
+        case .failure(let failure):
+            return (Text(LocalizedStringKey(failure.title)), true)
+        }
+    }
+
+    /// Keeps the amount at the sum's total while the operators are showing, so saving, the converted amount and the
+    /// unsaved-changes check all see it. A sum that can't be worked out leaves the amount as it was.
+    func syncPriceFromExpression() {
+        guard isCalculating, case .success(let total) = expression.total(fractionDigits: fractionDigits) else {
+            return
+        }
+
+        expressionPrice = total
+        if price != total {
+            price = total
+        }
+    }
+
+    func toggleCalculator() {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+
+        if calculatorShown {
+            // Hiding the operators works the sum out first, so nothing typed is lost.
+            switch expression.collapse(fractionDigits: fractionDigits) {
+            case .success(let total):
+                expressionPrice = total
+                price = total
+            case .failure(let failure):
+                showCalculatorError(failure)
+                return
+            }
+
+            withAnimation(calculatorAnimation) {
+                calculatorShown = false
+            }
+
+            // Leave the pad the way an opened transaction leaves it, so typing carries on from the total.
+            isEditingDecimal = false
+            decimalValuesAssigned = .none
+            if price.truncatingRemainder(dividingBy: 1) > 0 && numberEntryType == 2 && fractionDigits > 0 {
+                isEditingDecimal = true
+                decimalValuesAssigned = AssignedDecimal(count: fractionDigits)
+            }
+        } else {
+            // Start the sum from exactly what the pad shows, such as "12." halfway through typing 12.50.
+            let typed = AmountEntry.display(price, entryType: numberEntryType, isEditingDecimal: isEditingDecimal, assigned: decimalValuesAssigned.count, fractionDigits: fractionDigits)
+            let hasEntry = price != 0 || (numberEntryType == 2 && isEditingDecimal)
+            expression = hasEntry ? CalculatorExpression(number: typed) : CalculatorExpression()
+            expressionPrice = price
+
+            withAnimation(calculatorAnimation) {
+                calculatorShown = true
+            }
+        }
+    }
+
+    /// The = key: the total takes the place of the sum.
+    func useTotal() {
+        if case .failure(let failure) = expression.collapse(fractionDigits: fractionDigits) {
+            showCalculatorError(failure)
+        }
+    }
+
+    func showCalculatorError(_ failure: CalculatorExpression.Failure) {
+        toastImage = failure.systemImage
+        toastTitle = failure.title
+        showToast = true
+        UINotificationFeedbackGenerator().notificationOccurred(.error)
+    }
+
     func symbol(for transaction: Transaction) -> String {
         guard let code = transaction.currencyCode else {
             return currencySymbol
@@ -676,6 +836,17 @@ struct TransactionView: View {
         selectedCurrency = code
 
         let digits = CurrencyDigits.fractionDigits(for: code)
+
+        if isCalculating {
+            // The sum keeps what was typed; only its total is rounded to the new currency's digits.
+            if case .success(let total) = expression.total(fractionDigits: digits) {
+                expressionPrice = total
+                price = total
+            }
+
+            dataController.ensureLatestExchangeRates()
+            return
+        }
         price = AmountEntry.truncated(price, fractionDigits: digits)
 
         if decimalValuesAssigned.count > digits {
@@ -930,6 +1101,18 @@ struct TransactionView: View {
     func submit() {
         let generator = UINotificationFeedbackGenerator()
 
+        // A sum still being typed is worked out first, so ✓ never needs = before it.
+        if isCalculating {
+            switch expression.collapse(fractionDigits: fractionDigits) {
+            case .success(let total):
+                expressionPrice = total
+                price = total
+            case .failure(let failure):
+                showCalculatorError(failure)
+                return
+            }
+        }
+
         if price == 0 {
             toastImage = "centsign.circle"
             toastTitle = "Missing Amount"
@@ -1048,14 +1231,24 @@ struct TransactionView: View {
                 editedTransaction.note = note.trimmingCharacters(in: .whitespaces)
             }
 
-            // Assigned even when nil, so an edit can remove the category.
-            editedTransaction.category = category
+            // Only a category changed on this page is saved, so one Apple Intelligence filed while the page
+            // was open stays. Assigned even when nil, so an edit can remove the category.
+            if category != openedCategory {
+                editedTransaction.category = category
+
+                // A category taken away on purpose stays away: Apple Intelligence never puts one back.
+                if category == nil {
+                    dataController.autoCategoryQueue.keepUncategorised(editedTransaction)
+                }
+            }
 
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 // Sync can still delete it during this delay.
                 guard !editedTransaction.isGone else {
                     return
                 }
+
+                var occurrences: [Transaction] = []
 
                 withAnimation(.easeInOut(duration: 0.5)) {
                     editedTransaction.amount = price
@@ -1081,7 +1274,7 @@ struct TransactionView: View {
                         editedTransaction.recurringType = Int16(repeatType)
                         editedTransaction.recurringCoefficient = Int16(repeatCoefficient)
 
-                        dataController.updateRecurringTransaction(transaction: editedTransaction)
+                        dataController.updateRecurringTransaction(transaction: editedTransaction) { occurrences.append($0) }
                     } else {
                         editedTransaction.onceRecurring = false
                         editedTransaction.recurringType = Int16(repeatType)
@@ -1094,6 +1287,9 @@ struct TransactionView: View {
                         dataController.refreshExchangeRates()
                     }
                 }
+
+                // Feature Lab: still without a category, and not because the user took it away.
+                AutoCategorizer.shared.categoriseIfNeeded([editedTransaction] + occurrences)
             }
 
             dismiss()
@@ -1134,14 +1330,20 @@ struct TransactionView: View {
 
         transaction.month = calendar.date(from: dateComponents) ?? Date.now
 
+        // Occurrences already due, when it's backdated, which go under the same category.
+        var occurrences: [Transaction] = []
+
         if repeatType > 0 {
             transaction.onceRecurring = true
             transaction.recurringType = Int16(repeatType)
             transaction.recurringCoefficient = Int16(repeatCoefficient)
-            dataController.updateRecurringTransaction(transaction: transaction)
+            dataController.updateRecurringTransaction(transaction: transaction) { occurrences.append($0) }
         }
 
         dataController.save()
+
+        // Feature Lab: a note without a category gets one from Apple Intelligence, while its row glimmers.
+        AutoCategorizer.shared.categoriseIfNeeded([transaction] + occurrences)
 
         if !CurrencyPreferences.isSameCurrency(chosenCurrency, as: nil, mainCurrency: currency) {
             dataController.refreshExchangeRates()
@@ -1188,6 +1390,7 @@ struct TransactionView: View {
 
             if let unwrappedCategory = transaction.category {
                 _category = State(initialValue: unwrappedCategory)
+                _openedCategory = State(initialValue: unwrappedCategory)
             }
 
             if let accounts = transaction.transferAccounts {

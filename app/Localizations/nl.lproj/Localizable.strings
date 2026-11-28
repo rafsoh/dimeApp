@@ -587,3 +587,15 @@
 "Import from Another App" = "Importeren uit een andere app";
 "Icon" = "Pictogram";
 "Swap Accounts" = "Rekeningen omwisselen";
+
+"Calculator" = "Rekenmachine";
+"Can't Divide by Zero" = "Kan niet delen door nul";
+"Total Can't Be Negative" = "Totaal kan niet negatief zijn";
+"Total Is Too Large" = "Totaal is te groot";
+/* Feature Lab: Auto-Categorise */
+"Auto-Categorise" = "Automatisch categoriseren";
+"Turn on Apple Intelligence in the Settings app to have it pick a category for transactions you log with a note but no category." = "Zet Apple Intelligence aan in de Instellingen-app om het een categorie te laten kiezen voor transacties die je vastlegt met een notitie maar zonder categorie.";
+"Apple Intelligence is still getting ready on this iPhone. Once it is, it can pick a category for transactions you log with a note but no category." = "Apple Intelligence wordt nog klaargezet op deze iPhone. Daarna kan het een categorie kiezen voor transacties die je vastlegt met een notitie maar zonder categorie.";
+"When you log a transaction with a note but no category, Apple Intelligence picks one of your categories for it, on your iPhone. Notes it can't make sense of stay uncategorised." = "Als je een transactie vastlegt met een notitie maar zonder categorie, kiest Apple Intelligence op je iPhone een van je categorieën ervoor. Notities waar het niets van kan maken, blijven zonder categorie.";
+"Choosing a category" = "Categorie wordt gekozen";
+"Filed under %@" = "Ingedeeld bij %@";

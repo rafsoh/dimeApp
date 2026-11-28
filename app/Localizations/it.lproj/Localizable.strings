@@ -587,3 +587,15 @@
 "Import from Another App" = "Importa da un'altra app";
 "Icon" = "Icona";
 "Swap Accounts" = "Scambia i conti";
+
+"Calculator" = "Calcolatrice";
+"Can't Divide by Zero" = "Impossibile dividere per zero";
+"Total Can't Be Negative" = "Il totale non può essere negativo";
+"Total Is Too Large" = "Il totale è troppo grande";
+/* Feature Lab: Auto-Categorise */
+"Auto-Categorise" = "Categorizza automaticamente";
+"Turn on Apple Intelligence in the Settings app to have it pick a category for transactions you log with a note but no category." = "Attiva Apple Intelligence nell’app Impostazioni perché scelga una categoria per le transazioni che registri con una nota ma senza categoria.";
+"Apple Intelligence is still getting ready on this iPhone. Once it is, it can pick a category for transactions you log with a note but no category." = "Apple Intelligence si sta ancora preparando su questo iPhone. Quando sarà pronta, potrà scegliere una categoria per le transazioni che registri con una nota ma senza categoria.";
+"When you log a transaction with a note but no category, Apple Intelligence picks one of your categories for it, on your iPhone. Notes it can't make sense of stay uncategorised." = "Quando registri una transazione con una nota ma senza categoria, Apple Intelligence sceglie una delle tue categorie, direttamente sul tuo iPhone. Le note che non riesce a interpretare restano senza categoria.";
+"Choosing a category" = "Scelta della categoria in corso";
+"Filed under %@" = "Archiviata in %@";
