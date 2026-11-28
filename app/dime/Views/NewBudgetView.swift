@@ -29,7 +29,7 @@ private struct RolloverNotice: Identifiable {
 }
 
 private enum BudgetEditor: Hashable {
-    case amount, category, start
+    case amount, category, accounts, start
 }
 
 struct BrandNewBudgetView: View {
@@ -67,7 +67,6 @@ struct BrandNewBudgetView: View {
 
     /// Which accounts the budget counts. Only offered once there's an account besides Main.
     @State private var accountScope: AccountScope
-    @State private var showAccountPicker = false
     @FetchRequest(sortDescriptors: [SortDescriptor(\.order), SortDescriptor(\.dateCreated)]) private var accounts: FetchedResults<Account>
     @AppStorage(MainAccount.nameKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var mainAccountName = ""
 
@@ -84,6 +83,10 @@ struct BrandNewBudgetView: View {
     }
 
     private let editorAnimation = Animation.spring(response: 0.38, dampingFraction: 0.86)
+
+    /// Room between the pinned bottom bar's top edge and what's in it, as wide as the side margins, so the sentence
+    /// scrolling under the bar doesn't run into the keys or tiles.
+    private let bottomBarTopPadding: CGFloat = 20
 
     var editMode: Bool {
         toEditBudget != nil || toEditMainBudget != nil
@@ -148,6 +151,7 @@ struct BrandNewBudgetView: View {
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 } else {
                     primaryButton
+                        .padding(.top, bottomBarTopPadding)
                         .padding(.bottom, 8)
                         .transition(.opacity)
                 }
@@ -173,19 +177,30 @@ struct BrandNewBudgetView: View {
         }
         #if DEBUG
         .onAppear {
-            // Accounts screenshots, removed before merging: `-accountsBudget picker` opens the accounts picker.
+            // Accounts screenshots, removed before merging: `-accountsBudget picker` opens the accounts editor,
+            // `categories` the category editor.
             let arguments = ProcessInfo.processInfo.arguments
-            if let index = arguments.firstIndex(of: "-accountsBudget"), index + 1 < arguments.count, arguments[index + 1] == "picker" {
+            guard let index = arguments.firstIndex(of: "-accountsBudget"), index + 1 < arguments.count else { return }
+
+            let opened: BudgetEditor?
+            switch arguments[index + 1] {
+            case "picker":
+                opened = .accounts
+            case "categories":
+                opened = .category
+            default:
+                opened = nil
+            }
+
+            if let opened {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-                    showAccountPicker = true
+                    withAnimation(editorAnimation) {
+                        activeEditor = opened
+                    }
                 }
             }
         }
         #endif
-        .sheet(isPresented: $showAccountPicker) {
-            AccountPickerSheet(title: "Accounts", scope: $accountScope)
-                .environmentObject(dataController)
-        }
         .alert(rolloverNotice?.title ?? "", isPresented: Binding(get: { rolloverNotice != nil }, set: { if !$0 { rolloverNotice = nil } }), presenting: rolloverNotice) { notice in
             Button(notice.confirm, role: notice.isDestructive ? ButtonRole.destructive : nil) {
                 save(rolloverChange: notice.change)
@@ -232,6 +247,7 @@ struct BrandNewBudgetView: View {
 
     // MARK: - Bottom editors
 
+    /// The keypad keeps the keyboard's height; the tiles, the day grid and the calendar size themselves.
     private func editor(_ editor: BudgetEditor) -> some View {
         ZStack {
             switch editor {
@@ -244,6 +260,8 @@ struct BrandNewBudgetView: View {
                 ) {
                     commitAmount()
                 }
+                .frame(height: editorHeight)
+                .padding(.top, bottomBarTopPadding)
                 .transition(.opacity)
             case .category:
                 BudgetCategoryGrid(
@@ -253,7 +271,14 @@ struct BrandNewBudgetView: View {
                 ) {
                     advance(from: .category)
                 }
-                .padding(.top, 8)
+                .padding(.top, bottomBarTopPadding)
+                .padding(.bottom, 15)
+                .transition(.opacity)
+            case .accounts:
+                BudgetAccountGrid(scope: $accountScope) {
+                    advance(from: .accounts)
+                }
+                .padding(.top, bottomBarTopPadding)
                 .padding(.bottom, 15)
                 .transition(.opacity)
             case .start:
@@ -261,29 +286,19 @@ struct BrandNewBudgetView: View {
                     .transition(.opacity)
             }
         }
-        .frame(height: fixedEditorHeight(editor))
-    }
-
-    /// The keypad keeps the keyboard's height; the category row, the day grid and the calendar size themselves.
-    private func fixedEditorHeight(_ editor: BudgetEditor) -> CGFloat? {
-        switch editor {
-        case .amount:
-            return editorHeight
-        case .category, .start:
-            return nil
-        }
     }
 
     /// Weekly budgets pick their day from a menu on the token, so only monthly and yearly budgets have an editor here.
+    /// The day cells and the weekday letters have 4pt of their own above them, so they're 4pt less down.
     @ViewBuilder var startEditor: some View {
         switch timeFrame {
         case .month:
             BudgetDayGrid(selection: $chosenDayMonth, title: ordinal, onPick: finishStartEditorSoon)
-                .padding(.top, 8)
+                .padding(.top, bottomBarTopPadding - 4)
                 .padding(.bottom, 15)
         case .year:
             GlassDatePicker(selection: $chosenDayYear, in: oneYearAgo ... Date.now, visibleWeeks: 5, onPick: finishStartEditorSoon)
-                .padding(.top, 4)
+                .padding(.top, bottomBarTopPadding - 4)
                 .padding(.bottom, 15)
         case .day, .week:
             EmptyView()
@@ -445,14 +460,12 @@ struct BrandNewBudgetView: View {
             font: sentenceFont,
             foreground: Color.PrimaryText,
             tint: nil,
-            isFocused: false,
+            isFocused: activeEditor == .accounts,
             isError: false,
             shake: false,
             accessibilityLabel: Text("Accounts") + Text(", ") + Text(accountsText)
         ) {
-            closeEditor {
-                showAccountPicker = true
-            }
+            toggleEditor(.accounts)
         }
         .accessibilityHint("Which accounts' spending counts towards this budget")
     }
@@ -1343,16 +1356,13 @@ private struct BudgetCategoryGrid: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
             } else {
-                let rows = CategoryTileGrid<FetchedResults<Category>>.scrollingRows(selectableCount: categories.count + (overall == nil ? 0 : 1))
+                let rows = PickerTiles.scrollingRows(selectableCount: categories.count + (overall == nil ? 0 : 1))
 
-                ScrollView(.horizontal, showsIndicators: false) {
+                BudgetTileStrip(rows: rows) {
                     CategoryTileGrid(categories: categories, category: $category, overall: overall, rows: rows, onAdd: {
                         showNewCategory = true
                     }, onSelect: onSelect)
-                        .padding(.horizontal, 20)
                 }
-                .frame(height: CategoryTileGrid<FetchedResults<Category>>.scrollingHeight(rows: rows))
-                .padding(.horizontal, -20)
             }
         }
         .sheet(isPresented: $showNewCategory) {
@@ -1368,6 +1378,102 @@ private struct BudgetCategoryGrid: View {
             sortDescriptors: [SortDescriptor(\.order)],
             predicate: Category.budgetablePredicate(editing: budget)
         )
+    }
+}
+
+/// The accounts editor: All Accounts, then Main and each account, as tiles like the category editor's.
+/// Accounts add to or come out of the budget's scope as they're tapped, so the editor stays open for more;
+/// All Accounts picks everything and moves on, like Everything does for categories.
+private struct BudgetAccountGrid: View {
+    @Binding var scope: AccountScope
+    let onSelectAll: () -> Void
+
+    @ObservedObject var dataController = DataController.shared
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.order), SortDescriptor(\.dateCreated)]) private var accounts: FetchedResults<Account>
+    // Read so renaming Main, or changing its icon, redraws its tile.
+    @AppStorage(MainAccount.nameKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var mainName = ""
+    @AppStorage(MainAccount.symbolKey, store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) private var mainSymbol = ""
+
+    @State private var showNewAccount = false
+
+    var choices: [AccountChoice] {
+        [.main] + accounts.map(AccountChoice.account)
+    }
+
+    var body: some View {
+        let rows = PickerTiles.scrollingRows(selectableCount: choices.count + 1)
+
+        BudgetTileStrip(rows: rows) {
+            PickerTiles.strip(rows: rows) {
+                allTile
+
+                ForEach(choices) { choice in
+                    accountTile(choice)
+                }
+
+                NewPickerTile(accessibilityLabel: Text("New Account")) {
+                    showNewAccount = true
+                }
+            }
+        }
+        .sheet(isPresented: $showNewAccount) {
+            AccountEditorSheet(target: .new) { created in
+                // A scope of every account counts the new one already.
+                if let keys = scope.keys {
+                    scope = AccountScope(keys: keys.union([created.key]))
+                }
+            }
+            .environmentObject(dataController)
+        }
+    }
+
+    var allTile: some View {
+        PickerTile(Text("All Accounts"), tint: Color.PrimaryText, fill: 0.08, selectedFill: 0.2, isSelected: scope.isAll) {
+            scope = .all
+            onSelectAll()
+        } icon: {
+            Image(systemName: "rectangle.stack")
+                .font(.app(.title2))
+                .foregroundColor(Color.PrimaryText)
+        }
+    }
+
+    func accountTile(_ choice: AccountChoice) -> some View {
+        PickerTile(Text(choice.name), tint: Color.PrimaryText, fill: 0.08, selectedFill: 0.2, isSelected: !scope.isAll && scope.includes(choice)) {
+            toggle(choice)
+        } icon: {
+            AccountIconView(symbol: choice.symbol)
+                .font(.app(.title2))
+                .foregroundColor(Color.PrimaryText)
+        }
+    }
+
+    func toggle(_ choice: AccountChoice) {
+        var keys = scope.keys ?? []
+        if keys.contains(choice.key) {
+            keys.remove(choice.key)
+        } else {
+            keys.insert(choice.key)
+        }
+
+        // Every account picked, or none, is the same as all of them.
+        let everyKey = Set(choices.map(\.key))
+        scope = keys.isEmpty || everyKey.isSubset(of: keys) ? .all : AccountScope(keys: keys)
+    }
+}
+
+/// A sideways-scrolling strip of tiles that runs to the screen's edges, past the page's 20pt margins.
+private struct BudgetTileStrip<Content: View>: View {
+    let rows: Int
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            content()
+                .padding(.horizontal, 20)
+        }
+        .frame(height: PickerTiles.scrollingHeight(rows: rows))
+        .padding(.horizontal, -20)
     }
 }
 

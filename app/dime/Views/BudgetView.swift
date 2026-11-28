@@ -118,7 +118,7 @@ struct BudgetView: View {
         #if DEBUG
         .onAppear {
             // Accounts screenshots, removed before merging: `-accountsBudget detail` opens the budget limited
-            // to an account, `edit` and `picker` the overall budget's editor.
+            // to an account, `edit` and `picker` the overall budget's editor, `new` and `categories` a new budget.
             let arguments = ProcessInfo.processInfo.arguments
             guard let index = arguments.firstIndex(of: "-accountsBudget"), index + 1 < arguments.count else { return }
 
@@ -130,6 +130,8 @@ struct BudgetView: View {
                     }
                 case "edit", "picker":
                     toEditMain = mainBudget.first
+                case "new", "categories":
+                    newBudget = true
                 default:
                     break
                 }
