@@ -1407,7 +1407,7 @@ class DataController: ObservableObject {
     /// earlier occurrences to fill in here; the app catches up on recurring transactions as usual.
     @available(iOS 16, *)
     @MainActor
-    func newTransactionInBackground(note: String, categoryID: NSManagedObjectID?, income: Bool, amount: Double, currencyCode: String?, repeatType: Int) async throws -> NSManagedObjectID {
+    func newTransactionInBackground(note: String, categoryID: NSManagedObjectID?, income: Bool, amount: Double, currencyCode: String?, accountID: NSManagedObjectID? = nil, repeatType: Int) async throws -> NSManagedObjectID {
         let author = container.viewContext.transactionAuthor
         let mergePolicy = container.viewContext.mergePolicy
         let resolvedCurrency = currencyCode ?? currencyForNewTransaction()
@@ -1419,8 +1419,10 @@ class DataController: ObservableObject {
                 context.mergePolicy = mergePolicy
 
                 let category = categoryID.flatMap { try? context.existingObject(with: $0) as? Category }
+                // No account, or one deleted meanwhile, is Main.
+                let account = accountID.flatMap { try? context.existingObject(with: $0) as? Account }.flatMap { $0.isDeleted ? nil : $0 }
                 let transaction = Transaction(context: context)
-                Self.fill(transaction, note: note, category: category, income: income, amount: amount, currencyCode: resolvedCurrency, account: nil, date: Date.now, repeatType: repeatType, repeatCoefficient: 1)
+                Self.fill(transaction, note: note, category: category, income: income, amount: amount, currencyCode: resolvedCurrency, account: account, date: Date.now, repeatType: repeatType, repeatCoefficient: 1)
 
                 do {
                     try context.save()
@@ -2298,8 +2300,12 @@ class DataController: ObservableObject {
         shortcutInsightsTotal(type: type, timeframe: timeframe, optionalIncome: optionalIncome, categories: categories).value
     }
 
-    func shortcutInsightsTotal(type: Int, timeframe: Int, optionalIncome: Bool?, categories: [Category]) -> MoneyTotal {
+    /// `accounts` limits it to some accounts; nil counts every account.
+    func shortcutInsightsTotal(type: Int, timeframe: Int, optionalIncome: Bool?, categories: [Category], accounts: NSPredicate? = nil) -> MoneyTotal {
         let fetchRequest = fetchRequestForLogView(type: timeframe, optionalIncome: optionalIncome, categoryFilters: categories)
+        if let accounts {
+            fetchRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [fetchRequest.predicate, accounts].compactMap { $0 })
+        }
         let allTransactions = results(for: fetchRequest)
 
         return allTransactions.total(using: currencyConverter, signed: type == 1)

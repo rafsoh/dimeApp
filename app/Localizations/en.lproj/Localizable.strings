@@ -581,3 +581,26 @@
 "When you log a transaction with a note but no category, Apple Intelligence picks one of your categories for it, on your iPhone. Notes it can't make sense of stay uncategorised." = "When you log a transaction with a note but no category, Apple Intelligence picks one of your categories for it, on your iPhone. Notes it can't make sense of stay uncategorised.";
 "Choosing a category" = "Choosing a category";
 "Filed under %@" = "Filed under %@";
+
+/* Accounts, transfers, import and Shortcuts strings missing until 3.1 */
+"Close" = "Close";
+"Save" = "Save";
+"Done" = "Done";
+"Reorder" = "Reorder";
+"New Category" = "New Category";
+"Everything" = "Everything";
+"Everything, overall budget" = "Everything, overall budget";
+"Link Accounts" = "Link Accounts";
+"Each account in your file is linked to one in Dime. Anything new is created for you, and you can edit it later." = "Each account in your file is linked to one in Dime. Anything new is created for you, and you can edit it later.";
+"Choose Account" = "Choose Account";
+"Your file doesn't say which account these transactions are in. Pick the one they go into." = "Your file doesn't say which account these transactions are in. Pick the one they go into.";
+"Optional. Matched to your accounts, or you pick one for the whole file." = "Optional. Matched to your accounts, or you pick one for the whole file.";
+"No Account" = "No Account";
+"1 transaction" = "1 transaction";
+"%lld transactions" = "%lld transactions";
+"Transfers" = "Transfers";
+"New Accounts" = "New Accounts";
+"from" = "from";
+"The account to log it in. Leave it empty to log it in your main account." = "The account to log it in. Leave it empty to log it in your main account.";
+"Which account? The one this shortcut used was deleted." = "Which account? The one this shortcut used was deleted.";
+"Only count transactions in these accounts. Leave it empty to count every account." = "Only count transactions in these accounts. Leave it empty to count every account.";

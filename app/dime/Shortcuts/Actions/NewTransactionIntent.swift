@@ -31,6 +31,9 @@ struct NewTransactionIntent: AppIntent {
     @Parameter(title: "Note")
     var note: String?
 
+    @Parameter(title: "Account", description: "The account to log it in. Leave it empty to log it in your main account.")
+    var account: AccountEntity?
+
     @Parameter(title: "Currency", description: "A three-letter code such as EUR. Leave it empty to use the currency Dime picks for new transactions.")
     var currencyCode: String?
 
@@ -124,8 +127,22 @@ struct NewTransactionIntent: AppIntent {
             category = id == CategoryEntityOptions.noCategoryID ? nil : try dataController.findCategory(withId: id)
         }
 
+        // Left empty, it goes into Main, as before accounts. An account deleted since the shortcut was set up
+        // is asked for again, rather than the transaction quietly landing somewhere else.
+        let accountChoice: AccountChoice
+
+        if let account {
+            guard let choice = dataController.accountChoices().first(where: { $0.key == account.id }) else {
+                throw $account.needsValueError("Which account? The one this shortcut used was deleted.")
+            }
+
+            accountChoice = choice
+        } else {
+            accountChoice = .main
+        }
+
         // Saved off the main thread; a slow disk write held it for seconds (DIME-IOS-Y).
-        let objectID = try await dataController.newTransactionInBackground(note: note ?? "", categoryID: category?.objectID, income: isIncome, amount: amount, currencyCode: currency, repeatType: repeatType)
+        let objectID = try await dataController.newTransactionInBackground(note: note ?? "", categoryID: category?.objectID, income: isIncome, amount: amount, currencyCode: currency, accountID: accountChoice.account?.objectID, repeatType: repeatType)
 
         guard let transaction = try? dataController.container.viewContext.existingObject(with: objectID) as? Transaction else {
             throw CustomError.coreDataSave
@@ -145,6 +162,7 @@ struct NewTransactionIntent: AppIntent {
             Case(TransactionType.expense) {
                 When(\NewTransactionIntent.$recurringTransaction, .equalTo, true, {
                     Summary("Log an \(\.$income) of \(\.$amount) under \(\.$expenseCategory)") {
+                        \.$account
                         \.$note
                         \.$currencyCode
                         \.$recurringTransaction
@@ -152,6 +170,7 @@ struct NewTransactionIntent: AppIntent {
                     }
                 }, otherwise: {
                     Summary("Log an \(\.$income) of \(\.$amount) under \(\.$expenseCategory)") {
+                        \.$account
                         \.$note
                         \.$currencyCode
                         \.$recurringTransaction
@@ -161,6 +180,7 @@ struct NewTransactionIntent: AppIntent {
             Case(TransactionType.income) {
                 When(\NewTransactionIntent.$recurringTransaction, .equalTo, true, {
                     Summary("Log an \(\.$income) of \(\.$amount) under \(\.$incomeCategory)") {
+                        \.$account
                         \.$note
                         \.$currencyCode
                         \.$recurringTransaction
@@ -168,6 +188,7 @@ struct NewTransactionIntent: AppIntent {
                     }
                 }, otherwise: {
                     Summary("Log an \(\.$income) of \(\.$amount) under \(\.$incomeCategory)") {
+                        \.$account
                         \.$note
                         \.$currencyCode
                         \.$recurringTransaction
@@ -181,6 +202,7 @@ struct NewTransactionIntent: AppIntent {
                     Summary("Log an \(\.$income) of \(\.$amount)") {
                         \.$expenseCategory
                         \.$incomeCategory
+                        \.$account
                         \.$note
                         \.$currencyCode
                         \.$recurringTransaction
@@ -190,6 +212,7 @@ struct NewTransactionIntent: AppIntent {
                     Summary("Log an \(\.$income) of \(\.$amount)") {
                         \.$expenseCategory
                         \.$incomeCategory
+                        \.$account
                         \.$note
                         \.$currencyCode
                         \.$recurringTransaction
@@ -262,6 +285,17 @@ struct ShortcutTransactionView: View {
         return numberFormatter.string(from: NSNumber(value: transaction.amount)) ?? "$0"
     }
 
+    /// The time, and the account once there's an account besides Main.
+    var subtitle: String {
+        let time = transaction.wrappedDate.formatted(.dateTime.hour().minute())
+
+        guard DataController.shared.accountCount() > 0 else {
+            return time
+        }
+
+        return time + " · " + transaction.accountName
+    }
+
     var body: some View {
         HStack(spacing: 12) {
             EmojiLogView(transaction: transaction, future: false)
@@ -283,7 +317,7 @@ struct ShortcutTransactionView: View {
                     .foregroundColor(Color.PrimaryText)
                     .lineLimit(1)
 
-                Text(transaction.wrappedDate, format: .dateTime.hour().minute())
+                Text(subtitle)
                     .font(.app(size: 12, weight: .medium))
                     .foregroundColor(Color.SubtitleText)
                     .lineLimit(1)

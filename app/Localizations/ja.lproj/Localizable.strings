@@ -599,3 +599,33 @@
 "When you log a transaction with a note but no category, Apple Intelligence picks one of your categories for it, on your iPhone. Notes it can't make sense of stay uncategorised." = "メモを入力してカテゴリを選ばずに取引を記録すると、Apple IntelligenceがiPhone上であなたのカテゴリからひとつを選びます。意味を読み取れないメモはカテゴリなしのままになります。";
 "Choosing a category" = "カテゴリを選択中";
 "Filed under %@" = "「%@」に分類しました";
+
+/* Accounts, transfers, import and Shortcuts strings missing until 3.1 */
+"Close" = "閉じる";
+"Save" = "保存";
+"Done" = "完了";
+"Reorder" = "並べ替え";
+"New Category" = "新しいカテゴリ";
+"Everything" = "すべて";
+"Everything, overall budget" = "すべて、全体の予算";
+"Link Accounts" = "口座をひも付け";
+"Each account in your file is linked to one in Dime. Anything new is created for you, and you can edit it later." = "ファイル内の各口座はDimeの口座にひも付けられます。新しい口座は自動で作成され、あとから編集できます。";
+"Choose Account" = "口座を選択";
+"Your file doesn't say which account these transactions are in. Pick the one they go into." = "このファイルには、取引がどの口座のものか書かれていません。追加先の口座を選んでください。";
+"Optional. Matched to your accounts, or you pick one for the whole file." = "任意。あなたの口座にひも付けられるか、ファイル全体の口座を1つ選びます。";
+"No Account" = "口座なし";
+"1 transaction" = "1件の取引";
+"%lld transactions" = "%lld件の取引";
+"Transfers" = "振替";
+"New Accounts" = "新しい口座";
+"The account to log it in. Leave it empty to log it in your main account." = "記録先の口座。空欄にするとメインの口座に記録します。";
+"Which account? The one this shortcut used was deleted." = "どの口座にしますか？ このショートカットで使っていた口座は削除されました。";
+"Only count transactions in these accounts. Leave it empty to count every account." = "これらの口座の取引だけを集計します。空欄にするとすべての口座を集計します。";
+"Category for an expense. Choose No Category to log it without one." = "支出のカテゴリ。「カテゴリなし」を選ぶとカテゴリなしで記録します。";
+"Category for an income. Choose No Category to log it without one." = "収入のカテゴリ。「カテゴリなし」を選ぶとカテゴリなしで記録します。";
+"Edits the template" = "テンプレートを編集します";
+"Move Earlier" = "前に移動";
+"Move Later" = "後ろに移動";
+"Tap a template to edit it, or hold and drag it to a new spot. The Quick Add widget logs each one with one tap, without opening Dime, and editing or deleting a template never changes what you've logged." = "テンプレートをタップすると編集でき、長押ししてドラッグすると並べ替えられます。クイック追加ウィジェットはDimeを開かずにワンタップで記録します。テンプレートを編集・削除しても、記録済みの内容は変わりません。";
+"no rollover" = "繰り越しなし";
+"rollover" = "繰り越し";
