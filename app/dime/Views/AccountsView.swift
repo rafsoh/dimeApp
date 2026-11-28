@@ -984,11 +984,10 @@ struct AccountEditorSheet: View {
 
 // MARK: - Picker
 
-/// Picks one account, or with `scope` any number of them.
+/// Picks one account. The budget page picks its accounts in place, with `BudgetAccountGrid`.
 struct AccountPickerSheet: View {
     let title: LocalizedStringKey
-    private var selection: Binding<AccountChoice?>?
-    private var scope: Binding<AccountScope>?
+    @Binding private var selection: AccountChoice?
     /// Adds an All Accounts row, which picks nil.
     private var allowsAll = false
 
@@ -1004,15 +1003,8 @@ struct AccountPickerSheet: View {
     /// Picks one account; with `allowsAll`, nil stands for every account.
     init(title: LocalizedStringKey, selection: Binding<AccountChoice?>, allowsAll: Bool = false) {
         self.title = title
-        self.selection = selection
+        _selection = selection
         self.allowsAll = allowsAll
-    }
-
-    /// Picks which accounts something counts.
-    init(title: LocalizedStringKey, scope: Binding<AccountScope>) {
-        self.title = title
-        self.scope = scope
-        allowsAll = true
     }
 
     var choices: [AccountChoice] {
@@ -1086,14 +1078,10 @@ struct AccountPickerSheet: View {
         .sheetBackground()
         .sheet(isPresented: $showNewAccount) {
             AccountEditorSheet(target: .new) { created in
-                // Picking a new account in a single pick closes the picker too.
-                if let selection {
-                    selection.wrappedValue = created
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                        dismiss()
-                    }
-                } else if let scope, let keys = scope.wrappedValue.keys {
-                    scope.wrappedValue = AccountScope(keys: keys.union([created.key]))
+                // Picking a new account closes the picker too.
+                selection = created
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                    dismiss()
                 }
             }
             .environmentObject(dataController)
@@ -1144,35 +1132,19 @@ struct AccountPickerSheet: View {
     }
 
     private var isAllSelected: Bool {
-        if let scope {
-            return scope.wrappedValue.isAll
-        }
-        if let selection {
-            return selection.wrappedValue == nil
-        }
-        return false
+        selection == nil
     }
 
     private func isSelected(_ choice: AccountChoice) -> Bool {
-        if let scope {
-            return !scope.wrappedValue.isAll && scope.wrappedValue.includes(choice)
-        }
-        if let selection {
-            return selection.wrappedValue == choice
-        }
-        return false
+        selection == choice
     }
 
     private func selectAll() {
         UISelectionFeedbackGenerator().selectionChanged()
 
         withAnimation(.easeOut(duration: 0.15)) {
-            if let scope {
-                scope.wrappedValue = .all
-            } else if let selection {
-                selection.wrappedValue = nil
-                dismiss()
-            }
+            selection = nil
+            dismiss()
         }
     }
 
@@ -1180,21 +1152,8 @@ struct AccountPickerSheet: View {
         UISelectionFeedbackGenerator().selectionChanged()
 
         withAnimation(.easeOut(duration: 0.15)) {
-            if let scope {
-                var keys = scope.wrappedValue.keys ?? []
-                if keys.contains(choice.key) {
-                    keys.remove(choice.key)
-                } else {
-                    keys.insert(choice.key)
-                }
-
-                // Every account picked, or none, is the same as all of them.
-                let everyKey = Set(choices.map(\.key))
-                scope.wrappedValue = keys.isEmpty || everyKey.isSubset(of: keys) ? .all : AccountScope(keys: keys)
-            } else if let selection {
-                selection.wrappedValue = choice
-                dismiss()
-            }
+            selection = choice
+            dismiss()
         }
     }
 }

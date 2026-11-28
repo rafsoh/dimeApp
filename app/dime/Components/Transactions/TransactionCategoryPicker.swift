@@ -267,6 +267,136 @@ struct NewCategoryCapsule: View {
     }
 }
 
+/// Sizes shared by the category tiles and the pickers drawn like them, such as the budget page's accounts.
+enum PickerTiles {
+    static let height: CGFloat = 84
+    static let spacing: CGFloat = 10
+    static let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
+
+    /// Matches a tile's width in the 3-column grid laid out with 20pt page margins.
+    static var rowTileWidth: CGFloat {
+        (UIScreen.main.bounds.width - 40 - spacing * 2) / 3
+    }
+
+    /// A horizontal strip stays one row until it has more than six selectable tiles.
+    static func scrollingRows(selectableCount: Int) -> Int {
+        selectableCount > 6 ? 2 : 1
+    }
+
+    static func scrollingHeight(rows: Int) -> CGFloat {
+        height * CGFloat(rows) + spacing * CGFloat(rows - 1)
+    }
+
+    /// `rows` rows of tiles, each as wide as a tile in the 3-column grid, for a strip that scrolls sideways.
+    static func strip<Content: View>(rows: Int, @ViewBuilder content: () -> Content) -> some View {
+        let tiles = content()
+
+        return LazyHGrid(rows: Array(repeating: GridItem(.fixed(height), spacing: spacing), count: rows), spacing: spacing) {
+            Group {
+                tiles
+            }
+            .frame(width: rowTileWidth)
+        }
+    }
+}
+
+/// A picker tile: an icon over a name on a tinted rounded rectangle, filled more and outlined when selected.
+struct PickerTile<Icon: View>: View {
+    let name: Text
+    let tint: Color
+    let fill: Double
+    let selectedFill: Double
+    let isSelected: Bool
+    let accessibilityLabel: Text
+    let action: () -> Void
+    let icon: Icon
+
+    init(
+        _ name: Text,
+        tint: Color,
+        fill: Double = 0.25,
+        selectedFill: Double = 0.45,
+        isSelected: Bool,
+        accessibilityLabel: Text? = nil,
+        action: @escaping () -> Void,
+        @ViewBuilder icon: () -> Icon
+    ) {
+        self.name = name
+        self.tint = tint
+        self.fill = fill
+        self.selectedFill = selectedFill
+        self.isSelected = isSelected
+        self.accessibilityLabel = accessibilityLabel ?? name
+        self.action = action
+        self.icon = icon()
+    }
+
+    var body: some View {
+        let shape = PickerTiles.shape
+
+        Button {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            action()
+        } label: {
+            VStack(spacing: 6) {
+                icon
+
+                name
+                    .font(.app(.subheadline, weight: .semibold))
+                    .foregroundColor(Color.PrimaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                    .truncationMode(.tail)
+            }
+            .padding(.horizontal, 8)
+            .frame(maxWidth: .infinity, minHeight: PickerTiles.height)
+            .background(shape.fill(tint.opacity(isSelected ? selectedFill : fill)))
+            .overlay {
+                if isSelected {
+                    shape.strokeBorder(tint, lineWidth: 2)
+                }
+            }
+            .contentShape(shape)
+        }
+        .buttonStyle(BouncyButton(duration: 0.15, scale: 0.96))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityLabel)
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
+    }
+}
+
+/// The dashed New tile that ends a picker's tiles.
+struct NewPickerTile: View {
+    let accessibilityLabel: Text
+    let action: () -> Void
+
+    var body: some View {
+        let shape = PickerTiles.shape
+
+        Button(action: action) {
+            VStack(spacing: 6) {
+                Image(systemName: "plus")
+                    .font(.app(.title2, weight: .medium))
+                    .foregroundColor(Color.SubtitleText)
+
+                Text("New")
+                    .font(.app(.subheadline, weight: .semibold))
+                    .foregroundColor(Color.SubtitleText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+            .padding(.horizontal, 8)
+            .frame(maxWidth: .infinity, minHeight: PickerTiles.height)
+            .overlay(shape.strokeBorder(Color.SubtitleText.opacity(0.4), style: StrokeStyle(lineWidth: 1.5, dash: [5, 4])))
+            .contentShape(shape)
+        }
+        .buttonStyle(BouncyButton(duration: 0.15, scale: 0.96))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityLabel)
+        .accessibilityAddTraits(.isButton)
+    }
+}
+
 /// The 3-column grid of tinted category tiles, or a horizontally scrolling grid of `rows` rows of the same tiles.
 /// Passing `overall` adds a leading Everything tile; passing `noneIncome` adds a leading No Category tile;
 /// passing `onAdd` adds a trailing New Category tile.
@@ -280,25 +410,7 @@ struct CategoryTileGrid<Categories: RandomAccessCollection>: View where Categori
     var onAdd: (() -> Void)?
     let onSelect: () -> Void
 
-    static var tileHeight: CGFloat { 84 }
-    static var spacing: CGFloat { 10 }
-
-    /// Matches a tile's width in the 3-column grid laid out with 20pt page margins.
-    static var rowTileWidth: CGFloat {
-        (UIScreen.main.bounds.width - 40 - spacing * 2) / 3
-    }
-
-    /// A horizontal strip stays one row until it has more than six selectable tiles.
-    static func scrollingRows(selectableCount: Int) -> Int {
-        selectableCount > 6 ? 2 : 1
-    }
-
-    static func scrollingHeight(rows: Int) -> CGFloat {
-        tileHeight * CGFloat(rows) + spacing * CGFloat(rows - 1)
-    }
-
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: CategoryTileGrid.spacing), count: 3)
-    private let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: PickerTiles.spacing), count: 3)
 
     init(categories: Categories, category: Binding<Category?>, overall: Binding<Bool>? = nil, noneIncome: Bool? = nil, rows: Int? = nil, onAdd: (() -> Void)? = nil, onSelect: @escaping () -> Void) {
         self.categories = categories
@@ -312,14 +424,11 @@ struct CategoryTileGrid<Categories: RandomAccessCollection>: View where Categori
 
     var body: some View {
         if let rows {
-            LazyHGrid(rows: Array(repeating: GridItem(.fixed(Self.tileHeight), spacing: Self.spacing), count: rows), spacing: Self.spacing) {
-                Group {
-                    tiles
-                }
-                .frame(width: Self.rowTileWidth)
+            PickerTiles.strip(rows: rows) {
+                tiles
             }
         } else {
-            LazyVGrid(columns: columns, spacing: Self.spacing) {
+            LazyVGrid(columns: columns, spacing: PickerTiles.spacing) {
                 tiles
             }
         }
@@ -339,142 +448,54 @@ struct CategoryTileGrid<Categories: RandomAccessCollection>: View where Categori
         }
 
         if let onAdd {
-            addTile(onAdd)
+            NewPickerTile(accessibilityLabel: Text("New Category"), action: onAdd)
         }
     }
 
     func categoryTile(_ item: Category) -> some View {
-        let isSelected = item == category && overall?.wrappedValue != true
-
-        return Button {
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        PickerTile(Text(item.wrappedName), tint: item.tokenColour, isSelected: item == category && overall?.wrappedValue != true) {
             category = item
             overall?.wrappedValue = false
             onSelect()
-        } label: {
-            VStack(spacing: 6) {
-                Text(item.wrappedEmoji)
-                    .font(.system(.title2))
-
-                Text(item.wrappedName)
-                    .font(.app(.subheadline, weight: .semibold))
-                    .foregroundColor(Color.PrimaryText)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-                    .truncationMode(.tail)
-            }
-            .padding(.horizontal, 8)
-            .frame(maxWidth: .infinity, minHeight: Self.tileHeight)
-            .background(shape.fill(item.tokenColour.opacity(isSelected ? 0.45 : 0.25)))
-            .overlay {
-                if isSelected {
-                    shape.strokeBorder(item.tokenColour, lineWidth: 2)
-                }
-            }
-            .contentShape(shape)
+        } icon: {
+            Text(item.wrappedEmoji)
+                .font(.system(.title2))
         }
-        .buttonStyle(BouncyButton(duration: 0.15, scale: 0.96))
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(item.wrappedName)
-        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     }
 
     func everythingTile(_ overall: Binding<Bool>) -> some View {
-        let isSelected = overall.wrappedValue
-
-        return Button {
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        PickerTile(
+            Text("Everything"),
+            tint: Color.PrimaryText,
+            fill: 0.08,
+            selectedFill: 0.2,
+            isSelected: overall.wrappedValue,
+            accessibilityLabel: Text("Everything, overall budget")
+        ) {
             overall.wrappedValue = true
             category = nil
             onSelect()
-        } label: {
-            VStack(spacing: 6) {
-                Image(systemName: "square.grid.2x2.fill")
-                    .font(.app(.title2))
-                    .foregroundColor(Color.PrimaryText)
-
-                Text("Everything")
-                    .font(.app(.subheadline, weight: .semibold))
-                    .foregroundColor(Color.PrimaryText)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-            }
-            .padding(.horizontal, 8)
-            .frame(maxWidth: .infinity, minHeight: Self.tileHeight)
-            .background(shape.fill(Color.PrimaryText.opacity(isSelected ? 0.2 : 0.08)))
-            .overlay {
-                if isSelected {
-                    shape.strokeBorder(Color.PrimaryText, lineWidth: 2)
-                }
-            }
-            .contentShape(shape)
+        } icon: {
+            Image(systemName: "square.grid.2x2.fill")
+                .font(.app(.title2))
+                .foregroundColor(Color.PrimaryText)
         }
-        .buttonStyle(BouncyButton(duration: 0.15, scale: 0.96))
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Everything, overall budget")
-        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     }
 
     func noneTile(income: Bool) -> some View {
-        let isSelected = category == nil
-        let tint = Color(hex: Uncategorised.colour)
-
-        return Button {
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        PickerTile(
+            Text("category-picker-none"),
+            tint: Color(hex: Uncategorised.colour),
+            isSelected: category == nil,
+            accessibilityLabel: Text("No Category")
+        ) {
             category = nil
             onSelect()
-        } label: {
-            VStack(spacing: 6) {
-                Image(systemName: Uncategorised.symbol(income: income))
-                    .font(.app(.title2, weight: .semibold))
-                    .foregroundColor(Color.PrimaryText)
-
-                Text("category-picker-none")
-                    .font(.app(.subheadline, weight: .semibold))
-                    .foregroundColor(Color.PrimaryText)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-            }
-            .padding(.horizontal, 8)
-            .frame(maxWidth: .infinity, minHeight: Self.tileHeight)
-            .background(shape.fill(tint.opacity(isSelected ? 0.45 : 0.25)))
-            .overlay {
-                if isSelected {
-                    shape.strokeBorder(tint, lineWidth: 2)
-                }
-            }
-            .contentShape(shape)
+        } icon: {
+            Image(systemName: Uncategorised.symbol(income: income))
+                .font(.app(.title2, weight: .semibold))
+                .foregroundColor(Color.PrimaryText)
         }
-        .buttonStyle(BouncyButton(duration: 0.15, scale: 0.96))
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("No Category")
-        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
-    }
-
-    func addTile(_ action: @escaping () -> Void) -> some View {
-        Button {
-            action()
-        } label: {
-            VStack(spacing: 6) {
-                Image(systemName: "plus")
-                    .font(.app(.title2, weight: .medium))
-                    .foregroundColor(Color.SubtitleText)
-
-                Text("New")
-                    .font(.app(.subheadline, weight: .semibold))
-                    .foregroundColor(Color.SubtitleText)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-            }
-            .padding(.horizontal, 8)
-            .frame(maxWidth: .infinity, minHeight: Self.tileHeight)
-            .overlay(shape.strokeBorder(Color.SubtitleText.opacity(0.4), style: StrokeStyle(lineWidth: 1.5, dash: [5, 4])))
-            .contentShape(shape)
-        }
-        .buttonStyle(BouncyButton(duration: 0.15, scale: 0.96))
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("New Category")
-        .accessibilityAddTraits(.isButton)
     }
 }
 
