@@ -311,6 +311,9 @@ struct PickerTile<Icon: View>: View {
     let action: () -> Void
     let icon: Icon
 
+    /// Every icon gets an emoji's height, so names line up across tiles whatever the symbol's shape.
+    @ScaledMetric(relativeTo: .title2) private var iconHeight: CGFloat = 28
+
     init(
         _ name: Text,
         tint: Color,
@@ -340,6 +343,7 @@ struct PickerTile<Icon: View>: View {
         } label: {
             VStack(spacing: 6) {
                 icon
+                    .frame(height: iconHeight)
 
                 name
                     .font(.app(.subheadline, weight: .semibold))
