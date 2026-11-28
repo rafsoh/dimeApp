@@ -480,13 +480,15 @@ struct CalculatorExpression: Equatable {
         return .success(Double(rounded.description) ?? NSDecimalNumber(decimal: rounded).doubleValue)
     }
 
-    /// The = key: puts the total in place of the sum, to the currency's digits.
+    /// The = key: puts the total in place of the sum. A whole total is written without decimals (5 × 3 is 15), and
+    /// any other to the currency's digits (86.40 ÷ 3 is 28.80).
     @discardableResult
     mutating func collapse(fractionDigits: Int) -> Result<Double, Failure> {
         let result = total(fractionDigits: fractionDigits)
 
         if hasOperator, case .success(let value) = result {
-            tokens = value == 0 ? [] : [.number(String(format: "%.\(max(0, fractionDigits))f", value))]
+            let format = value.rounded() == value ? "%.0f" : "%.\(max(0, fractionDigits))f"
+            tokens = value == 0 ? [] : [.number(String(format: format, value))]
         }
 
         return result
