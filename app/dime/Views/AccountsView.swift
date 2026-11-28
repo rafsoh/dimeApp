@@ -93,6 +93,117 @@ struct AccountIconGrid: View {
     }
 }
 
+/// The icons as a keyboard. The account editor's icon tile takes focus with it, the way the category editor's
+/// emoji tile brings up the emoji keyboard: moving between the tile and the name swaps one keyboard for the
+/// other in place, so the sheet above them never moves.
+struct AccountIconKeyboard: UIViewRepresentable {
+    @Binding var isActive: Bool
+    let selection: String
+    let onPick: (String) -> Void
+
+    final class Coordinator {
+        var isActive: Binding<Bool>
+        var hosting: UIHostingController<AccountIconKeyboardContent>?
+
+        init(isActive: Binding<Bool>) {
+            self.isActive = isActive
+        }
+
+        func focusChanged(_ focused: Bool) {
+            DispatchQueue.main.async { [weak self] in
+                guard let self, self.isActive.wrappedValue != focused else { return }
+                self.isActive.wrappedValue = focused
+            }
+        }
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(isActive: $isActive)
+    }
+
+    func makeUIView(context: Context) -> AccountIconKeyboardHost {
+        let host = AccountIconKeyboardHost()
+        let hosting = UIHostingController(rootView: AccountIconKeyboardContent(selection: selection, onPick: onPick))
+        hosting.view.backgroundColor = .clear
+        hosting.view.translatesAutoresizingMaskIntoConstraints = false
+
+        // Drawn on the keyboard's own background, like the emoji keyboard.
+        let keyboard = UIInputView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 270), inputViewStyle: .keyboard)
+        keyboard.allowsSelfSizing = false
+        keyboard.addSubview(hosting.view)
+        NSLayoutConstraint.activate([
+            hosting.view.leadingAnchor.constraint(equalTo: keyboard.leadingAnchor),
+            hosting.view.trailingAnchor.constraint(equalTo: keyboard.trailingAnchor),
+            hosting.view.topAnchor.constraint(equalTo: keyboard.topAnchor),
+            hosting.view.bottomAnchor.constraint(equalTo: keyboard.bottomAnchor)
+        ])
+
+        host.iconKeyboard = keyboard
+        host.onFocusChange = { [weak coordinator = context.coordinator] focused in
+            coordinator?.focusChanged(focused)
+        }
+        context.coordinator.hosting = hosting
+        return host
+    }
+
+    func updateUIView(_ host: AccountIconKeyboardHost, context: Context) {
+        context.coordinator.isActive = $isActive
+        context.coordinator.hosting?.rootView = AccountIconKeyboardContent(selection: selection, onPick: onPick)
+
+        if isActive, !host.isFirstResponder {
+            DispatchQueue.main.async {
+                _ = host.becomeFirstResponder()
+            }
+        } else if !isActive, host.isFirstResponder {
+            DispatchQueue.main.async {
+                _ = host.resignFirstResponder()
+            }
+        }
+    }
+}
+
+/// Stands in for a text field whose keyboard is the icons. It has no size and draws nothing.
+final class AccountIconKeyboardHost: UIView {
+    var iconKeyboard: UIView?
+    var onFocusChange: ((Bool) -> Void)?
+
+    override var canBecomeFirstResponder: Bool {
+        true
+    }
+
+    override var inputView: UIView? {
+        iconKeyboard
+    }
+
+    override func becomeFirstResponder() -> Bool {
+        let became = super.becomeFirstResponder()
+        if became {
+            onFocusChange?(true)
+        }
+        return became
+    }
+
+    override func resignFirstResponder() -> Bool {
+        let resigned = super.resignFirstResponder()
+        if resigned {
+            onFocusChange?(false)
+        }
+        return resigned
+    }
+}
+
+struct AccountIconKeyboardContent: View {
+    let selection: String
+    let onPick: (String) -> Void
+
+    var body: some View {
+        AccountIconGrid(selection: selection, onPick: onPick)
+            .padding(.horizontal, 16)
+            .padding(.top, 18)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    }
+}
+
 enum AccountsViewMode {
     /// In Settings; in onboarding, after categories; and once, as a half sheet, for people updating from before accounts.
     case settings, welcome, announcement
@@ -604,9 +715,9 @@ struct AccountEditorSheet: View {
 
     var body: some View {
         if #available(iOS 16.0, *) {
-            // The icons take the keyboard's place, so the sheet grows to hold them while it's down.
+            // The icons are a keyboard of their own, so the sheet keeps one height above whichever is showing.
             content(fixedHeight: false)
-                .presentationDetents([.height(showingIcons ? 540 : 300)])
+                .presentationDetents([.height(300)])
                 .presentationDragIndicator(.hidden)
         } else {
             content(fixedHeight: true)
@@ -649,21 +760,11 @@ struct AccountEditorSheet: View {
 
                 CategoryConfirmButton(systemImage: editingChoice == nil ? "plus" : "checkmark", accessibilityLabel: editingChoice == nil ? "Add Account" : "Save", action: save)
             }
-
-            if showingIcons {
-                AccountIconGrid(selection: symbol) { picked in
-                    withAnimation(.easeOut(duration: 0.15)) {
-                        pickedSymbol = picked
-                    }
-                }
-                .padding(.top, 24)
-                .transition(.opacity.combined(with: .move(edge: .bottom)))
-            }
         }
         .padding(.horizontal, 20)
         .padding(.top, 20)
         .padding(.bottom, 16)
-        .frame(maxHeight: fixedHeight && !showingIcons ? 350 : .infinity, alignment: .top)
+        .frame(maxHeight: fixedHeight ? 350 : .infinity, alignment: .top)
         .frame(maxHeight: .infinity, alignment: .top)
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .sheetBackground()
@@ -673,14 +774,6 @@ struct AccountEditorSheet: View {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                     showToast = false
                 }
-            }
-        }
-        // Tapping the name brings the keyboard back in place of the icons.
-        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
-            guard showingIcons else { return }
-
-            withAnimation(.easeOut(duration: 0.25)) {
-                showingIcons = false
             }
         }
         #if DEBUG
@@ -722,14 +815,20 @@ struct AccountEditorSheet: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Text("Icon"))
+        .background {
+            // Takes focus from the name, which swaps the keyboard for the icons; tapping the name swaps back.
+            AccountIconKeyboard(isActive: $showingIcons, selection: symbol) { picked in
+                withAnimation(.easeOut(duration: 0.15)) {
+                    pickedSymbol = picked
+                }
+            }
+            .frame(width: 0, height: 0)
+            .accessibilityHidden(true)
+        }
     }
 
     private func showIcons() {
-        UIApplication.shared.endEditing()
-
-        withAnimation(.easeOut(duration: 0.25)) {
-            showingIcons = true
-        }
+        showingIcons = true
     }
 
     func save() {
