@@ -292,6 +292,32 @@ struct TransactionView: View {
 
     @State private var usesVerticalBar = VerticalBar.isActiveInKeyWindow
 
+    /// The page's height without a keyboard, and the window size it was measured in. On the Duo the page is laid out
+    /// 34 pt shorter while the note's keyboard is up, which lifted the number pad out from under the keyboard and
+    /// everything above it with it. Keeping the taller height lets the keyboard cover the pad and leaves the rest where
+    /// it was. It's measured again in a new window size, such as after rotating or unfolding.
+    @State private var keyboardFreeHeight: (window: CGSize?, height: CGFloat)?
+
+    func pageHeight(proposed: CGFloat) -> CGFloat {
+        guard let held = keyboardFreeHeight, held.window == KeyboardHeightCache.windowSize else {
+            return proposed
+        }
+
+        return max(held.height, proposed)
+    }
+
+    func recordPageHeight(_ height: CGFloat) {
+        let window = KeyboardHeightCache.windowSize
+
+        if let held = keyboardFreeHeight, held.window == window {
+            if height > held.height {
+                keyboardFreeHeight = (window, height)
+            }
+        } else {
+            keyboardFreeHeight = (window, height)
+        }
+    }
+
     var body: some View {
         sideBarNavigation {
             GeometryReader { proxy in
@@ -497,8 +523,14 @@ struct TransactionView: View {
                 .padding(.vertical, 17)
                 .padding(.leading, max(17, sideOcclusion.leading))
                 .padding(.trailing, max(17, sideOcclusion.trailing))
-                .frame(width: proxy.size.width, height: proxy.size.height)
+                .frame(width: proxy.size.width, height: pageHeight(proposed: proxy.size.height), alignment: .top)
                 .background(Color.PrimaryBackground)
+                .onAppear {
+                    recordPageHeight(proxy.size.height)
+                }
+                .onChange(of: proxy.size.height) { height in
+                    recordPageHeight(height)
+                }
                 .onTapGesture {
                     self.hideKeyboard()
                 }
@@ -598,7 +630,7 @@ struct TransactionView: View {
                     }
                 }
 
-                // With -screenshotAdd, `-screenshotCalculator closed|open|currency|total` turns the calculator on with its
+                // With -screenshotAdd, `-screenshotCalculator closed|open|currency|total|whole` turns the calculator on with its
                 // operators hidden, or open on 86.40 ÷ 3 (in euros for currency, worked out for total), for its screenshots.
                 let arguments = ProcessInfo.processInfo.arguments
                 if toEdit == nil && editedTemplate == nil, let index = arguments.firstIndex(of: "-screenshotCalculator"), index + 1 < arguments.count {
@@ -611,10 +643,11 @@ struct TransactionView: View {
                     }
 
                     if calculatorShown {
-                        var sum = CalculatorExpression(number: "86.40")
-                        sum.apply(.divide)
+                        // `whole` is 5 × 3 after =.
+                        var sum = CalculatorExpression(number: mode == "whole" ? "5" : "86.40")
+                        sum.apply(mode == "whole" ? .multiply : .divide)
                         sum.append(digit: 3, fractionDigits: fractionDigits)
-                        if mode == "total" {
+                        if mode == "total" || mode == "whole" {
                             sum.collapse(fractionDigits: fractionDigits)
                         }
                         expression = sum

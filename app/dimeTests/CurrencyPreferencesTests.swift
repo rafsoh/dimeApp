@@ -318,6 +318,24 @@ final class CalculatorExpressionTests: XCTestCase {
         XCTAssertTrue(empty.isEmpty)
     }
 
+    func testEqualsLeavesWholeTotalsWithoutDecimals() {
+        var whole = typed("5*3")
+        whole.collapse(fractionDigits: 2)
+        XCTAssertEqual(whole.text(), "15")
+
+        var tip = typed("64*1.25")
+        tip.collapse(fractionDigits: 2)
+        XCTAssertEqual(tip.text(), "80")
+
+        var cents = typed("10/4")
+        cents.collapse(fractionDigits: 2)
+        XCTAssertEqual(cents.text(), "2.50")
+
+        var dinar = typed("1/8", fractionDigits: 3)
+        dinar.collapse(fractionDigits: 3)
+        XCTAssertEqual(dinar.text(), "0.125")
+    }
+
     func testStartingFromAnAmount() {
         XCTAssertEqual(CalculatorExpression(number: "12.").text(), "12.")
         XCTAssertEqual(CalculatorExpression(number: "12.50").text(), "12.50")
