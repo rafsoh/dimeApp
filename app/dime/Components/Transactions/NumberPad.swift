@@ -49,6 +49,8 @@ struct NumberPad: View {
     /// a decimal point: shifting in cents can't express × 3.
     var expression: Binding<CalculatorExpression>? = nil
     var submit: () -> Void
+    /// The = key on the operator row.
+    var equals: () -> Void = {}
 
     @AppStorage("numberEntryType", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime")) var numberEntryType: Int = 1
     @AppStorage("haptics", store: UserDefaults(suiteName: "group.com.rafaelsoh.dime"))
@@ -57,6 +59,25 @@ struct NumberPad: View {
     var numPadNumbers = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
 
     var body: some View {
+        // The operator row sits inside the pad's keyboard-high block, taking its height from the keys, so the note's
+        // keyboard covers the row and the keys together and nothing above them moves when it comes up.
+        VStack(spacing: CalculatorOperatorRow.spacing) {
+            if let expression {
+                CalculatorOperatorRow(expression: expression, equals: equals)
+                    .transition(.opacity)
+            }
+
+            keys
+        }
+        .padding(.bottom, 15)
+        .keyboardAwareHeight(showToolbar: showingNotePicker)
+        .onAppear(perform: prepareHaptics)
+        .onChange(of: hapticType) { _ in
+            prepareHaptics()
+        }
+    }
+
+    private var keys: some View {
         GeometryReader { proxy in
             VStack(spacing: proxy.size.height * 0.04) {
                 ForEach(numPadNumbers, id: \.self) { array in
@@ -127,12 +148,6 @@ struct NumberPad: View {
                 }
             }
             .frame(width: proxy.size.width, height: proxy.size.height)
-        }
-        .padding(.bottom, 15)
-        .keyboardAwareHeight(showToolbar: showingNotePicker)
-        .onAppear(perform: prepareHaptics)
-        .onChange(of: hapticType) { _ in
-            prepareHaptics()
         }
     }
 
@@ -217,6 +232,8 @@ struct CalculatorOperatorRow: View {
     var hapticType: Int = 1
 
     static let height: CGFloat = 44
+    /// Between the row and the keys under it.
+    static let spacing: CGFloat = 10
 
     var body: some View {
         GeometryReader { proxy in
@@ -242,7 +259,7 @@ struct CalculatorOperatorRow: View {
                     equals()
                 } label: {
                     Image(systemName: "equal")
-                        .font(.app(size: 21, weight: .semibold))
+                        .font(.app(size: 17, weight: .medium))
                         .foregroundColor(expression.hasOperator ? Color.PrimaryText : Color.SubtitleText)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .contentShape(Rectangle())
@@ -276,7 +293,7 @@ struct CalculatorOperatorRow: View {
             expression.apply(op)
         } label: {
             Image(systemName: op.symbolName)
-                .font(.app(size: 21, weight: .semibold))
+                .font(.app(size: 17, weight: .medium))
                 .foregroundColor(isPending ? Color.LightIcon : Color.PrimaryText)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .contentShape(Rectangle())
@@ -468,18 +485,25 @@ struct NumberPadTextView: View {
         numberEntryType == 2 || expression != nil || calculatorButton != nil
     }
 
-    /// The sum with its operators drawn as symbols, in grey, between the numbers.
+    /// The sum with its operators drawn as symbols, in grey, between the numbers. The symbols are half the amount's
+    /// size, raised to sit level with the middle of the digits.
     func expressionText(_ expression: CalculatorExpression) -> Text {
         guard !expression.isEmpty else {
             return Text(verbatim: "0").foregroundColor(Color.PrimaryText)
         }
+
+        let operatorSize = largerFontSize * 0.5
 
         return expression.tokens.reduce(Text(verbatim: "")) { text, token in
             switch token {
             case .number(let number):
                 return text + Text(verbatim: number.replacingOccurrences(of: ".", with: decimalSeparator)).foregroundColor(Color.PrimaryText)
             case .op(let op):
-                return text + Text(verbatim: " ") + Text(Image(systemName: op.symbolName)).foregroundColor(Color.SubtitleText) + Text(verbatim: " ")
+                let symbol = Text(verbatim: " ") + Text(Image(systemName: op.symbolName)) + Text(verbatim: " ")
+                return text + symbol
+                    .font(.app(size: operatorSize, weight: .regular))
+                    .baselineOffset(largerFontSize * 0.175)
+                    .foregroundColor(Color.SubtitleText)
             }
         }
     }
