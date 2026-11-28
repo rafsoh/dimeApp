@@ -155,7 +155,7 @@ extension DataController {
     /// A goal or debt by its id, or nil when there's none, such as one deleted since a widget was set up.
     func savingsAccount(withID id: UUID) -> Account? {
         let request: NSFetchRequest<Account> = Account.fetchRequest()
-        request.predicate = NSPredicate(format: "%K == %@", #keyPath(Account.id), id as CVarArg)
+        request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
         request.fetchLimit = 1
         return results(for: request).first { $0.isGoal || $0.isDebt }
     }
