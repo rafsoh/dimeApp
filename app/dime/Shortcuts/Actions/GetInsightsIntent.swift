@@ -28,6 +28,9 @@ struct GetInsightsIntent: AppIntent {
     @Parameter(title: "Category Filters", description: "Additional Category Filters", requestValueDialog: IntentDialog("Which additional category filters do you want to impose?"))
     var expenseCategories: [ExpenseCategoryEntity]?
 
+    @Parameter(title: "Accounts", description: "Only count transactions in these accounts. Leave it empty to count every account.")
+    var accounts: [AccountEntity]?
+
     @MainActor
     func perform() async throws -> some ReturnsValue<Double> & ShowsSnippetView & ProvidesDialog {
         let dataController = DataController.shared
@@ -67,7 +70,22 @@ struct GetInsightsIntent: AppIntent {
             typeInt = 3
         }
 
-        let total = dataController.shortcutInsightsTotal(type: typeInt, timeframe: timeframe.rawValue, optionalIncome: optionalIncome, categories: categories)
+        // Accounts deleted since the shortcut was set up are left out. When none are left, it asks again rather
+        // than counting every account in their place.
+        var accountPredicate: NSPredicate?
+
+        if let accounts, !accounts.isEmpty {
+            let existing = Set(dataController.accountChoices().map(\.key))
+            let keys = Set(accounts.map(\.id)).intersection(existing)
+
+            guard !keys.isEmpty else {
+                throw $accounts.needsValueError("Which account? The one this shortcut used was deleted.")
+            }
+
+            accountPredicate = AccountScope(keys: keys).predicate(in: dataController.container.viewContext)
+        }
+
+        let total = dataController.shortcutInsightsTotal(type: typeInt, timeframe: timeframe.rawValue, optionalIncome: optionalIncome, categories: categories, accounts: accountPredicate)
         let result = total.value
         let dialog: IntentDialog = total.report.note.map { IntentDialog("Here you go! \($0)") } ?? "Here you go!"
 
@@ -79,20 +97,26 @@ struct GetInsightsIntent: AppIntent {
     static var parameterSummary: some ParameterSummary {
         Switch(\GetInsightsIntent.$type) {
             Case(ShortcutsInsightsType.net) {
-                Summary("Calculate \(\.$type) for \(\.$timeframe)")
+                Summary("Calculate \(\.$type) for \(\.$timeframe)") {
+                    \.$accounts
+                }
             }
             Case(ShortcutsInsightsType.income) {
                 Summary("Calculate \(\.$type) for \(\.$timeframe)") {
                     \.$incomeCategories
+                    \.$accounts
                 }
             }
             Case(ShortcutsInsightsType.spent) {
                 Summary("Calculate \(\.$type) for \(\.$timeframe)") {
                     \.$expenseCategories
+                    \.$accounts
                 }
             }
             DefaultCase {
-                Summary("Calculate \(\.$type) for \(\.$timeframe)")
+                Summary("Calculate \(\.$type) for \(\.$timeframe)") {
+                    \.$accounts
+                }
             }
         }
     }

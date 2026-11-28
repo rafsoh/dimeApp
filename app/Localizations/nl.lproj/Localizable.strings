@@ -599,3 +599,33 @@
 "When you log a transaction with a note but no category, Apple Intelligence picks one of your categories for it, on your iPhone. Notes it can't make sense of stay uncategorised." = "Als je een transactie vastlegt met een notitie maar zonder categorie, kiest Apple Intelligence op je iPhone een van je categorieën ervoor. Notities waar het niets van kan maken, blijven zonder categorie.";
 "Choosing a category" = "Categorie wordt gekozen";
 "Filed under %@" = "Ingedeeld bij %@";
+
+/* Accounts, transfers, import and Shortcuts strings missing until 3.1 */
+"Close" = "Sluit";
+"Save" = "Bewaar";
+"Done" = "Gereed";
+"Reorder" = "Herschik";
+"New Category" = "Nieuwe categorie";
+"Everything" = "Alles";
+"Everything, overall budget" = "Alles, totaalbudget";
+"Link Accounts" = "Koppel rekeningen";
+"Each account in your file is linked to one in Dime. Anything new is created for you, and you can edit it later." = "Elke rekening uit je bestand wordt gekoppeld aan een rekening in Dime. Nieuwe rekeningen worden voor je aangemaakt en je kunt ze later bewerken.";
+"Choose Account" = "Kies rekening";
+"Your file doesn't say which account these transactions are in. Pick the one they go into." = "Je bestand zegt niet op welke rekening deze transacties staan. Kies de rekening waar ze naartoe gaan.";
+"Optional. Matched to your accounts, or you pick one for the whole file." = "Optioneel. Gekoppeld aan je rekeningen, of je kiest er een voor het hele bestand.";
+"No Account" = "Geen rekening";
+"1 transaction" = "1 transactie";
+"%lld transactions" = "%lld transacties";
+"Transfers" = "Overboekingen";
+"New Accounts" = "Nieuwe rekeningen";
+"The account to log it in. Leave it empty to log it in your main account." = "De rekening om hem op vast te leggen. Laat leeg om hem op de hoofdrekening vast te leggen.";
+"Which account? The one this shortcut used was deleted." = "Welke rekening? De rekening die deze opdracht gebruikte, is verwijderd.";
+"Only count transactions in these accounts. Leave it empty to count every account." = "Tel alleen transacties op deze rekeningen. Laat leeg om alle rekeningen te tellen.";
+"Category for an expense. Choose No Category to log it without one." = "Categorie voor een uitgave. Kies Geen categorie om hem zonder categorie vast te leggen.";
+"Category for an income. Choose No Category to log it without one." = "Categorie voor een inkomst. Kies Geen categorie om hem zonder categorie vast te leggen.";
+"Edits the template" = "Bewerkt het sjabloon";
+"Move Earlier" = "Verplaats naar voren";
+"Move Later" = "Verplaats naar achteren";
+"Tap a template to edit it, or hold and drag it to a new spot. The Quick Add widget logs each one with one tap, without opening Dime, and editing or deleting a template never changes what you've logged." = "Tik op een sjabloon om het te bewerken, of houd het vast en sleep het naar een nieuwe plek. De Snel toevoegen-widget legt elk sjabloon met één tik vast, zonder Dime te openen, en een sjabloon bewerken of verwijderen verandert nooit wat je al hebt vastgelegd.";
+"no rollover" = "geen overdracht";
+"rollover" = "overdracht";

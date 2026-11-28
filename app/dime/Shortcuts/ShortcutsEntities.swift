@@ -8,6 +8,7 @@
 import AppIntents
 import CoreData
 import Foundation
+import UIKit
 
 // @available(iOS 16, *)
 // struct IncomeCategoryEntity: AppEntity, Identifiable {
@@ -527,3 +528,59 @@ struct BudgetQuery: EntityStringQuery {
 //    }
 //
 // }
+
+// MARK: - Accounts
+
+/// Main or one of the user's accounts, as Shortcuts offers them. Identified by `AccountChoice.key`: an account's
+/// id, or "main" for Main, which has no object of its own.
+@available(iOS 16, *)
+struct AccountEntity: AppEntity, Identifiable {
+    static var typeDisplayRepresentation: TypeDisplayRepresentation = .init(name: "Account")
+    typealias DefaultQueryType = AccountQuery
+    static var defaultQuery: AccountQuery = .init()
+
+    var id: String
+
+    @Property(title: "Name")
+    var name: String
+
+    /// The account's SF Symbol, or a stand-in where this iOS version lacks it.
+    var symbol: String
+
+    var displayRepresentation: DisplayRepresentation {
+        DisplayRepresentation(title: "\(name)", image: .init(systemName: symbol))
+    }
+
+    init(_ choice: AccountChoice) {
+        id = choice.key
+        symbol = UIImage(systemName: choice.symbol) != nil ? choice.symbol : "wallet.pass"
+        name = choice.name
+    }
+}
+
+@available(iOS 16, *)
+struct AccountQuery: EntityStringQuery {
+    @MainActor
+    func entities(matching query: String) async throws -> [AccountEntity] {
+        let trimmed = query.trimmingCharacters(in: .whitespaces)
+
+        return DataController.shared.accountChoices()
+            .filter { trimmed.isEmpty || $0.name.localizedCaseInsensitiveContains(trimmed) }
+            .map(AccountEntity.init)
+    }
+
+    /// An account deleted since the shortcut was set up isn't found, so the action can ask for another.
+    @MainActor
+    func entities(for identifiers: [AccountEntity.ID]) async throws -> [AccountEntity] {
+        let choices = DataController.shared.accountChoices()
+
+        return identifiers.compactMap { identifier in
+            choices.first { $0.key == identifier }.map(AccountEntity.init)
+        }
+    }
+
+    @MainActor
+    func suggestedEntities() async throws -> [AccountEntity] {
+        DataController.shared.accountChoices().map(AccountEntity.init)
+    }
+}

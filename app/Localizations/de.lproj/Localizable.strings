@@ -599,3 +599,33 @@
 "When you log a transaction with a note but no category, Apple Intelligence picks one of your categories for it, on your iPhone. Notes it can't make sense of stay uncategorised." = "Wenn du eine Buchung mit Notiz, aber ohne Kategorie erfasst, wählt Apple Intelligence direkt auf deinem iPhone eine deiner Kategorien dafür aus. Notizen, mit denen es nichts anfangen kann, bleiben ohne Kategorie.";
 "Choosing a category" = "Kategorie wird gewählt";
 "Filed under %@" = "Abgelegt unter %@";
+
+/* Accounts, transfers, import and Shortcuts strings missing until 3.1 */
+"Close" = "Schließen";
+"Save" = "Sichern";
+"Done" = "Fertig";
+"Reorder" = "Neu ordnen";
+"New Category" = "Neue Kategorie";
+"Everything" = "Alles";
+"Everything, overall budget" = "Alles, Gesamtbudget";
+"Link Accounts" = "Konten zuordnen";
+"Each account in your file is linked to one in Dime. Anything new is created for you, and you can edit it later." = "Jedes Konto aus deiner Datei wird einem Konto in Dime zugeordnet. Neue Konten werden für dich angelegt, und du kannst sie später bearbeiten.";
+"Choose Account" = "Konto wählen";
+"Your file doesn't say which account these transactions are in. Pick the one they go into." = "Deine Datei sagt nicht, in welchem Konto diese Transaktionen sind. Wähle das Konto, in das sie kommen.";
+"Optional. Matched to your accounts, or you pick one for the whole file." = "Optional. Wird deinen Konten zugeordnet, oder du wählst eines für die ganze Datei.";
+"No Account" = "Kein Konto";
+"1 transaction" = "1 Buchung";
+"%lld transactions" = "%lld Buchungen";
+"Transfers" = "Umbuchungen";
+"New Accounts" = "Neue Konten";
+"The account to log it in. Leave it empty to log it in your main account." = "Das Konto, in dem sie erfasst wird. Leer lassen, um sie im Hauptkonto zu erfassen.";
+"Which account? The one this shortcut used was deleted." = "Welches Konto? Das Konto dieses Kurzbefehls wurde gelöscht.";
+"Only count transactions in these accounts. Leave it empty to count every account." = "Nur Transaktionen in diesen Konten zählen. Leer lassen, um alle Konten zu zählen.";
+"Category for an expense. Choose No Category to log it without one." = "Kategorie für eine Ausgabe. Wähle „Keine Kategorie“, um sie ohne Kategorie zu erfassen.";
+"Category for an income. Choose No Category to log it without one." = "Kategorie für eine Einnahme. Wähle „Keine Kategorie“, um sie ohne Kategorie zu erfassen.";
+"Edits the template" = "Bearbeitet die Vorlage";
+"Move Earlier" = "Nach vorne";
+"Move Later" = "Nach hinten";
+"Tap a template to edit it, or hold and drag it to a new spot. The Quick Add widget logs each one with one tap, without opening Dime, and editing or deleting a template never changes what you've logged." = "Tippe auf eine Vorlage, um sie zu bearbeiten, oder halte und ziehe sie an eine neue Stelle. Das Schnellerfassungs-Widget erfasst jede mit einem Tippen, ohne Dime zu öffnen, und Bearbeiten oder Löschen einer Vorlage ändert nie, was du schon erfasst hast.";
+"no rollover" = "kein Übertrag";
+"rollover" = "Übertrag";

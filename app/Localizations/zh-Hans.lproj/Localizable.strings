@@ -599,3 +599,33 @@
 "When you log a transaction with a note but no category, Apple Intelligence picks one of your categories for it, on your iPhone. Notes it can't make sense of stay uncategorised." = "当你记录带备注但未选类别的交易时，Apple 智能会在你的 iPhone 上从你的类别中为其选择一个。无法理解的备注将保持无类别。";
 "Choosing a category" = "正在选择类别";
 "Filed under %@" = "已归入“%@”";
+
+/* Accounts, transfers, import and Shortcuts strings missing until 3.1 */
+"Close" = "关闭";
+"Save" = "存储";
+"Done" = "完成";
+"Reorder" = "重新排序";
+"New Category" = "新建类别";
+"Everything" = "全部";
+"Everything, overall budget" = "全部，总预算";
+"Link Accounts" = "关联账户";
+"Each account in your file is linked to one in Dime. Anything new is created for you, and you can edit it later." = "文件中的每个账户都会关联到 Dime 中的一个账户。新账户会自动为你创建，之后可以编辑。";
+"Choose Account" = "选择账户";
+"Your file doesn't say which account these transactions are in. Pick the one they go into." = "你的文件没有说明这些交易属于哪个账户。请选择它们要放入的账户。";
+"Optional. Matched to your accounts, or you pick one for the whole file." = "可选。与你的账户匹配，或为整个文件选择一个账户。";
+"No Account" = "无账户";
+"1 transaction" = "1 笔交易";
+"%lld transactions" = "%lld 笔交易";
+"Transfers" = "转账";
+"New Accounts" = "新账户";
+"The account to log it in. Leave it empty to log it in your main account." = "记入的账户。留空则记入主账户。";
+"Which account? The one this shortcut used was deleted." = "哪个账户？此快捷指令使用的账户已被删除。";
+"Only count transactions in these accounts. Leave it empty to count every account." = "仅统计这些账户中的交易。留空则统计所有账户。";
+"Category for an expense. Choose No Category to log it without one." = "支出的类别。选择“无类别”可不设类别记录。";
+"Category for an income. Choose No Category to log it without one." = "收入的类别。选择“无类别”可不设类别记录。";
+"Edits the template" = "编辑此模板";
+"Move Earlier" = "前移";
+"Move Later" = "后移";
+"Tap a template to edit it, or hold and drag it to a new spot. The Quick Add widget logs each one with one tap, without opening Dime, and editing or deleting a template never changes what you've logged." = "轻点模板可编辑，按住并拖移可调整位置。“快速添加”小组件无需打开 Dime，轻点一下即可记录；编辑或删除模板不会改变已记录的内容。";
+"no rollover" = "不结转";
+"rollover" = "结转";

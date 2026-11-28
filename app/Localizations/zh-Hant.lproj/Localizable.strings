@@ -599,3 +599,33 @@
 "When you log a transaction with a note but no category, Apple Intelligence picks one of your categories for it, on your iPhone. Notes it can't make sense of stay uncategorised." = "當你記錄有備註但未選類別的交易時，Apple Intelligence 會在你的 iPhone 上從你的類別中為其選擇一個。無法理解的備註會維持無類別。";
 "Choosing a category" = "正在選擇類別";
 "Filed under %@" = "已歸入「%@」";
+
+/* Accounts, transfers, import and Shortcuts strings missing until 3.1 */
+"Close" = "關閉";
+"Save" = "儲存";
+"Done" = "完成";
+"Reorder" = "重新排序";
+"New Category" = "新增類別";
+"Everything" = "全部";
+"Everything, overall budget" = "全部，總預算";
+"Link Accounts" = "連結帳戶";
+"Each account in your file is linked to one in Dime. Anything new is created for you, and you can edit it later." = "檔案中的每個帳戶都會連結到 Dime 中的一個帳戶。新帳戶會自動為你建立，之後可以編輯。";
+"Choose Account" = "選擇帳戶";
+"Your file doesn't say which account these transactions are in. Pick the one they go into." = "你的檔案沒有說明這些交易屬於哪個帳戶。請選擇要放入的帳戶。";
+"Optional. Matched to your accounts, or you pick one for the whole file." = "選用。與你的帳戶配對，或為整個檔案選擇一個帳戶。";
+"No Account" = "無帳戶";
+"1 transaction" = "1 筆交易";
+"%lld transactions" = "%lld 筆交易";
+"Transfers" = "轉帳";
+"New Accounts" = "新帳戶";
+"The account to log it in. Leave it empty to log it in your main account." = "記入的帳戶。留空則記入主帳戶。";
+"Which account? The one this shortcut used was deleted." = "哪個帳戶？此捷徑使用的帳戶已被刪除。";
+"Only count transactions in these accounts. Leave it empty to count every account." = "只計算這些帳戶中的交易。留空則計算所有帳戶。";
+"Category for an expense. Choose No Category to log it without one." = "支出的類別。選擇「無類別」可不設類別記錄。";
+"Category for an income. Choose No Category to log it without one." = "收入的類別。選擇「無類別」可不設類別記錄。";
+"Edits the template" = "編輯此範本";
+"Move Earlier" = "往前移";
+"Move Later" = "往後移";
+"Tap a template to edit it, or hold and drag it to a new spot. The Quick Add widget logs each one with one tap, without opening Dime, and editing or deleting a template never changes what you've logged." = "點一下範本可編輯，按住並拖移可調整位置。「快速新增」小工具不必打開 Dime，點一下即可記錄；編輯或刪除範本不會改變已記錄的內容。";
+"no rollover" = "不結轉";
+"rollover" = "結轉";

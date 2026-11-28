@@ -466,33 +466,33 @@
 "%@ will be added to your log on %@." = "El %2$@ se añadirá %1$@ a tu registro.";
 
 // budget rollover
-"+%@ rolled over" = "+%@ transferido";
-"−%@ rolled over" = "−%@ transferido";
-"Leftover rolls over %@" = "El sobrante se transfiere %@";
-"Nothing rolled over" = "Nada transferido";
-"Rolls over" = "Se transfiere";
+"+%@ rolled over" = "+%@ arrastrado";
+"−%@ rolled over" = "−%@ arrastrado";
+"Leftover rolls over %@" = "El sobrante se arrastra %@";
+"Nothing rolled over" = "Nada arrastrado";
+"Rolls over" = "Se arrastra";
 "%@ budget %@ %@ = %@" = "Presupuesto de %@ %@ %@ = %@";
-"Rollover" = "Transferencia";
+"Rollover" = "Arrastre";
 "Whether what's left, or overspent, carries into the next period" = "Si lo que sobra, o el exceso, pasa al siguiente periodo";
 "%@ overspend" = "exceso de %@";
 "%@ left over" = "sobrante de %@";
-"Rollover starts this period" = "La transferencia empieza este periodo";
+"Rollover starts this period" = "El arrastre empieza este periodo";
 "What's left at the end of this period, or overspent, carries into the next one. Earlier periods aren't counted." = "Lo que sobre al final de este periodo, o el exceso, pasa al siguiente. Los periodos anteriores no cuentan.";
-"Turn On Rollover" = "Activar transferencia";
-"Turn off rollover?" = "¿Desactivar la transferencia?";
-"The %@ from earlier periods will be cleared. Turning rollover back on starts fresh." = "Se borrará el %@ transferido a este periodo. Si vuelves a activar la transferencia, empezará de cero.";
-"Leftovers will stop carrying over. Turning rollover back on starts fresh." = "El sobrante dejará de transferirse. Si vuelves a activar la transferencia, empezará de cero.";
+"Turn On Rollover" = "Activar arrastre";
+"Turn off rollover?" = "¿Desactivar el arrastre?";
+"The %@ from earlier periods will be cleared. Turning rollover back on starts fresh." = "Se borrará el %@ arrastrado a este periodo. Si vuelves a activar el arrastre, empezará de cero.";
+"Leftovers will stop carrying over. Turning rollover back on starts fresh." = "El sobrante dejará de arrastrarse. Si vuelves a activar el arrastre, empezará de cero.";
 "Turn Off" = "Desactivar";
-"Reset rollover?" = "¿Reiniciar la transferencia?";
-"Changing how often this budget repeats clears the %@ from earlier periods. Rollover starts again from this period." = "Cambiar la frecuencia de este presupuesto borra el %@ transferido. La transferencia empieza de nuevo desde este periodo.";
-"Changing the category clears the %@ from earlier periods. Rollover starts again from this period." = "Cambiar la categoría borra el %@ transferido. La transferencia empieza de nuevo desde este periodo.";
-"Changing how often this budget repeats restarts rollover from this period." = "Cambiar la frecuencia de este presupuesto reinicia la transferencia desde este periodo.";
-"Changing the category restarts rollover from this period." = "Cambiar la categoría reinicia la transferencia desde este periodo.";
+"Reset rollover?" = "¿Reiniciar el arrastre?";
+"Changing how often this budget repeats clears the %@ from earlier periods. Rollover starts again from this period." = "Cambiar la frecuencia de este presupuesto borra el %@ arrastrado. El arrastre empieza de nuevo desde este periodo.";
+"Changing the category clears the %@ from earlier periods. Rollover starts again from this period." = "Cambiar la categoría borra el %@ arrastrado. El arrastre empieza de nuevo desde este periodo.";
+"Changing how often this budget repeats restarts rollover from this period." = "Cambiar la frecuencia de este presupuesto reinicia el arrastre desde este periodo.";
+"Changing the category restarts rollover from this period." = "Cambiar la categoría reinicia el arrastre desde este periodo.";
 "Apply from this period?" = "¿Aplicar desde este periodo?";
 "Your changes apply from this period on, and earlier periods keep their old settings." = "Tus cambios se aplican desde este periodo y los anteriores conservan sus ajustes.";
 "The new amount applies from this period on, and earlier periods keep the old one." = "El nuevo importe se aplica desde este periodo y los anteriores conservan el anterior.";
 "The new reset day applies from this period on, and earlier periods keep the old one." = "El nuevo día de reinicio se aplica desde este periodo y los anteriores conservan el anterior.";
-"The %@ from earlier periods is kept." = "Se conserva el %@ transferido hasta ahora.";
+"The %@ from earlier periods is kept." = "Se conserva el %@ arrastrado hasta ahora.";
 
 /* Accounts and transfers */
 "by account" = "por cuenta";
@@ -524,8 +524,8 @@
 "Transactions not in another account are in %@. You can rename %@, but not delete it." = "Las transacciones sin otra cuenta están en «%@». Puedes cambiar el nombre de «%@», pero no eliminarla.";
 "Only %@" = "Solo %@";
 "%lld accounts" = "%lld cuentas";
-"Changing which accounts count clears the %@ from earlier periods. Rollover starts again from this period." = "Cambiar qué cuentas cuentan borra el %@ transferido hasta ahora. El traspaso empieza de nuevo en este periodo.";
-"Changing which accounts count restarts rollover from this period." = "Cambiar qué cuentas cuentan reinicia el traspaso desde este periodo.";
+"Changing which accounts count clears the %@ from earlier periods. Rollover starts again from this period." = "Cambiar qué cuentas cuentan borra el %@ arrastrado hasta ahora. El arrastre empieza de nuevo desde este periodo.";
+"Changing which accounts count restarts rollover from this period." = "Cambiar qué cuentas cuentan reinicia el arrastre desde este periodo.";
 "Add %@" = "Añadir %@";
 "Show all accounts" = "Mostrar todas las cuentas";
 "Account filter" = "Filtro de cuenta";
@@ -599,3 +599,33 @@
 "When you log a transaction with a note but no category, Apple Intelligence picks one of your categories for it, on your iPhone. Notes it can't make sense of stay uncategorised." = "Cuando registras una transacción con una nota pero sin categoría, Apple Intelligence elige una de tus categorías para ella, en tu iPhone. Las notas que no logra entender se quedan sin categoría.";
 "Choosing a category" = "Eligiendo una categoría";
 "Filed under %@" = "Archivada en %@";
+
+/* Accounts, transfers, import and Shortcuts strings missing until 3.1 */
+"Close" = "Cerrar";
+"Save" = "Guardar";
+"Done" = "OK";
+"Reorder" = "Reordenar";
+"New Category" = "Nueva categoría";
+"Everything" = "Todo";
+"Everything, overall budget" = "Todo, presupuesto general";
+"Link Accounts" = "Vincular cuentas";
+"Each account in your file is linked to one in Dime. Anything new is created for you, and you can edit it later." = "Cada cuenta de tu archivo se vincula a una de Dime. Lo nuevo se crea por ti y puedes editarlo después.";
+"Choose Account" = "Elegir cuenta";
+"Your file doesn't say which account these transactions are in. Pick the one they go into." = "Tu archivo no dice en qué cuenta están estas transacciones. Elige la cuenta a la que van.";
+"Optional. Matched to your accounts, or you pick one for the whole file." = "Opcional. Se vincula con tus cuentas, o eliges una para todo el archivo.";
+"No Account" = "Sin cuenta";
+"1 transaction" = "1 transacción";
+"%lld transactions" = "%lld transacciones";
+"Transfers" = "Transferencias";
+"New Accounts" = "Cuentas nuevas";
+"The account to log it in. Leave it empty to log it in your main account." = "La cuenta en la que se registra. Déjalo vacío para registrarla en la cuenta principal.";
+"Which account? The one this shortcut used was deleted." = "¿Qué cuenta? Se eliminó la cuenta que usaba este atajo.";
+"Only count transactions in these accounts. Leave it empty to count every account." = "Cuenta solo las transacciones de estas cuentas. Déjalo vacío para contar todas.";
+"Category for an expense. Choose No Category to log it without one." = "Categoría de un gasto. Elige Sin categoría para registrarlo sin ninguna.";
+"Category for an income. Choose No Category to log it without one." = "Categoría de un ingreso. Elige Sin categoría para registrarlo sin ninguna.";
+"Edits the template" = "Edita la plantilla";
+"Move Earlier" = "Mover antes";
+"Move Later" = "Mover después";
+"Tap a template to edit it, or hold and drag it to a new spot. The Quick Add widget logs each one with one tap, without opening Dime, and editing or deleting a template never changes what you've logged." = "Toca una plantilla para editarla, o mantenla pulsada y arrástrala a otro lugar. El widget de añadido rápido registra cada una con un toque, sin abrir Dime, y editar o eliminar una plantilla nunca cambia lo que ya has registrado.";
+"no rollover" = "sin arrastre";
+"rollover" = "arrastre";

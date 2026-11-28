@@ -599,3 +599,33 @@
 "When you log a transaction with a note but no category, Apple Intelligence picks one of your categories for it, on your iPhone. Notes it can't make sense of stay uncategorised." = "메모를 입력하고 카테고리 없이 거래를 기록하면 Apple Intelligence가 iPhone에서 내 카테고리 중 하나를 골라 줍니다. 의미를 알 수 없는 메모는 카테고리 없이 그대로 둡니다.";
 "Choosing a category" = "카테고리 선택 중";
 "Filed under %@" = "%@(으)로 분류됨";
+
+/* Accounts, transfers, import and Shortcuts strings missing until 3.1 */
+"Close" = "닫기";
+"Save" = "저장";
+"Done" = "완료";
+"Reorder" = "순서 변경";
+"New Category" = "새 카테고리";
+"Everything" = "전체";
+"Everything, overall budget" = "전체, 전체 예산";
+"Link Accounts" = "계좌 연결";
+"Each account in your file is linked to one in Dime. Anything new is created for you, and you can edit it later." = "파일의 각 계좌는 Dime의 계좌 하나에 연결됩니다. 새 계좌는 자동으로 만들어지며 나중에 편집할 수 있습니다.";
+"Choose Account" = "계좌 선택";
+"Your file doesn't say which account these transactions are in. Pick the one they go into." = "파일에 이 거래들이 어느 계좌에 있는지 나와 있지 않습니다. 거래를 넣을 계좌를 선택하세요.";
+"Optional. Matched to your accounts, or you pick one for the whole file." = "선택 사항. 내 계좌와 연결되거나, 파일 전체에 사용할 계좌를 하나 선택합니다.";
+"No Account" = "계좌 없음";
+"1 transaction" = "거래 1건";
+"%lld transactions" = "거래 %lld건";
+"Transfers" = "이체";
+"New Accounts" = "새 계좌";
+"The account to log it in. Leave it empty to log it in your main account." = "기록할 계좌입니다. 비워 두면 기본 계좌에 기록합니다.";
+"Which account? The one this shortcut used was deleted." = "어느 계좌인가요? 이 단축어가 사용하던 계좌가 삭제되었습니다.";
+"Only count transactions in these accounts. Leave it empty to count every account." = "이 계좌의 거래만 계산합니다. 비워 두면 모든 계좌를 계산합니다.";
+"Category for an expense. Choose No Category to log it without one." = "지출 카테고리입니다. 카테고리 없음을 선택하면 카테고리 없이 기록합니다.";
+"Category for an income. Choose No Category to log it without one." = "수입 카테고리입니다. 카테고리 없음을 선택하면 카테고리 없이 기록합니다.";
+"Edits the template" = "템플릿을 편집합니다";
+"Move Earlier" = "앞으로 이동";
+"Move Later" = "뒤로 이동";
+"Tap a template to edit it, or hold and drag it to a new spot. The Quick Add widget logs each one with one tap, without opening Dime, and editing or deleting a template never changes what you've logged." = "템플릿을 탭하여 편집하거나, 길게 누른 채 드래그하여 위치를 옮기세요. 빠른 추가 위젯은 Dime을 열지 않고 한 번의 탭으로 기록하며, 템플릿을 편집하거나 삭제해도 이미 기록한 내용은 바뀌지 않습니다.";
+"no rollover" = "이월 없음";
+"rollover" = "이월";
